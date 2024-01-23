@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  meldingen:
+    image: amsterdam/meldingen
+    build:
+      context: .
+    ports:
+      - "8000:80"
+    volumes:
+      - ".:/opt/meldingen"
