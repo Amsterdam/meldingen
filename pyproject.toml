@@ -1,12 +1,14 @@
 [tool.poetry]
 name = "meldingen"
 version = "0.1.0"
-description = ""
+description = "The main meldingen project which includes the framework bindings."
 authors = ["Youri Westerman <y.westerman@amsterdam.nl>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+fastapi = "^0.109.0"
+uvicorn = {extras = ["standard"], version = "^0.27.0"}
 
 
 [build-system]
