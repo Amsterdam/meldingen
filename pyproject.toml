@@ -13,7 +13,7 @@ python = "^3.12"
 fastapi = "^0.109.0"
 uvicorn = {extras = ["standard"], version = "^0.27.0"}
 pydantic-settings = "^2.1.0"
-
+meldingen-core = {git = "git@github.com:Amsterdam/meldingen-core.git"}
 
 [build-system]
 requires = ["poetry-core"]

@@ -146,6 +146,21 @@ files = [
 ]
 
 [[package]]
+name = "meldingen-core"
+version = "0.1.0"
+description = "Framework agnostic package containing the core code for the meldingen project."
+optional = false
+python-versions = "^3.12"
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "git@github.com:Amsterdam/meldingen-core.git"
+reference = "HEAD"
+resolved_reference = "4c2a0de6687dd7e0c6bd25a7a0dbdfeb82ffea08"
+
+[[package]]
 name = "pydantic"
 version = "2.5.3"
 description = "Data validation using Python type hints"
@@ -411,13 +426,13 @@ files = [
 
 [[package]]
 name = "uvicorn"
-version = "0.27.0"
+version = "0.27.0.post1"
 description = "The lightning-fast ASGI server."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "uvicorn-0.27.0-py3-none-any.whl", hash = "sha256:890b00f6c537d58695d3bb1f28e23db9d9e7a17cbcc76d7457c499935f933e24"},
-    {file = "uvicorn-0.27.0.tar.gz", hash = "sha256:c855578045d45625fd027367f7653d249f7c49f9361ba15cf9624186b26b8eb6"},
+    {file = "uvicorn-0.27.0.post1-py3-none-any.whl", hash = "sha256:4b85ba02b8a20429b9b205d015cbeb788a12da527f731811b643fd739ef90d5f"},
+    {file = "uvicorn-0.27.0.post1.tar.gz", hash = "sha256:54898fcd80c13ff1cd28bf77b04ec9dbd8ff60c5259b499b4b12bb0917f22907"},
 ]
 
 [package.dependencies]
@@ -649,4 +664,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "0a3ca997023d8fb024934bcdf4d4834628187ce9b0b3cc2e356aa90b3458ef05"
+content-hash = "93483f8ae218fb1169e3bbbb3b69c8f2f4b02bc78346d5e9779617721d7758b0"
