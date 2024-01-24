@@ -156,7 +156,7 @@ develop = false
 
 [package.source]
 type = "git"
-url = "git@github.com:Amsterdam/meldingen-core.git"
+url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "HEAD"
 resolved_reference = "4c2a0de6687dd7e0c6bd25a7a0dbdfeb82ffea08"
 
@@ -664,4 +664,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "93483f8ae218fb1169e3bbbb3b69c8f2f4b02bc78346d5e9779617721d7758b0"
+content-hash = "aac38270b1c8359c4d6da9ed7f2c2af7f6bc46976d6244d6eb152201f491b437"
