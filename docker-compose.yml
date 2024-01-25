@@ -11,3 +11,10 @@ services:
       - dev.env
     volumes:
       - ".:/opt/meldingen"
+
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: meldingen
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: meldingen
