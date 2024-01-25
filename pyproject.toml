@@ -15,6 +15,7 @@ uvicorn = {extras = ["standard"], version = "^0.27.0"}
 pydantic-settings = "^2.1.0"
 meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
 sqlmodel = "^0.0.14"
+psycopg2 = "^2.9.9"
 
 [build-system]
 requires = ["poetry-core"]
