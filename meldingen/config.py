@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """Settings class to manage configuration variables for the application."""
+
     model_config = SettingsConfigDict(env_prefix="api_", env_nested_delimiter="__")
 
     # General settings
