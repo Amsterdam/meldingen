@@ -5,6 +5,8 @@ services:
     image: amsterdam/meldingen
     build:
       context: .
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-true}
     ports:
       - "8000:80"
     env_file:
