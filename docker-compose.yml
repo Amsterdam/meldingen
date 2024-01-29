@@ -5,12 +5,18 @@ services:
     image: amsterdam/meldingen
     build:
       context: .
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-true}
     ports:
       - "8000:80"
     env_file:
       - dev.env
+    depends_on:
+      database:
+        condition: service_healthy
     volumes:
       - ".:/opt/meldingen"
+    entrypoint: "/opt/meldingen/meldingen-entrypoint.sh"
 
   database:
     image: postgres:16-alpine
@@ -18,3 +24,10 @@ services:
       POSTGRES_USER: meldingen
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: meldingen
+    ports:
+      - "54321:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "meldingen", "-U", "meldingen" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
