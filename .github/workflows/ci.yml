@@ -62,7 +62,7 @@ jobs:
       - name: Install the project dependencies
         run: poetry install
 
-      - name: black
+      - name: isort
         run: poetry run isort .
 
   MyPy:
@@ -93,5 +93,5 @@ jobs:
       - name: Install the project dependencies
         run: poetry install
 
-      - name: black
+      - name: mypy
         run: poetry run mypy --strict . | poetry run mypy-baseline filter
