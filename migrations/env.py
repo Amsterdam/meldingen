@@ -7,7 +7,6 @@ from alembic import context
 from sqlmodel import SQLModel
 
 from meldingen.config import settings
-from meldingen.models import Melding
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
