@@ -7,5 +7,7 @@ services:
       context: .
     ports:
       - "8000:80"
+    env_file:
+      - dev.env
     volumes:
       - ".:/opt/meldingen"
