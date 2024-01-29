@@ -9,4 +9,4 @@ app = FastAPI(
     prefix=settings.url_prefix,
 )
 
-engine = create_engine(settings.database_dsn, echo=True)
+engine = create_engine(str(settings.database_dsn), echo=True)
