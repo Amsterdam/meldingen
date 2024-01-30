@@ -6,4 +6,5 @@ from sqlmodel import Field, SQLModel
 
 class Melding(BaseMelding, SQLModel, table=True):
     """SQLModel for Melding."""
+
     id: Optional[int] = Field(default=None, primary_key=True)

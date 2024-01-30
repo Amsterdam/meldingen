@@ -21,7 +21,31 @@ dependency-injector = {git = "https://github.com/anton-petrov/python-dependency-
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
+isort = "^5.13.2"
+mypy = "^1.8.0"
+mypy-baseline = "^0.6.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.env
+  | \.venv
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_third_party = ["meldingen_core"]
+known_first_party = ["meldingen"]
+
+[tool.mypy-baseline]
+baseline_path = "mypy-baseline.txt"
