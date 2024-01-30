@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from meldingen.api.v1.endpoints.melding import router
 from meldingen.config import Settings
 from meldingen.containers import Container
 
@@ -14,3 +15,4 @@ app = FastAPI(
     title=container.settings.get("project_name"),
     prefix=container.settings.get("url_prefix"),
 )
+app.include_router(router)
