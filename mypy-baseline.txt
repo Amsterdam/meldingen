@@ -1,2 +1,0 @@
-meldingen/config.py:0: error: Missing named argument "database_dsn" for "Settings"  [call-arg]
-main.py:0: error: Missing named argument "database_dsn" for "Settings"  [call-arg]
