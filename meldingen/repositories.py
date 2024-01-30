@@ -18,3 +18,4 @@ class MeldingRepository(BaseSQLModelRepository, BaseMeldingRepository):
     def add(self, melding: Melding) -> None:
         self._session.add(melding)
         self._session.commit()
+        self._session.refresh(melding)
