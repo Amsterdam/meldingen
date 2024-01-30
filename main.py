@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from sqlmodel import create_engine
 
 from meldingen.config import Settings
 from meldingen.containers import Container
@@ -15,5 +14,3 @@ app = FastAPI(
     title=container.settings.get("project_name"),
     prefix=container.settings.get("url_prefix"),
 )
-
-engine = create_engine(str(container.settings.get("database_dsn")), echo=True)
