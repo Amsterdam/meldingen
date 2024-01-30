@@ -1,17 +1,19 @@
-from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
-from dependency_injector.providers import Configuration, Singleton, Resource, Factory
-from sqlalchemy import Engine
-from sqlmodel import create_engine, Session
+from typing import Any, Generator
 
-from meldingen.config import Settings
+from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
+from dependency_injector.providers import Configuration, Factory, Resource, Singleton
+from pydantic_core import MultiHostUrl
+from sqlalchemy import Engine
+from sqlmodel import Session, create_engine
+
 from meldingen.repositories import MeldingRepository
 
 
-def get_database_engine(settings: Settings) -> Engine:
-    return create_engine(str(settings.get("database_dsn")), echo=True)
+def get_database_engine(dsn: MultiHostUrl) -> Engine:
+    return create_engine(str(dsn), echo=True)
 
 
-def get_database_session(engine: Engine) -> Session:
+def get_database_session(engine: Engine) -> Generator[Session, None, None]:
     with Session(engine) as session:
         yield session
 
@@ -22,7 +24,7 @@ class Container(DeclarativeContainer):
     wiring_config = WiringConfiguration(modules=["meldingen.api.v1.endpoints.melding"])
 
     settings: Configuration = Configuration(strict=True)
-    database_engine: Engine = Singleton(get_database_engine, settings=settings)
-    database_session: Session = Resource(get_database_session, engine=database_engine)
+    database_engine: Singleton[Engine] = Singleton(get_database_engine, dsn=settings.database_dsn)
+    database_session: Resource[Session] = Resource(get_database_session, engine=database_engine)
 
-    melding_repository: MeldingRepository = Factory(MeldingRepository, session=database_session)
+    melding_repository: Factory[MeldingRepository] = Factory(MeldingRepository, session=database_session)
