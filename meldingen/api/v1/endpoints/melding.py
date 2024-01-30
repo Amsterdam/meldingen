@@ -1,9 +1,9 @@
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
+from meldingen_core.actions import MeldingCreateAction
 
 from meldingen.containers import Container
 from meldingen.models import Melding
-from meldingen.repositories import MeldingRepository
 
 router = APIRouter()
 
@@ -11,8 +11,8 @@ router = APIRouter()
 @router.post("/", response_model=Melding)
 @inject
 async def create_melding(
-    melding: Melding, melding_repository: MeldingRepository = Depends(Provide(Container.melding_repository))
+    melding: Melding, action: MeldingCreateAction = Depends(Provide(Container.melding_create_action))
 ) -> Melding:
-    melding_repository.add(melding)
+    action(melding)
 
     return melding
