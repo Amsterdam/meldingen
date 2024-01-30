@@ -418,7 +418,7 @@ develop = false
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "HEAD"
-resolved_reference = "4c2a0de6687dd7e0c6bd25a7a0dbdfeb82ffea08"
+resolved_reference = "61b20da74e6d5e3896c15c9335a738d2389b6448"
 
 [[package]]
 name = "mypy"
