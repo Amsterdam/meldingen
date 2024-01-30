@@ -16,7 +16,6 @@ services:
         condition: service_healthy
     volumes:
       - ".:/opt/meldingen"
-    entrypoint: "/opt/meldingen/meldingen-entrypoint.sh"
 
   database:
     image: postgres:16-alpine
