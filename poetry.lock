@@ -616,7 +616,7 @@ develop = false
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "HEAD"
-resolved_reference = "61b20da74e6d5e3896c15c9335a738d2389b6448"
+resolved_reference = "2db986e4f63cf7d7887cb9995509a00d8a87d8d0"
 
 [[package]]
 name = "mergedeep"
@@ -1778,4 +1778,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "9021fac0b8fef27c32ca3c21989dc950560d4fb3400e39540982f3913f11a3a7"
+content-hash = "dc9323862282298e9928480c35d836bb389820806f4b81012b55ef5b3ae6d5ac"
