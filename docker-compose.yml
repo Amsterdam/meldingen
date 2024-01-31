@@ -32,3 +32,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  docs:
+    image: amsterdam/meldingen
+    ports:
+      - "8001:8000"
+    volumes:
+      - ".:/opt/meldingen"
+    entrypoint: mkdocs serve -f /opt/meldingen/mkdocs.yml --dev-addr=0.0.0.0:8000
