@@ -3,9 +3,10 @@ from typing import Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY, HTTP_200_OK
+from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 ROUTE_NAME_CREATE: Final[str] = "melding:create"
+
 
 class TestMeldingRoutes:
     @pytest.mark.asyncio
