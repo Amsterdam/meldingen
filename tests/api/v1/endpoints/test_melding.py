@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from main import app
 
 
-def test_create_melding() -> None:
+def test_create_melding(apply_migrations: None) -> None:
     client = TestClient(app)
 
     response = client.post("/melding", json={"text": "This is a test melding."})
