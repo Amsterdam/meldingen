@@ -12,4 +12,4 @@ jobs:
         run: docker-compose up -d --build
 
       - name: Test migrations
-        run: docker-compose exec meldingen pytest --test-alembic
+        run: docker-compose exec -T meldingen pytest --test-alembic
