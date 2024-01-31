@@ -13,7 +13,7 @@ router = APIRouter()
 async def create_melding(
     melding_input: MeldingCreateInput, action: MeldingCreateAction = Depends(Provide(Container.melding_create_action))
 ) -> Melding:
-    melding = Melding(**melding_input.model_dump())
+    melding = Melding.model_validate(melding_input)
     action(melding)
 
     return melding
