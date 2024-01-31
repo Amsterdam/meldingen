@@ -8,7 +8,7 @@ from meldingen.models import Melding, MeldingCreateInput
 router = APIRouter()
 
 
-@router.post("/")
+@router.post("/", name="melding:create")
 @inject
 async def create_melding(
     melding_input: MeldingCreateInput, action: MeldingCreateAction = Depends(Provide(Container.melding_create_action))
