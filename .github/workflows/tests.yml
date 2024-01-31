@@ -1,0 +1,15 @@
+name: Tests
+on: [pull_request]
+
+jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/actions/checkout
+      - uses: actions/checkout@v4
+
+      - name: Build and start containers
+        run: docker-compose up -d --build
+
+      - name: Test migrations
+        run: docker-compose exec meldingen pytest --test-alembic
