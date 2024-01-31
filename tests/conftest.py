@@ -1,14 +1,17 @@
+from typing import Generator
+
 import alembic
 import pytest
 import sqlalchemy
-from pytest_alembic.config import Config
+from alembic.config import Config
+from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy import Engine
 
 
 @pytest.fixture
-def alembic_config() -> Config:
+def alembic_config() -> PytestAlembicConfig:
     """Override this fixture to configure the exact alembic context setup required."""
-    return Config()
+    return PytestAlembicConfig()
 
 
 @pytest.fixture
@@ -17,11 +20,8 @@ def alembic_engine() -> Engine:
     return sqlalchemy.create_engine("postgresql://meldingen:postgres@database:5432/meldingen-test")
 
 
-# Apply migrations at beginning and end of testing session
 @pytest.fixture(scope="session")
-def apply_migrations():
-    # warnings.filterwarnings("ignore", category=DeprecationWarning)
-    # os.environ["TESTING"] = "1"
+def apply_migrations() -> Generator[None, None, None]:
     config = Config("alembic.ini")
 
     alembic.command.upgrade(config, "head")
