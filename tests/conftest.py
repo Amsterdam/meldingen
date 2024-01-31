@@ -1,5 +1,3 @@
-from typing import Generator
-
 import alembic
 import pytest
 import sqlalchemy
@@ -20,10 +18,9 @@ def alembic_engine() -> Engine:
     return sqlalchemy.create_engine("postgresql://meldingen:postgres@database:5432/meldingen-test")
 
 
-@pytest.fixture(scope="session")
-def apply_migrations() -> Generator[None, None, None]:
+@pytest.fixture
+def apply_migrations() -> None:
     config = Config("alembic.ini")
 
-    alembic.command.upgrade(config, "head")
-    yield
     alembic.command.downgrade(config, "base")
+    alembic.command.upgrade(config, "head")
