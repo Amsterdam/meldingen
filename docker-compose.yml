@@ -25,6 +25,8 @@ services:
       POSTGRES_DB: meldingen
     ports:
       - "54321:5432"
+    volumes:
+      - "./docker/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d"
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "meldingen", "-U", "meldingen" ]
       interval: 10s

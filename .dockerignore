@@ -1,5 +1,7 @@
 __pycache__
 .idea/
 README.md
-
+Dockerfile
+docker
+docker-compose.yml
 *.env

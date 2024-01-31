@@ -23,6 +23,7 @@ dependency-injector = {git = "https://github.com/anton-petrov/python-dependency-
 black = "^24.1.1"
 isort = "^5.13.2"
 mypy = "^1.8.0"
+pytest-alembic = "^0.10.7"
 
 [build-system]
 requires = ["poetry-core"]
