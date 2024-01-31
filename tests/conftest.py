@@ -25,12 +25,11 @@ def alembic_engine() -> Engine:
 
 
 @pytest_asyncio.fixture(scope="session")
-def apply_migrations() -> Generator[None, None, None]:
+def apply_migrations() -> None:
     config = Config("alembic.ini")
 
-    alembic.command.upgrade(config, "head")
-    yield
     alembic.command.downgrade(config, "base")
+    alembic.command.upgrade(config, "head")
 
 
 @pytest_asyncio.fixture
