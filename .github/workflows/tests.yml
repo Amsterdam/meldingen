@@ -12,7 +12,10 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and start containers
-        run: docker-compose up -d --build meldingen
+        run: docker-compose build
 
       - name: Test migrations
-        run: docker-compose exec -T meldingen pytest --test-alembic -v
+        run: docker-compose run --rm meldingen pytest --test-alembic -v
+
+      - name: Run tests
+        run: docker-compose run --rm meldingen pytest -v
