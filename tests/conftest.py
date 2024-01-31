@@ -2,6 +2,7 @@ from typing import AsyncGenerator, Generator
 
 import alembic
 import pytest
+import pytest_asyncio
 import sqlalchemy
 from alembic.config import Config
 from asgi_lifespan import LifespanManager
@@ -23,7 +24,7 @@ def alembic_engine() -> Engine:
     return sqlalchemy.create_engine("postgresql://meldingen:postgres@database:5432/meldingen-test")
 
 
-@pytest.fixture
+@pytest_asyncio.fixture(scope="session")
 def apply_migrations() -> Generator[None, None, None]:
     config = Config("alembic.ini")
 
@@ -32,14 +33,14 @@ def apply_migrations() -> Generator[None, None, None]:
     alembic.command.downgrade(config, "base")
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def app(apply_migrations: None) -> FastAPI:
     from main import get_application
 
     return get_application()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(
