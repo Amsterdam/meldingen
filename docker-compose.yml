@@ -33,6 +33,19 @@ services:
       timeout: 5s
       retries: 3
 
+  keycloak:
+    image: amsterdam/meldingen-keycloak
+    build:
+      context: docker/keycloak
+    command: ["/opt/keycloak/bin/kc.sh", "start-dev", "--http-port", "8002"]
+    ports:
+      - "8002:8002"
+    volumes:
+      - "./docker/keycloak/import:/import"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+
   docs:
     image: amsterdam/meldingen
     ports:
