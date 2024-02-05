@@ -1,4 +1,3 @@
-from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.repositories import BaseRepository, BaseMeldingRepository
 from sqlmodel import Session, select
 from typing import TypeVar
@@ -21,7 +20,7 @@ class BaseSQLModelRepository(BaseRepository[T, T_co]):
 class MeldingRepository(BaseSQLModelRepository[Melding, Melding], BaseMeldingRepository):
     """Repository for Melding model."""
 
-    def add(self, melding: BaseMelding) -> None:
+    def add(self, melding: Melding) -> None:
         self._session.add(melding)
         self._session.commit()
         self._session.refresh(melding)
