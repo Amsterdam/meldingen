@@ -1,7 +1,8 @@
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends
-from meldingen_core.actions import MeldingCreateAction
+from fastapi import APIRouter, Depends, HTTPException
+from meldingen_core.actions import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
 
+from meldingen.api.utils import pagination_params
 from meldingen.containers import Container
 from meldingen.models import Melding, MeldingCreateInput
 
@@ -15,5 +16,32 @@ async def create_melding(
 ) -> Melding:
     melding = Melding.model_validate(melding_input)
     action(melding)
+
+    return melding
+
+
+@router.get("/", name="melding:list")
+@inject
+async def list_meldingen(
+    pagination: dict[str, int | None] = Depends(pagination_params),
+    action: MeldingListAction = Depends(Provide(Container.melding_list_action)),
+) -> list[Melding]:
+    limit = pagination["limit"] or 0
+    offset = pagination["offset"] or 0
+
+    meldingen = action(limit=limit, offset=offset)
+
+    return meldingen
+
+
+@router.get("/{melding_id}", name="melding:retrieve")
+@inject
+async def retrieve_melding(
+    melding_id: int, action: MeldingRetrieveAction = Depends(Provide(Container.melding_retrieve_action))
+) -> Melding:
+    melding = action(pk=melding_id)
+
+    if not melding:
+        raise HTTPException(status_code=404)
 
     return melding

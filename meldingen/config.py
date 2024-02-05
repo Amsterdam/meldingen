@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     debug: bool = False
     project_name: str = "Meldingen Openbare Ruimte"
     url_prefix: str = "/api"
+    default_page_size: int = 50
 
     # Database settings
     database_dsn: PostgresDsn

@@ -2,7 +2,7 @@ from typing import Generator
 
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
-from meldingen_core.actions import MeldingCreateAction
+from meldingen_core.actions import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
 from pydantic_core import MultiHostUrl
 from sqlalchemy import Engine
 from sqlmodel import Session, create_engine
@@ -31,3 +31,7 @@ class Container(DeclarativeContainer):
     melding_repository: Factory[MeldingRepository] = Factory(MeldingRepository, session=database_session)
 
     melding_create_action: Factory[MeldingCreateAction] = Factory(MeldingCreateAction, repository=melding_repository)
+    melding_list_action: Factory[MeldingListAction] = Factory(MeldingListAction, repository=melding_repository)
+    melding_retrieve_action: Factory[MeldingRetrieveAction] = Factory(
+        MeldingRetrieveAction, repository=melding_repository
+    )

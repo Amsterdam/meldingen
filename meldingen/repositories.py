@@ -1,6 +1,8 @@
-from meldingen_core.models import Melding
+from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.repositories import BaseMeldingRepository
-from sqlmodel import Session
+from sqlmodel import Session, select
+
+from meldingen.models import Melding
 
 
 class BaseSQLModelRepository:
@@ -15,7 +17,25 @@ class BaseSQLModelRepository:
 class MeldingRepository(BaseSQLModelRepository, BaseMeldingRepository):
     """Repository for Melding model."""
 
-    def add(self, melding: Melding) -> None:
+    def add(self, melding: BaseMelding) -> None:
         self._session.add(melding)
         self._session.commit()
         self._session.refresh(melding)
+
+    def list(self, *, limit: int | None = None, offset: int | None = None) -> list[Melding]:
+        statement = select(Melding)
+
+        if limit:
+            statement = statement.limit(limit)
+
+        if offset:
+            statement = statement.offset(offset)
+
+        results = self._session.exec(statement)
+
+        return list(results.all())
+
+    def retrieve(self, pk: int) -> Melding | None:
+        statement = select(Melding).where(Melding.id == pk)
+        results = self._session.exec(statement)
+        return results.one_or_none()
