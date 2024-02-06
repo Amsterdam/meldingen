@@ -15,7 +15,7 @@ jobs:
         run: docker-compose build
 
       - name: Test migrations
-        run: docker-compose run --rm meldingen pytest --test-alembic -v
+        run: docker-compose run --rm meldingen pytest --test-alembic -v -m "alembic"
 
       - name: Run tests
         run: docker-compose run --rm meldingen pytest -v
