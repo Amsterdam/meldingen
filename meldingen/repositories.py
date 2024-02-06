@@ -1,6 +1,7 @@
-from meldingen_core.repositories import BaseRepository, BaseMeldingRepository
-from sqlmodel import Session, select
 from typing import TypeVar
+
+from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
+from sqlmodel import Session, select
 
 from meldingen.models import Melding
 
