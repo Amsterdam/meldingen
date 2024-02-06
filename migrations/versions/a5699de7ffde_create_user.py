@@ -12,7 +12,6 @@ import sqlalchemy as sa
 import sqlmodel
 from alembic import op
 
-
 # revision identifiers, used by Alembic.
 revision: str = "a5699de7ffde"
 down_revision: str | None = "23f514d3746f"
@@ -25,9 +24,7 @@ def upgrade() -> None:
     op.create_table(
         "user",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column(
-            "username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("email", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("email"),
