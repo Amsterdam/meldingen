@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # Database settings
     database_dsn: PostgresDsn
 
+    # Authentication
+    jwks_url: str
+
 
 # Create an instance of the Settings model
 settings = Settings()
