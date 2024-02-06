@@ -4,7 +4,7 @@ from typing import TypeVar
 
 from meldingen.models import Melding
 
-T = TypeVar('T')
+T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
 
 
