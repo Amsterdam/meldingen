@@ -1,7 +1,4 @@
-from dependency_injector.wiring import Provide
-from fastapi import Depends
 from jwt import decode, PyJWKClient
-from meldingen.containers import Container
 from sqlalchemy.exc import NoResultFound
 
 from meldingen.models import User
