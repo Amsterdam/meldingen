@@ -69,3 +69,9 @@ class UserRepository(BaseSQLModelRepository[User, User]):
         statement = select(User).where(User.id == pk)
         results = self._session.exec(statement)
         return results.one_or_none()
+
+    def find_by_email(self, email: str) -> User:
+        statement = select(User).where(User.email == email)
+        results = self._session.exec(statement)
+
+        return results.one()
