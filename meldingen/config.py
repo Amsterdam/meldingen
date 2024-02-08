@@ -18,6 +18,8 @@ class Settings(BaseSettings):
 
     # Authentication
     jwks_url: str
+    auth_url: str
+    token_url: str
 
 
 # Create an instance of the Settings model
