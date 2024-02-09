@@ -21,13 +21,13 @@ def alembic_config() -> PytestAlembicConfig:
     return PytestAlembicConfig()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def alembic_engine() -> Engine:
     """Override this fixture to provide pytest-alembic powered tests with a database handle."""
-    return sqlalchemy.create_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT", echo=True)
+    return sqlalchemy.create_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def test_database(alembic_engine: Engine) -> None:
     from sqlmodel import SQLModel
 
