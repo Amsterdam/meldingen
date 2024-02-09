@@ -1,12 +1,16 @@
+from fastapi import HTTPException
 from jwt import decode, PyJWKClient
 from sqlalchemy.exc import NoResultFound
+from starlette.status import HTTP_401_UNAUTHORIZED
 
 from meldingen.models import User
 
 from meldingen.repositories import UserRepository
 
 
-class UnauthenticatedException(Exception): ...
+class UnauthenticatedException(HTTPException):
+    def __init__(self, detail: str) -> None:
+        super().__init__(status_code=HTTP_401_UNAUTHORIZED, detail=detail)
 
 
 class Authenticator:
