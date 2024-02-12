@@ -19,6 +19,7 @@ psycopg2 = "^2.9.9"
 alembic = "^1.13.1"
 dependency-injector = {git = "https://github.com/anton-petrov/python-dependency-injector.git"}
 pyjwt = {extras = ["crypto"], version = "^2.8.0"}
+pydantic = {extras = ["email"], version = "^2.6.1"}
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2.1.0"
