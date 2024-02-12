@@ -2,14 +2,12 @@ from typing import Generator
 
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
-from fastapi.security import OAuth2AuthorizationCodeBearer, OAuth2
 from jwt import PyJWKClient
 from meldingen_core.actions import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
 from pydantic_core import MultiHostUrl
 from sqlalchemy import Engine
 from sqlmodel import Session, create_engine
 
-from meldingen.authentication import Authenticator
 from meldingen.repositories import MeldingRepository, UserRepository
 
 
@@ -25,7 +23,9 @@ def get_database_session(engine: Engine) -> Generator[Session, None, None]:
 class Container(DeclarativeContainer):
     """Dependency injection container."""
 
-    wiring_config: WiringConfiguration = WiringConfiguration(modules=["meldingen.api.v1.endpoints.melding"])
+    wiring_config: WiringConfiguration = WiringConfiguration(
+        modules=["meldingen.api.v1.endpoints.melding", "meldingen.authentication"]
+    )
 
     settings: Configuration = Configuration(strict=True)
     database_engine: Singleton[Engine] = Singleton(get_database_engine, dsn=settings.database_dsn)
@@ -44,13 +44,3 @@ class Container(DeclarativeContainer):
 
     # authentication
     jwks_client: Singleton[PyJWKClient] = Singleton(PyJWKClient, uri=settings.jwks_url)
-    authenticator: Singleton[Authenticator] = Singleton(
-        Authenticator,
-        jwks_client=jwks_client,
-        user_repository=user_repository
-    )
-    oauth2: Singleton[OAuth2] = Singleton(
-        OAuth2AuthorizationCodeBearer,
-        authorizationUrl=settings.auth_url,
-        tokenUrl=settings.token_url
-    )
