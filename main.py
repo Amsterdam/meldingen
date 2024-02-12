@@ -2,7 +2,7 @@ import typer
 
 from meldingen.config import Settings
 from meldingen.containers import Container
-from meldingen.models import User
+from meldingen.models import UserInput, User
 
 app = typer.Typer()
 container = Container()
@@ -13,9 +13,8 @@ container.settings.from_dict(Settings().model_dump())
 def add_user(email: str) -> None:
     user_repository = container.user_repository()
 
-    user = User()
-    user.username = email
-    user.email = email
+    user_input = UserInput(username=email, email=email)
+    user = User.model_validate(user_input)
 
     user_repository.add(user)
 
