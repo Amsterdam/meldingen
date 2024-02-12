@@ -5,12 +5,13 @@ from jwt import PyJWKClient, decode
 from sqlalchemy.exc import NoResultFound
 from starlette.status import HTTP_401_UNAUTHORIZED
 
+from meldingen.config import settings
 from meldingen.models import User
 from meldingen.repositories import UserRepository
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
-    "http://localhost:8002/realms/meldingen/protocol/openid-connect/auth",
-    "http://localhost:8002/realms/meldingen/protocol/openid-connect/token",
+    settings.auth_url,
+    settings.token_url,
 )
 
 
