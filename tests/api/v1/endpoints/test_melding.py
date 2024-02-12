@@ -35,7 +35,6 @@ async def test_create_melding(app: FastAPI, client: AsyncClient) -> None:
     assert data.get("text") == "This is a test melding."
 
 
-# class TestMeldingList:
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "limit, offset, expected_result",
