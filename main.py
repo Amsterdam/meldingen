@@ -2,7 +2,7 @@ import typer
 
 from meldingen.config import Settings
 from meldingen.containers import Container
-from meldingen.models import UserInput, User
+from meldingen.models import User, UserInput
 
 app = typer.Typer()
 container = Container()
