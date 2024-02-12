@@ -1,8 +1,10 @@
 import pytest
 from _pytest.fixtures import SubRequest
+from fastapi import FastAPI
 
+from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import Melding
+from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
 
 
@@ -52,3 +54,12 @@ def test_meldingen(melding_repository: MeldingRepository, melding_text: str) -> 
         meldingen.append(melding)
 
     return meldingen
+
+
+async def authenticate_user_override(token: str | None = None) -> User:
+    return User(username="user@example.com", email="user@example.com")
+
+
+@pytest.fixture
+def auth_user(app: FastAPI) -> None:
+    app.dependency_overrides[authenticate_user] = authenticate_user_override

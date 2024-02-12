@@ -44,6 +44,7 @@ async def test_create_melding(app: FastAPI, client: AsyncClient) -> None:
 async def test_list_meldingen(
     app: FastAPI,
     client: AsyncClient,
+    auth_user: None,
     limit: int,
     offset: int,
     expected_result: int,
@@ -61,7 +62,7 @@ async def test_list_meldingen(
 @pytest.mark.parametrize(
     "melding_text", ["Er ligt poep op de stoep.", "Er is een matras naast de prullenbak gedumpt."], indirect=True
 )
-async def test_retrieve_melding(app: FastAPI, client: AsyncClient, test_melding: Melding) -> None:
+async def test_retrieve_melding(app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding) -> None:
     response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, melding_id=test_melding.id))
 
     assert response.status_code == HTTP_200_OK
