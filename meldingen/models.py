@@ -21,5 +21,5 @@ class UserInput(SQLModel):
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    username: str = Field(min_length=1, max_length=254, unique=True)
-    email: str = Field(min_length=5, max_length=254, unique=True)
+    username: str = Field(min_length=1, max_length=320, unique=True)
+    email: str = Field(min_length=5, max_length=320, unique=True)
