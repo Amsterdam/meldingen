@@ -3,7 +3,7 @@ from typing import Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 from meldingen.models import Melding
 
@@ -58,6 +58,17 @@ async def test_list_meldingen(
 
 
 @pytest.mark.asyncio
+async def test_list_meldingen_unauthorized(app: FastAPI, client: AsyncClient) -> None:
+    """Tests that a 401 response is given when no access token is provided through the Authorization header."""
+    response = await client.get(app.url_path_for(ROUTE_NAME_LIST))
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    data = response.json()
+    assert data.get("detail") == "Not authenticated"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "melding_text", ["Er ligt poep op de stoep.", "Er is een matras naast de prullenbak gedumpt."], indirect=True
 )
@@ -69,3 +80,14 @@ async def test_retrieve_melding(app: FastAPI, client: AsyncClient, auth_user: No
     data = response.json()
     assert data.get("id") == test_melding.id
     assert data.get("text") == test_melding.text
+
+
+@pytest.mark.asyncio
+async def test_retrieve_melding_unauthorized(app: FastAPI, client: AsyncClient, test_melding: Melding) -> None:
+    """Tests that a 401 response is given when no access token is provided through the Authorization header."""
+    response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, melding_id=test_melding.id))
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    data = response.json()
+    assert data.get("detail") == "Not authenticated"
