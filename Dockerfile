@@ -24,4 +24,4 @@ COPY . /opt/meldingen
 ENV PYTHONPATH=/opt/meldingen
 
 ENTRYPOINT ["/opt/meldingen/meldingen-entrypoint.sh"]
-CMD ["uvicorn", "main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80", "--reload"]
+CMD ["uvicorn", "meldingen.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80", "--reload"]
