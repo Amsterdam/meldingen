@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from collections.abc import Collection
 from typing import TypeVar
 
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
@@ -27,7 +28,7 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         await self._session.commit()
         await self._session.refresh(model)
 
-    async def list(self, *, limit: int | None = None, offset: int | None = None) -> list[T_co]:
+    async def list(self, *, limit: int | None = None, offset: int | None = None) -> Collection[T_co]:
         statement = select(self.get_model_type())
 
         if limit:
@@ -38,13 +39,13 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
 
         results = await self._session.execute(statement)
 
-        return list(results.all())
+        return results.scalars().all()
 
     async def retrieve(self, pk: int) -> T_co | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.id == pk)
         results = await self._session.execute(statement)
-        return results.one_or_none()
+        return results.scalars().one_or_none()
 
 
 class MeldingRepository(BaseSQLModelRepository[Melding, Melding], BaseMeldingRepository):
@@ -62,4 +63,4 @@ class UserRepository(BaseSQLModelRepository[User, User]):
         statement = select(User).where(User.email == email)
         results = await self._session.execute(statement)
 
-        return results.one()
+        return results.scalars().one()
