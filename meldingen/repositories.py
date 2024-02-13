@@ -4,7 +4,7 @@ from typing import TypeVar
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
 from sqlmodel import Session, select
 
-from meldingen.models import Melding, User, BaseDBModel
+from meldingen.models import BaseDBModel, Melding, User
 
 T = TypeVar("T", bound=BaseDBModel)
 T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
