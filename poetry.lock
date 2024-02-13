@@ -916,8 +916,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "6097037806089e29709ef04d71194751993900db"
+reference = "task/async-db-connection"
+resolved_reference = "192ae09e0d1c92bf77e3798efb4c0aa1c39a62d3"
 
 [[package]]
 name = "mergedeep"
@@ -2160,4 +2160,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "71d3ddb91b70dbf0bfb5eac83fd97f806d592967ceff4dafd8f3c4bc95243776"
+content-hash = "27c000ddad6a397ebdf37b68d9a8f20e37890d6cef3950adfd5751ee6f214faf"
