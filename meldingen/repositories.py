@@ -2,7 +2,8 @@ from abc import ABCMeta, abstractmethod
 from typing import TypeVar
 
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
-from sqlmodel import Session, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from meldingen.models import BaseDBModel, Melding, User
 
@@ -13,20 +14,20 @@ T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
 class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
     """Base repository for SQLModel based repositories."""
 
-    _session: Session
+    _session: AsyncSession
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
     @abstractmethod
     def get_model_type(self) -> type[T_co]: ...
 
-    def add(self, model: T) -> None:
+    async def add(self, model: T) -> None:
         self._session.add(model)
-        self._session.commit()
-        self._session.refresh(model)
+        await self._session.commit()
+        await self._session.refresh(model)
 
-    def list(self, *, limit: int | None = None, offset: int | None = None) -> list[T_co]:
+    async def list(self, *, limit: int | None = None, offset: int | None = None) -> list[T_co]:
         statement = select(self.get_model_type())
 
         if limit:
@@ -35,14 +36,14 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         if offset:
             statement = statement.offset(offset)
 
-        results = self._session.exec(statement)
+        results = await self._session.execute(statement)
 
         return list(results.all())
 
-    def retrieve(self, pk: int) -> T_co | None:
+    async def retrieve(self, pk: int) -> T_co | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.id == pk)
-        results = self._session.exec(statement)
+        results = await self._session.execute(statement)
         return results.one_or_none()
 
 
@@ -57,8 +58,8 @@ class UserRepository(BaseSQLModelRepository[User, User]):
     def get_model_type(self) -> type[User]:
         return User
 
-    def find_by_email(self, email: str) -> User:
+    async def find_by_email(self, email: str) -> User:
         statement = select(User).where(User.email == email)
-        results = self._session.exec(statement)
+        results = await self._session.execute(statement)
 
         return results.one()
