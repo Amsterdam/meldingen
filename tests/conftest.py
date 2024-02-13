@@ -1,18 +1,16 @@
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
-import sqlalchemy
 from asgi_lifespan import LifespanManager
 from dependency_injector import containers
 from dependency_injector.providers import Object, Resource
 from fastapi import FastAPI
 from httpx import AsyncClient
 from pytest_alembic.config import Config as PytestAlembicConfig
-from sqlalchemy import Engine
-from sqlmodel import Session
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-TEST_DATABASE_URL: str = "postgresql://meldingen:postgres@database:5432/meldingen-test"
+TEST_DATABASE_URL: str = "postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test"
 
 
 @pytest.fixture
@@ -22,33 +20,33 @@ def alembic_config() -> PytestAlembicConfig:
 
 
 @pytest.fixture
-def alembic_engine() -> Engine:
+def alembic_engine() -> AsyncEngine:
     """Override this fixture to provide pytest-alembic powered tests with a database handle."""
-    return sqlalchemy.create_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
-
-
-@pytest.fixture
-def test_database(alembic_engine: Engine) -> None:
-    from sqlmodel import SQLModel
-
-    SQLModel.metadata.drop_all(alembic_engine)
-    SQLModel.metadata.create_all(alembic_engine)
+    return create_async_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
 
 
 @pytest_asyncio.fixture
-def app(test_database: None, alembic_engine: Engine) -> FastAPI:
+async def test_database(alembic_engine: AsyncEngine) -> None:
+    from sqlmodel import SQLModel
+
+    async with alembic_engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
+        await conn.run_sync(SQLModel.metadata.create_all)
+
+
+@pytest_asyncio.fixture
+async def app(test_database: None, alembic_engine: AsyncEngine) -> FastAPI:
     from meldingen.containers import Container
     from meldingen.main import get_application
 
-    def get_database_session(engine: Engine) -> Generator[Session, None, None]:
-        session = Session(engine)
-        yield session
-        session.close()
+    async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
+        async with AsyncSession(engine) as session:
+            yield session
 
     @containers.override(Container)
     class TestContainer(containers.DeclarativeContainer):
-        database_engine: Object[Engine] = Object(alembic_engine)
-        database_session: Resource[Session] = Resource(get_database_session, engine=database_engine)
+        database_engine: Object[AsyncEngine] = Object(alembic_engine)
+        database_session: Resource[AsyncSession] = Resource(get_database_session, engine=database_engine)
 
     return get_application()
 

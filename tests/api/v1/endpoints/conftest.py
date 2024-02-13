@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 from _pytest.fixtures import SubRequest
 from fastapi import FastAPI
 
@@ -8,12 +9,12 @@ from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
 
 
-@pytest.fixture
-def melding_repository() -> MeldingRepository:
+@pytest_asyncio.fixture
+async def melding_repository() -> MeldingRepository:
     """Fixture providing a MeldingRepository instance."""
 
     container = Container()
-    melding_repository = container.melding_repository()
+    melding_repository = await container.melding_repository()
 
     return melding_repository
 
@@ -28,20 +29,20 @@ def melding_text(request: SubRequest) -> str:
         return "This is a test melding."
 
 
-@pytest.fixture
-def test_melding(melding_repository: MeldingRepository, melding_text: str) -> Melding:
+@pytest_asyncio.fixture
+async def test_melding(melding_repository: MeldingRepository, melding_text: str) -> Melding:
     """Fixture providing a single test melding instance."""
 
     melding = Melding()
     melding.text = melding_text
 
-    melding_repository.add(melding)
+    await melding_repository.add(melding)
 
     return melding
 
 
-@pytest.fixture
-def test_meldingen(melding_repository: MeldingRepository, melding_text: str) -> list[Melding]:
+@pytest_asyncio.fixture
+async def test_meldingen(melding_repository: MeldingRepository, melding_text: str) -> list[Melding]:
     """Fixture providing a list test melding instances."""
 
     meldingen = []
@@ -49,7 +50,7 @@ def test_meldingen(melding_repository: MeldingRepository, melding_text: str) -> 
         melding = Melding()
         melding.text = melding_text
 
-        melding_repository.add(melding)
+        await melding_repository.add(melding)
 
         meldingen.append(melding)
 
