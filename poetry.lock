@@ -917,7 +917,7 @@ develop = false
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "task/async-db-connection"
-resolved_reference = "16233e8f7951e7b9953c5ba1f7fdad267a50f72b"
+resolved_reference = "edd05f1ba7cd28e9fb6286612a6206afcebb32f3"
 
 [[package]]
 name = "mergedeep"
