@@ -21,7 +21,7 @@ class UnauthenticatedException(HTTPException):
 
 
 @inject
-def get_user(
+async def get_user(
     token: str,
     jwks_client: PyJWKClient = Provide["jwks_client"],
     user_repository: UserRepository = Provide["user_repository"],
@@ -34,10 +34,10 @@ def get_user(
         raise UnauthenticatedException("Invalid token")
 
     try:
-        return user_repository.find_by_email(email)
+        return await user_repository.find_by_email(email)
     except NoResultFound:
         raise UnauthenticatedException("User not found")
 
 
 async def authenticate_user(token: str = Depends(oauth2_scheme)) -> User:
-    return get_user(token)
+    return await get_user(token)
