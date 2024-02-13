@@ -15,8 +15,6 @@ class MeldingCreateInput(BaseMelding, SQLModel): ...
 class Melding(BaseMelding, BaseDBModel, table=True):
     """SQLModel for Melding."""
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-
 
 class UserInput(SQLModel):
     username: str
@@ -24,6 +22,5 @@ class UserInput(SQLModel):
 
 
 class User(BaseDBModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(min_length=1, max_length=320, unique=True)
     email: str = Field(min_length=5, max_length=320, unique=True)
