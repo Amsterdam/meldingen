@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Melding, User
-from meldingen.repositories import MeldingRepository
+from meldingen.repositories import MeldingRepository, UserRepository
 
 
 @pytest_asyncio.fixture
@@ -64,3 +64,63 @@ async def authenticate_user_override(token: str | None = None) -> User:
 @pytest.fixture
 def auth_user(app: FastAPI) -> None:
     app.dependency_overrides[authenticate_user] = authenticate_user_override
+
+
+@pytest.fixture
+def user_repository() -> UserRepository:
+    """Fixture providing a UserRepository instance."""
+
+    container = Container()
+    user_repository = container.user_repository()
+
+    return user_repository
+
+
+@pytest.fixture
+def user_username(request: SubRequest) -> str:
+    """Fixture providing a username."""
+
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return "meldingen_user"
+
+
+@pytest.fixture
+def user_email(request: SubRequest) -> str:
+    """Fixture providing a email."""
+
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return "user@example.com"
+
+
+@pytest.fixture
+def test_user(user_repository: UserRepository, user_username: str, user_email: str) -> User:
+    """Fixture providing a single test user instance."""
+
+    user = User()
+    user.username = user_username
+    user.email = user_email
+
+    user_repository.add(user)
+
+    return user
+
+
+@pytest.fixture
+def test_users(user_repository: UserRepository) -> list[User]:
+    """Fixture providing a list test user instances."""
+
+    users = []
+    for n in range(10):
+        user = User()
+        user.username = f"test_user_{n}"
+        user.email = f"test_email_{n}@example.com"
+
+        user_repository.add(user)
+
+        users.append(user)
+
+    return users
