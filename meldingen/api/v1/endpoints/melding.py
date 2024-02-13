@@ -5,8 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from meldingen_core.actions import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
 
 from meldingen.api.utils import pagination_params
+from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import Melding, MeldingCreateInput
+from meldingen.models import Melding, MeldingCreateInput, User
 
 router = APIRouter()
 
@@ -27,6 +28,7 @@ async def create_melding(
 async def list_meldingen(
     pagination: dict[str, int | None] = Depends(pagination_params),
     action: MeldingListAction = Depends(Provide(Container.melding_list_action)),
+    user: User = Depends(authenticate_user),
 ) -> Any:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -39,7 +41,9 @@ async def list_meldingen(
 @router.get("/{melding_id}", name="melding:retrieve", response_model=Melding)
 @inject
 async def retrieve_melding(
-    melding_id: int, action: MeldingRetrieveAction = Depends(Provide(Container.melding_retrieve_action))
+    melding_id: int,
+    action: MeldingRetrieveAction = Depends(Provide(Container.melding_retrieve_action)),
+    user: User = Depends(authenticate_user),
 ) -> Any:
     melding = action(pk=melding_id)
 

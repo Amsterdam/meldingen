@@ -37,8 +37,8 @@ def test_database(alembic_engine: Engine) -> None:
 
 @pytest_asyncio.fixture
 def app(test_database: None, alembic_engine: Engine) -> FastAPI:
-    from main import get_application
     from meldingen.containers import Container
+    from meldingen.main import get_application
 
     def get_database_session(engine: Engine) -> Generator[Session, None, None]:
         session = Session(engine)

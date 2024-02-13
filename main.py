@@ -1,25 +1,23 @@
-from fastapi import FastAPI
+import typer
 
-from meldingen.api.v1.api import api_router
 from meldingen.config import Settings
 from meldingen.containers import Container
+from meldingen.models import User, UserInput
+
+app = typer.Typer()
+container = Container()
+container.settings.from_dict(Settings().model_dump())
 
 
-def get_application() -> FastAPI:
-    container = Container()
-    # TODO: We are currently unable to use `from_pydantic()`, because the `dependency-injector`
-    # lacks support for pydantic v2.
-    # https://python-dependency-injector.ets-labs.org/providers/configuration.html#loading-from-a-pydantic-settings
-    container.settings.from_dict(Settings().model_dump())
+@app.command()
+def add_user(email: str) -> None:
+    user_repository = container.user_repository()
 
-    application = FastAPI(
-        debug=container.settings.get("debug"),
-        title=container.settings.get("project_name"),
-        prefix=container.settings.get("url_prefix"),
-    )
-    application.include_router(api_router)
+    user_input = UserInput(username=email, email=email)
+    user = User.model_validate(user_input)
 
-    return application
+    user_repository.add(user)
 
 
-app = get_application()
+if __name__ == "__main__":
+    app()
