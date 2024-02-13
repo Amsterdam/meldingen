@@ -18,7 +18,7 @@ async def create_melding(
     melding_input: MeldingCreateInput, action: MeldingCreateAction = Depends(Provide(Container.melding_create_action))
 ) -> Melding:
     melding = Melding.model_validate(melding_input)
-    action(melding)
+    await action(melding)
 
     return melding
 
