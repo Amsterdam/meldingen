@@ -33,7 +33,7 @@ async def list_meldingen(
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
-    meldingen = action(limit=limit, offset=offset)
+    meldingen = await action(limit=limit, offset=offset)
 
     return meldingen
 
@@ -45,7 +45,7 @@ async def retrieve_melding(
     action: MeldingRetrieveAction = Depends(Provide(Container.melding_retrieve_action)),
     user: User = Depends(authenticate_user),
 ) -> Any:
-    melding = action(pk=melding_id)
+    melding = await action(pk=melding_id)
 
     if not melding:
         raise HTTPException(status_code=404)
