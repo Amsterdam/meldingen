@@ -6,7 +6,7 @@ from meldingen_core.repositories import BaseMeldingRepository, BaseRepository, B
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from meldingen.models import BaseDBModel, Melding, User, Group
+from meldingen.models import BaseDBModel, Melding, User
 
 T = TypeVar("T", bound=BaseDBModel)
 T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
