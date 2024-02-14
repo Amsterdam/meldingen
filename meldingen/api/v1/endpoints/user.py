@@ -13,7 +13,7 @@ from meldingen.models import User, UserCreateInput
 router = APIRouter()
 
 
-@router.post("/", name="user:create")
+@router.post("/", name="user:create", status_code=201)
 @inject
 async def create_user(
     user_input: UserCreateInput,

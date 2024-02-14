@@ -3,7 +3,7 @@ from typing import Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_204_NO_CONTENT
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_204_NO_CONTENT
 
 from meldingen.models import User
 
@@ -19,7 +19,7 @@ async def test_create_user(app: FastAPI, client: AsyncClient, auth_user: None) -
         app.url_path_for(ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user@example.com"}
     )
 
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_201_CREATED
 
     data = response.json()
     assert data.get("id") == 1
