@@ -17,7 +17,7 @@ async def async_add_user(email: str) -> None:
     user_input = UserCreateInput(username=email, email=email)
     user = User.model_validate(user_input)
 
-    await user_repository.add(user)
+    await user_repository.save(user)
 
 
 @app.command()

@@ -24,7 +24,7 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
     def get_model_type(self) -> type[T_co]: ...
 
     @override
-    async def add(self, model: T) -> None:
+    async def save(self, model: T) -> None:
         self._session.add(model)
         await self._session.commit()
         await self._session.refresh(model)
