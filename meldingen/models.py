@@ -1,5 +1,3 @@
-from typing import Optional
-
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import User as BaseUser
@@ -53,8 +51,8 @@ class UserOutput(BaseModel):
 
 
 class UserPartialInput(BaseModel):
-    username: Optional[str] = None
-    email: Optional[EmailStr] = None
+    username: str | None = None
+    email: EmailStr | None = None
 
 
 user_group = Table(
