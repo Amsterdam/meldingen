@@ -36,7 +36,7 @@ async def test_melding(melding_repository: MeldingRepository, melding_text: str)
     melding = Melding()
     melding.text = melding_text
 
-    await melding_repository.add(melding)
+    await melding_repository.save(melding)
 
     return melding
 
@@ -50,7 +50,7 @@ async def test_meldingen(melding_repository: MeldingRepository, melding_text: st
         melding = Melding()
         melding.text = melding_text
 
-        await melding_repository.add(melding)
+        await melding_repository.save(melding)
 
         meldingen.append(melding)
 
@@ -104,7 +104,7 @@ async def test_user(user_repository: UserRepository, user_username: str, user_em
     user.username = user_username
     user.email = user_email
 
-    await user_repository.add(user)
+    await user_repository.save(user)
 
     return user
 
@@ -119,7 +119,7 @@ async def test_users(user_repository: UserRepository) -> list[User]:
         user.username = f"test_user_{n}"
         user.email = f"test_email_{n}@example.com"
 
-        await user_repository.add(user)
+        await user_repository.save(user)
 
         users.append(user)
 
