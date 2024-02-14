@@ -21,7 +21,7 @@ async def create_user(
     user: User = Depends(authenticate_user),
 ) -> User:
     melding = User.model_validate(user_input)
-    action(melding)
+    await action(melding)
 
     return melding
 
@@ -36,7 +36,7 @@ async def list_users(
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
-    users = action(limit=limit, offset=offset)
+    users = await action(limit=limit, offset=offset)
 
     return users
 
@@ -49,7 +49,7 @@ async def retrieve_user(
     user: User = Depends(authenticate_user),
 ) -> Any:
     try:
-        db_user = action(pk=user_id)
+        db_user = await action(pk=user_id)
     except NoResultFound:
         raise HTTPException(status_code=404)
 
@@ -67,6 +67,6 @@ async def delete_user(
         raise HTTPException(status_code=400, detail="You cannot delete your own account")
 
     try:
-        action(pk=user_id)
+        await action(pk=user_id)
     except NoResultFound:
         raise HTTPException(status_code=404)

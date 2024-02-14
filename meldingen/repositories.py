@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
 from typing import TypeVar, override
 
-from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
+from meldingen_core.repositories import BaseMeldingRepository, BaseRepository, BaseUserRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -59,7 +59,7 @@ class MeldingRepository(BaseSQLModelRepository[Melding, Melding], BaseMeldingRep
         return Melding
 
 
-class UserRepository(BaseSQLModelRepository[User, User]):
+class UserRepository(BaseSQLModelRepository[User, User], BaseUserRepository):
     @override
     def get_model_type(self) -> type[User]:
         return User
@@ -70,6 +70,8 @@ class UserRepository(BaseSQLModelRepository[User, User]):
 
         return results.scalars().one()
 
-    def delete(self, pk: int) -> None:
-        db_user = self.retrieve(pk=pk)
-        self._session.delete(db_user)
+    @override
+    async def delete(self, pk: int) -> None:
+        db_user = await self.retrieve(pk=pk)
+        await self._session.delete(db_user)
+        await self._session.commit()
