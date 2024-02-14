@@ -9,7 +9,7 @@ from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from meldingen.repositories import MeldingRepository, UserRepository
+from meldingen.repositories import MeldingRepository, UserRepository, GroupRepository
 
 
 def get_database_engine(dsn: MultiHostUrl) -> AsyncEngine:
@@ -17,7 +17,7 @@ def get_database_engine(dsn: MultiHostUrl) -> AsyncEngine:
 
 
 async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
-    async_session = async_sessionmaker(engine, class_=AsyncSession)
+    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
         yield session
 
@@ -36,6 +36,7 @@ class Container(DeclarativeContainer):
     # repositories
     melding_repository: Factory[MeldingRepository] = Factory(MeldingRepository, session=database_session)
     user_repository: Factory[UserRepository] = Factory(UserRepository, session=database_session)
+    group_repository: Factory[GroupRepository] = Factory(GroupRepository, session=database_session)
 
     # actions
     melding_create_action: Factory[MeldingCreateAction] = Factory(MeldingCreateAction, repository=melding_repository)

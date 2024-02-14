@@ -6,7 +6,7 @@ from meldingen_core.repositories import BaseMeldingRepository, BaseRepository, B
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from meldingen.models import BaseDBModel, Melding, User
+from meldingen.models import BaseDBModel, Melding, User, Group, UserGroup
 
 T = TypeVar("T", bound=BaseDBModel)
 T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
@@ -64,14 +64,27 @@ class UserRepository(BaseSQLModelRepository[User, User], BaseUserRepository):
     def get_model_type(self) -> type[User]:
         return User
 
-    async def find_by_email(self, email: str) -> User:
-        statement = select(User).where(User.email == email)
-        results = await self._session.exec(statement)
-
-        return results.one()
-
     @override
     async def delete(self, pk: int) -> None:
         db_user = await self.retrieve(pk=pk)
         await self._session.delete(db_user)
         await self._session.commit()
+
+    async def find_by_email(self, email: str) -> User:
+        statement = select(User).where(User.email == email)
+
+        results = await self._session.exec(statement)
+
+        return results.unique().one()
+
+
+class GroupRepository(BaseSQLModelRepository[Group, Group]):
+    @override
+    def get_model_type(self) -> type[Group]:
+        return Group
+
+    async def find_by_name(self, name: str) -> Group:
+        statement = select(Group).where(Group.name == name)
+        results = await self._session.exec(statement)
+
+        return results.one()

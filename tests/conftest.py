@@ -41,7 +41,7 @@ async def app(test_database: None, alembic_engine: AsyncEngine) -> FastAPI:
     from meldingen.main import get_application
 
     async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
-        async_session = async_sessionmaker(engine, class_=AsyncSession)
+        async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
         async with async_session() as session:
             yield session
 
