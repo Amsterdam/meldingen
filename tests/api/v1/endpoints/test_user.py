@@ -3,7 +3,7 @@ from typing import Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_204_NO_CONTENT
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_401_UNAUTHORIZED
 
 from meldingen.models import User
 
@@ -38,6 +38,7 @@ async def test_create_user_unauthorized(app: FastAPI, client: AsyncClient) -> No
 
     data = response.json()
     assert data.get("detail") == "Not authenticated"
+
 
 #
 @pytest.mark.asyncio
@@ -116,7 +117,9 @@ async def test_delete_user(app: FastAPI, client: AsyncClient, auth_user: None, t
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "user_username, user_email",
-    [("username #1", "user-1@example.com"), ],
+    [
+        ("username #1", "user-1@example.com"),
+    ],
     indirect=True,
 )
 async def test_delete_user_unauthorized(app: FastAPI, client: AsyncClient, test_user: User) -> None:
