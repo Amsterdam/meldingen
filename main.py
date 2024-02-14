@@ -30,6 +30,7 @@ async def async_add_group(name: str) -> None:
 
     await group_repository.save(Group(name=name))
 
+
 @app.command()
 def add_group(name: str) -> None:
     asyncio.run(async_add_group(name))

@@ -29,7 +29,9 @@ class UserGroup(SQLModel, table=True):
 class User(BaseUser, BaseDBModel, table=True):
     username: str = Field(min_length=1, max_length=320, unique=True)
     email: str = Field(min_length=5, max_length=320, unique=True)
-    groups: list["Group"] = Relationship(back_populates="users", link_model=UserGroup, sa_relationship_kwargs={"lazy": "joined"})
+    groups: list["Group"] = Relationship(
+        back_populates="users", link_model=UserGroup, sa_relationship_kwargs={"lazy": "joined"}
+    )
 
 
 class Group(BaseDBModel, table=True):

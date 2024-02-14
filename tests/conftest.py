@@ -8,7 +8,7 @@ from dependency_injector.providers import Object, Resource
 from fastapi import FastAPI
 from httpx import AsyncClient
 from pytest_alembic.config import Config as PytestAlembicConfig
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 TEST_DATABASE_URL: str = "postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test"
