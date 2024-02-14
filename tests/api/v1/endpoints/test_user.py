@@ -26,6 +26,18 @@ async def test_create_user(app: FastAPI, client: AsyncClient, auth_user: None) -
     assert data.get("email") == "user@example.com"
 
 
+@pytest.mark.asyncio
+async def test_create_user_unauthorized(app: FastAPI, client: AsyncClient) -> None:
+    """Tests that a 401 response is given when no access token is provided through the Authorization header."""
+    response = await client.post(
+        app.url_path_for(ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user@example.com"}
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    data = response.json()
+    assert data.get("detail") == "Not authenticated"
+
 #
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
