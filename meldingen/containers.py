@@ -1,5 +1,7 @@
 from typing import AsyncGenerator
 
+from async_casbin_sqlmodel_adapter import Adapter
+from casbin import AsyncEnforcer
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient
@@ -87,3 +89,9 @@ class Container(DeclarativeContainer):
 
     # authentication
     jwks_client: Singleton[PyJWKClient] = Singleton(PyJWKClient, uri=settings.jwks_url)
+
+    # authorization
+    casbin_adapter: Singleton[Adapter] = Singleton(Adapter, engine=database_engine)
+    casbin_enforcer: Singleton[AsyncEnforcer] = Singleton(
+        AsyncEnforcer, model=settings.casbin_model_path, adapter=casbin_adapter, enable_log=True
+    )
