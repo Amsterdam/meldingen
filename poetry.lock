@@ -65,6 +65,22 @@ files = [
 sniffio = "*"
 
 [[package]]
+name = "async-casbin-sqlmodel-adapter"
+version = "0.1.5"
+description = "Async SQLModel Adapter for PyCasbin"
+optional = false
+python-versions = ">=3.10,<4.0"
+files = [
+    {file = "async_casbin_sqlmodel_adapter-0.1.5-py3-none-any.whl", hash = "sha256:eecf3bb9aeaa393bc4d5861b80d99a8010f54ec369f794bad9a27478a6235c71"},
+    {file = "async_casbin_sqlmodel_adapter-0.1.5.tar.gz", hash = "sha256:b9eb0e201a55c81926250bff64d29dc410c89f393d1481e4ae5f3cf4e86be6b0"},
+]
+
+[package.dependencies]
+casbin-async-sqlalchemy-adapter = ">=1.4.0,<2.0.0"
+SQLAlchemy = {version = ">=2.0.25,<3.0.0", extras = ["asyncio", "mypy"]}
+sqlmodel = ">=0.0.14,<0.0.15"
+
+[[package]]
 name = "asyncpg"
 version = "0.29.0"
 description = "An asyncio PostgreSQL driver"
@@ -175,6 +191,35 @@ colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.7.4)", "aiohttp (>=3.7.4,!=3.9.0)"]
 jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
 uvloop = ["uvloop (>=0.15.2)"]
+
+[[package]]
+name = "casbin"
+version = "1.36.0"
+description = "An authorization library that supports access control models like ACL, RBAC, ABAC in Python"
+optional = false
+python-versions = ">=3.3"
+files = [
+    {file = "casbin-1.36.0-py3-none-any.whl", hash = "sha256:bb15d27a3d3e6d25411c954b283a509524977f94ae51af8ef3af88be20b1adb2"},
+    {file = "casbin-1.36.0.tar.gz", hash = "sha256:f43511eed6d3cd05c89c19289f9cebf899ce9e13ed4eaa9316716f8ad34ffd81"},
+]
+
+[package.dependencies]
+simpleeval = ">=0.9.11"
+
+[[package]]
+name = "casbin-async-sqlalchemy-adapter"
+version = "1.4.0"
+description = "Asynchronous SQLAlchemy Adapter for PyCasbin"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "casbin_async_sqlalchemy_adapter-1.4.0-py3-none-any.whl", hash = "sha256:f909d205d4f33803fb6650d8daca28c0d0c67af097ca1a66a9f38ec9abf7249a"},
+    {file = "casbin_async_sqlalchemy_adapter-1.4.0.tar.gz", hash = "sha256:964c95d596610849281ef9c8e696e8006224389e8a90563b2e9e1bd2bd2cf1c2"},
+]
+
+[package.dependencies]
+casbin = ">=1.34.0"
+SQLAlchemy = ">=1.4.0"
 
 [[package]]
 name = "certifi"
@@ -1017,17 +1062,18 @@ min-versions = ["babel (==2.9.0)", "click (==7.0)", "colorama (==0.4)", "ghp-imp
 
 [[package]]
 name = "mkdocs-autorefs"
-version = "0.5.0"
+version = "1.0.0"
 description = "Automatically link across pages in MkDocs."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "mkdocs_autorefs-0.5.0-py3-none-any.whl", hash = "sha256:7930fcb8ac1249f10e683967aeaddc0af49d90702af111a5e390e8b20b3d97ff"},
-    {file = "mkdocs_autorefs-0.5.0.tar.gz", hash = "sha256:9a5054a94c08d28855cfab967ada10ed5be76e2bfad642302a610b252c3274c0"},
+    {file = "mkdocs_autorefs-1.0.0-py3-none-any.whl", hash = "sha256:2b6d288f0582589d1be7c99ce4470c8e7c5077892014051ff0d4ff574a73dbe8"},
+    {file = "mkdocs_autorefs-1.0.0.tar.gz", hash = "sha256:1b20db41cade632b07b7a73dee818977b52e869c9deb438f6f20e2896ff01859"},
 ]
 
 [package.dependencies]
 Markdown = ">=3.3"
+markupsafe = ">=2.0.1"
 mkdocs = ">=1.1"
 
 [[package]]
@@ -1086,13 +1132,13 @@ files = [
 
 [[package]]
 name = "mkdocstrings"
-version = "0.24.0"
+version = "0.24.1"
 description = "Automatic documentation from sources, for MkDocs."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "mkdocstrings-0.24.0-py3-none-any.whl", hash = "sha256:f4908560c10f587326d8f5165d1908817b2e280bbf707607f601c996366a2264"},
-    {file = "mkdocstrings-0.24.0.tar.gz", hash = "sha256:222b1165be41257b494a9d29b14135d2b7ca43f38161d5b10caae03b87bd4f7e"},
+    {file = "mkdocstrings-0.24.1-py3-none-any.whl", hash = "sha256:b4206f9a2ca8a648e222d5a0ca1d36ba7dee53c88732818de183b536f9042b5d"},
+    {file = "mkdocstrings-0.24.1.tar.gz", hash = "sha256:cc83f9a1c8724fc1be3c2fa071dd73d91ce902ef6a79710249ec8d0ee1064401"},
 ]
 
 [package.dependencies]
@@ -1306,13 +1352,13 @@ files = [
 
 [[package]]
 name = "pydantic"
-version = "2.6.2"
+version = "2.6.3"
 description = "Data validation using Python type hints"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pydantic-2.6.2-py3-none-any.whl", hash = "sha256:37a5432e54b12fecaa1049c5195f3d860a10e01bdfd24f1840ef14bd0d3aeab3"},
-    {file = "pydantic-2.6.2.tar.gz", hash = "sha256:a09be1c3d28f3abe37f8a78af58284b236a92ce520105ddc91a6d29ea1176ba7"},
+    {file = "pydantic-2.6.3-py3-none-any.whl", hash = "sha256:72c6034df47f46ccdf81869fddb81aade68056003900a8724a4f160700016a2a"},
+    {file = "pydantic-2.6.3.tar.gz", hash = "sha256:e07805c4c7f5c6826e33a1d4c9d47950d7eaf34868e2690f8594d2e30241f11f"},
 ]
 
 [package.dependencies]
@@ -1812,6 +1858,17 @@ files = [
 ]
 
 [[package]]
+name = "simpleeval"
+version = "0.9.13"
+description = "A simple, safe single expression evaluator library."
+optional = false
+python-versions = "*"
+files = [
+    {file = "simpleeval-0.9.13-py2.py3-none-any.whl", hash = "sha256:22a2701a5006e4188d125d34accf2405c2c37c93f6b346f2484b6422415ae54a"},
+    {file = "simpleeval-0.9.13.tar.gz", hash = "sha256:4a30f9cc01825fe4c719c785e3762623e350c4840d5e6855c2a8496baaa65fac"},
+]
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -1893,6 +1950,7 @@ files = [
 
 [package.dependencies]
 greenlet = {version = "!=0.4.17", optional = true, markers = "platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\" or extra == \"asyncio\""}
+mypy = {version = ">=0.910", optional = true, markers = "extra == \"mypy\""}
 typing-extensions = ">=4.6.0"
 
 [package.extras]
@@ -1919,6 +1977,21 @@ postgresql-psycopg2cffi = ["psycopg2cffi"]
 postgresql-psycopgbinary = ["psycopg[binary] (>=3.0.7)"]
 pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3_binary"]
+
+[[package]]
+name = "sqlmodel"
+version = "0.0.14"
+description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "sqlmodel-0.0.14-py3-none-any.whl", hash = "sha256:accea3ff5d878e41ac439b11e78613ed61ce300cfcb860e87a2d73d4884cbee4"},
+    {file = "sqlmodel-0.0.14.tar.gz", hash = "sha256:0bff8fc94af86b44925aa813f56cf6aabdd7f156b73259f2f60692c6a64ac90e"},
+]
+
+[package.dependencies]
+pydantic = ">=1.10.13,<3.0.0"
+SQLAlchemy = ">=2.0.0,<2.1.0"
 
 [[package]]
 name = "starlette"
@@ -2290,4 +2363,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "beffbe7de601b346868414dd3fa2ed36c1ba019c9b2c87ac42f243dad350533c"
+content-hash = "4e3f754d2138f8998a669f9f8c46566b66dd22adb0943099249f6dadea73a3e5"
