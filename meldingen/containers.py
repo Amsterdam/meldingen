@@ -17,7 +17,7 @@ def get_database_engine(dsn: MultiHostUrl) -> AsyncEngine:
 
 
 async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
-    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = async_sessionmaker(engine, class_=AsyncSession)
     async with async_session() as session:
         yield session
 
