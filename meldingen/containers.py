@@ -6,7 +6,8 @@ from jwt import PyJWKClient
 from meldingen_core.actions.melding import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserListAction, UserRetrieveAction
 from pydantic_core import MultiHostUrl
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from meldingen.repositories import MeldingRepository, UserRepository
 
@@ -16,7 +17,8 @@ def get_database_engine(dsn: MultiHostUrl) -> AsyncEngine:
 
 
 async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
-    async with AsyncSession(engine) as session:
+    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with async_session() as session:
         yield session
 
 
