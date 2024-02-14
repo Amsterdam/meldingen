@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     auth_url: str
     token_url: str
 
+    # Authorization
+    casbin_model_path: str
+
 
 # Create an instance of the Settings model
 settings = Settings()
