@@ -69,3 +69,7 @@ class UserRepository(BaseSQLModelRepository[User, User]):
         results = await self._session.execute(statement)
 
         return results.scalars().one()
+
+    def delete(self, pk: int) -> None:
+        db_user = self.retrieve(pk=pk)
+        self._session.delete(db_user)

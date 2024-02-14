@@ -2,7 +2,8 @@ from typing import Any
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
-from meldingen_core.actions.user import UserCreateAction, UserListAction, UserRetrieveAction
+from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserListAction, UserRetrieveAction
+from sqlalchemy.exc import NoResultFound
 
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
@@ -47,9 +48,25 @@ async def retrieve_user(
     action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     user: User = Depends(authenticate_user),
 ) -> Any:
-    db_user = action(pk=user_id)
-
-    if not db_user:
+    try:
+        db_user = action(pk=user_id)
+    except NoResultFound:
         raise HTTPException(status_code=404)
 
     return db_user
+
+
+@router.delete("/{user_id}", name="user:delete", status_code=204)
+@inject
+async def delete_user(
+    user_id: int,
+    action: UserDeleteAction = Depends(Provide(Container.user_delete_action)),
+    user: User = Depends(authenticate_user),
+) -> None:
+    if user.id == user_id:
+        raise HTTPException(status_code=400, detail="You cannot delete your own account")
+
+    try:
+        action(pk=user_id)
+    except NoResultFound:
+        raise HTTPException(status_code=404)

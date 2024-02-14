@@ -3,13 +3,14 @@ from typing import Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_204_NO_CONTENT
 
 from meldingen.models import User
 
 ROUTE_NAME_CREATE: Final[str] = "user:create"
 ROUTE_NAME_LIST: Final[str] = "user:list"
 ROUTE_NAME_RETRIEVE: Final[str] = "user:retrieve"
+ROUTE_NAME_DELETE: Final[str] = "user:delete"
 
 
 @pytest.mark.asyncio
@@ -93,6 +94,34 @@ async def test_retrieve_user(app: FastAPI, client: AsyncClient, auth_user: None,
 async def test_retrieve_user_unauthorized(app: FastAPI, client: AsyncClient, test_user: User) -> None:
     """Tests that a 401 response is given when no access token is provided through the Authorization header."""
     response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, user_id=test_user.id))
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    data = response.json()
+    assert data.get("detail") == "Not authenticated"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "user_username, user_email",
+    [("username #1", "user-1@example.com"), ("username #2", "user-2@example.com")],
+    indirect=True,
+)
+async def test_delete_user(app: FastAPI, client: AsyncClient, auth_user: None, test_user: User) -> None:
+    response = await client.delete(app.url_path_for(ROUTE_NAME_DELETE, user_id=test_user.id))
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "user_username, user_email",
+    [("username #1", "user-1@example.com"), ],
+    indirect=True,
+)
+async def test_delete_user_unauthorized(app: FastAPI, client: AsyncClient, test_user: User) -> None:
+    """Tests that a 401 response is given when no access token is provided through the Authorization header."""
+    response = await client.delete(app.url_path_for(ROUTE_NAME_DELETE, user_id=test_user.id))
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
