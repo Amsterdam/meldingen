@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
-from typing import TypeVar
+from typing import TypeVar, override
 
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,11 +23,13 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
     @abstractmethod
     def get_model_type(self) -> type[T_co]: ...
 
+    @override
     async def add(self, model: T) -> None:
         self._session.add(model)
         await self._session.commit()
         await self._session.refresh(model)
 
+    @override
     async def list(self, *, limit: int | None = None, offset: int | None = None) -> Collection[T_co]:
         statement = select(self.get_model_type())
 
@@ -41,6 +43,7 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
 
         return results.scalars().all()
 
+    @override
     async def retrieve(self, pk: int) -> T_co | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.id == pk)
@@ -51,11 +54,13 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
 class MeldingRepository(BaseSQLModelRepository[Melding, Melding], BaseMeldingRepository):
     """Repository for Melding model."""
 
+    @override
     def get_model_type(self) -> type[Melding]:
         return Melding
 
 
 class UserRepository(BaseSQLModelRepository[User, User]):
+    @override
     def get_model_type(self) -> type[User]:
         return User
 
