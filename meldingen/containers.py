@@ -3,7 +3,8 @@ from typing import AsyncGenerator
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient
-from meldingen_core.actions import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
+from meldingen_core.actions.melding import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
+from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserListAction, UserRetrieveAction
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
@@ -23,7 +24,7 @@ class Container(DeclarativeContainer):
     """Dependency injection container."""
 
     wiring_config: WiringConfiguration = WiringConfiguration(
-        modules=["meldingen.api.v1.endpoints.melding", "meldingen.authentication"]
+        modules=["meldingen.api.v1.endpoints.melding", "meldingen.api.v1.endpoints.user", "meldingen.authentication"]
     )
 
     settings: Configuration = Configuration(strict=True)
@@ -40,6 +41,10 @@ class Container(DeclarativeContainer):
     melding_retrieve_action: Factory[MeldingRetrieveAction] = Factory(
         MeldingRetrieveAction, repository=melding_repository
     )
+    user_create_action: Factory[UserCreateAction] = Factory(UserCreateAction, repository=user_repository)
+    user_list_action: Factory[UserListAction] = Factory(UserListAction, repository=user_repository)
+    user_retrieve_action: Factory[UserRetrieveAction] = Factory(UserRetrieveAction, repository=user_repository)
+    user_delete_action: Factory[UserDeleteAction] = Factory(UserDeleteAction, repository=user_repository)
 
     # authentication
     jwks_client: Singleton[PyJWKClient] = Singleton(PyJWKClient, uri=settings.jwks_url)
