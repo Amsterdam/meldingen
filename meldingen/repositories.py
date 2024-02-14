@@ -1,13 +1,13 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from typing import TypeVar
 
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
 from sqlmodel import Session, select
 
-from meldingen.models import Melding, User
+from meldingen.models import BaseDBModel, Melding, User
 
-T = TypeVar("T")
-T_co = TypeVar("T_co", covariant=True)
+T = TypeVar("T", bound=BaseDBModel)
+T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
 
 
 class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
@@ -18,57 +18,44 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
     def __init__(self, session: Session) -> None:
         self._session = session
 
+    @abstractmethod
+    def get_model_type(self) -> type[T_co]: ...
+
+    def add(self, model: T) -> None:
+        self._session.add(model)
+        self._session.commit()
+        self._session.refresh(model)
+
+    def list(self, *, limit: int | None = None, offset: int | None = None) -> list[T_co]:
+        statement = select(self.get_model_type())
+
+        if limit:
+            statement = statement.limit(limit)
+
+        if offset:
+            statement = statement.offset(offset)
+
+        results = self._session.exec(statement)
+
+        return list(results.all())
+
+    def retrieve(self, pk: int) -> T_co | None:
+        _type = self.get_model_type()
+        statement = select(_type).where(_type.id == pk)
+        results = self._session.exec(statement)
+        return results.one_or_none()
+
 
 class MeldingRepository(BaseSQLModelRepository[Melding, Melding], BaseMeldingRepository):
     """Repository for Melding model."""
 
-    def add(self, melding: Melding) -> None:
-        self._session.add(melding)
-        self._session.commit()
-        self._session.refresh(melding)
-
-    def list(self, *, limit: int | None = None, offset: int | None = None) -> list[Melding]:
-        statement = select(Melding)
-
-        if limit:
-            statement = statement.limit(limit)
-
-        if offset:
-            statement = statement.offset(offset)
-
-        results = self._session.exec(statement)
-
-        return list(results.all())
-
-    def retrieve(self, pk: int) -> Melding | None:
-        statement = select(Melding).where(Melding.id == pk)
-        results = self._session.exec(statement)
-        return results.one_or_none()
+    def get_model_type(self) -> type[Melding]:
+        return Melding
 
 
 class UserRepository(BaseSQLModelRepository[User, User]):
-    def add(self, user: User) -> None:
-        self._session.add(user)
-        self._session.commit()
-        self._session.refresh(user)
-
-    def list(self, *, limit: int | None = None, offset: int | None = None) -> list[User]:
-        statement = select(User)
-
-        if limit:
-            statement = statement.limit(limit)
-
-        if offset:
-            statement = statement.offset(offset)
-
-        results = self._session.exec(statement)
-
-        return list(results.all())
-
-    def retrieve(self, pk: int) -> User | None:
-        statement = select(User).where(User.id == pk)
-        results = self._session.exec(statement)
-        return results.one_or_none()
+    def get_model_type(self) -> type[User]:
+        return User
 
     def find_by_email(self, email: str) -> User:
         statement = select(User).where(User.email == email)
