@@ -1,3 +1,5 @@
 main.py:0: error: Incompatible types in "await" (actual type "UserRepository", expected type "Awaitable[Any]")  [misc]
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in "await" (actual type "MeldingRepository", expected type "Awaitable[Any]")  [misc]
 tests/api/v1/endpoints/conftest.py:0: error: Returning Any from function declared to return "MeldingRepository"  [no-any-return]
+tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in "await" (actual type "UserRepository", expected type "Awaitable[Any]")  [misc]
+tests/api/v1/endpoints/conftest.py:0: error: Returning Any from function declared to return "UserRepository"  [no-any-return]
