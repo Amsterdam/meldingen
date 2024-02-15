@@ -41,14 +41,14 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
 
         results = await self._session.exec(statement)
 
-        return results.all()
+        return results.unique().all()
 
     @override
     async def retrieve(self, pk: int) -> T_co | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.id == pk)
         results = await self._session.exec(statement)
-        return results.one_or_none()
+        return results.unique().one_or_none()
 
 
 class MeldingRepository(BaseSQLModelRepository[Melding, Melding], BaseMeldingRepository):
