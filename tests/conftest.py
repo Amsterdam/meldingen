@@ -8,7 +8,8 @@ from dependency_injector.providers import Object, Resource
 from fastapi import FastAPI
 from httpx import AsyncClient
 from pytest_alembic.config import Config as PytestAlembicConfig
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 TEST_DATABASE_URL: str = "postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test"
 
@@ -40,7 +41,8 @@ async def app(test_database: None, alembic_engine: AsyncEngine) -> FastAPI:
     from meldingen.main import get_application
 
     async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
-        async with AsyncSession(engine) as session:
+        async_session = async_sessionmaker(engine, class_=AsyncSession)
+        async with async_session() as session:
             yield session
 
     @containers.override(Container)

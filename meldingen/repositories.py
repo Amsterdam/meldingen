@@ -3,8 +3,8 @@ from collections.abc import Collection
 from typing import TypeVar, override
 
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository, BaseUserRepository
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from meldingen.models import BaseDBModel, Melding, User
 
@@ -39,16 +39,16 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         if offset:
             statement = statement.offset(offset)
 
-        results = await self._session.execute(statement)
+        results = await self._session.exec(statement)
 
-        return results.scalars().all()
+        return results.all()
 
     @override
     async def retrieve(self, pk: int) -> T_co | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.id == pk)
-        results = await self._session.execute(statement)
-        return results.scalars().one_or_none()
+        results = await self._session.exec(statement)
+        return results.one_or_none()
 
 
 class MeldingRepository(BaseSQLModelRepository[Melding, Melding], BaseMeldingRepository):
@@ -66,9 +66,9 @@ class UserRepository(BaseSQLModelRepository[User, User], BaseUserRepository):
 
     async def find_by_email(self, email: str) -> User:
         statement = select(User).where(User.email == email)
-        results = await self._session.execute(statement)
+        results = await self._session.exec(statement)
 
-        return results.scalars().one()
+        return results.one()
 
     @override
     async def delete(self, pk: int) -> None:
