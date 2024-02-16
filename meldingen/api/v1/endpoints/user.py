@@ -1,13 +1,12 @@
-from casbin import AsyncEnforcer
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserUpdateAction
 from sqlalchemy.exc import NoResultFound
-from starlette.status import HTTP_403_FORBIDDEN
 
 from meldingen.actions import UserListAction, UserRetrieveAction
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
+from meldingen.authorization import Authorizer
 from meldingen.containers import Container
 from meldingen.models import User, UserInput, UserOutput, UserPartialInput
 
@@ -20,16 +19,9 @@ async def create_user(
     user_input: UserInput,
     action: UserCreateAction = Depends(Provide(Container.user_create_action)),
     user: User = Depends(authenticate_user),
-    enforcer: AsyncEnforcer = Depends(Provide(Container.casbin_enforcer)),
+    authorize: Authorizer = Depends(Provide(Container.authorizer)),
 ) -> UserOutput:
-    authorized = False
-    for group in user.groups:
-        if enforcer.enforce(group.name, "user", "create"):
-            authorized = True
-            break
-
-    if not authorized:
-        raise HTTPException(HTTP_403_FORBIDDEN)
+    await authorize(user, "user", "create")
 
     db_user = User(**user_input.model_dump())
     await action(db_user)
@@ -45,7 +37,10 @@ async def list_users(
     pagination: dict[str, int | None] = Depends(pagination_params),
     action: UserListAction = Depends(Provide(Container.user_list_action)),
     user: User = Depends(authenticate_user),
+    authorize: Authorizer = Depends(Provide(Container.authorizer)),
 ) -> list[UserOutput]:
+    await authorize(user, "user", "list")
+
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
@@ -64,7 +59,10 @@ async def retrieve_user(
     user_id: int,
     action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     user: User = Depends(authenticate_user),
+    authorize: Authorizer = Depends(Provide(Container.authorizer)),
 ) -> UserOutput:
+    await authorize(user, "user", "retrieve")
+
     db_user = await action(pk=user_id)
     if not db_user:
         raise HTTPException(status_code=404)
@@ -78,7 +76,10 @@ async def delete_user(
     user_id: int,
     action: UserDeleteAction = Depends(Provide(Container.user_delete_action)),
     user: User = Depends(authenticate_user),
+    authorize: Authorizer = Depends(Provide(Container.authorizer)),
 ) -> None:
+    await authorize(user, "user", "delete")
+
     if user.id == user_id:
         raise HTTPException(status_code=400, detail="You cannot delete your own account")
 
@@ -96,7 +97,10 @@ async def update_user(
     retrieve_action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     update_action: UserUpdateAction = Depends(Provide(Container.user_create_action)),
     user: User = Depends(authenticate_user),
+    authorize: Authorizer = Depends(Provide(Container.authorizer)),
 ) -> UserOutput:
+    await authorize(user, "user", "update")
+
     db_user = await retrieve_action(pk=user_id)
     if not db_user:
         raise HTTPException(status_code=404)
