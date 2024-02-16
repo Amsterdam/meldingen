@@ -14,7 +14,7 @@ from sqlalchemy.exc import NoResultFound
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import User, UserInput
+from meldingen.models import User, UserInput, UserPartialInput
 
 router = APIRouter()
 
@@ -77,11 +77,11 @@ async def delete_user(
         raise HTTPException(status_code=404)
 
 
-@router.put("/{user_id}", name="user:update", response_model=User)
+@router.patch("/{user_id}", name="user:update", response_model=User)
 @inject
 async def update_user(
     user_id: int,
-    user_input: UserInput,
+    user_input: UserPartialInput,
     retrieve_action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     update_action: UserUpdateAction = Depends(Provide(Container.user_create_action)),
     user: User = Depends(authenticate_user),

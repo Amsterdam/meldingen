@@ -21,6 +21,11 @@ class UserInput(BaseUser, SQLModel):
     email: EmailStr
 
 
+class UserPartialInput(BaseUser, SQLModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+
 class UserGroup(SQLModel, table=True):
     user_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True)
     group_id: int | None = Field(default=None, foreign_key="group.id", primary_key=True)
