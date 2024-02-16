@@ -2,6 +2,7 @@ import asyncio
 
 import typer
 
+from async_casbin_sqlmodel_adapter.models import CasbinRule
 from meldingen.config import Settings
 from meldingen.containers import Container
 from meldingen.models import Group, User, UserInput
@@ -51,6 +52,22 @@ async def async_add_user_to_group(email: str, group_name: str) -> None:
 @app.command()
 def add_user_to_group(email: str, group_name: str) -> None:
     asyncio.run(async_add_user_to_group(email, group_name))
+
+
+async def async_add_casbin_rules() -> None:
+    db_session = await container.database_session()
+    db_session.add(CasbinRule(ptype="p", v0="admins", v1="user", v2="create"))
+    db_session.add(CasbinRule(ptype="p", v0="admins", v1="user", v2="list"))
+    db_session.add(CasbinRule(ptype="p", v0="admins", v1="user", v2="retrieve"))
+    db_session.add(CasbinRule(ptype="p", v0="admins", v1="user", v2="update"))
+    db_session.add(CasbinRule(ptype="p", v0="admins", v1="user", v2="delete"))
+
+    await db_session.commit()
+
+
+@app.command()
+def add_casbin_rules() -> None:
+    asyncio.run(async_add_casbin_rules())
 
 
 if __name__ == "__main__":
