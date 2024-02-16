@@ -1,8 +1,8 @@
 import asyncio
 
 import typer
-
 from async_casbin_sqlmodel_adapter.models import CasbinRule
+
 from meldingen.config import Settings
 from meldingen.containers import Container
 from meldingen.models import Group, User, UserInput
