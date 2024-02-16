@@ -1,7 +1,9 @@
+from casbin import AsyncEnforcer
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserUpdateAction
 from sqlalchemy.exc import NoResultFound
+from starlette.status import HTTP_403_FORBIDDEN
 
 from meldingen.actions import UserListAction, UserRetrieveAction
 from meldingen.api.utils import pagination_params
@@ -18,7 +20,17 @@ async def create_user(
     user_input: UserInput,
     action: UserCreateAction = Depends(Provide(Container.user_create_action)),
     user: User = Depends(authenticate_user),
+    enforcer: AsyncEnforcer = Depends(Provide(Container.casbin_enforcer)),
 ) -> UserOutput:
+    authorized = False
+    for group in user.groups:
+        if enforcer.enforce(group.name, "user", "create"):
+            authorized = True
+            break
+
+    if not authorized:
+        raise HTTPException(HTTP_403_FORBIDDEN)
+
     db_user = User(**user_input.model_dump())
     await action(db_user)
 
