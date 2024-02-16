@@ -17,7 +17,7 @@ class Melding(BaseMelding, BaseDBModel, table=True):
     """SQLModel for Melding."""
 
 
-class UserCreateInput(BaseUser, SQLModel):
+class UserInput(BaseUser, SQLModel):
     email: EmailStr
 
 
