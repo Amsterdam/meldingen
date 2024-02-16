@@ -21,7 +21,7 @@ class UserInput(BaseUser, SQLModel):
     email: EmailStr
 
 
-class UserPartialInput(BaseUser, SQLModel):
+class UserPartialInput(SQLModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
 
