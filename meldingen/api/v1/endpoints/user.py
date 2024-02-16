@@ -90,7 +90,7 @@ async def update_user(
     if not db_user:
         raise HTTPException(status_code=404)
 
-    user_data = user_input.dict(exclude_unset=True)
+    user_data = user_input.model_dump(exclude_unset=True)
     for key, value in user_data.items():
         setattr(db_user, key, value)
 
