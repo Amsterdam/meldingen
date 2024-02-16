@@ -36,6 +36,13 @@ async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSessi
         yield session
 
 
+async def get_casbin_enforcer(model_path: str, adapter: Adapter, enable_log: bool = True) -> AsyncEnforcer:
+    casbin_enforcer = AsyncEnforcer(model_path, adapter, enable_log)
+    await casbin_enforcer.load_policy()
+
+    return casbin_enforcer
+
+
 class Container(DeclarativeContainer):
     """Dependency injection container."""
 
@@ -93,5 +100,5 @@ class Container(DeclarativeContainer):
     # authorization
     casbin_adapter: Singleton[Adapter] = Singleton(Adapter, engine=database_engine)
     casbin_enforcer: Singleton[AsyncEnforcer] = Singleton(
-        AsyncEnforcer, model=settings.casbin_model_path, adapter=casbin_adapter, enable_log=True
+        get_casbin_enforcer, model_path=settings.casbin_model_path, adapter=casbin_adapter, enable_log=True
     )
