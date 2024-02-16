@@ -23,6 +23,11 @@ from meldingen.actions import (
     UserListAction,
     UserRetrieveAction,
 )
+from pydantic_core import MultiHostUrl
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from meldingen.authorization import Authorizer
 from meldingen.repositories import ClassificationRepository, GroupRepository, MeldingRepository, UserRepository
 
 
@@ -102,3 +107,4 @@ class Container(DeclarativeContainer):
     casbin_enforcer: Singleton[AsyncEnforcer] = Singleton(
         get_casbin_enforcer, model_path=settings.casbin_model_path, adapter=casbin_adapter, enable_log=True
     )
+    authorizer: Singleton[Authorizer] = Singleton(Authorizer, enforcer=casbin_enforcer)
