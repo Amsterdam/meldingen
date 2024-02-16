@@ -17,8 +17,13 @@ class Melding(BaseMelding, BaseDBModel, table=True):
     """SQLModel for Melding."""
 
 
-class UserCreateInput(BaseUser, SQLModel):
+class UserInput(BaseUser, SQLModel):
     email: EmailStr
+
+
+class UserPartialInput(SQLModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 
 class UserGroup(SQLModel, table=True):

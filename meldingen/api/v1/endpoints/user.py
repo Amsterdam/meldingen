@@ -2,13 +2,19 @@ from typing import Any
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
-from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserListAction, UserRetrieveAction
+from meldingen_core.actions.user import (
+    UserCreateAction,
+    UserDeleteAction,
+    UserListAction,
+    UserRetrieveAction,
+    UserUpdateAction,
+)
 from sqlalchemy.exc import NoResultFound
 
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import User, UserCreateInput
+from meldingen.models import User, UserInput, UserPartialInput
 
 router = APIRouter()
 
@@ -16,7 +22,7 @@ router = APIRouter()
 @router.post("/", name="user:create", status_code=201)
 @inject
 async def create_user(
-    user_input: UserCreateInput,
+    user_input: UserInput,
     action: UserCreateAction = Depends(Provide(Container.user_create_action)),
     user: User = Depends(authenticate_user),
 ) -> User:
@@ -48,9 +54,8 @@ async def retrieve_user(
     action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     user: User = Depends(authenticate_user),
 ) -> Any:
-    try:
-        db_user = await action(pk=user_id)
-    except NoResultFound:
+    db_user = await action(pk=user_id)
+    if not db_user:
         raise HTTPException(status_code=404)
 
     return db_user
@@ -70,3 +75,25 @@ async def delete_user(
         await action(pk=user_id)
     except NoResultFound:
         raise HTTPException(status_code=404)
+
+
+@router.patch("/{user_id}", name="user:update", response_model=User)
+@inject
+async def update_user(
+    user_id: int,
+    user_input: UserPartialInput,
+    retrieve_action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
+    update_action: UserUpdateAction = Depends(Provide(Container.user_create_action)),
+    user: User = Depends(authenticate_user),
+) -> Any:
+    db_user = await retrieve_action(pk=user_id)
+    if not db_user:
+        raise HTTPException(status_code=404)
+
+    user_data = user_input.model_dump(exclude_unset=True)
+    for key, value in user_data.items():
+        setattr(db_user, key, value)
+
+    await update_action(db_user)
+
+    return db_user
