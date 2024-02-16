@@ -3,7 +3,14 @@ from typing import Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_401_UNAUTHORIZED
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+)
 
 from meldingen.models import User
 
@@ -11,6 +18,7 @@ ROUTE_NAME_CREATE: Final[str] = "user:create"
 ROUTE_NAME_LIST: Final[str] = "user:list"
 ROUTE_NAME_RETRIEVE: Final[str] = "user:retrieve"
 ROUTE_NAME_DELETE: Final[str] = "user:delete"
+ROUTE_NAME_UPDATE: Final[str] = "user:update"
 
 
 @pytest.mark.asyncio
@@ -145,7 +153,7 @@ async def test_delete_user_unauthorized(app: FastAPI, client: AsyncClient, test_
 async def test_update_user(
     app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, new_data: dict[str, str]
 ) -> None:
-    response = await client.patch(app.url_path_for(ROUTE_NAME_DELETE, user_id=test_user.id), json=new_data)
+    response = await client.patch(app.url_path_for(ROUTE_NAME_UPDATE, user_id=test_user.id), json=new_data)
 
     assert response.status_code == HTTP_200_OK
 
@@ -153,6 +161,32 @@ async def test_update_user(
 
     for key, value in new_data.items():
         assert data.get(key) == value
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "invalid_data",
+    [
+        ({"username": 1234}),
+        ({"email": "not an email"}),
+        ({"username": ["user", 1], "email": True}),
+    ],
+)
+async def test_update_user_invalid_data(
+    app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, invalid_data: dict[str, str]
+) -> None:
+    response = await client.patch(app.url_path_for(ROUTE_NAME_UPDATE, user_id=test_user.id), json=invalid_data)
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+
+@pytest.mark.asyncio
+async def test_update_non_existing_user(app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+    response = await client.patch(
+        app.url_path_for(ROUTE_NAME_UPDATE, user_id=999), json={"username": "test", "email": "test@example.com"}
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
 
 
 @pytest.mark.asyncio
@@ -168,7 +202,7 @@ async def test_update_user_unauthorized(
 ) -> None:
     """Tests that a 401 response is given when no access token is provided through the Authorization header."""
     response = await client.patch(
-        app.url_path_for(ROUTE_NAME_DELETE, user_id=test_user.id), json={"username": new_username, "email": new_email}
+        app.url_path_for(ROUTE_NAME_UPDATE, user_id=test_user.id), json={"username": new_username, "email": new_email}
     )
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
