@@ -145,9 +145,7 @@ async def test_delete_user_unauthorized(app: FastAPI, client: AsyncClient, test_
 async def test_update_user(
     app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, new_data: dict[str, str]
 ) -> None:
-    response = await client.patch(
-        app.url_path_for(ROUTE_NAME_DELETE, user_id=test_user.id), json=new_data
-    )
+    response = await client.patch(app.url_path_for(ROUTE_NAME_DELETE, user_id=test_user.id), json=new_data)
 
     assert response.status_code == HTTP_200_OK
 
