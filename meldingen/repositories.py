@@ -50,6 +50,12 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         results = await self._session.exec(statement)
         return results.unique().one_or_none()
 
+    @override
+    async def delete(self, pk: int) -> None:
+        db_user = await self.retrieve(pk=pk)
+        await self._session.delete(db_user)
+        await self._session.commit()
+
 
 class MeldingRepository(BaseSQLModelRepository[Melding, Melding], BaseMeldingRepository):
     """Repository for Melding model."""
@@ -63,12 +69,6 @@ class UserRepository(BaseSQLModelRepository[User, User], BaseUserRepository):
     @override
     def get_model_type(self) -> type[User]:
         return User
-
-    @override
-    async def delete(self, pk: int) -> None:
-        db_user = await self.retrieve(pk=pk)
-        await self._session.delete(db_user)
-        await self._session.commit()
 
     async def find_by_email(self, email: str) -> User:
         statement = select(User).where(User.email == email)
