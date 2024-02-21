@@ -1,5 +1,6 @@
 from typing import Optional
 
+from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import User as BaseUser
 from pydantic import EmailStr
@@ -10,11 +11,18 @@ class BaseDBModel(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
 
 
-class MeldingCreateInput(BaseMelding, SQLModel): ...
+class Classification(BaseClassification, BaseDBModel, table=True): ...
+
+
+class MeldingCreateInput(SQLModel):
+    text: str
 
 
 class Melding(BaseMelding, BaseDBModel, table=True):
     """SQLModel for Melding."""
+
+    classification_id: int | None = Field(default=None, foreign_key="classification.id")
+    classification: Classification = Relationship()
 
 
 class UserInput(BaseUser, SQLModel):
