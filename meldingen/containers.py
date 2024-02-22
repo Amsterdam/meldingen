@@ -12,8 +12,7 @@ from meldingen_core.actions.user import (
     UserUpdateAction,
 )
 from pydantic_core import MultiHostUrl
-from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.repositories import GroupRepository, MeldingRepository, UserRepository
 
