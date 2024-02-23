@@ -31,6 +31,7 @@ def alembic_engine() -> AsyncEngine:
 async def test_database(alembic_engine: AsyncEngine) -> None:
     async with alembic_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
+    async with alembic_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.create_all)
 
 
