@@ -7,6 +7,7 @@ from dependency_injector import containers
 from dependency_injector.providers import Object, Resource
 from fastapi import FastAPI
 from httpx import AsyncClient
+from meldingen.models import BaseDBModel
 from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -28,11 +29,9 @@ def alembic_engine() -> AsyncEngine:
 
 @pytest_asyncio.fixture
 async def test_database(alembic_engine: AsyncEngine) -> None:
-    from sqlmodel import SQLModel
-
     async with alembic_engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.drop_all)
-        await conn.run_sync(SQLModel.metadata.create_all)
+        await conn.run_sync(BaseDBModel.metadata.drop_all)
+        await conn.run_sync(BaseDBModel.metadata.create_all)
 
 
 @pytest_asyncio.fixture
