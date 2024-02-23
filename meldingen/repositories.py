@@ -3,8 +3,8 @@ from collections.abc import Collection
 from typing import TypeVar, override
 
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository, BaseUserRepository
-from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from meldingen.models import BaseDBModel, Group, Melding, User
 
@@ -39,16 +39,16 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         if offset:
             statement = statement.offset(offset)
 
-        results = await self._session.exec(statement)
+        results = await self._session.execute(statement)
 
-        return results.unique().all()
+        return results.scalars().unique().all()
 
     @override
     async def retrieve(self, pk: int) -> T_co | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.id == pk)
-        results = await self._session.exec(statement)
-        return results.unique().one_or_none()
+        results = await self._session.execute(statement)
+        return results.scalars().unique().one_or_none()
 
     @override
     async def delete(self, pk: int) -> None:
@@ -73,9 +73,9 @@ class UserRepository(BaseSQLModelRepository[User, User], BaseUserRepository):
     async def find_by_email(self, email: str) -> User:
         statement = select(User).where(User.email == email)
 
-        results = await self._session.exec(statement)
+        results = await self._session.execute(statement)
 
-        return results.unique().one()
+        return results.scalars().unique().one()
 
 
 class GroupRepository(BaseSQLModelRepository[Group, Group]):
@@ -85,6 +85,6 @@ class GroupRepository(BaseSQLModelRepository[Group, Group]):
 
     async def find_by_name(self, name: str) -> Group:
         statement = select(Group).where(Group.name == name)
-        results = await self._session.exec(statement)
+        results = await self._session.execute(statement)
 
-        return results.one()
+        return results.scalars().one()
