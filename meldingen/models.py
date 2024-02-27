@@ -67,4 +67,4 @@ class User(BaseDBModel, BaseUser):
 
 class Group(BaseDBModel):
     name: Mapped[str] = mapped_column(unique=True)
-    users: Mapped[list[User]] = relationship(secondary=user_group, back_populates="groups")
+    users: Mapped[list[User]] = relationship(secondary=user_group, back_populates="groups", default_factory=list)
