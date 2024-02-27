@@ -7,7 +7,7 @@ from meldingen_core.actions.melding import MeldingCreateAction, MeldingListActio
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import Melding, MeldingCreateInput, User, MeldingOutput
+from meldingen.models import Melding, MeldingCreateInput, MeldingOutput, User
 
 router = APIRouter()
 
