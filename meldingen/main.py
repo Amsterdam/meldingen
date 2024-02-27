@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from starlette.requests import Request
+from starlette.responses import Response
 
 from meldingen.api.v1.api import api_router
 from meldingen.config import Settings
@@ -17,9 +19,25 @@ def get_application() -> FastAPI:
         title=container.settings.get("project_name"),
         prefix=container.settings.get("url_prefix"),
     )
+    application.container = container
     application.include_router(api_router)
 
     return application
 
 
 app = get_application()
+
+
+@app.middleware("http")
+async def handle_resources(request: Request, call_next) -> Response:
+    """Initialize dependency injection container resources before handling request
+    and close them after handling the request.
+    We need to do this in order for the resource dependencies to get "refreshed" every request."""
+
+    await app.container.init_resources()
+
+    response = await call_next(request)
+
+    await app.container.shutdown_resources()
+
+    return response
