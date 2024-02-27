@@ -1921,25 +1921,6 @@ pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
-name = "sqlmodel"
-version = "0"
-description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
-optional = false
-python-versions = "^3.7"
-files = []
-develop = false
-
-[package.dependencies]
-pydantic = ">=1.10.13,<3.0.0"
-SQLAlchemy = ">=2.0.0,<2.1.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/4c0n/sqlmodel.git"
-reference = "bug/relationship-property-overriding"
-resolved_reference = "dfe2ad0e6ed3be398c059f01d7868ffee84fad19"
-
-[[package]]
 name = "starlette"
 version = "0.36.3"
 description = "The little ASGI library that shines."
@@ -2309,4 +2290,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "e8386a9890b22b45c63119082ddf7ceec7d8c08e891cd14b2daa70f6ee72731a"
+content-hash = "02993a4c2c06d9224d24bc9fc81da883de31e74e31c17c7f7ce041d26871d313"
