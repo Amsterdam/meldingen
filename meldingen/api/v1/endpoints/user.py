@@ -14,7 +14,7 @@ from sqlalchemy.exc import NoResultFound
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import User, UserInput, UserPartialInput
+from meldingen.models import User, UserInput, UserOutput, UserPartialInput
 
 router = APIRouter()
 
@@ -25,40 +25,46 @@ async def create_user(
     user_input: UserInput,
     action: UserCreateAction = Depends(Provide(Container.user_create_action)),
     user: User = Depends(authenticate_user),
-) -> User:
-    melding = User.model_validate(user_input)
-    await action(melding)
+) -> UserOutput:
+    db_user = User(**user_input.model_dump())
+    await action(db_user)
 
-    return melding
+    output = UserOutput(id=db_user.id, email=db_user.email, username=db_user.username)
+
+    return output
 
 
-@router.get("/", name="user:list", response_model=list[User])
+@router.get("/", name="user:list")
 @inject
 async def list_users(
     pagination: dict[str, int | None] = Depends(pagination_params),
     action: UserListAction = Depends(Provide(Container.user_list_action)),
-    user: User = Depends(authenticate_user),
-) -> Any:
+    db_user: User = Depends(authenticate_user),
+) -> list[UserOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
     users = await action(limit=limit, offset=offset)
 
-    return users
+    output = []
+    for db_user in users:
+        output.append(UserOutput(id=db_user.id, email=db_user.email, username=db_user.username))
+
+    return output
 
 
-@router.get("/{user_id}", name="user:retrieve", response_model=User)
+@router.get("/{user_id}", name="user:retrieve")
 @inject
 async def retrieve_user(
     user_id: int,
     action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     user: User = Depends(authenticate_user),
-) -> Any:
+) -> UserOutput:
     db_user = await action(pk=user_id)
     if not db_user:
         raise HTTPException(status_code=404)
 
-    return db_user
+    return UserOutput(id=db_user.id, username=db_user.username, email=db_user.email)
 
 
 @router.delete("/{user_id}", name="user:delete", status_code=204)
@@ -77,7 +83,7 @@ async def delete_user(
         raise HTTPException(status_code=404)
 
 
-@router.patch("/{user_id}", name="user:update", response_model=User)
+@router.patch("/{user_id}", name="user:update")
 @inject
 async def update_user(
     user_id: int,
@@ -85,7 +91,7 @@ async def update_user(
     retrieve_action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     update_action: UserUpdateAction = Depends(Provide(Container.user_create_action)),
     user: User = Depends(authenticate_user),
-) -> Any:
+) -> UserOutput:
     db_user = await retrieve_action(pk=user_id)
     if not db_user:
         raise HTTPException(status_code=404)
@@ -96,4 +102,4 @@ async def update_user(
 
     await update_action(db_user)
 
-    return db_user
+    return UserOutput(id=db_user.id, username=db_user.username, email=db_user.email)
