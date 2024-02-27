@@ -33,8 +33,7 @@ def melding_text(request: SubRequest) -> str:
 async def test_melding(melding_repository: MeldingRepository, melding_text: str) -> Melding:
     """Fixture providing a single test melding instance."""
 
-    melding = Melding()
-    melding.text = melding_text
+    melding = Melding(text=melding_text)
 
     await melding_repository.save(melding)
 
@@ -47,8 +46,7 @@ async def test_meldingen(melding_repository: MeldingRepository, melding_text: st
 
     meldingen = []
     for _ in range(10):
-        melding = Melding()
-        melding.text = melding_text
+        melding = Melding(text=melding_text)
 
         await melding_repository.save(melding)
 
