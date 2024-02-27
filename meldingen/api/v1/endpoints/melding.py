@@ -2,8 +2,9 @@ from typing import Any
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
-from meldingen_core.actions.melding import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
+from meldingen_core.actions.melding import MeldingCreateAction
 
+from meldingen.actions import MeldingListAction, MeldingRetrieveAction
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container

@@ -1,16 +1,9 @@
-from typing import Any
-
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
-from meldingen_core.actions.user import (
-    UserCreateAction,
-    UserDeleteAction,
-    UserListAction,
-    UserRetrieveAction,
-    UserUpdateAction,
-)
+from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserUpdateAction
 from sqlalchemy.exc import NoResultFound
 
+from meldingen.actions import UserListAction, UserRetrieveAction
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -39,7 +32,7 @@ async def create_user(
 async def list_users(
     pagination: dict[str, int | None] = Depends(pagination_params),
     action: UserListAction = Depends(Provide(Container.user_list_action)),
-    db_user: User = Depends(authenticate_user),
+    user: User = Depends(authenticate_user),
 ) -> list[UserOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0

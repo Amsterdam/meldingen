@@ -3,17 +3,12 @@ from typing import AsyncGenerator
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient
-from meldingen_core.actions.melding import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
-from meldingen_core.actions.user import (
-    UserCreateAction,
-    UserDeleteAction,
-    UserListAction,
-    UserRetrieveAction,
-    UserUpdateAction,
-)
+from meldingen_core.actions.melding import MeldingCreateAction
+from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserUpdateAction
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
+from meldingen.actions import MeldingListAction, MeldingRetrieveAction, UserListAction, UserRetrieveAction
 from meldingen.repositories import GroupRepository, MeldingRepository, UserRepository
 
 
