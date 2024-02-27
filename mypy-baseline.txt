@@ -1,3 +1,7 @@
+meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Melding" defined the type as "str")  [assignment]
+meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Classification | None]", base class "Melding" defined the type as "meldingen_core.models.Classification | None")  [assignment]
+meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "User" defined the type as "str")  [assignment]
+meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "User" defined the type as "str")  [assignment]
 main.py:0: error: Incompatible types in "await" (actual type "UserRepository", expected type "Awaitable[Any]")  [misc]
 main.py:0: error: Incompatible types in "await" (actual type "GroupRepository", expected type "Awaitable[Any]")  [misc]
 main.py:0: error: Incompatible types in "await" (actual type "UserRepository", expected type "Awaitable[Any]")  [misc]
