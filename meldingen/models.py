@@ -23,6 +23,11 @@ class MeldingCreateInput(BaseModel):
     text: str
 
 
+class MeldingOutput(BaseModel):
+    id: int
+    text: str
+
+
 class Melding(BaseDBModel, BaseMelding):
     text: Mapped[str] = mapped_column(String)
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
