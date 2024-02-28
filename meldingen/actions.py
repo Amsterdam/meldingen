@@ -1,0 +1,18 @@
+from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
+from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
+from meldingen_core.actions.user import UserListAction as BaseUserListAction
+from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
+
+from meldingen.models import Melding, User
+
+
+class UserListAction(BaseUserListAction[User, User]): ...
+
+
+class UserRetrieveAction(BaseUserRetrieveAction[User, User]): ...
+
+
+class MeldingListAction(BaseMeldingListAction[Melding, Melding]): ...
+
+
+class MeldingRetrieveAction(BaseMeldingRetrieveAction[Melding, Melding]): ...

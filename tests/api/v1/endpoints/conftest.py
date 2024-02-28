@@ -33,8 +33,7 @@ def melding_text(request: SubRequest) -> str:
 async def test_melding(melding_repository: MeldingRepository, melding_text: str) -> Melding:
     """Fixture providing a single test melding instance."""
 
-    melding = Melding()
-    melding.text = melding_text
+    melding = Melding(text=melding_text)
 
     await melding_repository.save(melding)
 
@@ -47,8 +46,7 @@ async def test_meldingen(melding_repository: MeldingRepository, melding_text: st
 
     meldingen = []
     for _ in range(10):
-        melding = Melding()
-        melding.text = melding_text
+        melding = Melding(text=melding_text)
 
         await melding_repository.save(melding)
 
@@ -100,9 +98,7 @@ def user_email(request: SubRequest) -> str:
 async def test_user(user_repository: UserRepository, user_username: str, user_email: str) -> User:
     """Fixture providing a single test user instance."""
 
-    user = User()
-    user.username = user_username
-    user.email = user_email
+    user = User(username=user_username, email=user_email)
 
     await user_repository.save(user)
 
@@ -115,9 +111,7 @@ async def test_users(user_repository: UserRepository) -> list[User]:
 
     users = []
     for n in range(10):
-        user = User()
-        user.username = f"test_user_{n}"
-        user.email = f"test_email_{n}@example.com"
+        user = User(username=f"test_user_{n}", email=f"test_email_{n}@example.com")
 
         await user_repository.save(user)
 

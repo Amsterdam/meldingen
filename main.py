@@ -15,7 +15,7 @@ async def async_add_user(email: str) -> None:
     user_repository = await container.user_repository()
 
     user_input = UserInput(username=email, email=email)
-    user = User.model_validate(user_input)
+    user = User(**user_input.model_dump())
 
     await user_repository.save(user)
 

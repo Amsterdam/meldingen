@@ -2,12 +2,13 @@ from typing import Any
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
-from meldingen_core.actions.melding import MeldingCreateAction, MeldingListAction, MeldingRetrieveAction
+from meldingen_core.actions.melding import MeldingCreateAction
 
+from meldingen.actions import MeldingListAction, MeldingRetrieveAction
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import Melding, MeldingCreateInput, User
+from meldingen.models import Melding, MeldingCreateInput, MeldingOutput, User
 
 router = APIRouter()
 
@@ -16,38 +17,43 @@ router = APIRouter()
 @inject
 async def create_melding(
     melding_input: MeldingCreateInput, action: MeldingCreateAction = Depends(Provide(Container.melding_create_action))
-) -> Melding:
-    melding = Melding.model_validate(melding_input)
+) -> MeldingOutput:
+    melding = Melding(**melding_input.model_dump())
     await action(melding)
 
-    return melding
+    output = MeldingOutput(id=melding.id, text=melding.text)
+
+    return output
 
 
-@router.get("/", name="melding:list", response_model=list[Melding])
+@router.get("/", name="melding:list")
 @inject
 async def list_meldingen(
     pagination: dict[str, int | None] = Depends(pagination_params),
     action: MeldingListAction = Depends(Provide(Container.melding_list_action)),
     user: User = Depends(authenticate_user),
-) -> Any:
+) -> list[MeldingOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
     meldingen = await action(limit=limit, offset=offset)
+    output = []
+    for melding in meldingen:
+        output.append(MeldingOutput(id=melding.id, text=melding.text))
 
-    return meldingen
+    return output
 
 
-@router.get("/{melding_id}", name="melding:retrieve", response_model=Melding)
+@router.get("/{melding_id}", name="melding:retrieve")
 @inject
 async def retrieve_melding(
     melding_id: int,
     action: MeldingRetrieveAction = Depends(Provide(Container.melding_retrieve_action)),
     user: User = Depends(authenticate_user),
-) -> Any:
+) -> MeldingOutput:
     melding = await action(pk=melding_id)
 
     if not melding:
         raise HTTPException(status_code=404)
 
-    return melding
+    return MeldingOutput(id=melding.id, text=melding.text)
