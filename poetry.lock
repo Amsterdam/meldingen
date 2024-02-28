@@ -971,8 +971,8 @@ pre-commit = "^3.6.2"
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "task/dataclasses"
-resolved_reference = "55571a437b4138177ebb3b922e7fd4575753f71f"
+reference = "HEAD"
+resolved_reference = "f915d7b923bf4ae3ef4816c46d2ec0f60b75d41b"
 
 [[package]]
 name = "mergedeep"
@@ -2290,4 +2290,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "02993a4c2c06d9224d24bc9fc81da883de31e74e31c17c7f7ce041d26871d313"
+content-hash = "beffbe7de601b346868414dd3fa2ed36c1ba019c9b2c87ac42f243dad350533c"

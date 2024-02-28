@@ -13,7 +13,7 @@ python = "^3.12"
 fastapi = "^0.109.1"
 uvicorn = {extras = ["standard"], version = "^0.27.0"}
 pydantic-settings = "^2.1.0"
-meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git", rev = "task/dataclasses"}
+meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
 alembic = "^1.13.1"
 dependency-injector = {git = "https://github.com/anton-petrov/python-dependency-injector.git"}
 pyjwt = {extras = ["crypto"], version = "^2.8.0"}
