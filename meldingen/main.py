@@ -1,8 +1,10 @@
 from typing import Awaitable, Callable
 
 from fastapi import FastAPI
+from sqlalchemy.exc import IntegrityError
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
+from starlette.status import HTTP_409_CONFLICT
 
 from meldingen.api.v1.api import api_router
 from meldingen.config import Settings
@@ -27,23 +29,29 @@ def get_application(cont: Container) -> FastAPI:
     )
     application.include_router(api_router)
 
+    @application.middleware("http")
+    async def handle_resources(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        """Initialize dependency injection container resources before handling request
+        and close them after handling the request.
+        We need to do this in order for the resource dependencies to get "refreshed" every request."""
+
+        await container.init_resources()
+
+        response = await call_next(request)
+
+        await container.shutdown_resources()
+
+        return response
+
+    @application.exception_handler(IntegrityError)
+    async def sql_alchemy_integrity_error_handler(request: Request, exc: IntegrityError) -> JSONResponse:
+        return JSONResponse(
+            status_code=HTTP_409_CONFLICT,
+            content={"detail": "The requested operation could not be completed due to a conflict with existing data."},
+        )
+
     return application
 
 
 container = get_container()
 app = get_application(container)
-
-
-@app.middleware("http")
-async def handle_resources(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-    """Initialize dependency injection container resources before handling request
-    and close them after handling the request.
-    We need to do this in order for the resource dependencies to get "refreshed" every request."""
-
-    await container.init_resources()
-
-    response = await call_next(request)
-
-    await container.shutdown_resources()
-
-    return response

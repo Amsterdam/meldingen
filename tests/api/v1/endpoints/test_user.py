@@ -9,6 +9,7 @@ from starlette.status import (
     HTTP_204_NO_CONTENT,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
@@ -209,3 +210,50 @@ async def test_update_user_unauthorized(
 
     data = response.json()
     assert data.get("detail") == "Not authenticated"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "user_username, user_email, new_username, new_email",
+    [
+        ("username #1", "user-1@example.com", "username #1", "user-2@example.com"),
+        ("username #1", "user-1@example.com", "username #2", "user-1@example.com"),
+        ("username #1", "user-1@example.com", "username #1", "user-1@example.com"),
+    ],
+    indirect=["user_username", "user_email"],
+)
+async def test_create_existing_user_invalid(
+    app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, new_username: str, new_email: str
+) -> None:
+    response = await client.post(
+        app.url_path_for(ROUTE_NAME_CREATE), json={"username": new_username, "email": new_email}
+    )
+
+    assert response.status_code == HTTP_409_CONFLICT
+
+    data = response.json()
+    assert data.get("detail") == "The requested operation could not be completed due to a conflict with existing data."
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "new_username, new_email",
+    [
+        ("test_user_2", "test_email_1@example.com"),
+        ("test_user_1", "test_email_2@example.com"),
+        ("test_user_2", "test_email_2@example.com"),
+    ],
+)
+async def test_update_to_existing_user_invalid(
+    app: FastAPI, client: AsyncClient, auth_user: None, test_users: list[User], new_username: str, new_email: str
+) -> None:
+    test_user = test_users[0]
+
+    response = await client.patch(
+        app.url_path_for(ROUTE_NAME_UPDATE, user_id=test_user.id), json={"username": new_username, "email": new_email}
+    )
+
+    assert response.status_code == HTTP_409_CONFLICT
+
+    data = response.json()
+    assert data.get("detail") == "The requested operation could not be completed due to a conflict with existing data."
