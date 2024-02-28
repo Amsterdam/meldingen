@@ -12,7 +12,7 @@ T = TypeVar("T", bound=BaseDBModel)
 T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
 
 
-class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
+class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
     """Base repository for SQLModel based repositories."""
 
     _session: AsyncSession
@@ -57,7 +57,7 @@ class BaseSQLModelRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         await self._session.commit()
 
 
-class MeldingRepository(BaseSQLModelRepository[Melding, Melding], BaseMeldingRepository):
+class MeldingRepository(BaseSQLAlchemyRepository[Melding, Melding], BaseMeldingRepository):
     """Repository for Melding model."""
 
     @override
@@ -65,7 +65,7 @@ class MeldingRepository(BaseSQLModelRepository[Melding, Melding], BaseMeldingRep
         return Melding
 
 
-class UserRepository(BaseSQLModelRepository[User, User], BaseUserRepository):
+class UserRepository(BaseSQLAlchemyRepository[User, User], BaseUserRepository):
     @override
     def get_model_type(self) -> type[User]:
         return User
@@ -78,7 +78,7 @@ class UserRepository(BaseSQLModelRepository[User, User], BaseUserRepository):
         return results.scalars().unique().one()
 
 
-class GroupRepository(BaseSQLModelRepository[Group, Group]):
+class GroupRepository(BaseSQLAlchemyRepository[Group, Group]):
     @override
     def get_model_type(self) -> type[Group]:
         return Group
