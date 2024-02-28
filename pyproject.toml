@@ -66,6 +66,7 @@ overwrite_in_place = true
 plugins = [
   "pydantic.mypy"
 ]
+strict = true
 
 [tool.mypy-baseline]
 baseline_path = "mypy-baseline.txt"
