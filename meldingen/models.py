@@ -16,6 +16,13 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
         return cls.__name__.lower()
 
 
+class ClassificationInput(BaseModel, BaseClassification): ...
+
+
+class ClassificationOutput(BaseModel, BaseClassification):
+    id: int
+
+
 class Classification(BaseDBModel, BaseClassification):
     name: Mapped[str] = mapped_column(String, unique=True)
 
