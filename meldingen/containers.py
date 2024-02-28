@@ -9,7 +9,13 @@ from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, User
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from meldingen.actions import MeldingListAction, MeldingRetrieveAction, UserListAction, UserRetrieveAction
+from meldingen.actions import (
+    ClassificationListAction,
+    MeldingListAction,
+    MeldingRetrieveAction,
+    UserListAction,
+    UserRetrieveAction,
+)
 from meldingen.repositories import ClassificationRepository, GroupRepository, MeldingRepository, UserRepository
 
 
@@ -60,6 +66,9 @@ class Container(DeclarativeContainer):
     user_update_action: Factory[UserUpdateAction] = Factory(UserUpdateAction, repository=user_repository)
     classification_create_action: Factory[ClassificationCreateAction] = Factory(
         ClassificationCreateAction, repository=classification_repository
+    )
+    classification_list_action: Factory[ClassificationListAction] = Factory(
+        ClassificationListAction, repository=classification_repository
     )
 
     # authentication
