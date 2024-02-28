@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from meldingen.actions import (
     ClassificationListAction,
+    ClassificationRetrieveAction,
     MeldingListAction,
     MeldingRetrieveAction,
     UserListAction,
@@ -69,6 +70,9 @@ class Container(DeclarativeContainer):
     )
     classification_list_action: Factory[ClassificationListAction] = Factory(
         ClassificationListAction, repository=classification_repository
+    )
+    classification_retrieve_action: Factory[ClassificationRetrieveAction] = Factory(
+        ClassificationRetrieveAction, repository=classification_repository
     )
 
     # authentication
