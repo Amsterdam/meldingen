@@ -1,7 +1,7 @@
 from typing import AsyncGenerator
 
-from async_casbin_sqlmodel_adapter import Adapter
 from casbin import AsyncEnforcer
+from casbin_async_sqlalchemy_adapter import Adapter
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient
@@ -23,10 +23,6 @@ from meldingen.actions import (
     UserListAction,
     UserRetrieveAction,
 )
-from pydantic_core import MultiHostUrl
-from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
-from sqlmodel.ext.asyncio.session import AsyncSession
-
 from meldingen.authorization import Authorizer
 from meldingen.repositories import ClassificationRepository, GroupRepository, MeldingRepository, UserRepository
 
