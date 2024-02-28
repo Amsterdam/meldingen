@@ -16,7 +16,8 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
         return cls.__name__.lower()
 
 
-class Classification(BaseDBModel, BaseClassification): ...
+class Classification(BaseDBModel, BaseClassification):
+    name: Mapped[str] = mapped_column(String, unique=True)
 
 
 class MeldingCreateInput(BaseModel):
