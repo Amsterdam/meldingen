@@ -1,6 +1,6 @@
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
-from meldingen_core.actions.classification import ClassificationCreateAction
+from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationUpdateAction
 from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
 from meldingen.actions import ClassificationListAction, ClassificationRetrieveAction
@@ -8,6 +8,7 @@ from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Classification, ClassificationInput, ClassificationOutput, User
+from meldingen.repositories import ClassificationRepository
 
 router = APIRouter()
 
@@ -57,3 +58,25 @@ async def retrieve_classification(
         raise HTTPException(HTTP_404_NOT_FOUND)
 
     return ClassificationOutput(id=classification.id, name=classification.name)
+
+
+@router.patch("/{classification_id}", name="classification:update")
+@inject
+async def update_classification(
+    classification_id: int,
+    classification_input: ClassificationInput,
+    repository: ClassificationRepository = Depends(Provide[Container.classification_repository]),
+    action: ClassificationUpdateAction = Depends(Provide[Container.classification_update_action]),
+    user: User = Depends(authenticate_user),
+) -> ClassificationOutput:
+    classification = await repository.retrieve(classification_id)
+    if classification is None:
+        raise HTTPException(HTTP_404_NOT_FOUND)
+
+    classification_data = classification_input.model_dump(exclude_unset=True)
+    for key, value in classification_data.items():
+        setattr(classification, key, value)
+
+    await action(classification)
+
+    return ClassificationOutput(id=classification, name=classification.name)

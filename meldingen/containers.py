@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient
-from meldingen_core.actions.classification import ClassificationCreateAction
+from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationUpdateAction
 from meldingen_core.actions.melding import MeldingCreateAction
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserUpdateAction
 from pydantic_core import MultiHostUrl
@@ -73,6 +73,9 @@ class Container(DeclarativeContainer):
     )
     classification_retrieve_action: Factory[ClassificationRetrieveAction] = Factory(
         ClassificationRetrieveAction, repository=classification_repository
+    )
+    classification_update_action: Factory[ClassificationUpdateAction] = Factory(
+        ClassificationUpdateAction, repository=classification_repository
     )
 
     # authentication
