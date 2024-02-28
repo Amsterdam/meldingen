@@ -11,6 +11,7 @@ from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+
 TEST_DATABASE_URL: str = "postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test"
 
 
@@ -39,6 +40,7 @@ async def test_database(alembic_engine: AsyncEngine) -> None:
 async def app(test_database: None, alembic_engine: AsyncEngine) -> FastAPI:
     from meldingen.containers import Container
     from meldingen.main import get_application
+    from meldingen.main import get_container
 
     async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
         async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -50,7 +52,7 @@ async def app(test_database: None, alembic_engine: AsyncEngine) -> FastAPI:
         database_engine: Object[AsyncEngine] = Object(alembic_engine)
         database_session: Resource[AsyncSession] = Resource(get_database_session, engine=database_engine)
 
-    return get_application()
+    return get_application(get_container())
 
 
 @pytest_asyncio.fixture
