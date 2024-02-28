@@ -1,6 +1,7 @@
 import asyncio
 from logging.config import fileConfig
 
+import casbin_async_sqlalchemy_adapter
 from alembic import context
 from sqlalchemy import Connection, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
@@ -27,7 +28,7 @@ config.set_section_option(section, "sqlalchemy.url", f"{settings.database_dsn}")
 # target_metadata = mymodel.Base.metadata
 from meldingen import models
 
-target_metadata = models.BaseDBModel.metadata
+target_metadata = [models.BaseDBModel.metadata, casbin_async_sqlalchemy_adapter.adapter.Base.metadata]
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
