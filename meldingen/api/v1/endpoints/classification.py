@@ -1,7 +1,12 @@
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
-from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationUpdateAction
-from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
+from meldingen_core.actions.classification import (
+    ClassificationCreateAction,
+    ClassificationDeleteAction,
+    ClassificationUpdateAction,
+)
+from sqlalchemy.exc import NoResultFound
+from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions import ClassificationListAction, ClassificationRetrieveAction
 from meldingen.api.utils import pagination_params
@@ -80,3 +85,16 @@ async def update_classification(
     await action(classification)
 
     return ClassificationOutput(id=classification, name=classification.name)
+
+
+@router.delete("/{classification_id}", name="classification:delete", status_code=HTTP_204_NO_CONTENT)
+@inject
+async def delete_classification(
+    classification_id: int,
+    action: ClassificationDeleteAction = Depends(Provide[Container.classification_delete_action]),
+    user: User = Depends(authenticate_user),
+) -> None:
+    try:
+        await action(classification_id)
+    except NoResultFound:
+        raise HTTPException(HTTP_404_NOT_FOUND)
