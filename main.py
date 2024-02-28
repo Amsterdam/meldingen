@@ -1,7 +1,7 @@
 import asyncio
 
 import typer
-from async_casbin_sqlmodel_adapter.models import CasbinRule
+from casbin_async_sqlalchemy_adapter import CasbinRule
 
 from meldingen.config import Settings
 from meldingen.containers import Container
