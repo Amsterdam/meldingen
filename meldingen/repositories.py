@@ -4,6 +4,7 @@ from typing import TypeVar, override
 
 from meldingen_core.repositories import BaseMeldingRepository, BaseRepository, BaseUserRepository
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from meldingen.models import BaseDBModel, Group, Melding, User
@@ -26,8 +27,14 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
     @override
     async def save(self, model: T) -> None:
         self._session.add(model)
-        await self._session.commit()
-        await self._session.refresh(model)
+
+        try:
+            await self._session.commit()
+        except IntegrityError as integrity_error:
+            await self._session.rollback()
+            raise integrity_error
+        else:
+            await self._session.refresh(model)
 
     @override
     async def list(self, *, limit: int | None = None, offset: int | None = None) -> Collection[T_co]:
