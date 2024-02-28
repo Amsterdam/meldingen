@@ -21,7 +21,7 @@ pydantic = {extras = ["email"], version = "^2.6.1"}
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.26"}
 asyncpg = "^0.29.0"
 casbin = "^1.36.0"
-async-casbin-sqlmodel-adapter = "^0.1.5"
+casbin-async-sqlalchemy-adapter = "^1.4.0"
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2.1.0"
