@@ -3,13 +3,14 @@ from typing import AsyncGenerator
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient
+from meldingen_core.actions.classification import ClassificationCreateAction
 from meldingen_core.actions.melding import MeldingCreateAction
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserUpdateAction
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction, UserListAction, UserRetrieveAction
-from meldingen.repositories import GroupRepository, MeldingRepository, UserRepository
+from meldingen.repositories import ClassificationRepository, GroupRepository, MeldingRepository, UserRepository
 
 
 def get_database_engine(dsn: MultiHostUrl) -> AsyncEngine:
@@ -26,7 +27,12 @@ class Container(DeclarativeContainer):
     """Dependency injection container."""
 
     wiring_config: WiringConfiguration = WiringConfiguration(
-        modules=["meldingen.api.v1.endpoints.melding", "meldingen.api.v1.endpoints.user", "meldingen.authentication"]
+        modules=[
+            "meldingen.api.v1.endpoints.melding",
+            "meldingen.api.v1.endpoints.user",
+            "meldingen.authentication",
+            "meldingen.api.v1.endpoints.classification",
+        ]
     )
 
     settings: Configuration = Configuration(strict=True)
@@ -37,6 +43,9 @@ class Container(DeclarativeContainer):
     melding_repository: Factory[MeldingRepository] = Factory(MeldingRepository, session=database_session)
     user_repository: Factory[UserRepository] = Factory(UserRepository, session=database_session)
     group_repository: Factory[GroupRepository] = Factory(GroupRepository, session=database_session)
+    classification_repository: Factory[ClassificationRepository] = Factory(
+        ClassificationRepository, session=database_session
+    )
 
     # actions
     melding_create_action: Factory[MeldingCreateAction] = Factory(MeldingCreateAction, repository=melding_repository)
@@ -49,6 +58,9 @@ class Container(DeclarativeContainer):
     user_retrieve_action: Factory[UserRetrieveAction] = Factory(UserRetrieveAction, repository=user_repository)
     user_delete_action: Factory[UserDeleteAction] = Factory(UserDeleteAction, repository=user_repository)
     user_update_action: Factory[UserUpdateAction] = Factory(UserUpdateAction, repository=user_repository)
+    classification_create_action: Factory[ClassificationCreateAction] = Factory(
+        ClassificationCreateAction, repository=classification_repository
+    )
 
     # authentication
     jwks_client: Singleton[PyJWKClient] = Singleton(PyJWKClient, uri=settings.jwks_url)

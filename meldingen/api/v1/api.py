@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 
-from meldingen.api.v1.endpoints import melding, user
+from meldingen.api.v1.endpoints import classification, melding, user
 
 api_router = APIRouter()
+api_router.include_router(classification.router, prefix="/classification", tags=["classification"])
 api_router.include_router(melding.router, prefix="/melding", tags=["melding"])
 api_router.include_router(user.router, prefix="/user", tags=["user"])
