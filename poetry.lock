@@ -972,7 +972,7 @@ pre-commit = "^3.6.2"
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "HEAD"
-resolved_reference = "f915d7b923bf4ae3ef4816c46d2ec0f60b75d41b"
+resolved_reference = "830850a8a70ce1c6c9fbed8ecc5cda355f049162"
 
 [[package]]
 name = "mergedeep"

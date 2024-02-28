@@ -2,12 +2,17 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
 from typing import TypeVar, override
 
-from meldingen_core.repositories import BaseMeldingRepository, BaseRepository, BaseUserRepository
+from meldingen_core.repositories import (
+    BaseClassificationRepository,
+    BaseMeldingRepository,
+    BaseRepository,
+    BaseUserRepository,
+)
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from meldingen.models import BaseDBModel, Group, Melding, User
+from meldingen.models import BaseDBModel, Classification, Group, Melding, User
 
 T = TypeVar("T", bound=BaseDBModel)
 T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
@@ -95,3 +100,8 @@ class GroupRepository(BaseSQLAlchemyRepository[Group, Group]):
         results = await self._session.execute(statement)
 
         return results.scalars().one()
+
+
+class ClassificationRepository(BaseSQLAlchemyRepository[Classification, Classification], BaseClassificationRepository):
+    def get_model_type(self) -> type[Classification]:
+        return Classification

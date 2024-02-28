@@ -5,8 +5,8 @@ from fastapi import FastAPI
 
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import Melding, User
-from meldingen.repositories import MeldingRepository, UserRepository
+from meldingen.models import Classification, Melding, User
+from meldingen.repositories import ClassificationRepository, MeldingRepository, UserRepository
 
 
 @pytest_asyncio.fixture
@@ -118,3 +118,38 @@ async def test_users(user_repository: UserRepository) -> list[User]:
         users.append(user)
 
     return users
+
+
+@pytest_asyncio.fixture
+async def classification_repository() -> ClassificationRepository:
+    return await Container().classification_repository()
+
+
+@pytest.fixture
+def classification_name(request: SubRequest) -> str:
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return "classification name"
+
+
+@pytest_asyncio.fixture
+async def classification(
+    classification_repository: ClassificationRepository, classification_name: str
+) -> Classification:
+    classification = Classification(name=classification_name)
+
+    await classification_repository.save(classification)
+
+    return classification
+
+
+@pytest_asyncio.fixture
+async def classifications(classification_repository: ClassificationRepository) -> list[Classification]:
+    classifications = []
+    for n in range(10):
+        classification = Classification(f"category: {n}")
+        await classification_repository.save(classification)
+        classifications.append(classification)
+
+    return classifications
