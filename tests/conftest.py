@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from meldingen.models import BaseDBModel
 
-
 TEST_DATABASE_URL: str = "postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test"
 
 
@@ -39,8 +38,7 @@ async def test_database(alembic_engine: AsyncEngine) -> None:
 @pytest_asyncio.fixture
 async def app(test_database: None, alembic_engine: AsyncEngine) -> FastAPI:
     from meldingen.containers import Container
-    from meldingen.main import get_application
-    from meldingen.main import get_container
+    from meldingen.main import get_application, get_container
 
     async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
         async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
