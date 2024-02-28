@@ -58,6 +58,7 @@ profile = "black"
 line_length = 120
 known_third_party = ["meldingen_core"]
 known_first_party = ["meldingen"]
+overwrite_in_place = true
 
 [tool.mypy]
 plugins = [
