@@ -84,7 +84,7 @@ async def update_classification(
 
     await action(classification)
 
-    return ClassificationOutput(id=classification, name=classification.name)
+    return ClassificationOutput(id=classification.id, name=classification.name)
 
 
 @router.delete("/{classification_id}", name="classification:delete", status_code=HTTP_204_NO_CONTENT)
