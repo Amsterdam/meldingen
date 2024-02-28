@@ -971,8 +971,8 @@ pre-commit = "^3.6.2"
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "f915d7b923bf4ae3ef4816c46d2ec0f60b75d41b"
+reference = "task/derived-classification-model-support"
+resolved_reference = "5a35d831992c56801c038cced71cf7aa5d2348a1"
 
 [[package]]
 name = "mergedeep"
@@ -2290,4 +2290,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "beffbe7de601b346868414dd3fa2ed36c1ba019c9b2c87ac42f243dad350533c"
+content-hash = "a16558ec672474a45b06e5a00a73e42eda645ae1b1177869e6e1acb919b6d24d"
