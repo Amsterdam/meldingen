@@ -1,3 +1,5 @@
+import logging
+
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,6 +11,7 @@ class Settings(BaseSettings):
 
     # General settings
     debug: bool = False
+    log_level: int = logging.WARNING
     project_name: str = "Meldingen Openbare Ruimte"
     url_prefix: str = "/api"
     default_page_size: int = 50
