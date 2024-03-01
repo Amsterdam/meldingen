@@ -14,7 +14,7 @@ alembic = "^1.13.1"
 asyncpg = "^0.29.0"
 dependency-injector = {git = "https://github.com/anton-petrov/python-dependency-injector.git"}
 fastapi = "^0.109.1"
-meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
+meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git", rev = "feat/improve-updates"}
 pydantic = {extras = ["email"], version = "^2.6.1"}
 pydantic-settings = "^2.1.0"
 pyjwt = {extras = ["crypto"], version = "^2.8.0"}
@@ -65,6 +65,7 @@ overwrite_in_place = true
 plugins = [
   "pydantic.mypy"
 ]
+strict = true
 
 [tool.mypy-baseline]
 baseline_path = "mypy-baseline.txt"
