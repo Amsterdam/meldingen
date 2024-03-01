@@ -1,7 +1,7 @@
-from typing import Any
+from typing import Annotated, Any
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.melding import MeldingCreateAction
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction
@@ -29,9 +29,9 @@ async def create_melding(
 @router.get("/", name="melding:list")
 @inject
 async def list_meldingen(
-    pagination: dict[str, int | None] = Depends(pagination_params),
+    pagination: Annotated[dict[str, int | None], Depends(pagination_params)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: MeldingListAction = Depends(Provide(Container.melding_list_action)),
-    user: User = Depends(authenticate_user),
 ) -> list[MeldingOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -47,9 +47,9 @@ async def list_meldingen(
 @router.get("/{melding_id}", name="melding:retrieve")
 @inject
 async def retrieve_melding(
-    melding_id: int,
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: MeldingRetrieveAction = Depends(Provide(Container.melding_retrieve_action)),
-    user: User = Depends(authenticate_user),
 ) -> MeldingOutput:
     melding = await action(pk=melding_id)
 

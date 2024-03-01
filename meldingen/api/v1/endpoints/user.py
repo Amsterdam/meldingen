@@ -1,5 +1,7 @@
+from typing import Annotated
+
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserUpdateAction
 from sqlalchemy.exc import NoResultFound
 
@@ -16,8 +18,8 @@ router = APIRouter()
 @inject
 async def create_user(
     user_input: UserInput,
+    user: Annotated[User, Depends(authenticate_user)],
     action: UserCreateAction = Depends(Provide(Container.user_create_action)),
-    user: User = Depends(authenticate_user),
 ) -> UserOutput:
     db_user = User(**user_input.model_dump())
     await action(db_user)
@@ -30,9 +32,9 @@ async def create_user(
 @router.get("/", name="user:list")
 @inject
 async def list_users(
-    pagination: dict[str, int | None] = Depends(pagination_params),
+    pagination: Annotated[dict[str, int | None], Depends(pagination_params)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: UserListAction = Depends(Provide(Container.user_list_action)),
-    user: User = Depends(authenticate_user),
 ) -> list[UserOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -49,9 +51,9 @@ async def list_users(
 @router.get("/{user_id}", name="user:retrieve")
 @inject
 async def retrieve_user(
-    user_id: int,
+    user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
-    user: User = Depends(authenticate_user),
 ) -> UserOutput:
     db_user = await action(pk=user_id)
     if not db_user:
@@ -63,9 +65,9 @@ async def retrieve_user(
 @router.delete("/{user_id}", name="user:delete", status_code=204)
 @inject
 async def delete_user(
-    user_id: int,
+    user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: UserDeleteAction = Depends(Provide(Container.user_delete_action)),
-    user: User = Depends(authenticate_user),
 ) -> None:
     if user.id == user_id:
         raise HTTPException(status_code=400, detail="You cannot delete your own account")
@@ -79,11 +81,11 @@ async def delete_user(
 @router.patch("/{user_id}", name="user:update")
 @inject
 async def update_user(
-    user_id: int,
+    user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
     user_input: UserPartialInput,
+    user: Annotated[User, Depends(authenticate_user)],
     retrieve_action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     update_action: UserUpdateAction = Depends(Provide(Container.user_create_action)),
-    user: User = Depends(authenticate_user),
 ) -> UserOutput:
     db_user = await retrieve_action(pk=user_id)
     if not db_user:

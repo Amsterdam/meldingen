@@ -1,5 +1,7 @@
+from typing import Annotated
+
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.classification import (
     ClassificationCreateAction,
     ClassificationDeleteAction,
@@ -22,8 +24,8 @@ router = APIRouter()
 @inject
 async def create_classification(
     classification_input: ClassificationInput,
+    user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationCreateAction = Depends(Provide[Container.classification_create_action]),
-    user: User = Depends(authenticate_user),
 ) -> ClassificationOutput:
     db_model = Classification(**classification_input.model_dump())
 
@@ -35,9 +37,9 @@ async def create_classification(
 @router.get("/", name="classification:list")
 @inject
 async def list_classifications(
-    pagination: dict[str, int | None] = Depends(pagination_params),
+    pagination: Annotated[dict[str, int | None], Depends(pagination_params)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationListAction = Depends(Provide[Container.classification_list_action]),
-    user: User = Depends(authenticate_user),
 ) -> list[ClassificationOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -54,9 +56,9 @@ async def list_classifications(
 @router.get("/{classification_id}", name="classification:retrieve")
 @inject
 async def retrieve_classification(
-    classification_id: int,
+    classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationRetrieveAction = Depends(Provide[Container.classification_retrieve_action]),
-    user: User = Depends(authenticate_user),
 ) -> ClassificationOutput:
     classification = await action(classification_id)
     if classification is None:
@@ -68,11 +70,11 @@ async def retrieve_classification(
 @router.patch("/{classification_id}", name="classification:update")
 @inject
 async def update_classification(
-    classification_id: int,
+    classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
     classification_input: ClassificationInput,
+    user: Annotated[User, Depends(authenticate_user)],
     repository: ClassificationRepository = Depends(Provide[Container.classification_repository]),
     action: ClassificationUpdateAction = Depends(Provide[Container.classification_update_action]),
-    user: User = Depends(authenticate_user),
 ) -> ClassificationOutput:
     classification = await repository.retrieve(classification_id)
     if classification is None:
@@ -90,9 +92,9 @@ async def update_classification(
 @router.delete("/{classification_id}", name="classification:delete", status_code=HTTP_204_NO_CONTENT)
 @inject
 async def delete_classification(
-    classification_id: int,
+    classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationDeleteAction = Depends(Provide[Container.classification_delete_action]),
-    user: User = Depends(authenticate_user),
 ) -> None:
     try:
         await action(classification_id)
