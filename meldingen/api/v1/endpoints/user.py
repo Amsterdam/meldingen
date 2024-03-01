@@ -1,5 +1,7 @@
+from typing import Annotated
+
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserUpdateAction
 from sqlalchemy.exc import NoResultFound
 
@@ -49,7 +51,7 @@ async def list_users(
 @router.get("/{user_id}", name="user:retrieve")
 @inject
 async def retrieve_user(
-    user_id: int,
+    user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
     action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     user: User = Depends(authenticate_user),
 ) -> UserOutput:
@@ -63,7 +65,7 @@ async def retrieve_user(
 @router.delete("/{user_id}", name="user:delete", status_code=204)
 @inject
 async def delete_user(
-    user_id: int,
+    user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
     action: UserDeleteAction = Depends(Provide(Container.user_delete_action)),
     user: User = Depends(authenticate_user),
 ) -> None:
@@ -79,7 +81,7 @@ async def delete_user(
 @router.patch("/{user_id}", name="user:update")
 @inject
 async def update_user(
-    user_id: int,
+    user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
     user_input: UserPartialInput,
     retrieve_action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     update_action: UserUpdateAction = Depends(Provide(Container.user_create_action)),

@@ -1,5 +1,7 @@
+from typing import Annotated
+
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.classification import (
     ClassificationCreateAction,
     ClassificationDeleteAction,
@@ -54,7 +56,7 @@ async def list_classifications(
 @router.get("/{classification_id}", name="classification:retrieve")
 @inject
 async def retrieve_classification(
-    classification_id: int,
+    classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
     action: ClassificationRetrieveAction = Depends(Provide[Container.classification_retrieve_action]),
     user: User = Depends(authenticate_user),
 ) -> ClassificationOutput:
@@ -68,7 +70,7 @@ async def retrieve_classification(
 @router.patch("/{classification_id}", name="classification:update")
 @inject
 async def update_classification(
-    classification_id: int,
+    classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
     classification_input: ClassificationInput,
     repository: ClassificationRepository = Depends(Provide[Container.classification_repository]),
     action: ClassificationUpdateAction = Depends(Provide[Container.classification_update_action]),
@@ -90,7 +92,7 @@ async def update_classification(
 @router.delete("/{classification_id}", name="classification:delete", status_code=HTTP_204_NO_CONTENT)
 @inject
 async def delete_classification(
-    classification_id: int,
+    classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
     action: ClassificationDeleteAction = Depends(Provide[Container.classification_delete_action]),
     user: User = Depends(authenticate_user),
 ) -> None:

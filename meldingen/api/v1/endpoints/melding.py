@@ -1,7 +1,7 @@
-from typing import Any
+from typing import Annotated, Any
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.melding import MeldingCreateAction
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction
@@ -47,7 +47,7 @@ async def list_meldingen(
 @router.get("/{melding_id}", name="melding:retrieve")
 @inject
 async def retrieve_melding(
-    melding_id: int,
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: MeldingRetrieveAction = Depends(Provide(Container.melding_retrieve_action)),
     user: User = Depends(authenticate_user),
 ) -> MeldingOutput:
