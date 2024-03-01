@@ -18,8 +18,8 @@ router = APIRouter()
 @inject
 async def create_user(
     user_input: UserInput,
+    user: Annotated[User, Depends(authenticate_user)],
     action: UserCreateAction = Depends(Provide(Container.user_create_action)),
-    user: User = Depends(authenticate_user),
 ) -> UserOutput:
     db_user = User(**user_input.model_dump())
     await action(db_user)
@@ -32,9 +32,9 @@ async def create_user(
 @router.get("/", name="user:list")
 @inject
 async def list_users(
-    pagination: dict[str, int | None] = Depends(pagination_params),
+    pagination: Annotated[dict[str, int | None], Depends(pagination_params)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: UserListAction = Depends(Provide(Container.user_list_action)),
-    user: User = Depends(authenticate_user),
 ) -> list[UserOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -52,8 +52,8 @@ async def list_users(
 @inject
 async def retrieve_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
-    user: User = Depends(authenticate_user),
 ) -> UserOutput:
     db_user = await action(pk=user_id)
     if not db_user:
@@ -66,8 +66,8 @@ async def retrieve_user(
 @inject
 async def delete_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
     action: UserDeleteAction = Depends(Provide(Container.user_delete_action)),
-    user: User = Depends(authenticate_user),
 ) -> None:
     if user.id == user_id:
         raise HTTPException(status_code=400, detail="You cannot delete your own account")
@@ -83,9 +83,9 @@ async def delete_user(
 async def update_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
     user_input: UserPartialInput,
+    user: Annotated[User, Depends(authenticate_user)],
     retrieve_action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
     update_action: UserUpdateAction = Depends(Provide(Container.user_create_action)),
-    user: User = Depends(authenticate_user),
 ) -> UserOutput:
     db_user = await retrieve_action(pk=user_id)
     if not db_user:
