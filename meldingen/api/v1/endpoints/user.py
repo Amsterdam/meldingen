@@ -85,12 +85,12 @@ async def update_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
     user_input: UserPartialInput,
     user: Annotated[User, Depends(authenticate_user)],
-    update_action: UserUpdateAction = Depends(Provide(Container.user_create_action)),
+    action: UserUpdateAction = Depends(Provide(Container.user_update_action)),
 ) -> UserOutput:
     user_data = user_input.model_dump(exclude_unset=True)
 
     try:
-        db_user = await update_action(user_id, user_data)
+        db_user = await action(user_id, user_data)
     except NotFoundException:
         raise HTTPException(status_code=404)
 
