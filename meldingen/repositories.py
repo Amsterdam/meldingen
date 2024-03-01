@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
-from typing import TypeVar, override
+from typing import Any, TypeVar, override
 
 from meldingen_core.repositories import (
     BaseClassificationRepository,
@@ -27,7 +27,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         self._session = session
 
     @abstractmethod
-    def get_model_type(self) -> type[T_co]: ...
+    def get_model_type(self) -> type[Any]: ...
 
     @override
     async def save(self, model: T) -> None:
@@ -56,7 +56,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         return results.scalars().unique().all()
 
     @override
-    async def retrieve(self, pk: int) -> T_co | None:
+    async def retrieve(self, pk: int) -> T | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.id == pk)
         results = await self._session.execute(statement)

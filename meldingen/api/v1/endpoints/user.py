@@ -2,10 +2,11 @@ from typing import Annotated
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
-from meldingen_core.actions.user import UserCreateAction, UserDeleteAction, UserUpdateAction
+from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
+from meldingen_core.exceptions import NotFoundException
 from sqlalchemy.exc import NoResultFound
 
-from meldingen.actions import UserListAction, UserRetrieveAction
+from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -84,17 +85,13 @@ async def update_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
     user_input: UserPartialInput,
     user: Annotated[User, Depends(authenticate_user)],
-    retrieve_action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
-    update_action: UserUpdateAction = Depends(Provide(Container.user_create_action)),
+    action: UserUpdateAction = Depends(Provide(Container.user_update_action)),
 ) -> UserOutput:
-    db_user = await retrieve_action(pk=user_id)
-    if not db_user:
-        raise HTTPException(status_code=404)
-
     user_data = user_input.model_dump(exclude_unset=True)
-    for key, value in user_data.items():
-        setattr(db_user, key, value)
 
-    await update_action(db_user)
+    try:
+        db_user = await action(user_id, user_data)
+    except NotFoundException:
+        raise HTTPException(status_code=404)
 
     return UserOutput(id=db_user.id, username=db_user.username, email=db_user.email)
