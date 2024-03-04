@@ -1,8 +1,8 @@
-import uuid
 from importlib import metadata
 from typing import Awaitable, Callable
 
 import structlog
+from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from sqlalchemy.exc import IntegrityError
 from starlette.requests import Request
@@ -40,15 +40,11 @@ def get_application(cont: Container) -> FastAPI:
         # Clear previous context variables
         structlog.contextvars.clear_contextvars()
 
-        # Create a unique identifier for this request
-        request_identifier = uuid.uuid4()
-
         # Bind useful contextvars
         structlog.contextvars.bind_contextvars(
             path=request.url.path,
             method=request.method,
             client_host=request.client.host if request.client else None,
-            request_id=f"{request_identifier}",
             meldingen_version=get_version(),
             meldingen_core_version=metadata.version("meldingen-core"),
         )
@@ -89,6 +85,8 @@ def get_application(cont: Container) -> FastAPI:
             status_code=HTTP_409_CONFLICT,
             content={"detail": "The requested operation could not be completed due to a conflict with existing data."},
         )
+
+    application.add_middleware(CorrelationIdMiddleware)
 
     return application
 
