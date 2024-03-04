@@ -12,6 +12,7 @@ from starlette.status import HTTP_409_CONFLICT
 from meldingen.api.v1.api import api_router
 from meldingen.config import Settings
 from meldingen.containers import Container
+from meldingen.logging import setup_logging
 from meldingen.utils import get_version
 
 
@@ -94,4 +95,5 @@ def get_application(cont: Container) -> FastAPI:
 container = get_container()
 app = get_application(container)
 
+setup_logging()
 logger = structlog.get_logger()
