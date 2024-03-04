@@ -1,3 +1,4 @@
+import logging
 from typing import AsyncGenerator
 
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
@@ -22,8 +23,26 @@ from meldingen.actions import (
 from meldingen.repositories import ClassificationRepository, GroupRepository, MeldingRepository, UserRepository
 
 
-def get_database_engine(dsn: MultiHostUrl) -> AsyncEngine:
-    return create_async_engine(str(dsn), echo=True)
+def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
+    """Returns an async database engine.
+
+    echo can be configured via the environment variable for log_level.
+
+    "This has the effect of setting the Python logging level for the namespace
+    of this element’s class and object reference. A value of boolean True
+    indicates that the loglevel logging.INFO will be set for the logger,
+    whereas the string value debug will set the loglevel to logging.DEBUG."
+
+    More info on: https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html#sqlalchemy.ext.asyncio.AsyncEngine.echo
+    """
+    echo: bool | str = False
+    match log_level:
+        case logging.INFO:
+            echo = True
+        case logging.DEBUG:
+            echo = "debug"
+
+    return create_async_engine(str(dsn), echo=echo)
 
 
 async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
@@ -45,7 +64,9 @@ class Container(DeclarativeContainer):
     )
 
     settings: Configuration = Configuration(strict=True)
-    database_engine: Singleton[AsyncEngine] = Singleton(get_database_engine, dsn=settings.database_dsn)
+    database_engine: Singleton[AsyncEngine] = Singleton(
+        get_database_engine, dsn=settings.database_dsn, log_level=settings.log_level
+    )
     database_session: Resource[AsyncSession] = Resource(get_database_session, engine=database_engine)
 
     # repositories
