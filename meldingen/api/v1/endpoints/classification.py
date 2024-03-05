@@ -80,7 +80,18 @@ async def update_classification(
     return ClassificationOutput(id=classification.id, name=classification.name)
 
 
-@router.delete("/{classification_id}", name="classification:delete", status_code=HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{classification_id}",
+    name="classification:delete",
+    status_code=HTTP_204_NO_CONTENT,
+    responses={
+        "default": {"description": "Unexpected error"},
+        HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {"application/json": {"example": {"detail": "Not Found"}}},
+        },
+    },
+)
 @inject
 async def delete_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
