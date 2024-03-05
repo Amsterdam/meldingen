@@ -14,20 +14,20 @@ from starlette.status import (
 )
 
 from meldingen.models import Classification
-from tests.api.v1.endpoints.base import BaseCreate
+from tests.api.v1.endpoints.base import UnauthorizedMixin
 
-ROUTE_NAME_LIST: Final[str] = "classification:list"
 ROUTE_NAME_RETRIEVE: Final[str] = "classification:retrieve"
 ROUTE_NAME_UPDATE: Final[str] = "classification:update"
 ROUTE_NAME_DELETE: Final[str] = "classification:delete"
 
 
-class TestClassificationCreate(BaseCreate):
-    ROUTE_NAME_CREATE: Final[str] = "classification:create"
+class TestClassificationCreate(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "classification:create"
+    METHOD: Final[str] = "POST"
 
     @pytest.mark.asyncio
     async def test_create_classification(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
-        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"name": "bla"})
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
 
         assert response.status_code == HTTP_201_CREATED
 
@@ -39,7 +39,7 @@ class TestClassificationCreate(BaseCreate):
     async def test_create_classification_name_min_length_violation(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"name": ""})
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": ""})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -57,7 +57,7 @@ class TestClassificationCreate(BaseCreate):
     async def test_create_classification_duplicate_name(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
-        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"name": "bla"})
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
 
         assert response.status_code == HTTP_409_CONFLICT
 
@@ -67,12 +67,15 @@ class TestClassificationCreate(BaseCreate):
         )
 
 
-class TestClassificationList:
+class TestClassificationList(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "classification:list"
+    METHOD: Final[str] = "GET"
+
     @pytest.mark.asyncio
     async def test_list_all_classifications(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
         assert response.status_code == HTTP_200_OK
 
@@ -95,21 +98,12 @@ class TestClassificationList:
         expected: int,
         classifications: list[Classification],
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"limit": limit, "offset": offset})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
         assert len(data) == expected
-
-    @pytest.mark.asyncio
-    async def test_list_classifications_unauthorized(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST))
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -122,7 +116,7 @@ class TestClassificationList:
     async def test_list_classification_invalid_limit(
         self, app: FastAPI, client: AsyncClient, auth_user: None, limit: str | int, type: str, msg: str
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"limit": limit})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -146,7 +140,7 @@ class TestClassificationList:
     async def test_list_classification_invalid_offset(
         self, app: FastAPI, client: AsyncClient, auth_user: None, offset: str | int, type: str, msg: str
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"offset": offset})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"offset": offset})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 

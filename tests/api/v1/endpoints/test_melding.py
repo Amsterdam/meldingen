@@ -12,8 +12,8 @@ from starlette.status import (
 )
 
 from meldingen.models import Melding
+from tests.api.v1.endpoints.base import UnauthorizedMixin
 
-ROUTE_NAME_LIST: Final[str] = "melding:list"
 ROUTE_NAME_RETRIEVE: Final[str] = "melding:retrieve"
 
 
@@ -46,7 +46,10 @@ class TestMeldingCreate:
         assert violation.get("msg") == "String should have at least 1 character"
 
 
-class TestMeldingList:
+class TestMeldingList(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "melding:list"
+    METHOD: Final[str] = "GET"
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "limit, offset, expected_result",
@@ -62,22 +65,12 @@ class TestMeldingList:
         expected_result: int,
         test_meldingen: list[Melding],
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"limit": limit, "offset": offset})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
         assert len(data) == expected_result
-
-    @pytest.mark.asyncio
-    async def test_list_meldingen_unauthorized(self, app: FastAPI, client: AsyncClient) -> None:
-        """Tests that a 401 response is given when no access token is provided through the Authorization header."""
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST))
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -90,7 +83,7 @@ class TestMeldingList:
     async def test_list_melding_invalid_limit(
         self, app: FastAPI, client: AsyncClient, auth_user: None, limit: str | int, type: str, msg: str
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"limit": limit})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -114,7 +107,7 @@ class TestMeldingList:
     async def test_list_melding_invalid_offset(
         self, app: FastAPI, client: AsyncClient, auth_user: None, offset: str | int, type: str, msg: str
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"offset": offset})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"offset": offset})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 

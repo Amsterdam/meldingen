@@ -15,21 +15,21 @@ from starlette.status import (
 )
 
 from meldingen.models import User
-from tests.api.v1.endpoints.base import BaseCreate
+from tests.api.v1.endpoints.base import UnauthorizedMixin
 
-ROUTE_NAME_LIST: Final[str] = "user:list"
 ROUTE_NAME_RETRIEVE: Final[str] = "user:retrieve"
 ROUTE_NAME_DELETE: Final[str] = "user:delete"
 ROUTE_NAME_UPDATE: Final[str] = "user:update"
 
 
-class TestUserCreate(BaseCreate):
-    ROUTE_NAME_CREATE: Final[str] = "user:create"
+class TestUserCreate(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "user:create"
+    METHOD: Final[str] = "POST"
 
     @pytest.mark.asyncio
     async def test_create_user(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user@example.com"}
+            app.url_path_for(self.ROUTE_NAME), json={"username": "meldingen_user", "email": "user@example.com"}
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -44,7 +44,7 @@ class TestUserCreate(BaseCreate):
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE), json={"username": "", "email": "user@example.com"}
+            app.url_path_for(self.ROUTE_NAME), json={"username": "", "email": "user@example.com"}
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -61,7 +61,7 @@ class TestUserCreate(BaseCreate):
     @pytest.mark.asyncio
     async def test_create_user_email_violation(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user.example.com"}
+            app.url_path_for(self.ROUTE_NAME), json={"username": "meldingen_user", "email": "user.example.com"}
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -92,7 +92,7 @@ class TestUserCreate(BaseCreate):
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, new_username: str, new_email: str
     ) -> None:
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE), json={"username": new_username, "email": new_email}
+            app.url_path_for(self.ROUTE_NAME), json={"username": new_username, "email": new_email}
         )
 
         assert response.status_code == HTTP_409_CONFLICT
@@ -103,7 +103,10 @@ class TestUserCreate(BaseCreate):
         )
 
 
-class TestUserList:
+class TestUserList(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "user:list"
+    METHOD: Final[str] = "GET"
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "limit, offset, expected_result",
@@ -119,22 +122,12 @@ class TestUserList:
         expected_result: int,
         test_users: list[User],
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"limit": limit, "offset": offset})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
         assert len(data) == expected_result
-
-    @pytest.mark.asyncio
-    async def test_list_users_unauthorized(self, app: FastAPI, client: AsyncClient) -> None:
-        """Tests that a 401 response is given when no access token is provided through the Authorization header."""
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST))
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -147,7 +140,7 @@ class TestUserList:
     async def test_list_users_invalid_limit(
         self, app: FastAPI, client: AsyncClient, auth_user: None, limit: str | int, type: str, msg: str
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"limit": limit})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -171,7 +164,7 @@ class TestUserList:
     async def test_list_users_invalid_offset(
         self, app: FastAPI, client: AsyncClient, auth_user: None, offset: str | int, type: str, msg: str
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"offset": offset})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"offset": offset})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
