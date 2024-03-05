@@ -13,6 +13,12 @@ from meldingen.containers import Container
 from meldingen.models import Classification, ClassificationInput, ClassificationOutput, User
 
 router = APIRouter()
+not_found_response = {
+    HTTP_404_NOT_FOUND: {
+        "description": "Not Found",
+        "content": {"application/json": {"example": {"detail": "Not Found"}}},
+    }
+}
 
 
 @router.post("/", name="classification:create", status_code=HTTP_201_CREATED)
@@ -48,7 +54,7 @@ async def list_classifications(
     return output
 
 
-@router.get("/{classification_id}", name="classification:retrieve")
+@router.get("/{classification_id}", name="classification:retrieve", responses={**not_found_response})
 @inject
 async def retrieve_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
@@ -62,7 +68,7 @@ async def retrieve_classification(
     return ClassificationOutput(id=classification.id, name=classification.name)
 
 
-@router.patch("/{classification_id}", name="classification:update")
+@router.patch("/{classification_id}", name="classification:update", responses={**not_found_response})
 @inject
 async def update_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
@@ -85,11 +91,8 @@ async def update_classification(
     name="classification:delete",
     status_code=HTTP_204_NO_CONTENT,
     responses={
+        **not_found_response,
         "default": {"description": "Unexpected error"},
-        HTTP_404_NOT_FOUND: {
-            "description": "Not Found",
-            "content": {"application/json": {"example": {"detail": "Not Found"}}},
-        },
     },
 )
 @inject
