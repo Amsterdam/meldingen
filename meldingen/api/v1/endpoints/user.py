@@ -4,7 +4,6 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
 from meldingen_core.exceptions import NotFoundException
-from sqlalchemy.exc import NoResultFound
 
 from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.api.utils import pagination_params
@@ -75,7 +74,7 @@ async def delete_user(
 
     try:
         await action(pk=user_id)
-    except NoResultFound:
+    except NotFoundException:
         raise HTTPException(status_code=404)
 
 
