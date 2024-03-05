@@ -53,7 +53,7 @@ class UserOutput(BaseModel):
 
 
 class UserPartialInput(BaseModel):
-    username: str | None = None
+    username: str | None = Field(default=None, min_length=3)
     email: EmailStr | None = None
 
 
