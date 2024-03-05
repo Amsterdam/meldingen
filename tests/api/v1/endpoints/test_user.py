@@ -57,6 +57,28 @@ async def test_create_user_username_minimum_length_violation(
 
 
 @pytest.mark.asyncio
+async def test_create_user_email_violation(app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+    response = await client.post(
+        app.url_path_for(ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user.example.com"}
+    )
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+    data = response.json()
+    detail = data.get("detail")
+    assert len(detail) == 1
+
+    violation = detail[0]
+    print(violation)
+    assert violation.get("type") == "value_error"
+    assert violation.get("loc") == ["body", "email"]
+    assert (
+        violation.get("msg")
+        == "value is not a valid email address: The email address is not valid. It must have exactly one @-sign."
+    )
+
+
+@pytest.mark.asyncio
 async def test_create_user_unauthorized(app: FastAPI, client: AsyncClient) -> None:
     """Tests that a 401 response is given when no access token is provided through the Authorization header."""
     response = await client.post(
