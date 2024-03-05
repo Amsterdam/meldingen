@@ -64,7 +64,18 @@ async def retrieve_user(
     return UserOutput(id=db_user.id, username=db_user.username, email=db_user.email)
 
 
-@router.delete("/{user_id}", name="user:delete", status_code=HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{user_id}",
+    name="user:delete",
+    status_code=HTTP_204_NO_CONTENT,
+    responses={
+        HTTP_400_BAD_REQUEST: {
+            "description": "Delete own account",
+            "content": {"application/json": {"example": {"detail": "You cannot delete your own account"}}},
+        },
+        **not_found_response,
+    },
+)
 @inject
 async def delete_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
