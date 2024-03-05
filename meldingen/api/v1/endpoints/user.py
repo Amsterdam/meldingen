@@ -80,7 +80,7 @@ async def delete_user(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
 
-@router.patch("/{user_id}", name="user:update")
+@router.patch("/{user_id}", name="user:update", responses={**not_found_response})
 @inject
 async def update_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],

@@ -279,6 +279,9 @@ async def test_update_non_existing_user(app: FastAPI, client: AsyncClient, auth_
 
     assert response.status_code == HTTP_404_NOT_FOUND
 
+    body = response.json()
+    assert body.get("detail") == "Not Found"
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
