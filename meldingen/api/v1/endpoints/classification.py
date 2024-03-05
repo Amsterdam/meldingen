@@ -8,17 +8,12 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT
 
 from meldingen.actions import ClassificationListAction, ClassificationRetrieveAction, ClassificationUpdateAction
 from meldingen.api.utils import pagination_params
+from meldingen.api.v1 import not_found_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Classification, ClassificationInput, ClassificationOutput, User
 
 router = APIRouter()
-not_found_response = {
-    HTTP_404_NOT_FOUND: {
-        "description": "Not Found",
-        "content": {"application/json": {"example": {"detail": "Not Found"}}},
-    }
-}
 
 
 @router.post("/", name="classification:create", status_code=HTTP_201_CREATED)
