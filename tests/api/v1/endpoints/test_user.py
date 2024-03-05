@@ -143,6 +143,16 @@ async def test_retrieve_user(app: FastAPI, client: AsyncClient, auth_user: None,
 
 
 @pytest.mark.asyncio
+async def test_retrieve_user_that_does_not_exist(app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+    response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, user_id=1))
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+    body = response.json()
+    assert body.get("detail") == "Not Found"
+
+
+@pytest.mark.asyncio
 async def test_retrieve_user_unauthorized(app: FastAPI, client: AsyncClient, test_user: User) -> None:
     """Tests that a 401 response is given when no access token is provided through the Authorization header."""
     response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, user_id=test_user.id))
