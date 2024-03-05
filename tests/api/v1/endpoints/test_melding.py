@@ -3,7 +3,13 @@ from typing import Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+)
 
 from meldingen.models import Melding
 
@@ -28,7 +34,7 @@ class TestMeldingRoutes:
 async def test_create_melding(app: FastAPI, client: AsyncClient) -> None:
     response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"text": "This is a test melding."})
 
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_201_CREATED
 
     data = response.json()
     assert data.get("id") == 1

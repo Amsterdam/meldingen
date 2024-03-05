@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.melding import MeldingCreateAction
+from starlette.status import HTTP_201_CREATED
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction
 from meldingen.api.utils import pagination_params
@@ -13,7 +14,7 @@ from meldingen.models import Melding, MeldingInput, MeldingOutput, User
 router = APIRouter()
 
 
-@router.post("/", name="melding:create")
+@router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
 @inject
 async def create_melding(
     melding_input: MeldingInput, action: MeldingCreateAction = Depends(Provide(Container.melding_create_action))
