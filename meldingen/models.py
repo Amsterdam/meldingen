@@ -41,7 +41,7 @@ class Melding(BaseDBModel, BaseMelding):
     classification: Mapped[Classification | None] = relationship(default=None)
 
 
-class UserInput(BaseModel, BaseUser):
+class UserCreateInput(BaseModel, BaseUser):
     username: str = Field(min_length=3)
     email: EmailStr
 
@@ -52,7 +52,7 @@ class UserOutput(BaseModel):
     username: str
 
 
-class UserPartialInput(BaseModel):
+class UserUpdateInput(BaseModel):
     username: str | None = Field(default=None, min_length=3)
     email: EmailStr | None = None
 
