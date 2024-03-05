@@ -92,6 +92,56 @@ async def test_list_meldingen_unauthorized(app: FastAPI, client: AsyncClient) ->
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
+    "limit, type, msg",
+    [
+        ("abc", "int_parsing", "Input should be a valid integer, unable to parse string as an integer"),
+        (-1, "greater_than_equal", "Input should be greater than or equal to 0"),
+    ],
+)
+async def test_list_melding_invalid_limit(
+    app: FastAPI, client: AsyncClient, auth_user: None, limit: str | int, type: str, msg: str
+) -> None:
+    response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"limit": limit})
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+    body = response.json()
+    detail = body.get("detail")
+    assert len(detail) == 1
+
+    violation = detail[0]
+    assert violation.get("type") == type
+    assert violation.get("loc") == ["query", "limit"]
+    assert violation.get("msg") == msg
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "offset, type, msg",
+    [
+        ("abc", "int_parsing", "Input should be a valid integer, unable to parse string as an integer"),
+        (-1, "greater_than_equal", "Input should be greater than or equal to 0"),
+    ],
+)
+async def test_list_melding_invalid_offset(
+    app: FastAPI, client: AsyncClient, auth_user: None, offset: str | int, type: str, msg: str
+) -> None:
+    response = await client.get(app.url_path_for(ROUTE_NAME_LIST), params={"offset": offset})
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+    body = response.json()
+    detail = body.get("detail")
+    assert len(detail) == 1
+
+    violation = detail[0]
+    assert violation.get("type") == type
+    assert violation.get("loc") == ["query", "offset"]
+    assert violation.get("msg") == msg
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
     "melding_text", ["Er ligt poep op de stoep.", "Er is een matras naast de prullenbak gedumpt."], indirect=True
 )
 async def test_retrieve_melding(app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding) -> None:
