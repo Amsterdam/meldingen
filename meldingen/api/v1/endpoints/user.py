@@ -8,6 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD
 
 from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.api.utils import pagination_params
+from meldingen.api.v1 import not_found_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import User, UserCreateInput, UserOutput, UserUpdateInput
@@ -49,7 +50,7 @@ async def list_users(
     return output
 
 
-@router.get("/{user_id}", name="user:retrieve")
+@router.get("/{user_id}", name="user:retrieve", responses={**not_found_response})
 @inject
 async def retrieve_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
