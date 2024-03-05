@@ -3,7 +3,7 @@ from typing import Annotated, Any
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.melding import MeldingCreateAction
-from starlette.status import HTTP_201_CREATED
+from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction
 from meldingen.api.utils import pagination_params
@@ -55,6 +55,6 @@ async def retrieve_melding(
     melding = await action(pk=melding_id)
 
     if not melding:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return MeldingOutput(id=melding.id, text=melding.text)
