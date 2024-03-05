@@ -4,6 +4,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
 from meldingen_core.exceptions import NotFoundException
+from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.api.utils import pagination_params
@@ -14,7 +15,7 @@ from meldingen.models import User, UserCreateInput, UserOutput, UserUpdateInput
 router = APIRouter()
 
 
-@router.post("/", name="user:create", status_code=201)
+@router.post("/", name="user:create", status_code=HTTP_201_CREATED)
 @inject
 async def create_user(
     user_input: UserCreateInput,
@@ -57,12 +58,12 @@ async def retrieve_user(
 ) -> UserOutput:
     db_user = await action(pk=user_id)
     if not db_user:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return UserOutput(id=db_user.id, username=db_user.username, email=db_user.email)
 
 
-@router.delete("/{user_id}", name="user:delete", status_code=204)
+@router.delete("/{user_id}", name="user:delete", status_code=HTTP_204_NO_CONTENT)
 @inject
 async def delete_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
@@ -70,12 +71,12 @@ async def delete_user(
     action: UserDeleteAction = Depends(Provide(Container.user_delete_action)),
 ) -> None:
     if user.id == user_id:
-        raise HTTPException(status_code=400, detail="You cannot delete your own account")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="You cannot delete your own account")
 
     try:
         await action(pk=user_id)
     except NotFoundException:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
 
 @router.patch("/{user_id}", name="user:update")
@@ -91,6 +92,6 @@ async def update_user(
     try:
         db_user = await action(user_id, user_data)
     except NotFoundException:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return UserOutput(id=db_user.id, username=db_user.username, email=db_user.email)
