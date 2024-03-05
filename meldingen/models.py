@@ -3,7 +3,7 @@ from typing import Optional
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import User as BaseUser
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
 
@@ -16,7 +16,8 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
         return cls.__name__.lower()
 
 
-class ClassificationInput(BaseModel, BaseClassification): ...
+class ClassificationInput(BaseModel, BaseClassification):
+    name: str = Field(min_length=1)
 
 
 class ClassificationOutput(BaseModel, BaseClassification):

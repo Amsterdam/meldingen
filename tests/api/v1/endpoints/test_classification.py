@@ -9,6 +9,7 @@ from starlette.status import (
     HTTP_204_NO_CONTENT,
     HTTP_401_UNAUTHORIZED,
     HTTP_409_CONFLICT,
+    HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
 from meldingen.models import Classification
@@ -39,6 +40,24 @@ async def test_create_classification_unauthorized(app: FastAPI, client: AsyncCli
 
     data = response.json()
     assert data.get("detail") == "Not authenticated"
+
+
+@pytest.mark.asyncio
+async def test_create_classification_name_min_length_violation(
+    app: FastAPI, client: AsyncClient, auth_user: None
+) -> None:
+    response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"name": ""})
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+    data = response.json()
+    detail = data.get("detail")
+    assert len(detail) == 1
+
+    violation = detail[0]
+    assert violation.get("type") == "string_too_short"
+    assert violation.get("loc") == ["body", "name"]
+    assert violation.get("msg") == "String should have at least 1 character"
 
 
 @pytest.mark.asyncio
