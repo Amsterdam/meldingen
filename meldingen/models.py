@@ -44,6 +44,7 @@ class Melding(BaseDBModel, BaseMelding):
 
 
 class UserInput(BaseModel, BaseUser):
+    username: str = Field(min_length=3)
     email: EmailStr
 
 
