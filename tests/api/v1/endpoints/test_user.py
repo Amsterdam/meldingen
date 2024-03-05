@@ -7,6 +7,7 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
@@ -172,6 +173,16 @@ async def test_delete_user_that_does_not_exist(app: FastAPI, client: AsyncClient
 
     body = response.json()
     assert body.get("detail") == "Not Found"
+
+
+@pytest.mark.asyncio
+async def test_delete_user_own_user(app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+    response = await client.delete(app.url_path_for(ROUTE_NAME_DELETE, user_id=400))
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+
+    body = response.json()
+    assert body.get("detail") == "You cannot delete your own account"
 
 
 @pytest.mark.asyncio

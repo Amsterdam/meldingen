@@ -56,7 +56,9 @@ async def test_meldingen(melding_repository: MeldingRepository, melding_text: st
 
 
 async def authenticate_user_override(token: str | None = None) -> User:
-    return User(username="user@example.com", email="user@example.com")
+    user = User(username="user@example.com", email="user@example.com")
+    user.id = 400
+    return user
 
 
 @pytest.fixture
