@@ -29,7 +29,7 @@ class Classification(BaseDBModel, BaseClassification):
 
 
 class MeldingCreateInput(BaseModel):
-    text: str
+    text: str = Field(min_length=1)
 
 
 class MeldingOutput(BaseModel):
