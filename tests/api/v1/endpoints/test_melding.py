@@ -13,15 +13,16 @@ from starlette.status import (
 
 from meldingen.models import Melding
 
-ROUTE_NAME_CREATE: Final[str] = "melding:create"
 ROUTE_NAME_LIST: Final[str] = "melding:list"
 ROUTE_NAME_RETRIEVE: Final[str] = "melding:retrieve"
 
 
 class TestMeldingCreate:
+    ROUTE_NAME_CREATE: Final[str] = "melding:create"
+
     @pytest.mark.asyncio
     async def test_create_melding(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"text": "This is a test melding."})
+        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "This is a test melding."})
 
         assert response.status_code == HTTP_201_CREATED
 
@@ -31,7 +32,7 @@ class TestMeldingCreate:
 
     @pytest.mark.asyncio
     async def test_create_melding_text_minimum_length_violation(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"text": ""})
+        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": ""})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 

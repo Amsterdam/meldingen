@@ -15,19 +15,21 @@ from starlette.status import (
 )
 
 from meldingen.models import User
+from tests.api.v1.endpoints.base import BaseCreate
 
-ROUTE_NAME_CREATE: Final[str] = "user:create"
 ROUTE_NAME_LIST: Final[str] = "user:list"
 ROUTE_NAME_RETRIEVE: Final[str] = "user:retrieve"
 ROUTE_NAME_DELETE: Final[str] = "user:delete"
 ROUTE_NAME_UPDATE: Final[str] = "user:update"
 
 
-class TestUserCreate:
+class TestUserCreate(BaseCreate):
+    ROUTE_NAME_CREATE: Final[str] = "user:create"
+
     @pytest.mark.asyncio
     async def test_create_user(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
-            app.url_path_for(ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user@example.com"}
+            app.url_path_for(self.ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user@example.com"}
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -42,7 +44,7 @@ class TestUserCreate:
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
         response = await client.post(
-            app.url_path_for(ROUTE_NAME_CREATE), json={"username": "", "email": "user@example.com"}
+            app.url_path_for(self.ROUTE_NAME_CREATE), json={"username": "", "email": "user@example.com"}
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -59,7 +61,7 @@ class TestUserCreate:
     @pytest.mark.asyncio
     async def test_create_user_email_violation(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
-            app.url_path_for(ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user.example.com"}
+            app.url_path_for(self.ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user.example.com"}
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -77,18 +79,6 @@ class TestUserCreate:
         )
 
     @pytest.mark.asyncio
-    async def test_create_user_unauthorized(self, app: FastAPI, client: AsyncClient) -> None:
-        """Tests that a 401 response is given when no access token is provided through the Authorization header."""
-        response = await client.post(
-            app.url_path_for(ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user@example.com"}
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"
-
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "user_username, user_email, new_username, new_email",
         [
@@ -102,7 +92,7 @@ class TestUserCreate:
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, new_username: str, new_email: str
     ) -> None:
         response = await client.post(
-            app.url_path_for(ROUTE_NAME_CREATE), json={"username": new_username, "email": new_email}
+            app.url_path_for(self.ROUTE_NAME_CREATE), json={"username": new_username, "email": new_email}
         )
 
         assert response.status_code == HTTP_409_CONFLICT

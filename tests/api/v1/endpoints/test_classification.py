@@ -14,18 +14,20 @@ from starlette.status import (
 )
 
 from meldingen.models import Classification
+from tests.api.v1.endpoints.base import BaseCreate
 
-ROUTE_NAME_CREATE: Final[str] = "classification:create"
 ROUTE_NAME_LIST: Final[str] = "classification:list"
 ROUTE_NAME_RETRIEVE: Final[str] = "classification:retrieve"
 ROUTE_NAME_UPDATE: Final[str] = "classification:update"
 ROUTE_NAME_DELETE: Final[str] = "classification:delete"
 
 
-class TestClassificationCreate:
+class TestClassificationCreate(BaseCreate):
+    ROUTE_NAME_CREATE: Final[str] = "classification:create"
+
     @pytest.mark.asyncio
     async def test_create_classification(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
-        response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"name": "bla"})
+        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"name": "bla"})
 
         assert response.status_code == HTTP_201_CREATED
 
@@ -34,19 +36,10 @@ class TestClassificationCreate:
         assert data.get("name") == "bla"
 
     @pytest.mark.asyncio
-    async def test_create_classification_unauthorized(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"name": "bla"})
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"
-
-    @pytest.mark.asyncio
     async def test_create_classification_name_min_length_violation(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"name": ""})
+        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"name": ""})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -64,7 +57,7 @@ class TestClassificationCreate:
     async def test_create_classification_duplicate_name(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
-        response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"name": "bla"})
+        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"name": "bla"})
 
         assert response.status_code == HTTP_409_CONFLICT
 
