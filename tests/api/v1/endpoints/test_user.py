@@ -69,7 +69,6 @@ async def test_create_user_email_violation(app: FastAPI, client: AsyncClient, au
     assert len(detail) == 1
 
     violation = detail[0]
-    print(violation)
     assert violation.get("type") == "value_error"
     assert violation.get("loc") == ["body", "email"]
     assert (
