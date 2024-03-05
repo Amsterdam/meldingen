@@ -1,9 +1,7 @@
-from typing import Optional
-
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import User as BaseUser
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
 
@@ -16,7 +14,8 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
         return cls.__name__.lower()
 
 
-class ClassificationInput(BaseModel, BaseClassification): ...
+class ClassificationInput(BaseModel, BaseClassification):
+    name: str = Field(min_length=1)
 
 
 class ClassificationOutput(BaseModel, BaseClassification):
@@ -27,8 +26,8 @@ class Classification(BaseDBModel, BaseClassification):
     name: Mapped[str] = mapped_column(String, unique=True)
 
 
-class MeldingCreateInput(BaseModel):
-    text: str
+class MeldingInput(BaseModel):
+    text: str = Field(min_length=1)
 
 
 class MeldingOutput(BaseModel):
@@ -42,7 +41,8 @@ class Melding(BaseDBModel, BaseMelding):
     classification: Mapped[Classification | None] = relationship(default=None)
 
 
-class UserInput(BaseModel, BaseUser):
+class UserCreateInput(BaseModel, BaseUser):
+    username: str = Field(min_length=3)
     email: EmailStr
 
 
@@ -52,9 +52,9 @@ class UserOutput(BaseModel):
     username: str
 
 
-class UserPartialInput(BaseModel):
-    username: Optional[str] = None
-    email: Optional[EmailStr] = None
+class UserUpdateInput(BaseModel):
+    username: str | None = Field(default=None, min_length=3)
+    email: EmailStr | None = None
 
 
 user_group = Table(

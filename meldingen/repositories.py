@@ -19,7 +19,7 @@ T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
 
 
 class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
-    """Base repository for SQLModel based repositories."""
+    """Base repository for SqlAlchemy based repositories."""
 
     _session: AsyncSession
 

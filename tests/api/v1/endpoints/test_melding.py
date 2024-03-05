@@ -36,6 +36,22 @@ async def test_create_melding(app: FastAPI, client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_create_melding_text_minimum_length_violation(app: FastAPI, client: AsyncClient) -> None:
+    response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"text": ""})
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+    data = response.json()
+    detail = data.get("detail")
+    assert len(detail) == 1
+
+    violation = detail[0]
+    assert violation.get("type") == "string_too_short"
+    assert violation.get("loc") == ["body", "text"]
+    assert violation.get("msg") == "String should have at least 1 character"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "limit, offset, expected_result",
     [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],

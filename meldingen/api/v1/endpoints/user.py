@@ -10,7 +10,7 @@ from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateActi
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import User, UserInput, UserOutput, UserPartialInput
+from meldingen.models import User, UserCreateInput, UserOutput, UserUpdateInput
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("/", name="user:create", status_code=201)
 @inject
 async def create_user(
-    user_input: UserInput,
+    user_input: UserCreateInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: UserCreateAction = Depends(Provide(Container.user_create_action)),
 ) -> UserOutput:
@@ -83,7 +83,7 @@ async def delete_user(
 @inject
 async def update_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
-    user_input: UserPartialInput,
+    user_input: UserUpdateInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: UserUpdateAction = Depends(Provide(Container.user_update_action)),
 ) -> UserOutput:

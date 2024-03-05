@@ -37,6 +37,47 @@ async def test_create_user(app: FastAPI, client: AsyncClient, auth_user: None) -
 
 
 @pytest.mark.asyncio
+async def test_create_user_username_minimum_length_violation(
+    app: FastAPI, client: AsyncClient, auth_user: None
+) -> None:
+    response = await client.post(
+        app.url_path_for(ROUTE_NAME_CREATE), json={"username": "", "email": "user@example.com"}
+    )
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+    data = response.json()
+    detail = data.get("detail")
+    assert len(detail) == 1
+
+    violation = detail[0]
+    assert violation.get("type") == "string_too_short"
+    assert violation.get("loc") == ["body", "username"]
+    assert violation.get("msg") == "String should have at least 3 characters"
+
+
+@pytest.mark.asyncio
+async def test_create_user_email_violation(app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+    response = await client.post(
+        app.url_path_for(ROUTE_NAME_CREATE), json={"username": "meldingen_user", "email": "user.example.com"}
+    )
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+    data = response.json()
+    detail = data.get("detail")
+    assert len(detail) == 1
+
+    violation = detail[0]
+    assert violation.get("type") == "value_error"
+    assert violation.get("loc") == ["body", "email"]
+    assert (
+        violation.get("msg")
+        == "value is not a valid email address: The email address is not valid. It must have exactly one @-sign."
+    )
+
+
+@pytest.mark.asyncio
 async def test_create_user_unauthorized(app: FastAPI, client: AsyncClient) -> None:
     """Tests that a 401 response is given when no access token is provided through the Authorization header."""
     response = await client.post(
@@ -162,6 +203,24 @@ async def test_update_user(
 
     for key, value in new_data.items():
         assert data.get(key) == value
+
+
+@pytest.mark.asyncio
+async def test_update_user_username_minimum_length_violation(
+    app: FastAPI, client: AsyncClient, auth_user: None, test_user: User
+) -> None:
+    response = await client.patch(app.url_path_for(ROUTE_NAME_UPDATE, user_id=test_user.id), json={"username": "ab"})
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+    data = response.json()
+    detail = data.get("detail")
+    assert len(detail) == 1
+
+    violation = detail[0]
+    assert violation.get("type") == "string_too_short"
+    assert violation.get("loc") == ["body", "username"]
+    assert violation.get("msg") == "String should have at least 3 characters"
 
 
 @pytest.mark.asyncio
