@@ -134,6 +134,16 @@ async def test_retrieve_classification(
 
 
 @pytest.mark.asyncio
+async def test_retrieve_classification_that_does_not_exist(app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+    response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, classification_id=1))
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+    body = response.json()
+    assert body.get("detail") == "Not Found"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
 async def test_retrieve_classification_unauthorized(
     app: FastAPI, client: AsyncClient, classification: Classification
@@ -159,6 +169,19 @@ async def test_update_classification(
 
     data = response.json()
     assert data.get("name") == "bladiebla"
+
+
+@pytest.mark.asyncio
+async def test_update_classification_that_does_not_exist(app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+    response = await client.patch(
+        app.url_path_for(ROUTE_NAME_UPDATE, classification_id=404), json={"name": "bladiebla"}
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+    body = response.json()
+
+    assert body.get("detail") == "Not Found"
 
 
 @pytest.mark.asyncio
