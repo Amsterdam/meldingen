@@ -26,7 +26,7 @@ class Classification(BaseDBModel, BaseClassification):
     name: Mapped[str] = mapped_column(String, unique=True)
 
 
-class MeldingCreateInput(BaseModel):
+class MeldingInput(BaseModel):
     text: str = Field(min_length=1)
 
 

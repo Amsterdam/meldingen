@@ -8,7 +8,7 @@ from meldingen.actions import MeldingListAction, MeldingRetrieveAction
 from meldingen.api.utils import pagination_params
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import Melding, MeldingCreateInput, MeldingOutput, User
+from meldingen.models import Melding, MeldingInput, MeldingOutput, User
 
 router = APIRouter()
 
@@ -16,7 +16,7 @@ router = APIRouter()
 @router.post("/", name="melding:create")
 @inject
 async def create_melding(
-    melding_input: MeldingCreateInput, action: MeldingCreateAction = Depends(Provide(Container.melding_create_action))
+    melding_input: MeldingInput, action: MeldingCreateAction = Depends(Provide(Container.melding_create_action))
 ) -> MeldingOutput:
     melding = Melding(**melding_input.model_dump())
     await action(melding)
