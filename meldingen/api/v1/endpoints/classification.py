@@ -8,7 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT
 
 from meldingen.actions import ClassificationListAction, ClassificationRetrieveAction, ClassificationUpdateAction
 from meldingen.api.utils import pagination_params
-from meldingen.api.v1 import not_found_response
+from meldingen.api.v1 import default_response, not_found_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Classification, ClassificationInput, ClassificationOutput, User
@@ -87,7 +87,7 @@ async def update_classification(
     status_code=HTTP_204_NO_CONTENT,
     responses={
         **not_found_response,
-        "default": {"description": "Unexpected error"},
+        **default_response,
     },
 )
 @inject

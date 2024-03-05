@@ -6,3 +6,4 @@ not_found_response = {
         "content": {"application/json": {"example": {"detail": "Not Found"}}},
     }
 }
+default_response = {"default": {"description": "Unexpected error"}}
