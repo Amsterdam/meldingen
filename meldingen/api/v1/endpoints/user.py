@@ -7,7 +7,7 @@ from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateAction
-from meldingen.api.utils import pagination_params
+from meldingen.api.utils import PaginationParams, pagination_params
 from meldingen.api.v1 import default_response, not_found_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -34,7 +34,7 @@ async def create_user(
 @router.get("/", name="user:list")
 @inject
 async def list_users(
-    pagination: Annotated[dict[str, int | None], Depends(pagination_params)],
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
     user: Annotated[User, Depends(authenticate_user)],
     action: UserListAction = Depends(Provide(Container.user_list_action)),
 ) -> list[UserOutput]:

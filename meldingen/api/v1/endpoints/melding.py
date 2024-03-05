@@ -6,7 +6,7 @@ from meldingen_core.actions.melding import MeldingCreateAction
 from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction
-from meldingen.api.utils import pagination_params
+from meldingen.api.utils import PaginationParams, pagination_params
 from meldingen.api.v1 import not_found_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -31,7 +31,7 @@ async def create_melding(
 @router.get("/", name="melding:list")
 @inject
 async def list_meldingen(
-    pagination: Annotated[dict[str, int | None], Depends(pagination_params)],
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
     user: Annotated[User, Depends(authenticate_user)],
     action: MeldingListAction = Depends(Provide(Container.melding_list_action)),
 ) -> list[MeldingOutput]:
