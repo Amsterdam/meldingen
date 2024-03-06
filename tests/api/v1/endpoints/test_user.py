@@ -1,4 +1,4 @@
-from typing import Final, Any
+from typing import Any, Final
 
 import pytest
 from fastapi import FastAPI
@@ -16,8 +16,6 @@ from starlette.status import (
 
 from meldingen.models import User
 from tests.api.v1.endpoints.base import UnauthorizedMixin
-
-ROUTE_NAME_RETRIEVE: Final[str] = "user:retrieve"
 
 
 class TestUserCreate(UnauthorizedMixin):
@@ -176,7 +174,11 @@ class TestUserList(UnauthorizedMixin):
         assert violation.get("msg") == msg
 
 
-class TestUserRetrieve:
+class TestUserRetrieve(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "user:retrieve"
+    METHOD: Final[str] = "GET"
+    PATH_PARAMS: dict[str, Any] = {"user_id": 1}
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "user_username, user_email",
@@ -184,7 +186,7 @@ class TestUserRetrieve:
         indirect=True,
     )
     async def test_retrieve_user(self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, user_id=test_user.id))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, user_id=test_user.id))
 
         assert response.status_code == HTTP_200_OK
 
@@ -195,22 +197,12 @@ class TestUserRetrieve:
 
     @pytest.mark.asyncio
     async def test_retrieve_user_that_does_not_exist(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, user_id=1))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, user_id=1))
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
         body = response.json()
         assert body.get("detail") == "Not Found"
-
-    @pytest.mark.asyncio
-    async def test_retrieve_user_unauthorized(self, app: FastAPI, client: AsyncClient, test_user: User) -> None:
-        """Tests that a 401 response is given when no access token is provided through the Authorization header."""
-        response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, user_id=test_user.id))
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"
 
 
 class TestUserDelete(UnauthorizedMixin):
@@ -279,9 +271,7 @@ class TestUserUpdate(UnauthorizedMixin):
     async def test_update_user_username_minimum_length_violation(
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User
     ) -> None:
-        response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, user_id=test_user.id), json={"username": "ab"}
-        )
+        response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=test_user.id), json={"username": "ab"})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 

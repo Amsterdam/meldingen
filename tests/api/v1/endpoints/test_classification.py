@@ -1,4 +1,4 @@
-from typing import Final, Any
+from typing import Any, Final
 
 import pytest
 from fastapi import FastAPI
@@ -15,8 +15,6 @@ from starlette.status import (
 
 from meldingen.models import Classification
 from tests.api.v1.endpoints.base import UnauthorizedMixin
-
-ROUTE_NAME_RETRIEVE: Final[str] = "classification:retrieve"
 
 
 class TestClassificationCreate(UnauthorizedMixin):
@@ -152,13 +150,17 @@ class TestClassificationList(UnauthorizedMixin):
         assert violation.get("msg") == msg
 
 
-class TestClassificationRetrieve:
+class TestClassificationRetrieve(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "classification:retrieve"
+    METHOD: Final[str] = "GET"
+    PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_retrieve_classification(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, classification_id=classification.id))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
 
         assert response.status_code == HTTP_200_OK
 
@@ -170,24 +172,12 @@ class TestClassificationRetrieve:
     async def test_retrieve_classification_that_does_not_exist(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, classification_id=1))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=1))
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
         body = response.json()
         assert body.get("detail") == "Not Found"
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
-    async def test_retrieve_classification_unauthorized(
-        self, app: FastAPI, client: AsyncClient, classification: Classification
-    ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, classification_id=classification.id))
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"
 
 
 class TestClassificationUpdate(UnauthorizedMixin):

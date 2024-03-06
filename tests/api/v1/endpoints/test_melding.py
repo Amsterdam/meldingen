@@ -1,4 +1,4 @@
-from typing import Final
+from typing import Any, Final
 
 import pytest
 from fastapi import FastAPI
@@ -13,8 +13,6 @@ from starlette.status import (
 
 from meldingen.models import Melding
 from tests.api.v1.endpoints.base import UnauthorizedMixin
-
-ROUTE_NAME_RETRIEVE: Final[str] = "melding:retrieve"
 
 
 class TestMeldingCreate:
@@ -121,7 +119,11 @@ class TestMeldingList(UnauthorizedMixin):
         assert violation.get("msg") == msg
 
 
-class TestMeldingRetrieve:
+class TestMeldingRetrieve(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "melding:retrieve"
+    METHOD: Final[str] = "GET"
+    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "melding_text", ["Er ligt poep op de stoep.", "Er is een matras naast de prullenbak gedumpt."], indirect=True
@@ -129,7 +131,7 @@ class TestMeldingRetrieve:
     async def test_retrieve_melding(
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, melding_id=test_melding.id))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=test_melding.id))
 
         assert response.status_code == HTTP_200_OK
 
@@ -141,7 +143,7 @@ class TestMeldingRetrieve:
     async def test_retrieve_melding_that_does_not_exist(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, melding_id=1))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=1))
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
@@ -153,7 +155,7 @@ class TestMeldingRetrieve:
         self, app: FastAPI, client: AsyncClient, test_melding: Melding
     ) -> None:
         """Tests that a 401 response is given when no access token is provided through the Authorization header."""
-        response = await client.get(app.url_path_for(ROUTE_NAME_RETRIEVE, melding_id=test_melding.id))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=test_melding.id))
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
