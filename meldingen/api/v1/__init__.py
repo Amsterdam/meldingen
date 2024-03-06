@@ -1,13 +1,15 @@
+from typing import Any, Final
+
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
 
-not_found_response = {
+not_found_response: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_404_NOT_FOUND: {
         "description": "Not Found",
         "content": {"application/json": {"example": {"detail": "Not Found"}}},
     }
 }
-default_response = {"default": {"description": "Unexpected error"}}
-conflict_response = {
+default_response: Final[dict[str | int, dict[str, Any]]] = {"default": {"description": "Unexpected error"}}
+conflict_response: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_409_CONFLICT: {
         "description": "Conflict, a uniqueness error occurred",
         "content": {
