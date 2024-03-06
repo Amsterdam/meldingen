@@ -18,7 +18,6 @@ from meldingen.models import User
 from tests.api.v1.endpoints.base import UnauthorizedMixin
 
 ROUTE_NAME_RETRIEVE: Final[str] = "user:retrieve"
-ROUTE_NAME_UPDATE: Final[str] = "user:update"
 
 
 class TestUserCreate(UnauthorizedMixin):
@@ -249,7 +248,11 @@ class TestUserDelete(UnauthorizedMixin):
         assert body.get("detail") == "You cannot delete your own account"
 
 
-class TestUserUpdate:
+class TestUserUpdate(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "user:update"
+    METHOD: Final[str] = "PATCH"
+    PATH_PARAMS: dict[str, Any] = {"user_id": 1}
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "user_username, user_email, new_data",
@@ -263,7 +266,7 @@ class TestUserUpdate:
     async def test_update_user(
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, new_data: dict[str, str]
     ) -> None:
-        response = await client.patch(app.url_path_for(ROUTE_NAME_UPDATE, user_id=test_user.id), json=new_data)
+        response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=test_user.id), json=new_data)
 
         assert response.status_code == HTTP_200_OK
 
@@ -277,7 +280,7 @@ class TestUserUpdate:
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User
     ) -> None:
         response = await client.patch(
-            app.url_path_for(ROUTE_NAME_UPDATE, user_id=test_user.id), json={"username": "ab"}
+            app.url_path_for(self.ROUTE_NAME, user_id=test_user.id), json={"username": "ab"}
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -303,42 +306,20 @@ class TestUserUpdate:
     async def test_update_user_invalid_data(
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, invalid_data: dict[str, str]
     ) -> None:
-        response = await client.patch(app.url_path_for(ROUTE_NAME_UPDATE, user_id=test_user.id), json=invalid_data)
+        response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=test_user.id), json=invalid_data)
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
     async def test_update_non_existing_user(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.patch(
-            app.url_path_for(ROUTE_NAME_UPDATE, user_id=999), json={"username": "test", "email": "test@example.com"}
+            app.url_path_for(self.ROUTE_NAME, user_id=999), json={"username": "test", "email": "test@example.com"}
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
         body = response.json()
         assert body.get("detail") == "Not Found"
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "user_username, user_email, new_username, new_email",
-        [
-            ("username #1", "user-1@example.com", "U. Ser", "u.ser@example.com"),
-        ],
-        indirect=["user_username", "user_email"],
-    )
-    async def test_update_user_unauthorized(
-        self, app: FastAPI, client: AsyncClient, test_user: User, new_username: str, new_email: str
-    ) -> None:
-        """Tests that a 401 response is given when no access token is provided through the Authorization header."""
-        response = await client.patch(
-            app.url_path_for(ROUTE_NAME_UPDATE, user_id=test_user.id),
-            json={"username": new_username, "email": new_email},
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -361,7 +342,7 @@ class TestUserUpdate:
         test_user = test_users[0]
 
         response = await client.patch(
-            app.url_path_for(ROUTE_NAME_UPDATE, user_id=test_user.id),
+            app.url_path_for(self.ROUTE_NAME, user_id=test_user.id),
             json={"username": new_username, "email": new_email},
         )
 

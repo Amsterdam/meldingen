@@ -17,7 +17,6 @@ from meldingen.models import Classification
 from tests.api.v1.endpoints.base import UnauthorizedMixin
 
 ROUTE_NAME_RETRIEVE: Final[str] = "classification:retrieve"
-ROUTE_NAME_UPDATE: Final[str] = "classification:update"
 
 
 class TestClassificationCreate(UnauthorizedMixin):
@@ -191,14 +190,18 @@ class TestClassificationRetrieve:
         assert data.get("detail") == "Not authenticated"
 
 
-class TestClassificationUpdate:
+class TestClassificationUpdate(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "classification:update"
+    METHOD: Final[str] = "PATCH"
+    PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_update_classification(
         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
     ) -> None:
         response = await client.patch(
-            app.url_path_for(ROUTE_NAME_UPDATE, classification_id=classification.id), json={"name": "bladiebla"}
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"name": "bladiebla"}
         )
 
         assert response.status_code == HTTP_200_OK
@@ -211,7 +214,7 @@ class TestClassificationUpdate:
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
         response = await client.patch(
-            app.url_path_for(ROUTE_NAME_UPDATE, classification_id=404), json={"name": "bladiebla"}
+            app.url_path_for(self.ROUTE_NAME, classification_id=404), json={"name": "bladiebla"}
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
@@ -226,7 +229,7 @@ class TestClassificationUpdate:
         self, app: FastAPI, client: AsyncClient, classification: Classification
     ) -> None:
         response = await client.patch(
-            app.url_path_for(ROUTE_NAME_UPDATE, classification_id=classification.id), json={"name": "bladiebla"}
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"name": "bladiebla"}
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -239,7 +242,7 @@ class TestClassificationUpdate:
         self, app: FastAPI, client: AsyncClient, classifications: list[Classification], auth_user: None
     ) -> None:
         response = await client.patch(
-            app.url_path_for(ROUTE_NAME_UPDATE, classification_id=1), json={"name": "category: 2"}
+            app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "category: 2"}
         )
 
         assert response.status_code == HTTP_409_CONFLICT
