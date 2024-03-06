@@ -8,7 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD
 
 from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.api.utils import PaginationParams, pagination_params
-from meldingen.api.v1 import default_response, not_found_response
+from meldingen.api.v1 import conflict_response, default_response, not_found_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import User, UserCreateInput, UserOutput, UserUpdateInput
@@ -16,7 +16,7 @@ from meldingen.models import User, UserCreateInput, UserOutput, UserUpdateInput
 router = APIRouter()
 
 
-@router.post("/", name="user:create", status_code=HTTP_201_CREATED)
+@router.post("/", name="user:create", status_code=HTTP_201_CREATED, responses={**conflict_response})
 @inject
 async def create_user(
     user_input: UserCreateInput,
@@ -92,7 +92,7 @@ async def delete_user(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
 
-@router.patch("/{user_id}", name="user:update", responses={**not_found_response})
+@router.patch("/{user_id}", name="user:update", responses={**not_found_response, **conflict_response})
 @inject
 async def update_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
