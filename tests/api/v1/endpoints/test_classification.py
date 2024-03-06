@@ -13,12 +13,18 @@ from starlette.status import (
 )
 
 from meldingen.models import Classification
-from tests.api.v1.endpoints.base import UnauthorizedMixin
+from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 
 
-class TestClassificationCreate(UnauthorizedMixin):
+class TestClassificationCreate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:create"
     METHOD: Final[str] = "POST"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
 
     @pytest.mark.asyncio
     async def test_create_classification(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
@@ -62,9 +68,15 @@ class TestClassificationCreate(UnauthorizedMixin):
         )
 
 
-class TestClassificationList(UnauthorizedMixin):
+class TestClassificationList(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:list"
     METHOD: Final[str] = "GET"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
 
     @pytest.mark.asyncio
     async def test_list_all_classifications(
@@ -149,10 +161,19 @@ class TestClassificationList(UnauthorizedMixin):
         assert violation.get("msg") == msg
 
 
-class TestClassificationRetrieve(UnauthorizedMixin):
+class TestClassificationRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:retrieve"
     METHOD: Final[str] = "GET"
     PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
@@ -179,10 +200,19 @@ class TestClassificationRetrieve(UnauthorizedMixin):
         assert body.get("detail") == "Not Found"
 
 
-class TestClassificationUpdate(UnauthorizedMixin):
+class TestClassificationUpdate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:update"
     METHOD: Final[str] = "PATCH"
     PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
@@ -228,10 +258,19 @@ class TestClassificationUpdate(UnauthorizedMixin):
         )
 
 
-class TestClassificationDelete(UnauthorizedMixin):
+class TestClassificationDelete(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:delete"
     METHOD: Final[str] = "DELETE"
     PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)

@@ -14,12 +14,18 @@ from starlette.status import (
 )
 
 from meldingen.models import User
-from tests.api.v1.endpoints.base import UnauthorizedMixin
+from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 
 
-class TestUserCreate(UnauthorizedMixin):
+class TestUserCreate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "user:create"
     METHOD: Final[str] = "POST"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
 
     @pytest.mark.asyncio
     async def test_create_user(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
@@ -98,9 +104,15 @@ class TestUserCreate(UnauthorizedMixin):
         )
 
 
-class TestUserList(UnauthorizedMixin):
+class TestUserList(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "user:list"
     METHOD: Final[str] = "GET"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -173,10 +185,19 @@ class TestUserList(UnauthorizedMixin):
         assert violation.get("msg") == msg
 
 
-class TestUserRetrieve(UnauthorizedMixin):
+class TestUserRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "user:retrieve"
     METHOD: Final[str] = "GET"
     PATH_PARAMS: dict[str, Any] = {"user_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -204,10 +225,19 @@ class TestUserRetrieve(UnauthorizedMixin):
         assert body.get("detail") == "Not Found"
 
 
-class TestUserDelete(UnauthorizedMixin):
+class TestUserDelete(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "user:delete"
     METHOD: Final[str] = "DELETE"
     PATH_PARAMS: dict[str, Any] = {"user_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -239,10 +269,19 @@ class TestUserDelete(UnauthorizedMixin):
         assert body.get("detail") == "You cannot delete your own account"
 
 
-class TestUserUpdate(UnauthorizedMixin):
+class TestUserUpdate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "user:update"
     METHOD: Final[str] = "PATCH"
     PATH_PARAMS: dict[str, Any] = {"user_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

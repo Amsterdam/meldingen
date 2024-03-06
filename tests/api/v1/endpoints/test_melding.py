@@ -3,15 +3,10 @@ from typing import Any, Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import (
-    HTTP_200_OK,
-    HTTP_201_CREATED,
-    HTTP_404_NOT_FOUND,
-    HTTP_422_UNPROCESSABLE_ENTITY,
-)
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 from meldingen.models import Melding
-from tests.api.v1.endpoints.base import UnauthorizedMixin
+from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 
 
 class TestMeldingCreate:
@@ -43,9 +38,15 @@ class TestMeldingCreate:
         assert violation.get("msg") == "String should have at least 1 character"
 
 
-class TestMeldingList(UnauthorizedMixin):
+class TestMeldingList(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:list"
     METHOD: Final[str] = "GET"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -118,10 +119,19 @@ class TestMeldingList(UnauthorizedMixin):
         assert violation.get("msg") == msg
 
 
-class TestMeldingRetrieve(UnauthorizedMixin):
+class TestMeldingRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:retrieve"
     METHOD: Final[str] = "GET"
     PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
