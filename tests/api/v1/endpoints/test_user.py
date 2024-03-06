@@ -1,4 +1,4 @@
-from typing import Final
+from typing import Final, Any
 
 import pytest
 from fastapi import FastAPI
@@ -18,7 +18,6 @@ from meldingen.models import User
 from tests.api.v1.endpoints.base import UnauthorizedMixin
 
 ROUTE_NAME_RETRIEVE: Final[str] = "user:retrieve"
-ROUTE_NAME_DELETE: Final[str] = "user:delete"
 ROUTE_NAME_UPDATE: Final[str] = "user:update"
 
 
@@ -215,7 +214,11 @@ class TestUserRetrieve:
         assert data.get("detail") == "Not authenticated"
 
 
-class TestUserDelete:
+class TestUserDelete(UnauthorizedMixin):
+    ROUTE_NAME: Final[str] = "user:delete"
+    METHOD: Final[str] = "DELETE"
+    PATH_PARAMS: dict[str, Any] = {"user_id": 1}
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "user_username, user_email",
@@ -223,13 +226,13 @@ class TestUserDelete:
         indirect=True,
     )
     async def test_delete_user(self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User) -> None:
-        response = await client.delete(app.url_path_for(ROUTE_NAME_DELETE, user_id=test_user.id))
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, user_id=test_user.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
 
     @pytest.mark.asyncio
     async def test_delete_user_that_does_not_exist(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
-        response = await client.delete(app.url_path_for(ROUTE_NAME_DELETE, user_id=1))
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, user_id=1))
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
@@ -238,29 +241,12 @@ class TestUserDelete:
 
     @pytest.mark.asyncio
     async def test_delete_user_own_user(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
-        response = await client.delete(app.url_path_for(ROUTE_NAME_DELETE, user_id=400))
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, user_id=400))
 
         assert response.status_code == HTTP_400_BAD_REQUEST
 
         body = response.json()
         assert body.get("detail") == "You cannot delete your own account"
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "user_username, user_email",
-        [
-            ("username #1", "user-1@example.com"),
-        ],
-        indirect=True,
-    )
-    async def test_delete_user_unauthorized(self, app: FastAPI, client: AsyncClient, test_user: User) -> None:
-        """Tests that a 401 response is given when no access token is provided through the Authorization header."""
-        response = await client.delete(app.url_path_for(ROUTE_NAME_DELETE, user_id=test_user.id))
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"
 
 
 class TestUserUpdate:
