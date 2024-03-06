@@ -1,6 +1,6 @@
 from typing import Any, Final
 
-from starlette.status import HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
 
 not_found_response: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_404_NOT_FOUND: {
@@ -19,5 +19,11 @@ conflict_response: Final[dict[str | int, dict[str, Any]]] = {
                 }
             }
         },
+    }
+}
+unauthorized_response: Final[dict[str | int, dict[str, Any]]] = {
+    HTTP_401_UNAUTHORIZED: {
+        "description": "Unauthorized, perhaps the token was invalid or expired, or the user could not be found.",
+        "content": {"application/json": {"example": {"detail": "Token expired"}}},
     }
 }

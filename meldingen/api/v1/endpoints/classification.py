@@ -8,7 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT
 
 from meldingen.actions import ClassificationListAction, ClassificationRetrieveAction, ClassificationUpdateAction
 from meldingen.api.utils import PaginationParams, pagination_params
-from meldingen.api.v1 import conflict_response, default_response, not_found_response
+from meldingen.api.v1 import conflict_response, default_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Classification, ClassificationInput, ClassificationOutput, User
@@ -16,7 +16,12 @@ from meldingen.models import Classification, ClassificationInput, Classification
 router = APIRouter()
 
 
-@router.post("/", name="classification:create", status_code=HTTP_201_CREATED, responses={**conflict_response})
+@router.post(
+    "/",
+    name="classification:create",
+    status_code=HTTP_201_CREATED,
+    responses={**unauthorized_response, **conflict_response},
+)
 @inject
 async def create_classification(
     classification_input: ClassificationInput,
@@ -30,7 +35,7 @@ async def create_classification(
     return ClassificationOutput(id=db_model.id, name=db_model.name)
 
 
-@router.get("/", name="classification:list")
+@router.get("/", name="classification:list", responses={**unauthorized_response})
 @inject
 async def list_classifications(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
@@ -49,7 +54,9 @@ async def list_classifications(
     return output
 
 
-@router.get("/{classification_id}", name="classification:retrieve", responses={**not_found_response})
+@router.get(
+    "/{classification_id}", name="classification:retrieve", responses={**unauthorized_response, **not_found_response}
+)
 @inject
 async def retrieve_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
@@ -64,7 +71,9 @@ async def retrieve_classification(
 
 
 @router.patch(
-    "/{classification_id}", name="classification:update", responses={**not_found_response, **conflict_response}
+    "/{classification_id}",
+    name="classification:update",
+    responses={**unauthorized_response, **not_found_response, **conflict_response},
 )
 @inject
 async def update_classification(
@@ -88,6 +97,7 @@ async def update_classification(
     name="classification:delete",
     status_code=HTTP_204_NO_CONTENT,
     responses={
+        **unauthorized_response,
         **not_found_response,
         **default_response,
     },

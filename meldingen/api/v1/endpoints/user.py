@@ -8,7 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD
 
 from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.api.utils import PaginationParams, pagination_params
-from meldingen.api.v1 import conflict_response, default_response, not_found_response
+from meldingen.api.v1 import conflict_response, default_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import User, UserCreateInput, UserOutput, UserUpdateInput
@@ -16,7 +16,9 @@ from meldingen.models import User, UserCreateInput, UserOutput, UserUpdateInput
 router = APIRouter()
 
 
-@router.post("/", name="user:create", status_code=HTTP_201_CREATED, responses={**conflict_response})
+@router.post(
+    "/", name="user:create", status_code=HTTP_201_CREATED, responses={**unauthorized_response, **conflict_response}
+)
 @inject
 async def create_user(
     user_input: UserCreateInput,
@@ -31,7 +33,7 @@ async def create_user(
     return output
 
 
-@router.get("/", name="user:list")
+@router.get("/", name="user:list", responses={**unauthorized_response})
 @inject
 async def list_users(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
@@ -50,7 +52,7 @@ async def list_users(
     return output
 
 
-@router.get("/{user_id}", name="user:retrieve", responses={**not_found_response})
+@router.get("/{user_id}", name="user:retrieve", responses={**unauthorized_response, **not_found_response})
 @inject
 async def retrieve_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
@@ -73,6 +75,7 @@ async def retrieve_user(
             "description": "Delete own account",
             "content": {"application/json": {"example": {"detail": "You cannot delete your own account"}}},
         },
+        **unauthorized_response,
         **not_found_response,
         **default_response,
     },
@@ -92,7 +95,9 @@ async def delete_user(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
 
-@router.patch("/{user_id}", name="user:update", responses={**not_found_response, **conflict_response})
+@router.patch(
+    "/{user_id}", name="user:update", responses={**unauthorized_response, **not_found_response, **conflict_response}
+)
 @inject
 async def update_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
