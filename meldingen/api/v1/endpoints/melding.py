@@ -3,9 +3,11 @@ from typing import Annotated, Any
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.melding import MeldingCreateAction
+from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction
-from meldingen.api.utils import pagination_params
+from meldingen.api.utils import PaginationParams, pagination_params
+from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Melding, MeldingInput, MeldingOutput, User
@@ -13,7 +15,7 @@ from meldingen.models import Melding, MeldingInput, MeldingOutput, User
 router = APIRouter()
 
 
-@router.post("/", name="melding:create")
+@router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
 @inject
 async def create_melding(
     melding_input: MeldingInput, action: MeldingCreateAction = Depends(Provide(Container.melding_create_action))
@@ -26,10 +28,10 @@ async def create_melding(
     return output
 
 
-@router.get("/", name="melding:list")
+@router.get("/", name="melding:list", responses={**unauthorized_response})
 @inject
 async def list_meldingen(
-    pagination: Annotated[dict[str, int | None], Depends(pagination_params)],
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
     user: Annotated[User, Depends(authenticate_user)],
     action: MeldingListAction = Depends(Provide(Container.melding_list_action)),
 ) -> list[MeldingOutput]:
@@ -44,7 +46,7 @@ async def list_meldingen(
     return output
 
 
-@router.get("/{melding_id}", name="melding:retrieve")
+@router.get("/{melding_id}", name="melding:retrieve", responses={**unauthorized_response, **not_found_response})
 @inject
 async def retrieve_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
@@ -54,6 +56,6 @@ async def retrieve_melding(
     melding = await action(pk=melding_id)
 
     if not melding:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return MeldingOutput(id=melding.id, text=melding.text)

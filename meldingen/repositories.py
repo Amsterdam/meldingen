@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
 from typing import Any, TypeVar, override
 
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import (
     BaseClassificationRepository,
     BaseMeldingRepository,
@@ -65,6 +66,9 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
     @override
     async def delete(self, pk: int) -> None:
         db_user = await self.retrieve(pk=pk)
+        if db_user is None:
+            raise NotFoundException()
+
         await self._session.delete(db_user)
         await self._session.commit()
 

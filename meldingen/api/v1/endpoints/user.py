@@ -4,10 +4,11 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
 from meldingen_core.exceptions import NotFoundException
-from sqlalchemy.exc import NoResultFound
+from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateAction
-from meldingen.api.utils import pagination_params
+from meldingen.api.utils import PaginationParams, pagination_params
+from meldingen.api.v1 import conflict_response, default_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import User, UserCreateInput, UserOutput, UserUpdateInput
@@ -15,7 +16,9 @@ from meldingen.models import User, UserCreateInput, UserOutput, UserUpdateInput
 router = APIRouter()
 
 
-@router.post("/", name="user:create", status_code=201)
+@router.post(
+    "/", name="user:create", status_code=HTTP_201_CREATED, responses={**unauthorized_response, **conflict_response}
+)
 @inject
 async def create_user(
     user_input: UserCreateInput,
@@ -30,10 +33,10 @@ async def create_user(
     return output
 
 
-@router.get("/", name="user:list")
+@router.get("/", name="user:list", responses={**unauthorized_response})
 @inject
 async def list_users(
-    pagination: Annotated[dict[str, int | None], Depends(pagination_params)],
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
     user: Annotated[User, Depends(authenticate_user)],
     action: UserListAction = Depends(Provide(Container.user_list_action)),
 ) -> list[UserOutput]:
@@ -49,7 +52,7 @@ async def list_users(
     return output
 
 
-@router.get("/{user_id}", name="user:retrieve")
+@router.get("/{user_id}", name="user:retrieve", responses={**unauthorized_response, **not_found_response})
 @inject
 async def retrieve_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
@@ -58,12 +61,25 @@ async def retrieve_user(
 ) -> UserOutput:
     db_user = await action(pk=user_id)
     if not db_user:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return UserOutput(id=db_user.id, username=db_user.username, email=db_user.email)
 
 
-@router.delete("/{user_id}", name="user:delete", status_code=204)
+@router.delete(
+    "/{user_id}",
+    name="user:delete",
+    status_code=HTTP_204_NO_CONTENT,
+    responses={
+        HTTP_400_BAD_REQUEST: {
+            "description": "Delete own account",
+            "content": {"application/json": {"example": {"detail": "You cannot delete your own account"}}},
+        },
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+)
 @inject
 async def delete_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
@@ -71,15 +87,17 @@ async def delete_user(
     action: UserDeleteAction = Depends(Provide(Container.user_delete_action)),
 ) -> None:
     if user.id == user_id:
-        raise HTTPException(status_code=400, detail="You cannot delete your own account")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="You cannot delete your own account")
 
     try:
         await action(pk=user_id)
-    except NoResultFound:
-        raise HTTPException(status_code=404)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
 
-@router.patch("/{user_id}", name="user:update")
+@router.patch(
+    "/{user_id}", name="user:update", responses={**unauthorized_response, **not_found_response, **conflict_response}
+)
 @inject
 async def update_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
@@ -92,6 +110,6 @@ async def update_user(
     try:
         db_user = await action(user_id, user_data)
     except NotFoundException:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return UserOutput(id=db_user.id, username=db_user.username, email=db_user.email)

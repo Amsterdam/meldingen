@@ -4,11 +4,11 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
 from meldingen_core.exceptions import NotFoundException
-from sqlalchemy.exc import NoResultFound
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions import ClassificationListAction, ClassificationRetrieveAction, ClassificationUpdateAction
-from meldingen.api.utils import pagination_params
+from meldingen.api.utils import PaginationParams, pagination_params
+from meldingen.api.v1 import conflict_response, default_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Classification, ClassificationInput, ClassificationOutput, User
@@ -16,7 +16,12 @@ from meldingen.models import Classification, ClassificationInput, Classification
 router = APIRouter()
 
 
-@router.post("/", name="classification:create", status_code=HTTP_201_CREATED)
+@router.post(
+    "/",
+    name="classification:create",
+    status_code=HTTP_201_CREATED,
+    responses={**unauthorized_response, **conflict_response},
+)
 @inject
 async def create_classification(
     classification_input: ClassificationInput,
@@ -30,10 +35,10 @@ async def create_classification(
     return ClassificationOutput(id=db_model.id, name=db_model.name)
 
 
-@router.get("/", name="classification:list")
+@router.get("/", name="classification:list", responses={**unauthorized_response})
 @inject
 async def list_classifications(
-    pagination: Annotated[dict[str, int | None], Depends(pagination_params)],
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
     user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationListAction = Depends(Provide[Container.classification_list_action]),
 ) -> list[ClassificationOutput]:
@@ -49,7 +54,9 @@ async def list_classifications(
     return output
 
 
-@router.get("/{classification_id}", name="classification:retrieve")
+@router.get(
+    "/{classification_id}", name="classification:retrieve", responses={**unauthorized_response, **not_found_response}
+)
 @inject
 async def retrieve_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
@@ -63,7 +70,11 @@ async def retrieve_classification(
     return ClassificationOutput(id=classification.id, name=classification.name)
 
 
-@router.patch("/{classification_id}", name="classification:update")
+@router.patch(
+    "/{classification_id}",
+    name="classification:update",
+    responses={**unauthorized_response, **not_found_response, **conflict_response},
+)
 @inject
 async def update_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
@@ -81,7 +92,16 @@ async def update_classification(
     return ClassificationOutput(id=classification.id, name=classification.name)
 
 
-@router.delete("/{classification_id}", name="classification:delete", status_code=HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{classification_id}",
+    name="classification:delete",
+    status_code=HTTP_204_NO_CONTENT,
+    responses={
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+)
 @inject
 async def delete_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
@@ -90,5 +110,5 @@ async def delete_classification(
 ) -> None:
     try:
         await action(classification_id)
-    except NoResultFound:
+    except NotFoundException:
         raise HTTPException(HTTP_404_NOT_FOUND)
