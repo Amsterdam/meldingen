@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_422_UNPROCESSABLE_ENTITY
 
 
 class BaseUnauthorizedTest(metaclass=ABCMeta):
@@ -28,3 +28,56 @@ class BaseUnauthorizedTest(metaclass=ABCMeta):
 
         data = response.json()
         assert data.get("detail") == "Not authenticated"
+
+
+class BasePaginationParamsTest(metaclass=ABCMeta):
+    @abstractmethod
+    def get_route_name(self) -> str: ...
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "limit, type, msg",
+        [
+            ("abc", "int_parsing", "Input should be a valid integer, unable to parse string as an integer"),
+            (-1, "greater_than_equal", "Input should be greater than or equal to 0"),
+        ],
+    )
+    async def test_list_invalid_limit(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, limit: str | int, type: str, msg: str
+    ) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"limit": limit})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == type
+        assert violation.get("loc") == ["query", "limit"]
+        assert violation.get("msg") == msg
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "offset, type, msg",
+        [
+            ("abc", "int_parsing", "Input should be a valid integer, unable to parse string as an integer"),
+            (-1, "greater_than_equal", "Input should be greater than or equal to 0"),
+        ],
+    )
+    async def test_list_invalid_offset(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, offset: str | int, type: str, msg: str
+    ) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"offset": offset})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == type
+        assert violation.get("loc") == ["query", "offset"]
+        assert violation.get("msg") == msg

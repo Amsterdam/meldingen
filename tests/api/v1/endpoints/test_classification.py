@@ -13,7 +13,7 @@ from starlette.status import (
 )
 
 from meldingen.models import Classification
-from tests.api.v1.endpoints.base import BaseUnauthorizedTest
+from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
 
 
 class TestClassificationCreate(BaseUnauthorizedTest):
@@ -68,7 +68,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         )
 
 
-class TestClassificationList(BaseUnauthorizedTest):
+class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest):
     ROUTE_NAME: Final[str] = "classification:list"
     METHOD: Final[str] = "GET"
 
@@ -111,54 +111,6 @@ class TestClassificationList(BaseUnauthorizedTest):
 
         data = response.json()
         assert len(data) == expected
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "limit, type, msg",
-        [
-            ("abc", "int_parsing", "Input should be a valid integer, unable to parse string as an integer"),
-            (-1, "greater_than_equal", "Input should be greater than or equal to 0"),
-        ],
-    )
-    async def test_list_classification_invalid_limit(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, limit: str | int, type: str, msg: str
-    ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit})
-
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
-
-        body = response.json()
-        detail = body.get("detail")
-        assert len(detail) == 1
-
-        violation = detail[0]
-        assert violation.get("type") == type
-        assert violation.get("loc") == ["query", "limit"]
-        assert violation.get("msg") == msg
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "offset, type, msg",
-        [
-            ("abc", "int_parsing", "Input should be a valid integer, unable to parse string as an integer"),
-            (-1, "greater_than_equal", "Input should be greater than or equal to 0"),
-        ],
-    )
-    async def test_list_classification_invalid_offset(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, offset: str | int, type: str, msg: str
-    ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"offset": offset})
-
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
-
-        body = response.json()
-        detail = body.get("detail")
-        assert len(detail) == 1
-
-        violation = detail[0]
-        assert violation.get("type") == type
-        assert violation.get("loc") == ["query", "offset"]
-        assert violation.get("msg") == msg
 
 
 class TestClassificationRetrieve(BaseUnauthorizedTest):
