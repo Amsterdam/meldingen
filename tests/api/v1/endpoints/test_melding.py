@@ -6,7 +6,6 @@ from httpx import AsyncClient
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
-    HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
@@ -149,15 +148,3 @@ class TestMeldingRetrieve(UnauthorizedMixin):
 
         body = response.json()
         assert body.get("detail") == "Not Found"
-
-    @pytest.mark.asyncio
-    async def test_retrieve_melding_unauthorized(
-        self, app: FastAPI, client: AsyncClient, test_melding: Melding
-    ) -> None:
-        """Tests that a 401 response is given when no access token is provided through the Authorization header."""
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=test_melding.id))
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"

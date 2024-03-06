@@ -7,7 +7,6 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
-    HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_422_UNPROCESSABLE_ENTITY,
@@ -212,20 +211,6 @@ class TestClassificationUpdate(UnauthorizedMixin):
         body = response.json()
 
         assert body.get("detail") == "Not Found"
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
-    async def test_update_classification_unauthorized(
-        self, app: FastAPI, client: AsyncClient, classification: Classification
-    ) -> None:
-        response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"name": "bladiebla"}
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-        data = response.json()
-        assert data.get("detail") == "Not authenticated"
 
     @pytest.mark.asyncio
     async def test_update_classification_duplicate_name(
