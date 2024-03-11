@@ -117,7 +117,7 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
         return FormIoForm
 
 
-class formIoComponentRepository(BaseSQLAlchemyRepository[FormIoComponent, FormIoComponent]):
+class FormIoComponentRepository(BaseSQLAlchemyRepository[FormIoComponent, FormIoComponent]):
     @override
     def get_model_type(self) -> type[FormIoComponent]:
         return FormIoComponent
