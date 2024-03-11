@@ -84,7 +84,7 @@ class Group(BaseDBModel):
     users: Mapped[list[User]] = relationship(secondary=user_group, back_populates="groups", default_factory=list)
 
 
-class FormsIoFormDisplayEnum(enum.Enum):
+class FormIoFormDisplayEnum(enum.Enum):
     """The value of the display field on the form can be one of the following:
     - form
     - wizard
@@ -96,21 +96,21 @@ class FormsIoFormDisplayEnum(enum.Enum):
     pdf: Final[str] = "pdf"
 
 
-class FormsIoForm(BaseDBModel):
-    # Forms.io attr's
-    display: Mapped[str] = mapped_column(Enum(FormsIoFormDisplayEnum, name="forms_io_form_display", default="form"))
+class FormIoForm(BaseDBModel):
+    # Form.io attr's
+    display: Mapped[str] = mapped_column(Enum(FormIoFormDisplayEnum, name="form_io_form_display", default="form"))
 
     # Internal attr's
 
-    components: Mapped[OrderingList["FormsIoComponent"]] = relationship(
+    components: Mapped[OrderingList["FormIoComponent"]] = relationship(
         back_populates="form",
-        order_by="FormsIoComponent.position",
+        order_by="FormIoComponent.position",
         default_factory=ordering_list("position", count_from=1),
     )
 
 
-class FormsIoComponent(BaseDBModel):
-    # Forms.io attr's
+class FormIoComponent(BaseDBModel):
+    # Form.io attr's
 
     label: Mapped[str] = mapped_column(String(), nullable=True)
     description: Mapped[str] = mapped_column(String(), nullable=True)
@@ -124,8 +124,8 @@ class FormsIoComponent(BaseDBModel):
 
     # Internal attr's
 
-    form_id: Mapped[int] = mapped_column(ForeignKey("forms_io_form.id"), default=None)
-    form: Mapped["FormsIoForm"] = relationship(back_populates="components", default_factory=list)
+    form_id: Mapped[int] = mapped_column(ForeignKey("form_io_form.id"), default=None)
+    form: Mapped["FormIoForm"] = relationship(back_populates="components", default_factory=list)
 
     # Used to keep the order of the components correct
     position: Mapped[int] = mapped_column(Integer(), nullable=False, default=1)
