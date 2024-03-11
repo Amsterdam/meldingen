@@ -104,7 +104,7 @@ class FormsIoForm(BaseDBModel):
 
     components: Mapped[OrderingList["FormsIoComponent"]] = relationship(
         back_populates="form",
-        order_by="forms_io_form_component.position",
+        order_by="FormsIoComponent.position",
         default_factory=ordering_list("position", count_from=1),
     )
 
