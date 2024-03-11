@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from meldingen.models import BaseDBModel, Classification, Group, Melding, User
+from meldingen.models import BaseDBModel, Classification, FormIoComponent, FormIoForm, Group, Melding, User
 
 T = TypeVar("T", bound=BaseDBModel)
 T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
@@ -109,3 +109,15 @@ class GroupRepository(BaseSQLAlchemyRepository[Group, Group]):
 class ClassificationRepository(BaseSQLAlchemyRepository[Classification, Classification], BaseClassificationRepository):
     def get_model_type(self) -> type[Classification]:
         return Classification
+
+
+class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
+    @override
+    def get_model_type(self) -> type[FormIoForm]:
+        return FormIoForm
+
+
+class FormIoComponentRepository(BaseSQLAlchemyRepository[FormIoComponent, FormIoComponent]):
+    @override
+    def get_model_type(self) -> type[FormIoComponent]:
+        return FormIoComponent

@@ -1,8 +1,13 @@
+import enum
+import re
+from typing import Final
+
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import User as BaseUser
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import Column, ForeignKey, Integer, String, Table
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Table
+from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
 
 
@@ -11,7 +16,8 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
 
     @declared_attr.directive
     def __tablename__(cls) -> str:
-        return cls.__name__.lower()
+        """Converst the __name__ of the Class to lowercase snakecase"""
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", cls.__name__).lower()
 
 
 class ClassificationInput(BaseModel, BaseClassification):
@@ -76,3 +82,50 @@ class User(BaseDBModel, BaseUser):
 class Group(BaseDBModel):
     name: Mapped[str] = mapped_column(unique=True)
     users: Mapped[list[User]] = relationship(secondary=user_group, back_populates="groups", default_factory=list)
+
+
+class FormIoFormDisplayEnum(enum.Enum):
+    """The value of the display field on the form can be one of the following:
+    - form
+    - wizard
+    - pdf
+    """
+
+    form: Final[str] = "form"
+    wizard: Final[str] = "wizard"
+    pdf: Final[str] = "pdf"
+
+
+class FormIoForm(BaseDBModel):
+    # Form.io attr's
+    display: Mapped[str] = mapped_column(Enum(FormIoFormDisplayEnum, name="form_io_form_display", default="form"))
+
+    # Internal attr's
+
+    components: Mapped[OrderingList["FormIoComponent"]] = relationship(
+        back_populates="form",
+        order_by="FormIoComponent.position",
+        default_factory=ordering_list("position", count_from=1),
+    )
+
+
+class FormIoComponent(BaseDBModel):
+    # Form.io attr's
+
+    label: Mapped[str] = mapped_column(String(), nullable=True)
+    description: Mapped[str] = mapped_column(String(), nullable=True)
+
+    key: Mapped[str] = mapped_column(String())
+    type: Mapped[str] = mapped_column(String())
+    input: Mapped[bool] = mapped_column(Boolean(), default=True)
+
+    auto_expand: Mapped[bool] = mapped_column(Boolean(), default=False)
+    show_char_count: Mapped[bool] = mapped_column(Boolean(), default=False)
+
+    # Internal attr's
+
+    form_id: Mapped[int] = mapped_column(ForeignKey("form_io_form.id"), default=None)
+    form: Mapped["FormIoForm"] = relationship(back_populates="components", default_factory=list)
+
+    # Used to keep the order of the components correct
+    position: Mapped[int] = mapped_column(Integer(), nullable=False, default=1)
