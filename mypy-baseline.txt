@@ -1,5 +1,6 @@
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Classification" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Melding" defined the type as "str")  [assignment]
+meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "StateAware" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Classification | None]", base class "Melding" defined the type as "meldingen_core.models.Classification | None")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "User" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "User" defined the type as "str")  [assignment]
