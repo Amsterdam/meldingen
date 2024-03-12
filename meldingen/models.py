@@ -98,6 +98,7 @@ class FormIoFormDisplayEnum(enum.Enum):
 
 class FormIoForm(BaseDBModel):
     # Form.io attr's
+    title: Mapped[str] = mapped_column(String())
     display: Mapped[str] = mapped_column(Enum(FormIoFormDisplayEnum, name="form_io_form_display", default="form"))
 
     # Internal attr's
