@@ -7,7 +7,7 @@ main.py:0: error: Incompatible types in "await" (actual type "UserRepository", e
 main.py:0: error: Incompatible types in "await" (actual type "GroupRepository", expected type "Awaitable[Any]")  [misc]
 main.py:0: error: Incompatible types in "await" (actual type "UserRepository", expected type "Awaitable[Any]")  [misc]
 main.py:0: error: Incompatible types in "await" (actual type "GroupRepository", expected type "Awaitable[Any]")  [misc]
-migrations/versions/30ba4ee50663_form_io_models.py:0: error: Call to untyped function "drop" in typed context  [no-untyped-call]
+migrations/versions/206d78263ea1_form_io_models.py:0: error: Call to untyped function "drop" in typed context  [no-untyped-call]
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in "await" (actual type "MeldingRepository", expected type "Awaitable[Any]")  [misc]
 tests/api/v1/endpoints/conftest.py:0: error: Returning Any from function declared to return "MeldingRepository"  [no-any-return]
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in "await" (actual type "UserRepository", expected type "Awaitable[Any]")  [misc]
