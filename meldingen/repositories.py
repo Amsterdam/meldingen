@@ -73,7 +73,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         await self._session.commit()
 
 
-class MeldingRepository(BaseSQLAlchemyRepository[Melding, Melding], BaseMeldingRepository):
+class MeldingRepository(BaseSQLAlchemyRepository[Melding, Melding], BaseMeldingRepository[Melding, Melding]):
     """Repository for Melding model."""
 
     @override
