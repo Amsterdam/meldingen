@@ -15,7 +15,7 @@ asgi-correlation-id = "^4.3.1"
 asyncpg = "^0.29.0"
 dependency-injector = {git = "https://github.com/anton-petrov/python-dependency-injector.git"}
 fastapi = "^0.109.1"
-meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
+meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git", rev = "feat/finite-state-machine"}
 pydantic = {extras = ["email"], version = "^2.6.1"}
 pydantic-settings = "^2.1.0"
 pyjwt = {extras = ["crypto"], version = "^2.8.0"}
