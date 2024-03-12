@@ -65,11 +65,11 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
 
     @override
     async def delete(self, pk: int) -> None:
-        db_user = await self.retrieve(pk=pk)
-        if db_user is None:
+        db_item = await self.retrieve(pk=pk)
+        if db_item is None:
             raise NotFoundException()
 
-        await self._session.delete(db_user)
+        await self._session.delete(db_item)
         await self._session.commit()
 
 
