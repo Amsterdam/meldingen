@@ -26,7 +26,7 @@ async def create_melding(
     melding = Melding(**melding_input.model_dump())
     await action(melding)
 
-    output = MeldingOutput(id=melding.id, text=melding.text)
+    output = MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
 
     return output
 
@@ -44,7 +44,7 @@ async def list_meldingen(
     meldingen = await action(limit=limit, offset=offset)
     output = []
     for melding in meldingen:
-        output.append(MeldingOutput(id=melding.id, text=melding.text))
+        output.append(MeldingOutput(id=melding.id, text=melding.text, state=melding.state))
 
     return output
 
@@ -61,7 +61,7 @@ async def retrieve_melding(
     if not melding:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return MeldingOutput(id=melding.id, text=melding.text)
+    return MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
 
 
 @router.put(
@@ -89,7 +89,7 @@ async def process_melding(
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
-    return MeldingOutput(id=melding.id, text=melding.text)
+    return MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
 
 
 @router.put(
@@ -117,4 +117,4 @@ async def complete_melding(
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
-    return MeldingOutput(id=melding.id, text=melding.text)
+    return MeldingOutput(id=melding.id, text=melding.text, state=melding.state)

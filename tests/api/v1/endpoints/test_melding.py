@@ -3,6 +3,7 @@ from typing import Any, Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
+from meldingen_core.statemachine import MeldingStates
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 from meldingen.models import Melding
@@ -21,6 +22,7 @@ class TestMeldingCreate:
         data = response.json()
         assert data.get("id") == 1
         assert data.get("text") == "This is a test melding."
+        assert data.get("state") == MeldingStates.NEW
 
     @pytest.mark.asyncio
     async def test_create_melding_text_minimum_length_violation(self, app: FastAPI, client: AsyncClient) -> None:
@@ -99,6 +101,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         data = response.json()
         assert data.get("id") == test_melding.id
         assert data.get("text") == test_melding.text
+        assert data.get("state") == MeldingStates.NEW
 
     @pytest.mark.asyncio
     async def test_retrieve_melding_that_does_not_exist(
