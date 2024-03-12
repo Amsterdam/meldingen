@@ -1,3 +1,12 @@
+from typing import Any
+
+from meldingen_core.actions.base import (
+    BaseCreateAction,
+    BaseDeleteAction,
+    BaseListAction,
+    BaseRetrieveAction,
+    BaseUpdateAction,
+)
 from meldingen_core.actions.classification import ClassificationListAction as BaseClassificationListAction
 from meldingen_core.actions.classification import ClassificationRetrieveAction as BaseClassificationRetrieveAction
 from meldingen_core.actions.classification import ClassificationUpdateAction as BaseClassificationUpdateAction
@@ -7,7 +16,7 @@ from meldingen_core.actions.user import UserListAction as BaseUserListAction
 from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
 
-from meldingen.models import Classification, Melding, User
+from meldingen.models import Classification, FormIoComponent, FormIoForm, Melding, User
 
 
 class UserListAction(BaseUserListAction[User, User]): ...
@@ -32,3 +41,33 @@ class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classificati
 
 
 class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, Classification]): ...
+
+
+class FormIoFormCreateAction(BaseCreateAction[FormIoForm, FormIoForm]): ...
+
+
+class FormIoFormUpdateAction(BaseUpdateAction[FormIoForm, FormIoForm]): ...
+
+
+class FormIoFormListAction(BaseListAction[FormIoForm, FormIoForm]): ...
+
+
+class FormIoFormRetrieveAction(BaseRetrieveAction[FormIoForm, FormIoForm]): ...
+
+
+class FormIoFormDeleteAction(BaseDeleteAction[FormIoForm, FormIoForm]): ...
+
+
+class FormIoComponentCreateAction(BaseCreateAction[FormIoComponent, FormIoComponent]): ...
+
+
+class FormIoComponentUpdateAction(BaseUpdateAction[FormIoComponent, FormIoComponent]): ...
+
+
+class FormIoComponentListAction(BaseListAction[FormIoComponent, FormIoComponent]): ...
+
+
+class FormIoComponentRetrieveAction(BaseRetrieveAction[FormIoComponent, FormIoComponent]): ...
+
+
+class FormIoComponentDeleteAction(BaseDeleteAction[FormIoComponent, FormIoComponent]): ...
