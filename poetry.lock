@@ -1142,6 +1142,21 @@ griffe = ">=0.37"
 mkdocstrings = ">=0.20"
 
 [[package]]
+name = "mp-fsm"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = "^3.11"
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/Amsterdam/mp-fsm.git"
+reference = "HEAD"
+resolved_reference = "829ce39d886850ab903f358e15721664cbf06887"
+
+[[package]]
 name = "mypy"
 version = "1.8.0"
 description = "Optional static typing for Python"
@@ -2322,4 +2337,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "4f49522e89d95077551982640b4f72ef53027d32dd7c9da5cd49a83d5cda51f8"
+content-hash = "35089309e66ad6d0cd06db36b4723c3f150f6ca5c59503e7695316f55eaa39eb"
