@@ -1,8 +1,8 @@
-"""form.io models
+"""Form io models
 
-Revision ID: 206d78263ea1
-Revises: f9c612dd4b0b
-Create Date: 2024-03-12 10:34:29.744677
+Revision ID: c2c58caf1352
+Revises: b3425e4102aa
+Create Date: 2024-03-13 13:48:59.272869
 
 """
 
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "206d78263ea1"
-down_revision: str | None = "f9c612dd4b0b"
+revision: str = "c2c58caf1352"
+down_revision: str | None = "b3425e4102aa"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -28,6 +28,7 @@ def upgrade() -> None:
             sa.Enum("form", "wizard", "pdf", name="form_io_form_display"),
             nullable=False,
         ),
+        sa.Column("is_primary", sa.Boolean(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )

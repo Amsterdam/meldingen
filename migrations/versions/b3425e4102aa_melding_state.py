@@ -1,7 +1,7 @@
 """melding state
 
 Revision ID: b3425e4102aa
-Revises: 206d78263ea1
+Revises: f9c612dd4b0b
 Create Date: 2024-03-12 14:07:29.275425
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "b3425e4102aa"
-down_revision: str | None = "206d78263ea1"
+down_revision: str | None = "f9c612dd4b0b"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
