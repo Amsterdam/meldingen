@@ -985,8 +985,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feat/finite-state-machine"
-resolved_reference = "a117e2a8ca6cf629e347d7479da8408768bd3fa2"
+reference = "HEAD"
+resolved_reference = "e51db29f83d0f5f2a1599e3ddfc26d7d6767d7d7"
 
 [[package]]
 name = "mergedeep"
@@ -2337,4 +2337,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "35089309e66ad6d0cd06db36b4723c3f150f6ca5c59503e7695316f55eaa39eb"
+content-hash = "98e6fefe02e8301aa1ba6101ab98a75e2f24f63aad435fcb78c25b733aace068"
