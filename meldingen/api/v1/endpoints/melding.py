@@ -77,6 +77,7 @@ async def retrieve_melding(
         **default_response,
     },
 )
+@inject
 async def process_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     user: Annotated[User, Depends(authenticate_user)],
@@ -105,6 +106,7 @@ async def process_melding(
         **default_response,
     },
 )
+@inject
 async def complete_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     user: Annotated[User, Depends(authenticate_user)],
