@@ -4,7 +4,13 @@ import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
 from meldingen_core.statemachine import MeldingStates
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+)
 
 from meldingen.models import Melding
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
@@ -145,12 +151,27 @@ class TestMeldingProcess(BaseUnauthorizedTest):
     async def test_process_melding_not_found(
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
     ) -> None:
-        response = await client.request(
-            self.get_method(), app.url_path_for(self.get_route_name(), melding_id=404)
-        )
+        response = await client.request(self.get_method(), app.url_path_for(self.get_route_name(), melding_id=404))
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
         body = response.json()
 
         assert body.get("detail") == "Not Found"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.COMPLETED)], indirect=True
+    )
+    async def test_process_melding_wrong_state(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
+    ) -> None:
+        response = await client.request(
+            self.get_method(), app.url_path_for(self.get_route_name(), **self.get_path_params())
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+
+        assert body.get("detail") == "Transition not allowed from current state"
