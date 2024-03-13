@@ -113,3 +113,29 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
 
         body = response.json()
         assert body.get("detail") == "Not Found"
+
+
+class TestMeldingProcess(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "melding:process"
+
+    def get_method(self) -> str:
+        return "PUT"
+
+    def get_path_params(self) -> dict[str, Any]:
+        return {"melding_id": 1}
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
+    async def test_process_melding(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
+    ) -> None:
+        response = await client.request(
+            self.get_method(), app.url_path_for(self.get_route_name(), **self.get_path_params())
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body.get("state") == MeldingStates.PROCESSING
