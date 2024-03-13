@@ -11,7 +11,8 @@ from meldingen.api.utils import PaginationParams, pagination_params
 from meldingen.api.v1 import conflict_response, default_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import User, UserCreateInput, UserOutput, UserUpdateInput
+from meldingen.models import User
+from meldingen.schemas import UserCreateInput, UserOutput, UserUpdateInput
 
 router = APIRouter()
 

@@ -4,7 +4,8 @@ import typer
 
 from meldingen.config import Settings
 from meldingen.containers import Container
-from meldingen.models import Group, User, UserCreateInput
+from meldingen.models import Group, User
+from meldingen.schemas import UserCreateInput
 
 app = typer.Typer()
 container = Container()

@@ -4,7 +4,6 @@ from typing import Final
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import User as BaseUser
-from pydantic import BaseModel, EmailStr, Field
 from pydantic.alias_generators import to_snake
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Table
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
@@ -20,47 +19,14 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
         return to_snake(cls.__name__)
 
 
-class ClassificationInput(BaseModel, BaseClassification):
-    name: str = Field(min_length=1)
-
-
-class ClassificationOutput(BaseModel, BaseClassification):
-    id: int
-
-
 class Classification(BaseDBModel, BaseClassification):
     name: Mapped[str] = mapped_column(String, unique=True)
-
-
-class MeldingInput(BaseModel):
-    text: str = Field(min_length=1)
-
-
-class MeldingOutput(BaseModel):
-    id: int
-    text: str
 
 
 class Melding(BaseDBModel, BaseMelding):
     text: Mapped[str] = mapped_column(String)
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
     classification: Mapped[Classification | None] = relationship(default=None)
-
-
-class UserCreateInput(BaseModel, BaseUser):
-    username: str = Field(min_length=3)
-    email: EmailStr
-
-
-class UserOutput(BaseModel):
-    id: int
-    email: str
-    username: str
-
-
-class UserUpdateInput(BaseModel):
-    username: str | None = Field(default=None, min_length=3)
-    email: EmailStr | None = None
 
 
 user_group = Table(
