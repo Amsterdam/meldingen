@@ -56,7 +56,7 @@ async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSessi
 
 
 def get_transitions(process: Process, complete: Complete) -> dict[str, BaseTransition[Melding]]:
-    return {MeldingTransitions.PROCESS: process}
+    return {MeldingTransitions.PROCESS: process, MeldingTransitions.COMPLETE: complete}
 
 
 class Container(DeclarativeContainer):
