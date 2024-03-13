@@ -24,7 +24,7 @@ from meldingen.actions import (
 )
 from meldingen.models import Melding
 from meldingen.repositories import ClassificationRepository, GroupRepository, MeldingRepository, UserRepository
-from meldingen.statemachine import Complete, MeldingStateMachine, Process
+from meldingen.statemachine import Complete, MeldingStateMachine, MpFsmMeldingStateMachine, Process
 
 
 def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
@@ -91,8 +91,11 @@ class Container(DeclarativeContainer):
     melding_transitions: Singleton[dict[str, BaseTransition[Melding]]] = Singleton(
         get_transitions, process=melding_process_transition, complete=melding_complete_transition
     )
+    mp_fsm_melding_state_machine: Singleton[MpFsmMeldingStateMachine] = Singleton(
+        MpFsmMeldingStateMachine, transitions=melding_transitions
+    )
     melding_state_machine: Singleton[MeldingStateMachine] = Singleton(
-        MeldingStateMachine, transitions=melding_transitions
+        MeldingStateMachine, state_machine=mp_fsm_melding_state_machine
     )
 
     # actions

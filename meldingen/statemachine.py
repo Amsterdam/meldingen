@@ -24,7 +24,7 @@ class Complete(BaseTransition[Melding]):
         return MeldingStates.COMPLETED
 
 
-class MeldingStateMachine(BaseStateMachine[Melding], BaseMeldingStateMachine):
+class MpFsmMeldingStateMachine(BaseStateMachine[Melding]):
     __transitions: dict[str, BaseTransition[Melding]]
 
     def __init__(self, transitions: dict[str, BaseTransition[Melding]]):
@@ -33,3 +33,13 @@ class MeldingStateMachine(BaseStateMachine[Melding], BaseMeldingStateMachine):
     @property
     def _transitions(self) -> dict[str, BaseTransition[Melding]]:
         return self.__transitions
+
+
+class MeldingStateMachine(BaseMeldingStateMachine[Melding]):
+    _state_machine: MpFsmMeldingStateMachine
+
+    def __init__(self, state_machine: MpFsmMeldingStateMachine):
+        self._state_machine = state_machine
+
+    async def transition(self, melding: Melding, transition_name: str) -> None:
+        await self._state_machine.transition(melding, transition_name)
