@@ -24,7 +24,7 @@ class Complete(BaseTransition[Melding]):
         return MeldingStates.COMPLETED
 
 
-class MeldingStateMachine(BaseMeldingStateMachine, BaseStateMachine[Melding]):
+class MeldingStateMachine(BaseStateMachine[Melding], BaseMeldingStateMachine):
     __transitions: dict[str, BaseTransition[Melding]]
 
     def __init__(self, transitions: dict[str, BaseTransition[Melding]]):
