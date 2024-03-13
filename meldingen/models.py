@@ -1,11 +1,11 @@
 import enum
-import re
 from typing import Final
 
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import User as BaseUser
 from pydantic import BaseModel, EmailStr, Field
+from pydantic.alias_generators import to_snake
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Table
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
@@ -16,8 +16,8 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
 
     @declared_attr.directive
     def __tablename__(cls) -> str:
-        """Converst the __name__ of the Class to lowercase snakecase"""
-        return re.sub(r"(?<!^)(?=[A-Z])", "_", cls.__name__).lower()
+        """Converts the __name__ of the Class to lowercase snakecase"""
+        return to_snake(cls.__name__)
 
 
 class ClassificationInput(BaseModel, BaseClassification):
