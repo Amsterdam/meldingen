@@ -2,12 +2,14 @@ from typing import Annotated, Any
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
-from meldingen_core.actions.melding import MeldingCreateAction
-from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
+from meldingen_core.actions.melding import MeldingCompleteAction, MeldingCreateAction, MeldingProcessAction
+from meldingen_core.exceptions import NotFoundException
+from mp_fsm.statemachine import WrongStateException
+from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction
 from meldingen.api.utils import PaginationParams, pagination_params
-from meldingen.api.v1 import not_found_response, unauthorized_response
+from meldingen.api.v1 import default_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Melding, User
@@ -24,7 +26,7 @@ async def create_melding(
     melding = Melding(**melding_input.model_dump())
     await action(melding)
 
-    output = MeldingOutput(id=melding.id, text=melding.text)
+    output = MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
 
     return output
 
@@ -42,7 +44,7 @@ async def list_meldingen(
     meldingen = await action(limit=limit, offset=offset)
     output = []
     for melding in meldingen:
-        output.append(MeldingOutput(id=melding.id, text=melding.text))
+        output.append(MeldingOutput(id=melding.id, text=melding.text, state=melding.state))
 
     return output
 
@@ -59,4 +61,62 @@ async def retrieve_melding(
     if not melding:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return MeldingOutput(id=melding.id, text=melding.text)
+    return MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
+
+
+@router.put(
+    "/{melding_id}/process",
+    name="melding:process",
+    responses={
+        HTTP_400_BAD_REQUEST: {
+            "description": "Transition not allowed from current state",
+            "content": {"application/json": {"example": {"detail": "Transition not allowed from current state"}}},
+        },
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+)
+@inject
+async def process_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
+    action: MeldingProcessAction[Melding, Melding] = Depends(Provide(Container.melding_process_action)),
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+
+    return MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
+
+
+@router.put(
+    "/{melding_id}/complete",
+    name="melding:complete",
+    responses={
+        HTTP_400_BAD_REQUEST: {
+            "description": "Transition not allowed from current state",
+            "content": {"application/json": {"example": {"detail": "Transition not allowed from current state"}}},
+        },
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+)
+@inject
+async def complete_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
+    action: MeldingCompleteAction[Melding, Melding] = Depends(Provide(Container.melding_complete_action)),
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+
+    return MeldingOutput(id=melding.id, text=melding.text, state=melding.state)

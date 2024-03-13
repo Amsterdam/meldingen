@@ -17,6 +17,7 @@ class MeldingInput(BaseModel):
 class MeldingOutput(BaseModel):
     id: int
     text: str
+    state: str
 
 
 class UserCreateInput(BaseModel, User):

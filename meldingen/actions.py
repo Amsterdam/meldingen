@@ -1,5 +1,3 @@
-from typing import Any
-
 from meldingen_core.actions.base import (
     BaseCreateAction,
     BaseDeleteAction,

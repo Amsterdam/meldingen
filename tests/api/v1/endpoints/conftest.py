@@ -29,11 +29,21 @@ def melding_text(request: SubRequest) -> str:
         return "This is a test melding."
 
 
+@pytest.fixture
+def melding_state(request: SubRequest) -> str | None:
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return None
+
+
 @pytest_asyncio.fixture
-async def test_melding(melding_repository: MeldingRepository, melding_text: str) -> Melding:
+async def test_melding(melding_repository: MeldingRepository, melding_text: str, melding_state: str | None) -> Melding:
     """Fixture providing a single test melding instance."""
 
     melding = Melding(text=melding_text)
+    if melding_state is not None:
+        melding.state = melding_state
 
     await melding_repository.save(melding)
 

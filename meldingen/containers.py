@@ -5,8 +5,10 @@ from dependency_injector.containers import DeclarativeContainer, WiringConfigura
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
-from meldingen_core.actions.melding import MeldingCreateAction
+from meldingen_core.actions.melding import MeldingCompleteAction, MeldingCreateAction, MeldingProcessAction
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
+from meldingen_core.statemachine import MeldingTransitions
+from mp_fsm.statemachine import BaseTransition
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -20,7 +22,9 @@ from meldingen.actions import (
     UserRetrieveAction,
     UserUpdateAction,
 )
+from meldingen.models import Melding
 from meldingen.repositories import ClassificationRepository, GroupRepository, MeldingRepository, UserRepository
+from meldingen.statemachine import Complete, MeldingStateMachine, MpFsmMeldingStateMachine, Process
 
 
 def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
@@ -51,6 +55,10 @@ async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSessi
         yield session
 
 
+def get_transitions(process: Process, complete: Complete) -> dict[str, BaseTransition[Melding]]:
+    return {MeldingTransitions.PROCESS: process, MeldingTransitions.COMPLETE: complete}
+
+
 class Container(DeclarativeContainer):
     """Dependency injection container."""
 
@@ -77,11 +85,30 @@ class Container(DeclarativeContainer):
         ClassificationRepository, session=database_session
     )
 
+    # state machine
+    melding_process_transition: Singleton[Process] = Singleton(Process)
+    melding_complete_transition: Singleton[Complete] = Singleton(Complete)
+    melding_transitions: Singleton[dict[str, BaseTransition[Melding]]] = Singleton(
+        get_transitions, process=melding_process_transition, complete=melding_complete_transition
+    )
+    mp_fsm_melding_state_machine: Singleton[MpFsmMeldingStateMachine] = Singleton(
+        MpFsmMeldingStateMachine, transitions=melding_transitions
+    )
+    melding_state_machine: Singleton[MeldingStateMachine] = Singleton(
+        MeldingStateMachine, state_machine=mp_fsm_melding_state_machine
+    )
+
     # actions
     melding_create_action: Factory[MeldingCreateAction] = Factory(MeldingCreateAction, repository=melding_repository)
     melding_list_action: Factory[MeldingListAction] = Factory(MeldingListAction, repository=melding_repository)
     melding_retrieve_action: Factory[MeldingRetrieveAction] = Factory(
         MeldingRetrieveAction, repository=melding_repository
+    )
+    melding_process_action: Factory[MeldingProcessAction[Melding, Melding]] = Factory(
+        MeldingProcessAction, state_machine=melding_state_machine, repository=melding_repository
+    )
+    melding_complete_action: Factory[MeldingCompleteAction[Melding, Melding]] = Factory(
+        MeldingCompleteAction, state_machine=melding_state_machine, repository=melding_repository
     )
     user_create_action: Factory[UserCreateAction] = Factory(UserCreateAction, repository=user_repository)
     user_list_action: Factory[UserListAction] = Factory(UserListAction, repository=user_repository)
