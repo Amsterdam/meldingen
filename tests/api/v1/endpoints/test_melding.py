@@ -188,7 +188,9 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         return {"melding_id": 1}
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.PROCESSING)], indirect=True)
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.PROCESSING)], indirect=True
+    )
     async def test_complete_melding(
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
     ) -> None:

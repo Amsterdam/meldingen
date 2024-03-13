@@ -4,9 +4,9 @@ from typing import Final
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import User as BaseUser
-from pydantic.alias_generators import to_snake
 from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
+from pydantic.alias_generators import to_snake
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Table
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
