@@ -139,3 +139,18 @@ class TestMeldingProcess(BaseUnauthorizedTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.PROCESSING
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
+    async def test_process_melding_not_found(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
+    ) -> None:
+        response = await client.request(
+            self.get_method(), app.url_path_for(self.get_route_name(), melding_id=404)
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        body = response.json()
+
+        assert body.get("detail") == "Not Found"
