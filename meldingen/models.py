@@ -66,17 +66,36 @@ class FormIoFormDisplayEnum(enum.Enum):
 
 
 class FormIoForm(BaseDBModel):
+    @declared_attr.directive
+    def __tablename__(cls) -> str:
+        return "form_io_form"
+
     # Form.io attr's
     title: Mapped[str] = mapped_column(String())
-    display: Mapped[str] = mapped_column(Enum(FormIoFormDisplayEnum, name="form_io_form_display", default="form"))
+    display: Mapped[str] = mapped_column(
+        Enum(FormIoFormDisplayEnum, name="form_io_form_display", default=FormIoFormDisplayEnum.form)
+    )
 
     # Internal attr's
+
+    is_primary: Mapped[bool] = mapped_column(Boolean(), default=False, nullable=False)
+
+    __mapper_args__ = {
+        "polymorphic_on": "is_primary",
+        "polymorphic_identity": False,
+    }
 
     components: Mapped[OrderingList["FormIoComponent"]] = relationship(
         back_populates="form",
         order_by="FormIoComponent.position",
         default_factory=ordering_list("position", count_from=1),
     )
+
+
+class FormIoPrimaryForm(FormIoForm):
+    __mapper_args__ = {
+        "polymorphic_identity": True,
+    }
 
 
 class FormIoComponent(BaseDBModel):
