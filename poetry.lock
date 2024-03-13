@@ -986,7 +986,7 @@ develop = false
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "feat/finite-state-machine"
-resolved_reference = "73ece0d01e845a40d41fd8919cfde6caa5abe817"
+resolved_reference = "a117e2a8ca6cf629e347d7479da8408768bd3fa2"
 
 [[package]]
 name = "mergedeep"
