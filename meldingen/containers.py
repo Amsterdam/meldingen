@@ -8,6 +8,7 @@ from meldingen_core.actions.classification import ClassificationCreateAction, Cl
 from meldingen_core.actions.melding import MeldingCompleteAction, MeldingCreateAction, MeldingProcessAction
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
 from meldingen_core.statemachine import MeldingTransitions
+from mp_fsm.statemachine import BaseTransition
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -54,6 +55,10 @@ async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSessi
         yield session
 
 
+def get_transitions(process: Process, complete: Complete) -> dict[str, BaseTransition[Melding]]:
+    return {MeldingTransitions.PROCESS: process}
+
+
 class Container(DeclarativeContainer):
     """Dependency injection container."""
 
@@ -83,12 +88,11 @@ class Container(DeclarativeContainer):
     # state machine
     melding_process_transition: Singleton[Process] = Singleton(Process)
     melding_complete_transition: Singleton[Complete] = Singleton(Complete)
+    melding_transitions: Singleton[dict[str, BaseTransition[Melding]]] = Singleton(
+        get_transitions, process=melding_process_transition, complete=melding_complete_transition
+    )
     melding_state_machine: Singleton[MeldingStateMachine] = Singleton(
-        MeldingStateMachine,
-        transitions={
-            MeldingTransitions.PROCESS: melding_process_transition,
-            MeldingTransitions.COMPLETE: melding_complete_transition,
-        },
+        MeldingStateMachine, transitions=melding_transitions
     )
 
     # actions
