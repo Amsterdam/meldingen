@@ -1,5 +1,5 @@
 import enum
-from typing import Final
+from typing import Any, Final
 
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
@@ -8,6 +8,7 @@ from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
 from pydantic.alias_generators import to_snake
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Table
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
 
@@ -53,7 +54,7 @@ class Group(BaseDBModel):
     users: Mapped[list[User]] = relationship(secondary=user_group, back_populates="groups", default_factory=list)
 
 
-class FormIoFormDisplayEnum(enum.Enum):
+class FormIoFormDisplayEnum(enum.StrEnum):
     """The value of the display field on the form can be one of the following:
     - form
     - wizard
@@ -65,10 +66,17 @@ class FormIoFormDisplayEnum(enum.Enum):
     pdf: Final[str] = "pdf"
 
 
-class FormIoForm(BaseDBModel):
+class FormIoForm(AsyncAttrs, BaseDBModel):
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return "form_io_form"
+
+    @declared_attr.directive
+    def __mapper_args__(self) -> dict[str, Any]:
+        return {
+            "polymorphic_on": "is_primary",
+            "polymorphic_identity": False,
+        }
 
     # Form.io attr's
     title: Mapped[str] = mapped_column(String())
@@ -77,30 +85,25 @@ class FormIoForm(BaseDBModel):
     )
 
     # Internal attr's
-
     is_primary: Mapped[bool] = mapped_column(Boolean(), default=False, nullable=False)
 
-    __mapper_args__ = {
-        "polymorphic_on": "is_primary",
-        "polymorphic_identity": False,
-    }
-
-    components: Mapped[OrderingList["FormIoComponent"]] = relationship(
+    components: Mapped[list["FormIoComponent"]] = relationship(
         back_populates="form",
         order_by="FormIoComponent.position",
-        default_factory=ordering_list("position", count_from=1),
+        default_factory=ordering_list(attr="position", count_from=1),
     )
 
 
 class FormIoPrimaryForm(FormIoForm):
-    __mapper_args__ = {
-        "polymorphic_identity": True,
-    }
+    @declared_attr.directive
+    def __mapper_args__(self) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": True,
+        }
 
 
-class FormIoComponent(BaseDBModel):
+class FormIoComponent(AsyncAttrs, BaseDBModel):
     # Form.io attr's
-
     label: Mapped[str] = mapped_column(String(), nullable=True)
     description: Mapped[str] = mapped_column(String(), nullable=True)
 
@@ -112,7 +115,6 @@ class FormIoComponent(BaseDBModel):
     show_char_count: Mapped[bool] = mapped_column(Boolean(), default=False)
 
     # Internal attr's
-
     form_id: Mapped[int] = mapped_column(ForeignKey("form_io_form.id"), default=None)
     form: Mapped["FormIoForm"] = relationship(back_populates="components", default_factory=list)
 

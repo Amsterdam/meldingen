@@ -5,8 +5,8 @@ from fastapi import FastAPI
 
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import Classification, Melding, User
-from meldingen.repositories import ClassificationRepository, MeldingRepository, UserRepository
+from meldingen.models import Classification, FormIoFormDisplayEnum, FormIoPrimaryForm, Melding, User
+from meldingen.repositories import ClassificationRepository, FormIoFormRepository, MeldingRepository, UserRepository
 
 
 @pytest_asyncio.fixture
@@ -165,3 +165,29 @@ async def classifications(classification_repository: ClassificationRepository) -
         classifications.append(classification)
 
     return classifications
+
+
+@pytest_asyncio.fixture
+async def form_repository() -> FormIoFormRepository:
+    """Fixture providing a FormIoFormRepository instance."""
+
+    container = Container()
+    _form_repository = await container.form_repository()
+
+    return _form_repository
+
+
+@pytest_asyncio.fixture
+async def primary_form(form_repository: FormIoFormRepository) -> FormIoPrimaryForm:
+    primary_form = FormIoPrimaryForm(title="Primary Form", display=FormIoFormDisplayEnum.form.value, is_primary=True)
+    await form_repository.save(primary_form)
+
+    return primary_form
+
+
+@pytest_asyncio.fixture
+async def form(form_repository: FormIoFormRepository) -> FormIoPrimaryForm:
+    primary_form = FormIoPrimaryForm(title="Form", display=FormIoFormDisplayEnum.form.value, is_primary=False)
+    await form_repository.save(primary_form)
+
+    return primary_form

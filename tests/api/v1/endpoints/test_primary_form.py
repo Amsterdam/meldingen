@@ -1,0 +1,55 @@
+from typing import Final
+
+import pytest
+from fastapi import FastAPI
+from httpx import AsyncClient
+from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+
+from meldingen.models import FormIoForm, FormIoPrimaryForm
+from tests.api.v1.endpoints.base import BaseUnauthorizedTest
+
+
+class TestPrimaryFormRetrieve(BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "primary-form:retrieve"
+    METHOD: Final[str] = "GET"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    @pytest.mark.asyncio
+    async def test_retrieve_primary_form(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, primary_form: FormIoPrimaryForm
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert data.get("title") == primary_form.title
+        assert data.get("display") == primary_form.display
+        assert len(data.get("components")) == len(await primary_form.awaitable_attrs.components)
+
+    @pytest.mark.asyncio
+    async def test_retrieve_primary_form_does_not_exists(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        body = response.json()
+        assert body.get("detail") == "Not Found"
+
+    @pytest.mark.asyncio
+    async def test_retrieve_primary_form_other_form_exists(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form: FormIoForm
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        body = response.json()
+        assert body.get("detail") == "Not Found"

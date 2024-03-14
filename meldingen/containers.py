@@ -16,6 +16,7 @@ from meldingen.actions import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    FormIoPrimaryFormRetrieveAction,
     MeldingListAction,
     MeldingRetrieveAction,
     UserListAction,
@@ -23,7 +24,13 @@ from meldingen.actions import (
     UserUpdateAction,
 )
 from meldingen.models import Melding
-from meldingen.repositories import ClassificationRepository, GroupRepository, MeldingRepository, UserRepository
+from meldingen.repositories import (
+    ClassificationRepository,
+    FormIoFormRepository,
+    GroupRepository,
+    MeldingRepository,
+    UserRepository,
+)
 from meldingen.statemachine import Complete, MeldingStateMachine, MpFsmMeldingStateMachine, Process
 
 
@@ -68,6 +75,7 @@ class Container(DeclarativeContainer):
             "meldingen.api.v1.endpoints.user",
             "meldingen.authentication",
             "meldingen.api.v1.endpoints.classification",
+            "meldingen.api.v1.endpoints.primary_form",
         ]
     )
 
@@ -84,6 +92,7 @@ class Container(DeclarativeContainer):
     classification_repository: Factory[ClassificationRepository] = Factory(
         ClassificationRepository, session=database_session
     )
+    form_repository: Factory[FormIoFormRepository] = Factory(FormIoFormRepository, session=database_session)
 
     # state machine
     melding_process_transition: Singleton[Process] = Singleton(Process)
@@ -129,6 +138,11 @@ class Container(DeclarativeContainer):
     )
     classification_delete_action: Factory[ClassificationDeleteAction] = Factory(
         ClassificationDeleteAction, repository=classification_repository
+    )
+
+    # Primary form actions
+    primary_form_retrieve_action: Factory[FormIoPrimaryFormRetrieveAction] = Factory(
+        FormIoPrimaryFormRetrieveAction, repository=form_repository
     )
 
     # authentication
