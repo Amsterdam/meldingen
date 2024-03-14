@@ -1,5 +1,6 @@
 from meldingen_core.models import Classification, User
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field
+from pydantic.alias_generators import to_camel
 
 
 class ClassificationInput(BaseModel, Classification):
@@ -34,3 +35,25 @@ class UserOutput(BaseModel):
 class UserUpdateInput(BaseModel):
     username: str | None = Field(default=None, min_length=3)
     email: EmailStr | None = None
+
+
+class FormOutput(BaseModel):
+    title: str
+    display: str
+    components: list["FormComponentOutput"]
+
+
+class FormComponentOutput(BaseModel):
+    model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))
+
+    label: str
+    description: str
+
+    key: str
+    type: str
+    input: bool
+
+    auto_expand: bool
+    show_char_count: bool
+
+    position: int

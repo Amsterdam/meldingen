@@ -1,5 +1,8 @@
+from typing import Any
+
 from meldingen_core.actions.base import (
     BaseCreateAction,
+    BaseCRUDAction,
     BaseDeleteAction,
     BaseListAction,
     BaseRetrieveAction,
@@ -13,8 +16,10 @@ from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingR
 from meldingen_core.actions.user import UserListAction as BaseUserListAction
 from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
+from meldingen_core.exceptions import NotFoundException
 
 from meldingen.models import Classification, FormIoComponent, FormIoForm, Melding, User
+from meldingen.repositories import FormIoFormRepository
 
 
 class UserListAction(BaseUserListAction[User, User]): ...
@@ -69,3 +74,10 @@ class FormIoComponentRetrieveAction(BaseRetrieveAction[FormIoComponent, FormIoCo
 
 
 class FormIoComponentDeleteAction(BaseDeleteAction[FormIoComponent, FormIoComponent]): ...
+
+
+class FormIoPrimaryFormRetrieveAction(BaseCRUDAction[FormIoForm, FormIoForm]):
+    _repository: FormIoFormRepository
+
+    async def __call__(self) -> FormIoForm | None:
+        return await self._repository.retrieve_primary_form()
