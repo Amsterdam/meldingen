@@ -1,14 +1,11 @@
-from typing import Annotated
-
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.status import HTTP_404_NOT_FOUND
 
 from meldingen.actions import FormIoPrimaryFormRetrieveAction
-from meldingen.api.v1 import not_found_response, unauthorized_response
-from meldingen.authentication import authenticate_user
+from meldingen.api.v1 import not_found_response
 from meldingen.containers import Container
-from meldingen.models import FormIoForm, User
+from meldingen.models import FormIoForm
 from meldingen.schemas import FormComponentOutput, FormOutput
 
 router = APIRouter()
@@ -32,10 +29,9 @@ async def _form_output_schema(form: FormIoForm) -> FormOutput:
     return FormOutput(title=form.title, display=form.display, components=components_output)
 
 
-@router.get("/", name="primary-form:retrieve", responses={**unauthorized_response, **not_found_response})
+@router.get("/", name="primary-form:retrieve", responses={**not_found_response})
 @inject
 async def retrieve_primary_form(
-    user: Annotated[User, Depends(authenticate_user)],
     action: FormIoPrimaryFormRetrieveAction = Depends(Provide(Container.primary_form_retrieve_action)),
 ) -> FormOutput:
     """The primary form that is used to initiate the creation of a "Melding"."""
