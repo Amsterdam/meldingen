@@ -9,7 +9,7 @@ from meldingen_core.actions.melding import MeldingCompleteAction, MeldingCreateA
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
 from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
-from mp_fsm.statemachine import BaseTransition
+from mp_fsm.statemachine import BaseGuard, BaseTransition
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -33,7 +33,14 @@ from meldingen.repositories import (
     MeldingRepository,
     UserRepository,
 )
-from meldingen.statemachine import Classify, Complete, MeldingStateMachine, MpFsmMeldingStateMachine, Process
+from meldingen.statemachine import (
+    Classify,
+    Complete,
+    HasClassification,
+    MeldingStateMachine,
+    MpFsmMeldingStateMachine,
+    Process,
+)
 
 
 def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
@@ -72,6 +79,10 @@ def get_transitions(process: Process, classify: Classify, complete: Complete) ->
     }
 
 
+def get_classify_guards(has_classification: HasClassification) -> list[BaseGuard[Melding]]:
+    return [has_classification]
+
+
 class Container(DeclarativeContainer):
     """Dependency injection container."""
 
@@ -101,8 +112,12 @@ class Container(DeclarativeContainer):
     form_repository: Factory[FormIoFormRepository] = Factory(FormIoFormRepository, session=database_session)
 
     # state machine
+    melding_has_classification_guard: Singleton[HasClassification] = Singleton(HasClassification)
     melding_process_transition: Singleton[Process] = Singleton(Process)
-    melding_classify_transition: Singleton[Classify] = Singleton(Classify)
+    melding_classify_transition_guards: Singleton[BaseGuard[Melding]] = Singleton(
+        get_classify_guards, has_classification=melding_has_classification_guard
+    )
+    melding_classify_transition: Singleton[Classify] = Singleton(Classify, guards=melding_classify_transition_guards)
     melding_complete_transition: Singleton[Complete] = Singleton(Complete)
     melding_transitions: Singleton[dict[str, BaseTransition[Melding]]] = Singleton(
         get_transitions,
