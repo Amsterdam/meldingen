@@ -1,5 +1,6 @@
 from typing import Annotated, Any
 
+import structlog
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.actions.melding import MeldingCompleteAction, MeldingCreateAction, MeldingProcessAction
@@ -16,6 +17,7 @@ from meldingen.models import Melding, User
 from meldingen.schemas import MeldingInput, MeldingOutput
 
 router = APIRouter()
+logger = structlog.get_logger()
 
 
 def _hydrate_output(melding: Melding) -> MeldingOutput:
@@ -34,8 +36,6 @@ async def create_melding(
     try:
         await action(melding)
     except NotFoundException:
-        from meldingen.main import logger
-
         logger.error("Classifier failed to find classification!")
 
     return _hydrate_output(melding)
