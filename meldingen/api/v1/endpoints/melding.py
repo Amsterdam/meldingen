@@ -18,6 +18,15 @@ from meldingen.schemas import MeldingInput, MeldingOutput
 router = APIRouter()
 
 
+def _hydrate_output(melding: Melding) -> MeldingOutput:
+    return MeldingOutput(
+        id=melding.id,
+        text=melding.text,
+        state=melding.state,
+        classification=melding.classification_id
+    )
+
+
 @router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
 @inject
 async def create_melding(
@@ -31,9 +40,7 @@ async def create_melding(
         # TODO: The classifier received a classification name that does not exist
         ...
 
-    output = MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
-
-    return output
+    return _hydrate_output(melding)
 
 
 @router.get("/", name="melding:list", responses={**unauthorized_response})
@@ -49,7 +56,7 @@ async def list_meldingen(
     meldingen = await action(limit=limit, offset=offset)
     output = []
     for melding in meldingen:
-        output.append(MeldingOutput(id=melding.id, text=melding.text, state=melding.state))
+        output.append(_hydrate_output(melding))
 
     return output
 
@@ -66,7 +73,7 @@ async def retrieve_melding(
     if not melding:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
+    return _hydrate_output(melding)
 
 
 @router.put(
@@ -95,7 +102,7 @@ async def process_melding(
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
-    return MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
+    return _hydrate_output(melding)
 
 
 @router.put(
@@ -124,4 +131,4 @@ async def complete_melding(
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
-    return MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
+    return _hydrate_output(melding)

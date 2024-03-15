@@ -29,6 +29,7 @@ class TestMeldingCreate:
         assert data.get("id") == 1
         assert data.get("text") == "This is a test melding."
         assert data.get("state") == MeldingStates.NEW
+        assert data.get("classification", "") is None
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("classification_name,", ["classification_name"], indirect=True)
@@ -43,6 +44,7 @@ class TestMeldingCreate:
         assert data.get("id") == 1
         assert data.get("text") == "classification_name"
         assert data.get("state") == MeldingStates.CLASSIFIED
+        assert data.get("classification") == classification.id
 
     @pytest.mark.asyncio
     async def test_create_melding_text_minimum_length_violation(self, app: FastAPI, client: AsyncClient) -> None:
@@ -122,6 +124,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert data.get("id") == test_melding.id
         assert data.get("text") == test_melding.text
         assert data.get("state") == MeldingStates.NEW
+        assert data.get("classification", "") is None
 
     @pytest.mark.asyncio
     async def test_retrieve_melding_that_does_not_exist(
