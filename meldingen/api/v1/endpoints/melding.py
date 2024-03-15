@@ -37,8 +37,8 @@ async def create_melding(
     try:
         await action(melding)
     except NotFoundException:
-        # TODO: The classifier received a classification name that does not exist
-        ...
+        from meldingen.main import logger
+        logger.error("Classifier failed to find classification!")
 
     return _hydrate_output(melding)
 
