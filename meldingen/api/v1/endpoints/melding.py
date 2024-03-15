@@ -20,10 +20,7 @@ router = APIRouter()
 
 def _hydrate_output(melding: Melding) -> MeldingOutput:
     return MeldingOutput(
-        id=melding.id,
-        text=melding.text,
-        state=melding.state,
-        classification=melding.classification_id
+        id=melding.id, text=melding.text, state=melding.state, classification=melding.classification_id
     )
 
 
@@ -38,6 +35,7 @@ async def create_melding(
         await action(melding)
     except NotFoundException:
         from meldingen.main import logger
+
         logger.error("Classifier failed to find classification!")
 
     return _hydrate_output(melding)
