@@ -1,2 +1,3 @@
 * [Home](index.md)
-* [Summary](summary.md)
+* [Development](development/)
+* [CLI Command](commands.md)
