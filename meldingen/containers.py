@@ -112,9 +112,9 @@ class Container(DeclarativeContainer):
     form_repository: Factory[FormIoFormRepository] = Factory(FormIoFormRepository, session=database_session)
 
     # state machine
-    melding_has_classification_guard: Singleton[HasClassification] = Singleton(HasClassification)
     melding_process_transition: Singleton[Process] = Singleton(Process)
-    melding_classify_transition_guards: Singleton[BaseGuard[Melding]] = Singleton(
+    melding_has_classification_guard: Singleton[HasClassification] = Singleton(HasClassification)
+    melding_classify_transition_guards: Singleton[list[BaseGuard[Melding]]] = Singleton(
         get_classify_guards, has_classification=melding_has_classification_guard
     )
     melding_classify_transition: Singleton[Classify] = Singleton(Classify, guards=melding_classify_transition_guards)
