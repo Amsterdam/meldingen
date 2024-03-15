@@ -25,7 +25,11 @@ async def create_melding(
     action: MeldingCreateAction[Melding, Melding] = Depends(Provide(Container.melding_create_action)),
 ) -> MeldingOutput:
     melding = Melding(**melding_input.model_dump())
-    await action(melding)
+    try:
+        await action(melding)
+    except NotFoundException:
+        # TODO: The classifier received a classification name that does not exist
+        ...
 
     output = MeldingOutput(id=melding.id, text=melding.text, state=melding.state)
 
