@@ -14,6 +14,16 @@ class Process(BaseTransition[Melding]):
         return MeldingStates.PROCESSING
 
 
+class Classify(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.NEW]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.CLASSIFIED
+
+
 class Complete(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:

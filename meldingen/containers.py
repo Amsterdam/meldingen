@@ -33,7 +33,7 @@ from meldingen.repositories import (
     MeldingRepository,
     UserRepository,
 )
-from meldingen.statemachine import Complete, MeldingStateMachine, MpFsmMeldingStateMachine, Process
+from meldingen.statemachine import Classify, Complete, MeldingStateMachine, MpFsmMeldingStateMachine, Process
 
 
 def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
@@ -64,8 +64,12 @@ async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSessi
         yield session
 
 
-def get_transitions(process: Process, complete: Complete) -> dict[str, BaseTransition[Melding]]:
-    return {MeldingTransitions.PROCESS: process, MeldingTransitions.COMPLETE: complete}
+def get_transitions(process: Process, classify: Classify, complete: Complete) -> dict[str, BaseTransition[Melding]]:
+    return {
+        MeldingTransitions.PROCESS: process,
+        MeldingTransitions.CLASSIFY: classify,
+        MeldingTransitions.COMPLETE: complete,
+    }
 
 
 class Container(DeclarativeContainer):
@@ -98,9 +102,13 @@ class Container(DeclarativeContainer):
 
     # state machine
     melding_process_transition: Singleton[Process] = Singleton(Process)
+    melding_classify_transition: Singleton[Classify] = Singleton(Classify)
     melding_complete_transition: Singleton[Complete] = Singleton(Complete)
     melding_transitions: Singleton[dict[str, BaseTransition[Melding]]] = Singleton(
-        get_transitions, process=melding_process_transition, complete=melding_complete_transition
+        get_transitions,
+        process=melding_process_transition,
+        classify=melding_classify_transition,
+        complete=melding_complete_transition,
     )
     mp_fsm_melding_state_machine: Singleton[MpFsmMeldingStateMachine] = Singleton(
         MpFsmMeldingStateMachine, transitions=melding_transitions
