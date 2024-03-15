@@ -7,6 +7,7 @@ from jwt import PyJWKClient
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
 from meldingen_core.actions.melding import MeldingCompleteAction, MeldingCreateAction, MeldingProcessAction
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
+from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
 from mp_fsm.statemachine import BaseTransition
 from pydantic_core import MultiHostUrl
@@ -23,6 +24,7 @@ from meldingen.actions import (
     UserRetrieveAction,
     UserUpdateAction,
 )
+from meldingen.classification import DummyClassifierAdapter
 from meldingen.models import Melding
 from meldingen.repositories import (
     ClassificationRepository,
@@ -107,8 +109,19 @@ class Container(DeclarativeContainer):
         MeldingStateMachine, state_machine=mp_fsm_melding_state_machine
     )
 
+    # classifier
+    dummy_classifier_adaper: Singleton[DummyClassifierAdapter] = Singleton(DummyClassifierAdapter)
+    classifier: Singleton[Classifier] = Singleton(
+        Classifier, adapter=dummy_classifier_adaper, repository=classification_repository
+    )
+
     # actions
-    melding_create_action: Factory[MeldingCreateAction] = Factory(MeldingCreateAction, repository=melding_repository)
+    melding_create_action: Factory[MeldingCreateAction[Melding, Melding]] = Factory(
+        MeldingCreateAction,
+        repository=melding_repository,
+        classifier=classifier,
+        state_machine=melding_state_machine,
+    )
     melding_list_action: Factory[MeldingListAction] = Factory(MeldingListAction, repository=melding_repository)
     melding_retrieve_action: Factory[MeldingRetrieveAction] = Factory(
         MeldingRetrieveAction, repository=melding_repository

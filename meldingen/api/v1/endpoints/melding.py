@@ -21,7 +21,8 @@ router = APIRouter()
 @router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
 @inject
 async def create_melding(
-    melding_input: MeldingInput, action: MeldingCreateAction = Depends(Provide(Container.melding_create_action))
+    melding_input: MeldingInput,
+    action: MeldingCreateAction[Melding, Melding] = Depends(Provide(Container.melding_create_action)),
 ) -> MeldingOutput:
     melding = Melding(**melding_input.model_dump())
     await action(melding)
