@@ -7,8 +7,9 @@ from jwt import PyJWKClient
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
 from meldingen_core.actions.melding import MeldingCompleteAction, MeldingCreateAction, MeldingProcessAction
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
+from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
-from mp_fsm.statemachine import BaseTransition
+from mp_fsm.statemachine import BaseGuard, BaseTransition
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -23,6 +24,7 @@ from meldingen.actions import (
     UserRetrieveAction,
     UserUpdateAction,
 )
+from meldingen.classification import DummyClassifierAdapter
 from meldingen.models import Melding
 from meldingen.repositories import (
     ClassificationRepository,
@@ -31,7 +33,14 @@ from meldingen.repositories import (
     MeldingRepository,
     UserRepository,
 )
-from meldingen.statemachine import Complete, MeldingStateMachine, MpFsmMeldingStateMachine, Process
+from meldingen.statemachine import (
+    Classify,
+    Complete,
+    HasClassification,
+    MeldingStateMachine,
+    MpFsmMeldingStateMachine,
+    Process,
+)
 
 
 def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
@@ -62,8 +71,16 @@ async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSessi
         yield session
 
 
-def get_transitions(process: Process, complete: Complete) -> dict[str, BaseTransition[Melding]]:
-    return {MeldingTransitions.PROCESS: process, MeldingTransitions.COMPLETE: complete}
+def get_transitions(process: Process, classify: Classify, complete: Complete) -> dict[str, BaseTransition[Melding]]:
+    return {
+        MeldingTransitions.PROCESS: process,
+        MeldingTransitions.CLASSIFY: classify,
+        MeldingTransitions.COMPLETE: complete,
+    }
+
+
+def get_classify_guards(has_classification: HasClassification) -> list[BaseGuard[Melding]]:
+    return [has_classification]
 
 
 class Container(DeclarativeContainer):
@@ -96,9 +113,17 @@ class Container(DeclarativeContainer):
 
     # state machine
     melding_process_transition: Singleton[Process] = Singleton(Process)
+    melding_has_classification_guard: Singleton[HasClassification] = Singleton(HasClassification)
+    melding_classify_transition_guards: Singleton[list[BaseGuard[Melding]]] = Singleton(
+        get_classify_guards, has_classification=melding_has_classification_guard
+    )
+    melding_classify_transition: Singleton[Classify] = Singleton(Classify, guards=melding_classify_transition_guards)
     melding_complete_transition: Singleton[Complete] = Singleton(Complete)
     melding_transitions: Singleton[dict[str, BaseTransition[Melding]]] = Singleton(
-        get_transitions, process=melding_process_transition, complete=melding_complete_transition
+        get_transitions,
+        process=melding_process_transition,
+        classify=melding_classify_transition,
+        complete=melding_complete_transition,
     )
     mp_fsm_melding_state_machine: Singleton[MpFsmMeldingStateMachine] = Singleton(
         MpFsmMeldingStateMachine, transitions=melding_transitions
@@ -107,8 +132,19 @@ class Container(DeclarativeContainer):
         MeldingStateMachine, state_machine=mp_fsm_melding_state_machine
     )
 
+    # classifier
+    dummy_classifier_adaper: Singleton[DummyClassifierAdapter] = Singleton(DummyClassifierAdapter)
+    classifier: Singleton[Classifier] = Singleton(
+        Classifier, adapter=dummy_classifier_adaper, repository=classification_repository
+    )
+
     # actions
-    melding_create_action: Factory[MeldingCreateAction] = Factory(MeldingCreateAction, repository=melding_repository)
+    melding_create_action: Factory[MeldingCreateAction[Melding, Melding]] = Factory(
+        MeldingCreateAction,
+        repository=melding_repository,
+        classifier=classifier,
+        state_machine=melding_state_machine,
+    )
     melding_list_action: Factory[MeldingListAction] = Factory(MeldingListAction, repository=melding_repository)
     melding_retrieve_action: Factory[MeldingRetrieveAction] = Factory(
         MeldingRetrieveAction, repository=melding_repository

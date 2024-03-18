@@ -110,6 +110,16 @@ class ClassificationRepository(BaseSQLAlchemyRepository[Classification, Classifi
     def get_model_type(self) -> type[Classification]:
         return Classification
 
+    async def find_by_name(self, name: str) -> Classification:
+        statement = select(Classification).where(Classification.name == name)
+        result = await self._session.execute(statement)
+        classification = result.scalars().one_or_none()
+
+        if classification is None:
+            raise NotFoundException()
+
+        return classification
+
 
 class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
     @override

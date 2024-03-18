@@ -12,7 +12,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.models import Melding
+from meldingen.models import Classification, Melding
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
 
 
@@ -29,6 +29,22 @@ class TestMeldingCreate:
         assert data.get("id") == 1
         assert data.get("text") == "This is a test melding."
         assert data.get("state") == MeldingStates.NEW
+        assert data.get("classification", "") is None
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("classification_name,", ["classification_name"], indirect=True)
+    async def test_create_melding_with_classification(
+        self, app: FastAPI, client: AsyncClient, classification: Classification
+    ) -> None:
+        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "classification_name"})
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("id") == 1
+        assert data.get("text") == "classification_name"
+        assert data.get("state") == MeldingStates.CLASSIFIED
+        assert data.get("classification") == classification.id
 
     @pytest.mark.asyncio
     async def test_create_melding_text_minimum_length_violation(self, app: FastAPI, client: AsyncClient) -> None:
@@ -108,6 +124,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert data.get("id") == test_melding.id
         assert data.get("text") == test_melding.text
         assert data.get("state") == MeldingStates.NEW
+        assert data.get("classification", "") is None
 
     @pytest.mark.asyncio
     async def test_retrieve_melding_that_does_not_exist(

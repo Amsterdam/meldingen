@@ -19,6 +19,7 @@ class MeldingOutput(BaseModel):
     id: int
     text: str
     state: str
+    classification: int | None = Field(default=None)
 
 
 class UserCreateInput(BaseModel, User):
