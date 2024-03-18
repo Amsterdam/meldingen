@@ -87,10 +87,11 @@ class FormIoForm(AsyncAttrs, BaseDBModel):
     # Internal attr's
     is_primary: Mapped[bool] = mapped_column(Boolean(), default=False, nullable=False)
 
-    components: Mapped[list["FormIoComponent"]] = relationship(
+    components: Mapped[OrderingList["FormIoComponent"]] = relationship(
         back_populates="form",
         order_by="FormIoComponent.position",
-        default_factory=ordering_list(attr="position", count_from=1),
+        default_factory=list,
+        collection_class=ordering_list(attr="position", count_from=1),
     )
 
 
