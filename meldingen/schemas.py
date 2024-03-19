@@ -58,3 +58,22 @@ class FormComponentOutput(BaseModel):
     show_char_count: bool
 
     position: int
+
+
+class FormUpdateInput(BaseModel):
+    title: str
+    components: list["FormComponentUpdateInput"]
+
+
+class FormComponentUpdateInput(BaseModel):
+    model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))
+
+    label: str
+    description: str
+
+    key: str
+    type: str
+    input: bool
+
+    auto_expand: bool
+    show_char_count: bool

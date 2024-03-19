@@ -9,7 +9,7 @@ from meldingen_core.repositories import (
     BaseRepository,
     BaseUserRepository,
 )
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -130,7 +130,11 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
         _type = self.get_model_type()
         statement = select(_type).where(_type.is_primary == True)
         results = await self._session.execute(statement)
-        return results.scalars().unique().one_or_none()
+        return results.scalars().one_or_none()
+
+    async def delete_components(self, pk: int) -> None:
+        statement = delete(FormIoComponent).where(FormIoComponent.form_id == pk)
+        await self._session.execute(statement)
 
 
 class FormIoComponentRepository(BaseSQLAlchemyRepository[FormIoComponent, FormIoComponent]):

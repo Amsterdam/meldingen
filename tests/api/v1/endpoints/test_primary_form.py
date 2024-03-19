@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
 from meldingen.models import FormIoForm, FormIoPrimaryForm
+from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 
 
 class TestPrimaryFormRetrieve:
@@ -44,3 +45,60 @@ class TestPrimaryFormRetrieve:
 
         body = response.json()
         assert body.get("detail") == "Not Found"
+
+
+class TestPrimaryFormUpdate(BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "primary-form:update"
+    METHOD: Final[str] = "PUT"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    @pytest.mark.asyncio
+    async def test_update_primary_form(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        primary_form: FormIoPrimaryForm,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "components": [
+                {
+                    "label": "klacht",
+                    "description": "Wat is uw klacht?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "auto_expand": True,
+                    "show_char_count": True,
+                },
+                {
+                    "label": "aanvullend",
+                    "description": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "auto_expand": True,
+                    "show_char_count": True,
+                },
+            ],
+        }
+
+        assert primary_form.title != new_data["title"]
+        primary_form_components = await primary_form.awaitable_attrs.components
+        assert len(primary_form_components) != len(new_data["components"])
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME), json=new_data)
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data["title"] == new_data["title"]
+        assert data["display"] == "form"
+        assert len(data["components"]) == len(new_data["components"])

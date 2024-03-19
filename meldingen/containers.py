@@ -18,6 +18,7 @@ from meldingen.actions import (
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
     FormIoPrimaryFormRetrieveAction,
+    FormIoPrimaryFormUpdateAction,
     MeldingListAction,
     MeldingRetrieveAction,
     UserListAction,
@@ -28,6 +29,7 @@ from meldingen.classification import DummyClassifierAdapter
 from meldingen.models import Melding
 from meldingen.repositories import (
     ClassificationRepository,
+    FormIoComponentRepository,
     FormIoFormRepository,
     GroupRepository,
     MeldingRepository,
@@ -110,6 +112,9 @@ class Container(DeclarativeContainer):
         ClassificationRepository, session=database_session
     )
     form_repository: Factory[FormIoFormRepository] = Factory(FormIoFormRepository, session=database_session)
+    form_component_repository: Factory[FormIoComponentRepository] = Factory(
+        FormIoComponentRepository, session=database_session
+    )
 
     # state machine
     melding_process_transition: Singleton[Process] = Singleton(Process)
@@ -179,6 +184,9 @@ class Container(DeclarativeContainer):
     # Primary form actions
     primary_form_retrieve_action: Factory[FormIoPrimaryFormRetrieveAction] = Factory(
         FormIoPrimaryFormRetrieveAction, repository=form_repository
+    )
+    primary_form_update_action: Factory[FormIoPrimaryFormUpdateAction] = Factory(
+        FormIoPrimaryFormUpdateAction, repository=form_repository
     )
 
     # authentication

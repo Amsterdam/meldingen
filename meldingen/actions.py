@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, override
 
 from meldingen_core.actions.base import (
     BaseCreateAction,
@@ -81,3 +81,26 @@ class FormIoPrimaryFormRetrieveAction(BaseCRUDAction[FormIoForm, FormIoForm]):
 
     async def __call__(self) -> FormIoForm | None:
         return await self._repository.retrieve_primary_form()
+
+
+class FormIoPrimaryFormUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
+    _repository: FormIoFormRepository
+
+    async def __call__(self, values: dict[str, Any]) -> FormIoForm:
+        _form = await self._repository.retrieve_primary_form()
+        if _form is None:
+            raise NotFoundException()
+
+        await self._repository.delete_components(pk=_form.id)
+
+        form_components = await _form.awaitable_attrs.components
+        for component_values in values.pop("components", []):
+            FormIoComponent(form=_form, **component_values)
+        form_components.reorder()
+
+        for key, value in values.items():
+            setattr(_form, key, value)
+
+        await self._repository.save(_form)
+
+        return _form
