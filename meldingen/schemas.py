@@ -66,7 +66,7 @@ class FormUpdateInput(BaseModel):
 
 
 class FormComponentUpdateInput(BaseModel):
-    model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel))
 
     label: str
     description: str
