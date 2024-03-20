@@ -5,6 +5,7 @@ import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from sqlalchemy.exc import IntegrityError
+from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_409_CONFLICT
@@ -88,6 +89,14 @@ def get_application(cont: Container) -> FastAPI:
         )
 
     application.add_middleware(CorrelationIdMiddleware)
+
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=cont.settings.cors_allow_origins,
+        allow_credentials=cont.settings.cors_allow_credentials,
+        allow_methods=cont.settings.cors_allow_methods,
+        allow_headers=cont.settings.cors_allow_headers,
+    )
 
     return application
 
