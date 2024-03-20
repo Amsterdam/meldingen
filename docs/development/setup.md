@@ -52,7 +52,7 @@ user needs to exist in the database.
 First let's create the user in the database by running the following command:
 
 ```bash
-docker-compose run --rm meldingen python main.py add-user user@example.com
+docker-compose run --rm meldingen python main.py users add user@example.com
 ```
 
 ## Keycloak
