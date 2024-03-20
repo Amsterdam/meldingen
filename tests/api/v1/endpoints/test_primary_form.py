@@ -74,8 +74,8 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
                     "key": "textArea",
                     "type": "textArea",
                     "input": True,
-                    "auto_expand": True,
-                    "show_char_count": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
                 },
                 {
                     "label": "aanvullend",
@@ -83,8 +83,8 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
                     "key": "textArea",
                     "type": "textArea",
                     "input": True,
-                    "auto_expand": True,
-                    "show_char_count": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
                 },
             ],
         }
