@@ -1,6 +1,6 @@
 import logging
 
-from pydantic import PostgresDsn
+from pydantic import HttpUrl, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     jwks_url: str
     auth_url: str
     token_url: str
+
+    # CORS
+    cors_allow_origins: list[HttpUrl]
+    cors_allow_credentials: bool
+    cors_allow_methods: list[str]
+    cors_allow_headers: list[str]
 
 
 # Create an instance of the Settings model
