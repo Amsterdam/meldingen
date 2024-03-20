@@ -92,10 +92,10 @@ def get_application(cont: Container) -> FastAPI:
 
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=cont.settings.cors_allow_origins,
-        allow_credentials=cont.settings.cors_allow_credentials,
-        allow_methods=cont.settings.cors_allow_methods,
-        allow_headers=cont.settings.cors_allow_headers,
+        allow_origins=cont.settings.get("cors_allow_origins"),
+        allow_credentials=cont.settings.get("cors_allow_credentials"),
+        allow_methods=cont.settings.get("cors_allow_methods"),
+        allow_headers=cont.settings.get("cors_allow_headers"),
     )
 
     return application
