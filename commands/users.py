@@ -2,6 +2,7 @@ import asyncio
 
 import typer
 from rich import print
+from sqlalchemy.exc import IntegrityError
 
 from meldingen.config import Settings
 from meldingen.containers import Container
@@ -19,7 +20,11 @@ async def async_add_user(email: str) -> None:
     user_input = UserCreateInput(username=email, email=email)
     user = User(**user_input.model_dump())
 
-    await user_repository.save(user)
+    try:
+        await user_repository.save(user)
+    except IntegrityError:
+        print(f"[red]Error[/red] - User already exists!")
+        raise typer.Exit
 
     print(f'[green]Success[/green] - User "{email}" created!')
 
