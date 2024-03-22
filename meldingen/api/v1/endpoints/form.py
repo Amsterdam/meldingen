@@ -2,9 +2,10 @@ from typing import Annotated
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
-from starlette.status import HTTP_404_NOT_FOUND
+from meldingen_core.exceptions import NotFoundException
+from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
-from meldingen.actions import FormIoFormListAction, FormIoFormRetrieveAction
+from meldingen.actions import FormIoFormDeleteAction, FormIoFormListAction, FormIoFormRetrieveAction
 from meldingen.api.utils import PaginationParams, pagination_params
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
@@ -63,3 +64,24 @@ async def retrieve_form(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return await _hydrate_output(db_form)
+
+
+@router.delete(
+    "/{form_id}",
+    name="form:delete",
+    status_code=HTTP_204_NO_CONTENT,
+    responses={
+        **unauthorized_response,
+        **not_found_response,
+    },
+)
+@inject
+async def delete_form(
+    form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
+    action: FormIoFormDeleteAction = Depends(Provide(Container.form_delete_action)),
+) -> None:
+    try:
+        await action(pk=form_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)

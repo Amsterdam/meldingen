@@ -185,9 +185,17 @@ async def primary_form(form_repository: FormIoFormRepository) -> FormIoPrimaryFo
     return primary_form
 
 
+@pytest.fixture
+def form_title(request: SubRequest) -> str:
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return "Form"
+
+
 @pytest_asyncio.fixture
-async def form(form_repository: FormIoFormRepository) -> FormIoForm:
-    primary_form = FormIoPrimaryForm(title="Form", display=FormIoFormDisplayEnum.form.value, is_primary=False)
+async def form(form_repository: FormIoFormRepository, form_title: str) -> FormIoForm:
+    primary_form = FormIoPrimaryForm(title=form_title, display=FormIoFormDisplayEnum.form.value, is_primary=False)
     await form_repository.save(primary_form)
 
     return primary_form
