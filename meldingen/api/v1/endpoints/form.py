@@ -1,0 +1,65 @@
+from typing import Annotated
+
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends, HTTPException, Path
+from starlette.status import HTTP_404_NOT_FOUND
+
+from meldingen.actions import FormIoFormListAction, FormIoFormRetrieveAction
+from meldingen.api.utils import PaginationParams, pagination_params
+from meldingen.api.v1 import not_found_response, unauthorized_response
+from meldingen.authentication import authenticate_user
+from meldingen.containers import Container
+from meldingen.models import FormIoForm, User
+from meldingen.schemas import FormComponentOutput, FormOnlyOutput, FormOutput
+
+router = APIRouter()
+
+
+async def _hydrate_output(form: FormIoForm) -> FormOutput:
+    components_output = [
+        FormComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            auto_expand=component.auto_expand,
+            show_char_count=component.show_char_count,
+            position=component.position,
+        )
+        for component in await form.awaitable_attrs.components
+    ]
+
+    return FormOutput(title=form.title, display=form.display, components=components_output)
+
+
+@router.get("/", name="form:list", responses={**unauthorized_response})
+@inject
+async def list_form(
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    user: Annotated[User, Depends(authenticate_user)],
+    action: FormIoFormListAction = Depends(Provide(Container.form_list_action)),
+) -> list[FormOnlyOutput]:
+    limit = pagination["limit"] or 0
+    offset = pagination["offset"] or 0
+
+    forms = await action(limit=limit, offset=offset)
+
+    output = []
+    for db_form in forms:
+        output.append(FormOnlyOutput(title=db_form.title, display=db_form.display))
+
+    return output
+
+
+@router.get("/{form_id}", name="form:retrieve", responses={**not_found_response})
+@inject
+async def retrieve_form(
+    form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
+    action: FormIoFormRetrieveAction = Depends(Provide(Container.form_retrieve_action)),
+) -> FormOutput:
+    db_form = await action(pk=form_id)
+    if not db_form:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    return await _hydrate_output(db_form)

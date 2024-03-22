@@ -38,6 +38,11 @@ class UserUpdateInput(BaseModel):
     email: EmailStr | None = None
 
 
+class FormOnlyOutput(BaseModel):
+    title: str
+    display: str
+
+
 class FormOutput(BaseModel):
     title: str
     display: str

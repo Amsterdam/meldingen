@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import Classification, FormIoFormDisplayEnum, FormIoPrimaryForm, Melding, User
+from meldingen.models import Classification, FormIoForm, FormIoFormDisplayEnum, FormIoPrimaryForm, Melding, User
 from meldingen.repositories import ClassificationRepository, FormIoFormRepository, MeldingRepository, UserRepository
 
 
@@ -186,8 +186,21 @@ async def primary_form(form_repository: FormIoFormRepository) -> FormIoPrimaryFo
 
 
 @pytest_asyncio.fixture
-async def form(form_repository: FormIoFormRepository) -> FormIoPrimaryForm:
+async def form(form_repository: FormIoFormRepository) -> FormIoForm:
     primary_form = FormIoPrimaryForm(title="Form", display=FormIoFormDisplayEnum.form.value, is_primary=False)
     await form_repository.save(primary_form)
 
     return primary_form
+
+
+@pytest_asyncio.fixture
+async def test_forms(form_repository: FormIoFormRepository) -> list[FormIoForm]:
+    forms = []
+    for n in range(1, 11):
+        form = FormIoForm(title=f"Form #{n}", display=FormIoFormDisplayEnum.form, is_primary=False)
+
+        await form_repository.save(form)
+
+        forms.append(form)
+
+    return forms
