@@ -4,6 +4,7 @@ from typing import Any, TypeVar, override
 
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import (
+    BaseAnswerRepository,
     BaseClassificationRepository,
     BaseMeldingRepository,
     BaseQuestionRepository,
@@ -14,7 +15,17 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from meldingen.models import BaseDBModel, Classification, FormIoComponent, FormIoForm, Group, Melding, Question, User
+from meldingen.models import (
+    Answer,
+    BaseDBModel,
+    Classification,
+    FormIoComponent,
+    FormIoForm,
+    Group,
+    Melding,
+    Question,
+    User,
+)
 
 T = TypeVar("T", bound=BaseDBModel)
 T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
@@ -169,3 +180,8 @@ class FormIoComponentRepository(BaseSQLAlchemyRepository[FormIoComponent, FormIo
 class QuestionRepository(BaseSQLAlchemyRepository[Question, Question], BaseQuestionRepository):
     def get_model_type(self) -> type[Question]:
         return Question
+
+
+class AnswerRepository(BaseSQLAlchemyRepository[Answer, Answer], BaseAnswerRepository):
+    def get_model_type(self) -> type[Answer]:
+        return Answer
