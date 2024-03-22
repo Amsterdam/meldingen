@@ -42,7 +42,7 @@ Options:
 
 Arguments
 
-*    name      TEXT  [default: None] [required]   
+*    name      TEXT  [default: None] [required]
 ```
 
 Example:
@@ -64,8 +64,8 @@ Options:
 
 Arguments
 
-*    email           TEXT  [default: None] [required]                                                                                                                                 │
-*    group_name      TEXT  [default: None] [required]   
+*    email           TEXT  [default: None] [required]
+*    group_name      TEXT  [default: None] [required]
 ```
 
 Example:
@@ -92,5 +92,11 @@ Options:
 Example:
 
 ```bash
-$ python main.py users add-to-group user@example.com test-group
+$ python main.py forms add-primary
+```
+
+or
+
+```bash
+$ python main.py forms add-primary --title "The primary form."
 ```
