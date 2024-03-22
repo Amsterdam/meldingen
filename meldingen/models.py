@@ -1,6 +1,7 @@
 import enum
 from typing import Any, Final
 
+from meldingen_core.models import Answer as BaseAnswer
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import Question as BaseQuestion
@@ -128,4 +129,14 @@ class Question(BaseDBModel, BaseQuestion):
     text: Mapped[str] = mapped_column(String())
 
     classification_id: Mapped[int] = mapped_column(ForeignKey("classification.id"))
-    classification: Mapped["Classification"] = relationship()
+    classification: Mapped[Classification] = relationship()
+
+
+class Answer(BaseDBModel, BaseAnswer):
+    text: Mapped[str] = mapped_column(String())
+
+    question_id: Mapped[int] = mapped_column(ForeignKey("question.id"))
+    question: Mapped[Question] = relationship()
+
+    melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"))
+    melding: Mapped[Melding] = relationship()
