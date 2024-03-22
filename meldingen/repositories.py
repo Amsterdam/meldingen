@@ -126,6 +126,28 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
     def get_model_type(self) -> type[FormIoForm]:
         return FormIoForm
 
+    @override
+    async def list(self, *, limit: int | None = None, offset: int | None = None) -> Collection[FormIoForm]:
+        _type = self.get_model_type()
+        statement = select(self.get_model_type()).where(_type.is_primary == False)
+
+        if limit:
+            statement = statement.limit(limit)
+
+        if offset:
+            statement = statement.offset(offset)
+
+        results = await self._session.execute(statement)
+
+        return results.scalars().unique().all()
+
+    @override
+    async def retrieve(self, pk: int) -> FormIoForm | None:
+        _type = self.get_model_type()
+        statement = select(_type).where(_type.is_primary == False and _type.id == pk)
+        results = await self._session.execute(statement)
+        return results.scalars().unique().one_or_none()
+
     async def retrieve_primary_form(self) -> FormIoForm | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.is_primary == True)

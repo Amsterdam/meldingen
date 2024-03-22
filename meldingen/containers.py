@@ -17,6 +17,8 @@ from meldingen.actions import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    FormIoFormListAction,
+    FormIoFormRetrieveAction,
     FormIoPrimaryFormRetrieveAction,
     FormIoPrimaryFormUpdateAction,
     MeldingListAction,
@@ -95,6 +97,7 @@ class Container(DeclarativeContainer):
             "meldingen.authentication",
             "meldingen.api.v1.endpoints.classification",
             "meldingen.api.v1.endpoints.primary_form",
+            "meldingen.api.v1.endpoints.form",
         ]
     )
 
@@ -187,6 +190,12 @@ class Container(DeclarativeContainer):
     )
     primary_form_update_action: Factory[FormIoPrimaryFormUpdateAction] = Factory(
         FormIoPrimaryFormUpdateAction, repository=form_repository
+    )
+
+    # Form actions
+    form_list_action: Factory[FormIoFormListAction] = Factory(FormIoFormListAction, repository=form_repository)
+    form_retrieve_action: Factory[FormIoFormRetrieveAction] = Factory(
+        FormIoFormRetrieveAction, repository=form_repository
     )
 
     # authentication
