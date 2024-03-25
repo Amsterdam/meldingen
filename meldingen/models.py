@@ -128,9 +128,6 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
 class Question(BaseDBModel, BaseQuestion):
     text: Mapped[str] = mapped_column(String())
 
-    classification_id: Mapped[int] = mapped_column(ForeignKey("classification.id"))
-    classification: Mapped[Classification] = relationship()
-
 
 class Answer(BaseDBModel, BaseAnswer):
     text: Mapped[str] = mapped_column(String())

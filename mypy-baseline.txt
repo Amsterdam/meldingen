@@ -5,7 +5,6 @@ meldingen/models.py:0: error: Incompatible types in assignment (expression has t
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "User" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "User" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Question" defined the type as "str")  [assignment]
-meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Classification]", base class "Question" defined the type as "meldingen_core.models.Classification")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Answer" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Question]", base class "Answer" defined the type as "meldingen_core.models.Question")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Melding]", base class "Answer" defined the type as "meldingen_core.models.Melding")  [assignment]
