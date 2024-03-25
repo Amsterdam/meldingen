@@ -1,8 +1,10 @@
 import enum
 from typing import Any, Final
 
+from meldingen_core.models import Answer as BaseAnswer
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Melding as BaseMelding
+from meldingen_core.models import Question as BaseQuestion
 from meldingen_core.models import User as BaseUser
 from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
@@ -121,3 +123,17 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
 
     # Used to keep the order of the components correct
     position: Mapped[int] = mapped_column(Integer(), nullable=False, default=1)
+
+
+class Question(BaseDBModel, BaseQuestion):
+    text: Mapped[str] = mapped_column(String())
+
+
+class Answer(BaseDBModel, BaseAnswer):
+    text: Mapped[str] = mapped_column(String())
+
+    question_id: Mapped[int] = mapped_column(ForeignKey("question.id"))
+    question: Mapped[Question] = relationship()
+
+    melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"))
+    melding: Mapped[Melding] = relationship()
