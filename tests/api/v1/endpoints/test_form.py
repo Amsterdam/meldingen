@@ -108,3 +108,80 @@ class TestFormDelete(BaseUnauthorizedTest):
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, form_id=primary_form.id))
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+
+class TestFormUpdate(BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "form:update"
+    METHOD: Final[str] = "PUT"
+    PATH_PARAMS: dict[str, Any] = {"form_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
+
+    @pytest.mark.asyncio
+    async def test_update_form(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: FormIoForm,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "pdf",
+            "components": [
+                {
+                    "label": "extra-vraag1",
+                    "description": "Heeft u meer informatie die u met ons wilt delen?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+                {
+                    "label": "extra-vraag2",
+                    "description": "Waarom meld u dit bij ons?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+            ],
+        }
+
+        assert form.title != new_data["title"]
+        assert form.display != new_data["display"]
+        form_components = await form.awaitable_attrs.components
+        assert len(form_components) != len(new_data["components"])
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data["title"] == new_data["title"]
+        assert data["display"] == new_data["display"]
+        assert len(data["components"]) == len(new_data["components"])
+
+    @pytest.mark.asyncio
+    async def test_unable_to_update_primary_form(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, primary_form: FormIoForm
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "pdf",
+            "components": [],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=primary_form.id), json=new_data)
+
+        assert response.status_code == HTTP_404_NOT_FOUND

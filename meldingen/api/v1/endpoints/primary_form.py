@@ -10,7 +10,7 @@ from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import FormIoForm, User
-from meldingen.schemas import FormComponentOutput, FormOutput, FormUpdateInput
+from meldingen.schemas import FormComponentOutput, FormOutput, PrimaryFormUpdateInput
 
 router = APIRouter()
 
@@ -50,7 +50,7 @@ async def retrieve_primary_form(
 @router.put("/", name="primary-form:update", responses={**unauthorized_response, **not_found_response})
 @inject
 async def update_primary_form(
-    form_input: FormUpdateInput,
+    form_input: PrimaryFormUpdateInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoPrimaryFormUpdateAction = Depends(Provide(Container.primary_form_update_action)),
 ) -> FormOutput:

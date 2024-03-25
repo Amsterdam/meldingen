@@ -49,9 +49,6 @@ class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, 
 class FormIoFormCreateAction(BaseCreateAction[FormIoForm, FormIoForm]): ...
 
 
-class FormIoFormUpdateAction(BaseUpdateAction[FormIoForm, FormIoForm]): ...
-
-
 class FormIoFormListAction(BaseListAction[FormIoForm, FormIoForm]): ...
 
 
@@ -83,24 +80,38 @@ class FormIoPrimaryFormRetrieveAction(BaseCRUDAction[FormIoForm, FormIoForm]):
         return await self._repository.retrieve_primary_form()
 
 
-class FormIoPrimaryFormUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
+class BaseFormIoFormUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
     _repository: FormIoFormRepository
 
-    async def __call__(self, values: dict[str, Any]) -> FormIoForm:
-        _form = await self._repository.retrieve_primary_form()
-        if _form is None:
-            raise NotFoundException()
+    async def _update(self, form: FormIoForm, values: dict[str, Any]) -> FormIoForm:
+        await self._repository.delete_components(pk=form.id)
 
-        await self._repository.delete_components(pk=_form.id)
-
-        form_components = await _form.awaitable_attrs.components
+        form_components = await form.awaitable_attrs.components
         for component_values in values.pop("components", []):
-            FormIoComponent(form=_form, **component_values)
+            FormIoComponent(form=form, **component_values)
         form_components.reorder()
 
         for key, value in values.items():
-            setattr(_form, key, value)
+            setattr(form, key, value)
 
-        await self._repository.save(_form)
+        await self._repository.save(form)
 
-        return _form
+        return form
+
+
+class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):
+    async def __call__(self, pk: int, values: dict[str, Any]) -> FormIoForm:
+        obj = await self._repository.retrieve(pk=pk)
+        if obj is None:
+            raise NotFoundException()
+
+        return await self._update(obj, values)
+
+
+class FormIoPrimaryFormUpdateAction(BaseFormIoFormUpdateAction):
+    async def __call__(self, values: dict[str, Any]) -> FormIoForm:
+        obj = await self._repository.retrieve_primary_form()
+        if obj is None:
+            raise NotFoundException()
+
+        return await self._update(obj, values)
