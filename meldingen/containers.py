@@ -17,6 +17,7 @@ from meldingen.actions import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    FormIoFormDeleteAction,
     FormIoFormListAction,
     FormIoFormRetrieveAction,
     FormIoPrimaryFormRetrieveAction,
@@ -197,6 +198,7 @@ class Container(DeclarativeContainer):
     form_retrieve_action: Factory[FormIoFormRetrieveAction] = Factory(
         FormIoFormRetrieveAction, repository=form_repository
     )
+    form_delete_action: Factory[FormIoFormDeleteAction] = Factory(FormIoFormDeleteAction, repository=form_repository)
 
     # authentication
     jwks_client: Singleton[PyJWKClient] = Singleton(PyJWKClient, uri=settings.jwks_url)
