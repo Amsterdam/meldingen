@@ -2,6 +2,8 @@ from meldingen_core.models import Classification, User
 from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field
 from pydantic.alias_generators import to_camel
 
+from meldingen.models import FormIoFormDisplayEnum
+
 
 class ClassificationInput(BaseModel, Classification):
     name: str = Field(min_length=1)
@@ -65,9 +67,13 @@ class FormComponentOutput(BaseModel):
     position: int
 
 
-class FormUpdateInput(BaseModel):
+class PrimaryFormUpdateInput(BaseModel):
     title: str
     components: list["FormComponentUpdateInput"]
+
+
+class FormUpdateInput(PrimaryFormUpdateInput):
+    display: FormIoFormDisplayEnum
 
 
 class FormComponentUpdateInput(BaseModel):

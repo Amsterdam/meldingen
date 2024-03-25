@@ -5,13 +5,18 @@ from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
-from meldingen.actions import FormIoFormDeleteAction, FormIoFormListAction, FormIoFormRetrieveAction
+from meldingen.actions import (
+    FormIoFormDeleteAction,
+    FormIoFormListAction,
+    FormIoFormRetrieveAction,
+    FormIoFormUpdateAction,
+)
 from meldingen.api.utils import PaginationParams, pagination_params
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import FormIoForm, User
-from meldingen.schemas import FormComponentOutput, FormOnlyOutput, FormOutput
+from meldingen.schemas import FormComponentOutput, FormOnlyOutput, FormOutput, FormUpdateInput
 
 router = APIRouter()
 
@@ -64,6 +69,24 @@ async def retrieve_form(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return await _hydrate_output(db_form)
+
+
+@router.put("/{form_id}", name="form:update", responses={**unauthorized_response, **not_found_response})
+@inject
+async def update_form(
+    form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
+    form_input: FormUpdateInput,
+    user: Annotated[User, Depends(authenticate_user)],
+    action: FormIoFormUpdateAction = Depends(Provide(Container.form_update_action)),
+) -> FormOutput:
+    form_data = form_input.model_dump(exclude_unset=True)
+
+    try:
+        db_form = await action(form_id, form_data)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    return await _hydrate_output(form=db_form)
 
 
 @router.delete(
