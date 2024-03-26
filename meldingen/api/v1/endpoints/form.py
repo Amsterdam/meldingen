@@ -13,7 +13,7 @@ from meldingen.actions import (
     FormIoFormUpdateAction,
 )
 from meldingen.api.utils import PaginationParams, pagination_params
-from meldingen.api.v1 import conflict_response, not_found_response, unauthorized_response
+from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import FormIoComponent, FormIoForm, User
@@ -72,9 +72,7 @@ async def retrieve_form(
     return await _hydrate_output(db_form)
 
 
-@router.post(
-    "/", name="form:create", status_code=HTTP_201_CREATED, responses={**unauthorized_response, **conflict_response}
-)
+@router.post("/", name="form:create", status_code=HTTP_201_CREATED, responses={**unauthorized_response})
 @inject
 async def create_form(
     form_input: FormCreateInput,
