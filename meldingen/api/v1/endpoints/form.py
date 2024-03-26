@@ -3,9 +3,10 @@ from typing import Annotated
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.exceptions import NotFoundException
-from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions import (
+    FormIoFormCreateAction,
     FormIoFormDeleteAction,
     FormIoFormListAction,
     FormIoFormRetrieveAction,
@@ -15,8 +16,8 @@ from meldingen.api.utils import PaginationParams, pagination_params
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import FormIoForm, User
-from meldingen.schemas import FormComponentOutput, FormOnlyOutput, FormOutput, FormUpdateInput
+from meldingen.models import FormIoComponent, FormIoForm, User
+from meldingen.schemas import FormComponentOutput, FormCreateInput, FormOnlyOutput, FormOutput, FormUpdateInput
 
 router = APIRouter()
 
@@ -67,6 +68,25 @@ async def retrieve_form(
     db_form = await action(pk=form_id)
     if not db_form:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    return await _hydrate_output(db_form)
+
+
+@router.post("/", name="form:create", status_code=HTTP_201_CREATED, responses={**unauthorized_response})
+@inject
+async def create_form(
+    form_input: FormCreateInput,
+    user: Annotated[User, Depends(authenticate_user)],
+    action: FormIoFormCreateAction = Depends(Provide(Container.form_create_action)),
+) -> FormOutput:
+    dumped_form_input = form_input.model_dump()
+    dumped_components_input = dumped_form_input.pop("components", [])
+
+    db_form = FormIoForm(**dumped_form_input)
+    for component_input in dumped_components_input:
+        FormIoComponent(**component_input, form=db_form)
+
+    await action(db_form)
 
     return await _hydrate_output(db_form)
 

@@ -3,7 +3,13 @@ from typing import Any, Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+)
 
 from meldingen.models import FormIoForm
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
@@ -185,3 +191,112 @@ class TestFormUpdate(BaseUnauthorizedTest):
         response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=primary_form.id), json=new_data)
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+
+class TestFormCreate(BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "form:create"
+    METHOD: Final[str] = "POST"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    @pytest.mark.asyncio
+    async def test_create_form(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "label": "extra-vraag-1",
+                    "description": "Heeft u meer informatie die u met ons wilt delen?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": False,
+                    "showCharCount": False,
+                },
+                {
+                    "label": "extra-vraag-2",
+                    "description": "Waarom meld u dit bij ons?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("title") == "Formulier #1"
+        assert data.get("display") == "form"
+
+        components = data.get("components")
+        assert isinstance(components, list)
+        assert components is not None
+        assert len(components) == 2
+
+        first_component: dict[str, Any] = components[0]
+        assert first_component.get("label") == "extra-vraag-1"
+        assert first_component.get("description") == "Heeft u meer informatie die u met ons wilt delen?"
+        assert first_component.get("key") == "textArea"
+        assert first_component.get("type") == "textArea"
+        assert first_component.get("input") == True
+        assert first_component.get("autoExpand") == False
+        assert first_component.get("showCharCount") == False
+
+        second_component: dict[str, Any] = components[1]
+        assert second_component.get("label") == "extra-vraag-2"
+        assert second_component.get("description") == "Waarom meld u dit bij ons?"
+        assert second_component.get("key") == "textArea"
+        assert second_component.get("type") == "textArea"
+        assert second_component.get("input") == True
+        assert second_component.get("autoExpand") == True
+        assert second_component.get("showCharCount") == True
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "title, display, error_type, error_loc, error_msg",
+        [
+            ("AB", "form", "string_too_short", ["body", "title"], "String should have at least 3 characters"),
+            (
+                "Valid title",
+                "Invalid display",
+                "enum",
+                ["body", "display"],
+                "Input should be 'form', 'wizard' or 'pdf'",
+            ),
+        ],
+    )
+    async def test_create_form_violation(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        title: str,
+        display: str,
+        error_type: str,
+        error_loc: list[str],
+        error_msg: str,
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME), json={"title": title, "display": display, "components": []}
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        data = response.json()
+        detail = data.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == error_type
+        assert violation.get("loc") == error_loc
+        assert violation.get("msg") == error_msg
