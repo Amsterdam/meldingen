@@ -62,6 +62,7 @@ class FormIoComponentDeleteAction(BaseDeleteAction[FormIoComponent, FormIoCompon
 
 
 class FormIoFormCreateAction(BaseCreateAction[FormIoForm, FormIoForm]):
+    @override
     async def __call__(self, obj: FormIoForm) -> None:
         form_components = await obj.awaitable_attrs.components
         form_components.reorder()
