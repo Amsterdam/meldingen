@@ -46,18 +46,6 @@ class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classificati
 class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, Classification]): ...
 
 
-class FormIoFormCreateAction(BaseCreateAction[FormIoForm, FormIoForm]): ...
-
-
-class FormIoFormListAction(BaseListAction[FormIoForm, FormIoForm]): ...
-
-
-class FormIoFormRetrieveAction(BaseRetrieveAction[FormIoForm, FormIoForm]): ...
-
-
-class FormIoFormDeleteAction(BaseDeleteAction[FormIoForm, FormIoForm]): ...
-
-
 class FormIoComponentCreateAction(BaseCreateAction[FormIoComponent, FormIoComponent]): ...
 
 
@@ -71,6 +59,23 @@ class FormIoComponentRetrieveAction(BaseRetrieveAction[FormIoComponent, FormIoCo
 
 
 class FormIoComponentDeleteAction(BaseDeleteAction[FormIoComponent, FormIoComponent]): ...
+
+
+class FormIoFormCreateAction(BaseCreateAction[FormIoForm, FormIoForm]):
+    async def __call__(self, obj: FormIoForm) -> None:
+        form_components = await obj.awaitable_attrs.components
+        form_components.reorder()
+
+        await self._repository.save(obj)
+
+
+class FormIoFormListAction(BaseListAction[FormIoForm, FormIoForm]): ...
+
+
+class FormIoFormRetrieveAction(BaseRetrieveAction[FormIoForm, FormIoForm]): ...
+
+
+class FormIoFormDeleteAction(BaseDeleteAction[FormIoForm, FormIoForm]): ...
 
 
 class FormIoPrimaryFormRetrieveAction(BaseCRUDAction[FormIoForm, FormIoForm]):

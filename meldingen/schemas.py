@@ -67,6 +67,26 @@ class FormComponentOutput(BaseModel):
     position: int
 
 
+class FormCreateInput(BaseModel):
+    title: str = Field(min_length=3)
+    display: FormIoFormDisplayEnum
+    components: list["FormComponentCreateInput"]
+
+
+class FormComponentCreateInput(BaseModel):
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel))
+
+    label: str
+    description: str
+
+    key: str
+    type: str
+    input: bool
+
+    auto_expand: bool
+    show_char_count: bool
+
+
 class PrimaryFormUpdateInput(BaseModel):
     title: str
     components: list["FormComponentUpdateInput"]

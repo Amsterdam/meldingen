@@ -84,6 +84,9 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         await self._session.delete(db_item)
         await self._session.commit()
 
+    async def refresh(self, model: T) -> None:
+        await self._session.refresh(model)
+
 
 class MeldingRepository(BaseSQLAlchemyRepository[Melding, Melding], BaseMeldingRepository[Melding, Melding]):
     """Repository for Melding model."""
