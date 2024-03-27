@@ -7,7 +7,6 @@ RUN set eux; \
     curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python; \
     cd /usr/local/bin; \
     ln -s /opt/poetry/bin/poetry; \
-    poetry config virtualenvs.create false; \
     poetry self add poetry-sort
 
 COPY ./pyproject.toml ./poetry.lock /opt/meldingen/
@@ -16,9 +15,9 @@ COPY ./pyproject.toml ./poetry.lock /opt/meldingen/
 ARG INSTALL_DEV=false
 RUN set -eux; \
     if [ "$INSTALL_DEV" = "true" ]; then \
-      poetry install --no-root; \
+      poetry install --no-root --no-directory; \
     else \
-      poetry install --no-root --only main; \
+      poetry install --no-root --no-directory --only main; \
     fi
 
 COPY . /opt/meldingen
