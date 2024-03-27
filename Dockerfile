@@ -28,7 +28,7 @@ RUN set -eux; \
       poetry install; \
     else \
       poetry install --only main; \
-    fi \
+    fi
 
 ENV PYTHONPATH=/opt/meldingen
 
