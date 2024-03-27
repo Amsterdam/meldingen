@@ -1,7 +1,14 @@
 __pycache__
 .idea/
+.git/
+.github/
+.mypy_cache/
+.pytest_cache/
 README.md
 Dockerfile
 docker
 docker-compose.yml
+mkdocs.yml
+mypy-baseline.txt
+.pre-commit-config.yaml
 *.env
