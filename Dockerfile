@@ -16,12 +16,20 @@ COPY ./pyproject.toml ./poetry.lock /opt/meldingen/
 ARG INSTALL_DEV=false
 RUN set -eux; \
     if [ "$INSTALL_DEV" = "true" ]; then \
-      poetry install --no-root; \
+      poetry install --no-root --no-directory; \
     else \
-      poetry install --no-root --only main; \
+      poetry install --no-root --no-directory --only main; \
     fi
 
 COPY . /opt/meldingen
+
+RUN set -eux; \
+    if [ "$INSTALL_DEV" = "true" ]; then \
+      poetry install; \
+    else \
+      poetry install --only main; \
+    fi
+
 ENV PYTHONPATH=/opt/meldingen
 
 ENTRYPOINT ["/opt/meldingen/meldingen-entrypoint.sh"]
