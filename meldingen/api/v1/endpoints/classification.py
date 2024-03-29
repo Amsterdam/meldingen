@@ -8,7 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT
 
 from meldingen.actions import ClassificationListAction, ClassificationRetrieveAction, ClassificationUpdateAction
 from meldingen.api.utils import PaginationParams, pagination_params
-from meldingen.api.v1 import conflict_response, default_response, not_found_response, unauthorized_response
+from meldingen.api.v1 import conflict_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Classification, User
@@ -100,7 +100,6 @@ async def update_classification(
     responses={
         **unauthorized_response,
         **not_found_response,
-        **default_response,
     },
 )
 @inject
