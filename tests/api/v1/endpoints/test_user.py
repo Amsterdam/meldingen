@@ -220,6 +220,22 @@ class TestUserDelete(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("detail") == "You cannot delete your own account"
 
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("user_id", [0, -1])
+    async def test_delete_invalid_id(self, app: FastAPI, client: AsyncClient, auth_user: None, user_id: int) -> None:
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, user_id=user_id))
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "greater_than_equal"
+        assert violation.get("loc") == ["path", "user_id"]
+        assert violation.get("msg") == "Input should be greater than or equal to 1"
+
 
 class TestUserUpdate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "user:update"
