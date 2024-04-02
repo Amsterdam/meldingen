@@ -67,6 +67,14 @@
       "containerId" : "06c18262-d5f6-43a0-9069-4fb60d8b8593",
       "attributes" : { }
     }, {
+      "id" : "4463d5a4-77fc-4278-944d-bd81ac134f88",
+      "name" : "admin",
+      "description" : "",
+      "composite" : false,
+      "clientRole" : false,
+      "containerId" : "06c18262-d5f6-43a0-9069-4fb60d8b8593",
+      "attributes" : { }
+    }, {
       "id" : "fb4bedea-3f91-40f6-bbaf-f4360ef8e8d9",
       "name" : "uma_authorization",
       "description" : "${role_uma_authorization}",
@@ -334,7 +342,15 @@
       } ]
     }
   },
-  "groups" : [ ],
+  "groups" : [ {
+    "id" : "8de973d4-1e63-4a92-8804-ccb73ec90233",
+    "name" : "admins",
+    "path" : "/admins",
+    "subGroups" : [ ],
+    "attributes" : { },
+    "realmRoles" : [ "admin" ],
+    "clientRoles" : { }
+  } ],
   "defaultRole" : {
     "id" : "83759bff-5587-4882-897e-7c9fbebd9225",
     "name" : "default-roles-meldingen",
@@ -376,6 +392,29 @@
   "webAuthnPolicyPasswordlessAcceptableAaguids" : [ ],
   "webAuthnPolicyPasswordlessExtraOrigins" : [ ],
   "users" : [ {
+    "id" : "b7637cad-1654-464a-9736-53dffa043703",
+    "createdTimestamp" : 1712067679584,
+    "username" : "meldingen_admin",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Ad",
+    "lastName" : "Min",
+    "email" : "admin@example.com",
+    "credentials" : [ {
+      "id" : "ab5a29d8-ce04-4ec3-a871-3293ac44afcb",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1712067698508,
+      "secretData" : "{\"value\":\"l2pkZ3tLCjNt6FGfh3bRqRvOhZ8sG7iiBlM6fUI304U=\",\"salt\":\"/O8bj7px+1oicjEPJCl5GA==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-meldingen" ],
+    "notBefore" : 0,
+    "groups" : [ "/admins" ]
+  }, {
     "id" : "6277c66b-60be-4073-aeac-12a38890bb4e",
     "createdTimestamp" : 1706871345110,
     "username" : "meldingen_user",
