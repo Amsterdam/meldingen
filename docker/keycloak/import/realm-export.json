@@ -352,6 +352,7 @@
   "otpPolicyPeriod" : 30,
   "otpPolicyCodeReusable" : false,
   "otpSupportedApplications" : [ "totpAppFreeOTPName", "totpAppGoogleName", "totpAppMicrosoftAuthenticatorName" ],
+  "localizationTexts" : { },
   "webAuthnPolicyRpEntityName" : "keycloak",
   "webAuthnPolicySignatureAlgorithms" : [ "ES256" ],
   "webAuthnPolicyRpId" : "",
@@ -362,6 +363,7 @@
   "webAuthnPolicyCreateTimeout" : 0,
   "webAuthnPolicyAvoidSameAuthenticatorRegister" : false,
   "webAuthnPolicyAcceptableAaguids" : [ ],
+  "webAuthnPolicyExtraOrigins" : [ ],
   "webAuthnPolicyPasswordlessRpEntityName" : "keycloak",
   "webAuthnPolicyPasswordlessSignatureAlgorithms" : [ "ES256" ],
   "webAuthnPolicyPasswordlessRpId" : "",
@@ -372,6 +374,7 @@
   "webAuthnPolicyPasswordlessCreateTimeout" : 0,
   "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister" : false,
   "webAuthnPolicyPasswordlessAcceptableAaguids" : [ ],
+  "webAuthnPolicyPasswordlessExtraOrigins" : [ ],
   "users" : [ {
     "id" : "6277c66b-60be-4073-aeac-12a38890bb4e",
     "createdTimestamp" : 1706871345110,
@@ -543,8 +546,8 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "redirectUris" : [ "http://localhost:8000/*" ],
-    "webOrigins" : [ "http://localhost:8000" ],
+    "redirectUris" : [ "http://localhost*" ],
+    "webOrigins" : [ "*" ],
     "notBefore" : 0,
     "bearerOnly" : false,
     "consentRequired" : false,
@@ -557,9 +560,10 @@
     "protocol" : "openid-connect",
     "attributes" : {
       "oidc.ciba.grant.enabled" : "false",
+      "backchannel.logout.session.required" : "true",
       "post.logout.redirect.uris" : "+",
       "oauth2.device.authorization.grant.enabled" : "false",
-      "backchannel.logout.session.required" : "true",
+      "display.on.consent.screen" : "false",
       "backchannel.logout.revoke.offline.tokens" : "false"
     },
     "authenticationFlowBindingOverrides" : { },
@@ -1110,6 +1114,7 @@
   "browserSecurityHeaders" : {
     "contentSecurityPolicyReportOnly" : "",
     "xContentTypeOptions" : "nosniff",
+    "referrerPolicy" : "no-referrer",
     "xRobotsTag" : "none",
     "xFrameOptions" : "SAMEORIGIN",
     "contentSecurityPolicy" : "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
@@ -1126,15 +1131,6 @@
   "identityProviderMappers" : [ ],
   "components" : {
     "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy" : [ {
-      "id" : "86393472-c04a-4d49-8df1-03b54a45977d",
-      "name" : "Max Clients Limit",
-      "providerId" : "max-clients",
-      "subType" : "anonymous",
-      "subComponents" : { },
-      "config" : {
-        "max-clients" : [ "200" ]
-      }
-    }, {
       "id" : "dc09bf85-d684-4155-99c5-9a9e4cfa7bac",
       "name" : "Consent Required",
       "providerId" : "consent-required",
@@ -1167,7 +1163,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-address-mapper", "oidc-usermodel-property-mapper", "saml-user-attribute-mapper", "saml-role-list-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-attribute-mapper", "saml-user-property-mapper", "oidc-full-name-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-address-mapper", "saml-role-list-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-property-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "saml-user-property-mapper", "saml-user-attribute-mapper" ]
       }
     }, {
       "id" : "d46a6f99-ec51-4cc2-9b30-1d501f6355ba",
@@ -1177,6 +1173,24 @@
       "subComponents" : { },
       "config" : { }
     }, {
+      "id" : "02513600-950f-47be-ad1b-95d5cbf01ca7",
+      "name" : "Allowed Protocol Mapper Types",
+      "providerId" : "allowed-protocol-mappers",
+      "subType" : "anonymous",
+      "subComponents" : { },
+      "config" : {
+        "allowed-protocol-mapper-types" : [ "saml-user-attribute-mapper", "oidc-address-mapper", "saml-user-property-mapper", "oidc-usermodel-property-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-full-name-mapper", "saml-role-list-mapper", "oidc-usermodel-attribute-mapper" ]
+      }
+    }, {
+      "id" : "86393472-c04a-4d49-8df1-03b54a45977d",
+      "name" : "Max Clients Limit",
+      "providerId" : "max-clients",
+      "subType" : "anonymous",
+      "subComponents" : { },
+      "config" : {
+        "max-clients" : [ "200" ]
+      }
+    }, {
       "id" : "372f447f-8d22-48f4-bc88-8ed45471a221",
       "name" : "Allowed Client Scopes",
       "providerId" : "allowed-client-templates",
@@ -1184,15 +1198,6 @@
       "subComponents" : { },
       "config" : {
         "allow-default-scopes" : [ "true" ]
-      }
-    }, {
-      "id" : "02513600-950f-47be-ad1b-95d5cbf01ca7",
-      "name" : "Allowed Protocol Mapper Types",
-      "providerId" : "allowed-protocol-mappers",
-      "subType" : "anonymous",
-      "subComponents" : { },
-      "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-full-name-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-attribute-mapper", "oidc-address-mapper", "oidc-usermodel-property-mapper", "saml-user-attribute-mapper", "saml-user-property-mapper", "saml-role-list-mapper" ]
       }
     } ],
     "org.keycloak.keys.KeyProvider" : [ {
@@ -1219,6 +1224,16 @@
         "algorithm" : [ "RSA-OAEP" ]
       }
     }, {
+      "id" : "148431d5-8070-4309-ab34-8db29315cfc6",
+      "name" : "aes-generated",
+      "providerId" : "aes-generated",
+      "subComponents" : { },
+      "config" : {
+        "kid" : [ "7841c8bb-5835-4a73-b4e2-22b01224e6cd" ],
+        "secret" : [ "SLQhTYpBkSxfVy09VLy0sw" ],
+        "priority" : [ "100" ]
+      }
+    }, {
       "id" : "87030706-420b-4875-b034-65ce8ff290a8",
       "name" : "rsa-generated",
       "providerId" : "rsa-generated",
@@ -1227,16 +1242,6 @@
         "privateKey" : [ "MIIEoQIBAAKCAQEArn/DK7KdPDrCUtKgJ6OQc39YgSLRtRpFeESD6U3xTIQvSrl+e6GZxhpP1gGM/AVv2Kh6/rdATTnDBZD7oXxD97CG5SooFl3/XgEIHCLllDq0jeuMvZX4tyDK8tIIvN4bd9wEyBa153Yhj93lK1ckCQCzpc9LhwfwPdkeqOgPF3GYiopVp6mSdvXUgF6EcU28dfsRBHqHwZDC1vmfDVtvZzc01HbLKZQGEhUvyFDxpHHQDPMbqmGZkfA+asVgM9e2UoV5lCd8IhtSSg1npRi6cHXVK0VU/5SZ1Rn0EJU1xWrmNUfoKgPq8ZSGpKVqmTnmTQILZR7uN22K2lQ3Pfav5QIDAQABAoH/XnskI3agq+2WgrNr51/THdKOmSQy9c2nQWj0A2zMuehmllYuiVBZ5DB3XwSw0VJZLpJ8d8NPG9aOJS5M16LUf48jQfGDNNIFnWBjZ0phWSf+RYQZoeJnK9zcsLldrHOyiCUY43aE6vjgpPaq16HzfV4rA3FknjguIxXPrqSh+QB5EbyWz0SY+jlKDbj+7dzJ+rgzRdS93nZJjYGnJbyF186FUpU4uoewMWk/jvvB/M8xZavYy2o/B2W8+jl6zcWGiAiYcEnuja24fOYYz3pEdVEpbc6UGnaR+uEADRjL2VZUKqwKXcCYF8Y007zVEWHrw/2S4bDrMsb1Ou5wWRP7AoGBANb3hSSlmEZdiv3QYl6uGh6b4CtnQf8YZeYGe8hLYM/eRylHNOzrmbK6HFjru9yQJyf4DryN2yeRkDrkRzg6gYru6AN23CD0iNmKqj5dXVRGna1uO8bg1rrh4cmwtPm9rsPvV9uOmpTgXfiPO30Zi+ErVbr5LWbIUHImcBjZdmbXAoGBAM/OwoNqyJ5yzwByz2xHnm+p963p6WYFcZOhKThb4s/rpqBLtM6Vch3igr8dADvQp0iVz0wXA4xfOY56joyuEsPqoxNbYQo0wXi/eXmk3M6hokVY88oAf63oO2IDWhp5ymAjDOi6Kk6oY3TcXbsrwy1jF++X4eQwKaIuF9PLsNOjAoGBALDIje49YKU9eHiTTtKeS0yw1AHdwSCQZ/xriJCHrO5F1i/UJ2pPtu6Mr5NRCgWxZwIvta7K2lgIFZzY7tkHBFHFd3ih3xYbBBAjQS5YidAs4q8l4HMFpJG8AXtknvBjVb48rvwYonecrKsk379ZqvdaM/63vOayBbZadgV5kS2xAoGARq85kqH744mBx9FFpLsntSvHR6zM6xrm6yRidP0sRTUO1G9r7OkAjBHED2W58p6iiBoNDQC3AERTu5cMbeW4FFP3bFokw+f19zCKDUp6oP5xx8zd/9Pzmh/oMwqY13Cd2d2SQocwZNj6G4HpkATuur1+Is0y1P9c6gFrsWsTlqkCgYBwdJ36fPIfceI82mEBqOhmSD1z2F7TrfzCe2wlCxZ6pOG4hxiUmS/3FBtK+FXZAFjpXyqQDUj7LvHQ4W3rP68xCfxzyUg0hAt5ZBp2+3seDUQCqZy895cOB2U41fVoXhNzge9LIaE4QQhTVufCbu+fAbiXRfCiEtDiL2wnlynt3A==" ],
         "keyUse" : [ "SIG" ],
         "certificate" : [ "MIICoTCCAYkCBgGNaXKn9zANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAltZWxkaW5nZW4wHhcNMjQwMjAyMTA1MDM4WhcNMzQwMjAyMTA1MjE4WjAUMRIwEAYDVQQDDAltZWxkaW5nZW4wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCuf8Mrsp08OsJS0qAno5Bzf1iBItG1GkV4RIPpTfFMhC9KuX57oZnGGk/WAYz8BW/YqHr+t0BNOcMFkPuhfEP3sIblKigWXf9eAQgcIuWUOrSN64y9lfi3IMry0gi83ht33ATIFrXndiGP3eUrVyQJALOlz0uHB/A92R6o6A8XcZiKilWnqZJ29dSAXoRxTbx1+xEEeofBkMLW+Z8NW29nNzTUdssplAYSFS/IUPGkcdAM8xuqYZmR8D5qxWAz17ZShXmUJ3wiG1JKDWelGLpwddUrRVT/lJnVGfQQlTXFauY1R+gqA+rxlIakpWqZOeZNAgtlHu43bYraVDc99q/lAgMBAAEwDQYJKoZIhvcNAQELBQADggEBADWWa5P5cvAfTtuMRYPqrDSj+yqgiwL66DEMxcm4sxh3WzaWM6FvWk97LK3+o5m/1I9+qrDMddaDyLkof+J0X/0m3cEzKZP2TFcT6aR0B95XPCwd6R2tiUAbuuK4b5+4zl5vloJMYzdyCD3g1CJmA1YGMG029HjYHkmztWB3cXzj1/M/HLdaLQulcTG3M+PrK4ZgoYCuJl9AYRZoADJfYiuTTWqG5eWDr2GskBal1Yhe/eiIfI97KNic5yg+3iNVdfjK3+jE1Br/z3u5lWwav79t+ODOhyv7/9KjX5QVtAfF6XhBgwuGeqgQ3FmsmHAZibTLOuFOl/U0dKgxGScsenQ=" ],
-        "priority" : [ "100" ]
-      }
-    }, {
-      "id" : "148431d5-8070-4309-ab34-8db29315cfc6",
-      "name" : "aes-generated",
-      "providerId" : "aes-generated",
-      "subComponents" : { },
-      "config" : {
-        "kid" : [ "7841c8bb-5835-4a73-b4e2-22b01224e6cd" ],
-        "secret" : [ "SLQhTYpBkSxfVy09VLy0sw" ],
         "priority" : [ "100" ]
       }
     } ]
@@ -1263,35 +1268,6 @@
       "priority" : 20,
       "autheticatorFlow" : true,
       "flowAlias" : "Verify Existing Account by Re-authentication",
-      "userSetupAllowed" : false
-    } ]
-  }, {
-    "id" : "bf0d5fd5-c694-47b7-80b6-53bd2a1516e8",
-    "alias" : "Authentication Options",
-    "description" : "Authentication options.",
-    "providerId" : "basic-flow",
-    "topLevel" : false,
-    "builtIn" : true,
-    "authenticationExecutions" : [ {
-      "authenticator" : "basic-auth",
-      "authenticatorFlow" : false,
-      "requirement" : "REQUIRED",
-      "priority" : 10,
-      "autheticatorFlow" : false,
-      "userSetupAllowed" : false
-    }, {
-      "authenticator" : "basic-auth-otp",
-      "authenticatorFlow" : false,
-      "requirement" : "DISABLED",
-      "priority" : 20,
-      "autheticatorFlow" : false,
-      "userSetupAllowed" : false
-    }, {
-      "authenticator" : "auth-spnego",
-      "authenticatorFlow" : false,
-      "requirement" : "DISABLED",
-      "priority" : 30,
-      "autheticatorFlow" : false,
       "userSetupAllowed" : false
     } ]
   }, {
@@ -1611,28 +1587,6 @@
       "userSetupAllowed" : false
     } ]
   }, {
-    "id" : "b9a0b159-bf31-4a05-9c3c-e66a3eb158a1",
-    "alias" : "http challenge",
-    "description" : "An authentication flow based on challenge-response HTTP Authentication Schemes",
-    "providerId" : "basic-flow",
-    "topLevel" : true,
-    "builtIn" : true,
-    "authenticationExecutions" : [ {
-      "authenticator" : "no-cookie-redirect",
-      "authenticatorFlow" : false,
-      "requirement" : "REQUIRED",
-      "priority" : 10,
-      "autheticatorFlow" : false,
-      "userSetupAllowed" : false
-    }, {
-      "authenticatorFlow" : true,
-      "requirement" : "REQUIRED",
-      "priority" : 20,
-      "autheticatorFlow" : true,
-      "flowAlias" : "Authentication Options",
-      "userSetupAllowed" : false
-    } ]
-  }, {
     "id" : "b2e5c1c9-fd47-494a-ac91-fab1d43270dc",
     "alias" : "registration",
     "description" : "registration flow",
@@ -1660,13 +1614,6 @@
       "authenticatorFlow" : false,
       "requirement" : "REQUIRED",
       "priority" : 20,
-      "autheticatorFlow" : false,
-      "userSetupAllowed" : false
-    }, {
-      "authenticator" : "registration-profile-action",
-      "authenticatorFlow" : false,
-      "requirement" : "REQUIRED",
-      "priority" : 40,
       "autheticatorFlow" : false,
       "userSetupAllowed" : false
     }, {
@@ -1842,7 +1789,7 @@
     "cibaInterval" : "5",
     "realmReusableOtpCode" : "false"
   },
-  "keycloakVersion" : "21.1.2",
+  "keycloakVersion" : "23.0.7",
   "userManagedAccessAllowed" : false,
   "clientProfiles" : {
     "profiles" : [ ]
