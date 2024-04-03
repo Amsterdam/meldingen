@@ -18,7 +18,7 @@ services:
       - ".:/opt/meldingen"
 
   database:
-    image: postgres:16-alpine
+    image: postgis/postgis:16-3.4-alpine
     environment:
       POSTGRES_USER: meldingen
       POSTGRES_PASSWORD: postgres
