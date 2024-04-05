@@ -1,6 +1,5 @@
 import asyncio
 from logging.config import fileConfig
-from typing import MutableMapping
 
 from alembic import context
 from sqlalchemy import Connection, pool
