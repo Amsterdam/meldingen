@@ -581,6 +581,25 @@ SQLAlchemy = ">=1.4"
 shapely = ["Shapely (>=1.7)"]
 
 [[package]]
+name = "geojson-pydantic"
+version = "1.0.2"
+description = "Pydantic data models for the GeoJSON spec."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "geojson_pydantic-1.0.2-py3-none-any.whl", hash = "sha256:d7a7f8ff4ca27298f62d1af182f69ec85f9990b9db80fa7e0161be1de2a9ae0f"},
+    {file = "geojson_pydantic-1.0.2.tar.gz", hash = "sha256:3179d665ad8763670681b73aded2228df20a1164951e9d7075be8f370eb681f4"},
+]
+
+[package.dependencies]
+pydantic = ">=2.0,<3.0"
+
+[package.extras]
+dev = ["pre-commit"]
+docs = ["mkdocs", "mkdocs-material", "pygments"]
+test = ["pytest", "pytest-cov", "shapely"]
+
+[[package]]
 name = "ghp-import"
 version = "2.1.0"
 description = "Copy your docs directly to the gh-pages branch."
@@ -2354,4 +2373,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "25c2a6e77ae2c0602da129bc1a7695a448faafb71b4533166cbf2634022e532b"
+content-hash = "3b1f9d9c6aa57a8e1464b59aee4823a1920552ee7d2683b7442a74a1b99694ba"
