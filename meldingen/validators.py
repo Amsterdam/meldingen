@@ -1,4 +1,11 @@
-from typing import Any, Callable
+from functools import cache
+from pathlib import Path
+from typing import Annotated, Any, Callable
+
+from geojson_pydantic import Point as GeoJsonPydanticPoint
+from shapely import MultiPolygon
+from shapely import Point as ShapelyPoint
+from shapely import Polygon, from_geojson, from_wkt
 
 
 def create_match_validator(match_value: Any, error_msg: str) -> Callable[[Any], Any]:
@@ -37,3 +44,30 @@ def create_non_match_validator(match_value: Any, error_msg: str) -> Callable[[An
         return value
 
     return validator
+
+
+@cache
+def load_geojson(path: str | Path) -> Polygon | MultiPolygon:
+    """Load polygon from geojson file."""
+    with open(path, "r") as f:
+        shape = from_geojson(f.read())
+    return shape
+
+
+def within_polygon(
+    geometry: Annotated[str | ShapelyPoint | GeoJsonPydanticPoint, "Geometry in WKT format"],
+    shape: Polygon | MultiPolygon,
+) -> None:
+    """Check if the given geometry is within the (multi) polygon defined in the geojson file"""
+    if not isinstance(geometry, (str, ShapelyPoint, GeoJsonPydanticPoint)):
+        raise TypeError(
+            'geometry must be as a `str` in the "Well Known Text" format OR as a (shapely/geojson_pydantic) Point object'
+        )
+
+    if isinstance(geometry, str):
+        geometry = from_wkt(geometry)
+
+    if isinstance(geometry, GeoJsonPydanticPoint):
+        geometry = from_wkt(geometry.wkt)
+
+    assert geometry.within(shape), "given geometry must be within the configured (multi) polygon"

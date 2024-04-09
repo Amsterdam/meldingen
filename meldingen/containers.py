@@ -117,6 +117,7 @@ class Container(DeclarativeContainer):
             "meldingen.api.v1.endpoints.classification",
             "meldingen.api.v1.endpoints.form",
             "meldingen.api.v1.endpoints.static_form",
+            "meldingen.api.v1.endpoints.utils",
         ]
     )
 

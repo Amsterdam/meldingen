@@ -22,6 +22,7 @@ mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
 pydantic = {extras = ["email"], version = "^2.6.1"}
 pydantic-settings = "^2.1.0"
 pyjwt = {extras = ["crypto"], version = "^2.8.0"}
+shapely = "^2.0.3"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.26"}
 structlog = "^24.1.0"
 uvicorn = {extras = ["standard"], version = "^0.27.0"}
