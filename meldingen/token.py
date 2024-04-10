@@ -1,5 +1,6 @@
-from meldingen_core.token import BaseTokenGenerator
 from secrets import token_urlsafe
+
+from meldingen_core.token import BaseTokenGenerator
 
 
 class UrlSafeTokenGenerator(BaseTokenGenerator):
