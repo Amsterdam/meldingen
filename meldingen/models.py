@@ -9,7 +9,7 @@ from meldingen_core.models import User as BaseUser
 from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
 from pydantic.alias_generators import to_snake
-from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Table
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Table
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
@@ -33,6 +33,8 @@ class Melding(BaseDBModel, BaseMelding, StateAware):
     state: Mapped[str] = mapped_column(String, default=MeldingStates.NEW)
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
     classification: Mapped[Classification | None] = relationship(default=None)
+    token: Mapped[str | None] = mapped_column(String, default=None)
+    token_expires: Mapped[DateTime | None] = mapped_column(DateTime, default=None)
 
 
 user_group = Table(
