@@ -24,6 +24,10 @@ class MeldingOutput(BaseModel):
     classification: int | None = Field(default=None)
 
 
+class MeldingCreateOutput(MeldingOutput):
+    token: str
+
+
 class UserCreateInput(BaseModel, User):
     username: str = Field(min_length=3)
     email: EmailStr

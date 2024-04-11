@@ -30,6 +30,7 @@ class TestMeldingCreate:
         assert data.get("text") == "This is a test melding."
         assert data.get("state") == MeldingStates.NEW
         assert data.get("classification", "") is None
+        assert data.get("token") is not None
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("classification_name,", ["classification_name"], indirect=True)

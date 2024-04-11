@@ -48,6 +48,7 @@ from meldingen.statemachine import (
     MpFsmMeldingStateMachine,
     Process,
 )
+from meldingen.token import UrlSafeTokenGenerator
 
 
 def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
@@ -149,12 +150,17 @@ class Container(DeclarativeContainer):
         Classifier, adapter=dummy_classifier_adaper, repository=classification_repository
     )
 
+    # token
+    token_generator: Singleton[UrlSafeTokenGenerator] = Singleton(UrlSafeTokenGenerator)
+
     # actions
     melding_create_action: Factory[MeldingCreateAction[Melding, Melding]] = Factory(
         MeldingCreateAction,
         repository=melding_repository,
         classifier=classifier,
         state_machine=melding_state_machine,
+        token_generator=token_generator,
+        token_duration=settings.token_duration,
     )
     melding_list_action: Factory[MeldingListAction] = Factory(MeldingListAction, repository=melding_repository)
     melding_retrieve_action: Factory[MeldingRetrieveAction] = Factory(

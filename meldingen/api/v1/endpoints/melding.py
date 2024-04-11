@@ -14,7 +14,7 @@ from meldingen.api.v1 import default_response, not_found_response, unauthorized_
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Melding, User
-from meldingen.schemas import MeldingInput, MeldingOutput
+from meldingen.schemas import MeldingCreateOutput, MeldingInput, MeldingOutput
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -31,14 +31,20 @@ def _hydrate_output(melding: Melding) -> MeldingOutput:
 async def create_melding(
     melding_input: MeldingInput,
     action: MeldingCreateAction[Melding, Melding] = Depends(Provide(Container.melding_create_action)),
-) -> MeldingOutput:
+) -> MeldingCreateOutput:
     melding = Melding(**melding_input.model_dump())
     try:
         await action(melding)
     except NotFoundException:
         logger.error("Classifier failed to find classification!")
 
-    return _hydrate_output(melding)
+    return MeldingCreateOutput(
+        id=melding.id,
+        text=melding.text,
+        state=melding.state,
+        classification=melding.classification_id,
+        token=melding.token,
+    )
 
 
 @router.get("/", name="melding:list", responses={**unauthorized_response})

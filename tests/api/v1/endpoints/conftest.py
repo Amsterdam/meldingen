@@ -4,6 +4,7 @@ from _pytest.fixtures import SubRequest
 from fastapi import FastAPI
 
 from meldingen.authentication import authenticate_user
+from meldingen.config import Settings
 from meldingen.containers import Container
 from meldingen.models import Classification, FormIoForm, FormIoFormDisplayEnum, FormIoPrimaryForm, Melding, User
 from meldingen.repositories import ClassificationRepository, FormIoFormRepository, MeldingRepository, UserRepository
@@ -134,7 +135,10 @@ async def test_users(user_repository: UserRepository) -> list[User]:
 
 @pytest_asyncio.fixture
 async def classification_repository() -> ClassificationRepository:
-    return await Container().classification_repository()
+    container = Container()
+    container.settings.from_dict(Settings().model_dump())
+
+    return await container.classification_repository()
 
 
 @pytest.fixture
