@@ -1,8 +1,10 @@
+from typing import Annotated, Any, Callable
+
 from meldingen_core.models import Classification, User
-from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field
+from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, EmailStr, Field
 from pydantic.alias_generators import to_camel
 
-from meldingen.models import FormIoFormDisplayEnum
+from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
 
 
 class ClassificationInput(BaseModel, Classification):
@@ -44,22 +46,50 @@ class UserUpdateInput(BaseModel):
     email: EmailStr | None = None
 
 
-class BaseFormOutput(BaseModel):
-    title: str
-    display: str
+### Form.io ###
 
 
-class PrimaryFormOutput(BaseFormOutput):
-    components: list["FormComponentOutput"]
+def create_exact_match_validator(match_value: Any, error_msg: str) -> Callable[[Any], Any]:
+    def validator(value: Any) -> Any:
+        assert value == match_value, error_msg
+        return value
+
+    return validator
 
 
-class FormOnlyOutput(BaseFormOutput):
-    id: int
-    classification: int | None = None
+def create_non_match_validator(match_value: Any, error_msg: str) -> Callable[[Any], Any]:
+    def validator(value: Any) -> Any:
+        assert value != match_value, error_msg
+        return value
+
+    return validator
 
 
-class FormOutput(FormOnlyOutput):
-    components: list["FormComponentOutput"]
+_only_type_panel_validator = create_exact_match_validator(
+    FormIoComponentTypeEnum.panel, error_msg="only panel is allowed!"
+)
+_anything_but_type_panel_validator = create_non_match_validator(
+    FormIoComponentTypeEnum.panel, error_msg="panel is not allowed!"
+)
+
+
+class FormComponentInput(BaseModel):
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel))
+
+    label: str
+    description: str
+
+    key: str
+    type: Annotated[FormIoComponentTypeEnum, AfterValidator(_anything_but_type_panel_validator)]
+    input: bool
+
+    auto_expand: bool
+    show_char_count: bool
+
+
+class FormPanelComponentInput(FormComponentInput):
+    type: Annotated[FormIoComponentTypeEnum, AfterValidator(_only_type_panel_validator)]
+    components: list[FormComponentInput]
 
 
 class FormComponentOutput(BaseModel):
@@ -75,38 +105,39 @@ class FormComponentOutput(BaseModel):
     auto_expand: bool
     show_char_count: bool
 
-    position: int
+
+class FormPanelComponentOutput(FormComponentOutput):
+    components: list[FormComponentOutput]
 
 
-class FormCreateInput(BaseModel):
-    title: str = Field(min_length=3)
-    display: FormIoFormDisplayEnum
-    classification: int | None = Field(default=None, gt=0, serialization_alias="classification_id")
-    components: list["FormComponentCreateInput"]
+class BaseFormOutput(BaseModel):
+    title: str
+    display: str
 
 
-class FormComponentCreateInput(BaseModel):
-    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel))
+class PrimaryFormOutput(BaseFormOutput):
+    components: list[FormComponentOutput | FormPanelComponentOutput]
 
-    label: str
-    description: str
 
-    key: str
-    type: str
-    input: bool
+class FormOnlyOutput(BaseFormOutput):
+    id: int
+    classification: int | None = None
 
-    auto_expand: bool
-    show_char_count: bool
+
+class FormOutput(FormOnlyOutput):
+    components: list[FormComponentOutput | FormPanelComponentOutput]
 
 
 class PrimaryFormUpdateInput(BaseModel):
     title: str
-    components: list["FormComponentUpdateInput"]
+    components: list[FormComponentInput | FormPanelComponentInput]
 
 
-class FormUpdateInput(PrimaryFormUpdateInput):
+class FormInput(BaseModel):
+    title: str = Field(min_length=3)
     display: FormIoFormDisplayEnum
     classification: int | None = Field(default=None, gt=0, serialization_alias="classification_id")
+    components: list[FormComponentInput | FormPanelComponentInput]
 
 
 class FormComponentUpdateInput(BaseModel):

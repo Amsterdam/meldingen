@@ -16,35 +16,15 @@ from meldingen.api.utils import PaginationParams, pagination_params
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import FormIoComponent, FormIoForm, User
+from meldingen.models import FormIoForm, User
 from meldingen.repositories import ClassificationRepository, FormIoFormRepository
-from meldingen.schemas import FormComponentOutput, FormCreateInput, FormOnlyOutput, FormOutput, FormUpdateInput
+from meldingen.schema_renderer import FormOutPutRenderer
+from meldingen.schemas import FormInput, FormOnlyOutput, FormOutput
 
 router = APIRouter()
 
 
-async def _hydrate_output(form: FormIoForm) -> FormOutput:
-    components_output = [
-        FormComponentOutput(
-            label=component.label,
-            description=component.description,
-            key=component.key,
-            type=component.type,
-            input=component.input,
-            auto_expand=component.auto_expand,
-            show_char_count=component.show_char_count,
-            position=component.position,
-        )
-        for component in await form.awaitable_attrs.components
-    ]
-
-    return FormOutput(
-        id=form.id,
-        title=form.title,
-        display=form.display,
-        classification=form.classification_id,
-        components=components_output,
-    )
+_hydrate_output = FormOutPutRenderer()
 
 
 @router.get("/", name="form:list", responses={**unauthorized_response})
@@ -101,7 +81,7 @@ async def retrieve_form(
 )
 @inject
 async def create_form(
-    form_input: FormCreateInput,
+    form_input: FormInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormCreateAction = Depends(Provide(Container.form_create_action)),
     classification_repository: ClassificationRepository = Depends(Provide(Container.classification_repository)),
@@ -120,10 +100,8 @@ async def create_form(
 
     db_form = FormIoForm(**dumped_form_input)
     db_form.classification = classification
-    for component_input in dumped_components_input:
-        FormIoComponent(**component_input, form=db_form)
 
-    await action(db_form)
+    await action(db_form, dumped_components_input)
 
     return await _hydrate_output(db_form)
 
@@ -143,7 +121,7 @@ async def create_form(
 @inject
 async def update_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
-    form_input: FormUpdateInput,
+    form_input: FormInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormUpdateAction = Depends(Provide(Container.form_update_action)),
     classification_repository: ClassificationRepository = Depends(Provide(Container.classification_repository)),

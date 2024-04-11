@@ -164,7 +164,7 @@ async def form_repository(container: Container) -> FormIoFormRepository:
 
 @pytest_asyncio.fixture
 async def primary_form(form_repository: FormIoFormRepository) -> FormIoPrimaryForm:
-    primary_form = FormIoPrimaryForm(title="Primary Form", display=FormIoFormDisplayEnum.form.value, is_primary=True)
+    primary_form = FormIoPrimaryForm(title="Primary Form", display=FormIoFormDisplayEnum.form, is_primary=True)
     await form_repository.save(primary_form)
 
     return primary_form

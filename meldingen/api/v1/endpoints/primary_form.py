@@ -9,28 +9,14 @@ from meldingen.actions import FormIoPrimaryFormRetrieveAction, FormIoPrimaryForm
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import FormIoForm, User
-from meldingen.schemas import FormComponentOutput, PrimaryFormOutput, PrimaryFormUpdateInput
+from meldingen.models import User
+from meldingen.schema_renderer import PrimaryFormOutPutRenderer
+from meldingen.schemas import PrimaryFormOutput, PrimaryFormUpdateInput
 
 router = APIRouter()
 
 
-async def _hydrate_output(form: FormIoForm) -> PrimaryFormOutput:
-    components_output = [
-        FormComponentOutput(
-            label=component.label,
-            description=component.description,
-            key=component.key,
-            type=component.type,
-            input=component.input,
-            auto_expand=component.auto_expand,
-            show_char_count=component.show_char_count,
-            position=component.position,
-        )
-        for component in await form.awaitable_attrs.components
-    ]
-
-    return PrimaryFormOutput(title=form.title, display=form.display, components=components_output)
+_hydrate_output = PrimaryFormOutPutRenderer()
 
 
 @router.get("/", name="primary-form:retrieve", responses={**not_found_response})
