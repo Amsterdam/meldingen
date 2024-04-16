@@ -98,6 +98,9 @@ class FormIoForm(AsyncAttrs, BaseDBModel):
         collection_class=ordering_list(attr="position", count_from=1),
     )
 
+    classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None, unique=True)
+    classification: Mapped[Classification | None] = relationship(default=None)
+
 
 class FormIoPrimaryForm(FormIoForm):
     @declared_attr.directive
