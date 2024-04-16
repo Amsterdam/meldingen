@@ -46,6 +46,34 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest):
 
         data = response.json()
         assert len(data) == expected_result
+        for form in data:
+            assert form.get("classification", "") is None
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "limit, offset, expected_result",
+        [(11, 0, 11), (5, 0, 5)],
+    )
+    async def test_list_forms_first_with_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form_with_classification: FormIoForm,
+        limit: int,
+        offset: int,
+        expected_result: int,
+        test_forms: list[FormIoForm],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == expected_result
+        assert data[0].get("classification", "") == form_with_classification.classification_id
+        for form in data[1:]:
+            assert form.get("classification", "") is None
 
         assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/10"
 

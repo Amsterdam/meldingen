@@ -47,6 +47,7 @@ class UserUpdateInput(BaseModel):
 class BaseFormOutput(BaseModel):
     title: str
     display: str
+    classification: int | None = None
 
 
 class PrimaryFormOutput(BaseFormOutput):

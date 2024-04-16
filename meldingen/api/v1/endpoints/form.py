@@ -63,7 +63,9 @@ async def list_form(
 
     output = []
     for db_form in forms:
-        output.append(FormOnlyOutput(id=db_form.id, title=db_form.title, display=db_form.display))
+        output.append(
+            FormOnlyOutput(id=db_form.id, title=db_form.title, display=db_form.display, classification=db_form.classification_id)
+        )
 
     response.headers["Content-Range"] = f"form {offset}-{limit - 1 + offset}/{await repository.count()}"
 
