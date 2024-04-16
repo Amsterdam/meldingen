@@ -156,7 +156,7 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
     @override
     async def retrieve(self, pk: int) -> FormIoForm | None:
         _type = self.get_model_type()
-        statement = select(_type).where(_type.is_primary == False and _type.id == pk)
+        statement = select(_type).where(_type.is_primary == False).where(_type.id == pk)
         results = await self._session.execute(statement)
         return results.scalars().unique().one_or_none()
 

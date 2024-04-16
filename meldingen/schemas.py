@@ -50,6 +50,7 @@ class FormOnlyOutput(BaseModel):
 
 
 class FormOutput(BaseModel):
+    id: int
     title: str
     display: str
     components: list["FormComponentOutput"]
