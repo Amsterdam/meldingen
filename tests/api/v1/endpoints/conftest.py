@@ -187,6 +187,18 @@ async def form(form_repository: FormIoFormRepository, form_title: str) -> FormIo
 
 
 @pytest_asyncio.fixture
+async def form_with_classification(
+    classification_repository: ClassificationRepository, form_repository: FormIoFormRepository, form_title: str
+) -> FormIoForm:
+    classification = Classification("test_classification")
+    await classification_repository.save(classification)
+    form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form.value, classification=classification)
+    await form_repository.save(form)
+
+    return form
+
+
+@pytest_asyncio.fixture
 async def test_forms(form_repository: FormIoFormRepository) -> list[FormIoForm]:
     forms = []
     for n in range(1, 11):

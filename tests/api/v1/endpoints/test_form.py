@@ -30,7 +30,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest):
         "limit, offset, expected_result",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
     )
-    async def test_list_users(
+    async def test_list_forms(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -65,6 +65,20 @@ class TestFormRetrieve:
         assert data.get("title") == form.title
         assert data.get("display") == form.display
         assert len(data.get("components")) == len(await form.awaitable_attrs.components)
+
+    @pytest.mark.asyncio
+    async def test_retrieve_form_with_classification(
+        self, app: FastAPI, client: AsyncClient, form_with_classification: FormIoForm
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=form_with_classification.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert data.get("title") == form_with_classification.title
+        assert data.get("display") == form_with_classification.display
+        assert len(data.get("components")) == len(await form_with_classification.awaitable_attrs.components)
+        assert data.get("classification") == form_with_classification.classification_id
 
     @pytest.mark.asyncio
     async def test_retrieve_form_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
@@ -181,6 +195,7 @@ class TestFormUpdate(BaseUnauthorizedTest):
         assert data["title"] == new_data["title"]
         assert data["display"] == new_data["display"]
         assert len(data["components"]) == len(new_data["components"])
+        assert data.get("classification", "") is None
 
     @pytest.mark.asyncio
     async def test_unable_to_update_primary_form(
@@ -242,6 +257,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert data.get("id", 0) == 1
         assert data.get("title") == "Formulier #1"
         assert data.get("display") == "form"
+        assert data.get("classification", "") is None
 
         components = data.get("components")
         assert isinstance(components, list)

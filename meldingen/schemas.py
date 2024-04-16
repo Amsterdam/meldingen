@@ -55,6 +55,7 @@ class PrimaryFormOutput(BaseFormOutput):
 
 class FormOnlyOutput(BaseFormOutput):
     id: int
+    classification: int | None = None
 
 
 class FormOutput(FormOnlyOutput):
