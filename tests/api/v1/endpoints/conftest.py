@@ -199,17 +199,17 @@ def form_title(request: SubRequest) -> str:
 
 @pytest_asyncio.fixture
 async def form(form_repository: FormIoFormRepository, form_title: str) -> FormIoForm:
-    primary_form = FormIoPrimaryForm(title=form_title, display=FormIoFormDisplayEnum.form.value, is_primary=False)
-    await form_repository.save(primary_form)
+    form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form.value)
+    await form_repository.save(form)
 
-    return primary_form
+    return form
 
 
 @pytest_asyncio.fixture
 async def test_forms(form_repository: FormIoFormRepository) -> list[FormIoForm]:
     forms = []
     for n in range(1, 11):
-        form = FormIoForm(title=f"Form #{n}", display=FormIoFormDisplayEnum.form, is_primary=False)
+        form = FormIoForm(title=f"Form #{n}", display=FormIoFormDisplayEnum.form)
 
         await form_repository.save(form)
 
