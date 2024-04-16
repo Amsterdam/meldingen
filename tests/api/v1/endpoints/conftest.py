@@ -4,20 +4,14 @@ from _pytest.fixtures import SubRequest
 from fastapi import FastAPI
 
 from meldingen.authentication import authenticate_user
-from meldingen.config import Settings
 from meldingen.containers import Container
 from meldingen.models import Classification, FormIoForm, FormIoFormDisplayEnum, FormIoPrimaryForm, Melding, User
 from meldingen.repositories import ClassificationRepository, FormIoFormRepository, MeldingRepository, UserRepository
 
 
 @pytest_asyncio.fixture
-async def melding_repository() -> MeldingRepository:
-    """Fixture providing a MeldingRepository instance."""
-
-    container = Container()
-    melding_repository = await container.melding_repository()
-
-    return melding_repository
+async def melding_repository(container: Container) -> MeldingRepository:
+    return await container.melding_repository()
 
 
 @pytest.fixture
@@ -78,13 +72,8 @@ def auth_user(app: FastAPI) -> None:
 
 
 @pytest_asyncio.fixture
-async def user_repository() -> UserRepository:
-    """Fixture providing a UserRepository instance."""
-
-    container = Container()
-    user_repository = await container.user_repository()
-
-    return user_repository
+async def user_repository(container: Container) -> UserRepository:
+    return await container.user_repository()
 
 
 @pytest.fixture
@@ -134,10 +123,7 @@ async def test_users(user_repository: UserRepository) -> list[User]:
 
 
 @pytest_asyncio.fixture
-async def classification_repository() -> ClassificationRepository:
-    container = Container()
-    container.settings.from_dict(Settings().model_dump())
-
+async def classification_repository(container: Container) -> ClassificationRepository:
     return await container.classification_repository()
 
 
@@ -172,13 +158,8 @@ async def classifications(classification_repository: ClassificationRepository) -
 
 
 @pytest_asyncio.fixture
-async def form_repository() -> FormIoFormRepository:
-    """Fixture providing a FormIoFormRepository instance."""
-
-    container = Container()
-    _form_repository = await container.form_repository()
-
-    return _form_repository
+async def form_repository(container: Container) -> FormIoFormRepository:
+    return await container.form_repository()
 
 
 @pytest_asyncio.fixture
