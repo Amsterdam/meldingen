@@ -10,12 +10,12 @@ from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import FormIoForm, User
-from meldingen.schemas import FormComponentOutput, FormOutput, PrimaryFormUpdateInput
+from meldingen.schemas import FormComponentOutput, PrimaryFormOutput, PrimaryFormUpdateInput
 
 router = APIRouter()
 
 
-async def _hydrate_output(form: FormIoForm) -> FormOutput:
+async def _hydrate_output(form: FormIoForm) -> PrimaryFormOutput:
     components_output = [
         FormComponentOutput(
             label=component.label,
@@ -30,14 +30,14 @@ async def _hydrate_output(form: FormIoForm) -> FormOutput:
         for component in await form.awaitable_attrs.components
     ]
 
-    return FormOutput(title=form.title, display=form.display, components=components_output)
+    return PrimaryFormOutput(title=form.title, display=form.display, components=components_output)
 
 
 @router.get("/", name="primary-form:retrieve", responses={**not_found_response})
 @inject
 async def retrieve_primary_form(
     action: FormIoPrimaryFormRetrieveAction = Depends(Provide(Container.primary_form_retrieve_action)),
-) -> FormOutput:
+) -> PrimaryFormOutput:
     """The primary form that is used to initiate the creation of a "Melding"."""
     db_form = await action()
 
@@ -53,7 +53,7 @@ async def update_primary_form(
     form_input: PrimaryFormUpdateInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoPrimaryFormUpdateAction = Depends(Provide(Container.primary_form_update_action)),
-) -> FormOutput:
+) -> PrimaryFormOutput:
     """Update the primary form that is used to initiate the creation of a "Melding"."""
     form_data = form_input.model_dump(exclude_unset=True)
 
