@@ -103,6 +103,7 @@ class TestFormRetrieve:
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
+        assert data.get("id") == form_with_classification.id
         assert data.get("title") == form_with_classification.title
         assert data.get("display") == form_with_classification.display
         assert len(data.get("components")) == len(await form_with_classification.awaitable_attrs.components)

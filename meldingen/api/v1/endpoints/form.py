@@ -43,7 +43,11 @@ async def _hydrate_output(form: FormIoForm) -> FormOutput:
         title=form.title,
         display=form.display,
         classification=form.classification_id,
+<<<<<<< HEAD
         components=components_output
+=======
+        components=components_output,
+>>>>>>> 2e29301 (Include id in output of form endpoints)
     )
 
 
@@ -64,7 +68,9 @@ async def list_form(
     output = []
     for db_form in forms:
         output.append(
-            FormOnlyOutput(id=db_form.id, title=db_form.title, display=db_form.display, classification=db_form.classification_id)
+            FormOnlyOutput(
+                id=db_form.id, title=db_form.title, display=db_form.display, classification=db_form.classification_id
+            )
         )
 
     response.headers["Content-Range"] = f"form {offset}-{limit - 1 + offset}/{await repository.count()}"
