@@ -87,7 +87,18 @@ async def retrieve_form(
     return await _hydrate_output(db_form)
 
 
-@router.post("/", name="form:create", status_code=HTTP_201_CREATED, responses={**unauthorized_response})
+@router.post(
+    "/",
+    name="form:create",
+    status_code=HTTP_201_CREATED,
+    responses={
+        **unauthorized_response,
+        HTTP_400_BAD_REQUEST: {
+            "description": "Providing a classification id that does not exist",
+            "content": {"application/json": {"example": {"detail": "Classification not found"}}},
+        },
+    },
+)
 @inject
 async def create_form(
     form_input: FormCreateInput,
