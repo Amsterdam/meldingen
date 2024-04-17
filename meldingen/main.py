@@ -96,6 +96,7 @@ def get_application(cont: Container) -> FastAPI:
         allow_credentials=cont.settings.get("cors_allow_credentials"),
         allow_methods=cont.settings.get("cors_allow_methods"),
         allow_headers=cont.settings.get("cors_allow_headers"),
+        expose_headers=["Content-Range"],
     )
 
     return application

@@ -47,6 +47,8 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest):
         data = response.json()
         assert len(data) == expected_result
 
+        assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/10"
+
 
 class TestFormRetrieve:
     ROUTE_NAME: Final[str] = "form:retrieve"

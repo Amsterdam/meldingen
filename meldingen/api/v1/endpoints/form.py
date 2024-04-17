@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
@@ -17,6 +17,7 @@ from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import FormIoComponent, FormIoForm, User
+from meldingen.repositories import FormIoFormRepository
 from meldingen.schemas import FormComponentOutput, FormCreateInput, FormOnlyOutput, FormOutput, FormUpdateInput
 
 router = APIRouter()
@@ -43,9 +44,11 @@ async def _hydrate_output(form: FormIoForm) -> FormOutput:
 @router.get("/", name="form:list", responses={**unauthorized_response})
 @inject
 async def list_form(
+    response: Response,
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormListAction = Depends(Provide(Container.form_list_action)),
+    repository: FormIoFormRepository = Depends(Provide(Container.form_repository)),
 ) -> list[FormOnlyOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -55,6 +58,8 @@ async def list_form(
     output = []
     for db_form in forms:
         output.append(FormOnlyOutput(id=db_form.id, title=db_form.title, display=db_form.display))
+
+    response.headers["Content-Range"] = f"form {offset}-{limit - 1 + offset}/{await repository.count()}"
 
     return output
 
