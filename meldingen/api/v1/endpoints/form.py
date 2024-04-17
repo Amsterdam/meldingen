@@ -3,7 +3,7 @@ from typing import Annotated
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from meldingen_core.exceptions import NotFoundException
-from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from meldingen.actions import (
     FormIoFormCreateAction,
@@ -17,7 +17,7 @@ from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import FormIoComponent, FormIoForm, User
-from meldingen.repositories import FormIoFormRepository
+from meldingen.repositories import ClassificationRepository, FormIoFormRepository
 from meldingen.schemas import FormComponentOutput, FormCreateInput, FormOnlyOutput, FormOutput, FormUpdateInput
 
 router = APIRouter()
@@ -93,11 +93,22 @@ async def create_form(
     form_input: FormCreateInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormCreateAction = Depends(Provide(Container.form_create_action)),
+    classification_repository: ClassificationRepository = Depends(Provide(Container.classification_repository)),
 ) -> FormOutput:
-    dumped_form_input = form_input.model_dump()
-    dumped_components_input = dumped_form_input.pop("components", [])
+    classification = None
+    if form_input.classification is not None:
+        classification = await classification_repository.retrieve(form_input.classification)
+        if classification is None:
+            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Classification not found")
+
+    dumped_form_input = form_input.model_dump(by_alias=True)
+    dumped_form_input.pop("components")
+    dumped_components_input = []
+    for component in form_input.components:
+        dumped_components_input.append(component.model_dump())
 
     db_form = FormIoForm(**dumped_form_input)
+    db_form.classification = classification
     for component_input in dumped_components_input:
         FormIoComponent(**component_input, form=db_form)
 

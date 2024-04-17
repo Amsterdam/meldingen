@@ -7,11 +7,12 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.models import FormIoForm
+from meldingen.models import Classification, FormIoForm
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
 
 
@@ -312,6 +313,45 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert second_component.get("input") == True
         assert second_component.get("autoExpand") == True
         assert second_component.get("showCharCount") == True
+
+    @pytest.mark.asyncio
+    async def test_create_form_with_classification(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
+    ) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "classification": classification.id,
+            "components": [],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("title") == "Formulier #1"
+        assert data.get("display") == "form"
+        assert data.get("components") == []
+        assert data.get("classification") == classification.id
+
+    @pytest.mark.asyncio
+    async def test_create_form_with_classification_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "classification": 123456,
+            "components": [],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        assert body.get("detail") == "Classification not found"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

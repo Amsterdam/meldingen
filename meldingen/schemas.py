@@ -81,6 +81,7 @@ class FormComponentOutput(BaseModel):
 class FormCreateInput(BaseModel):
     title: str = Field(min_length=3)
     display: FormIoFormDisplayEnum
+    classification: int | None = Field(default=None, gt=0, serialization_alias="classification_id")
     components: list["FormComponentCreateInput"]
 
 
