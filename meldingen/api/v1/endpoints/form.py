@@ -43,11 +43,7 @@ async def _hydrate_output(form: FormIoForm) -> FormOutput:
         title=form.title,
         display=form.display,
         classification=form.classification_id,
-<<<<<<< HEAD
-        components=components_output
-=======
         components=components_output,
->>>>>>> 2e29301 (Include id in output of form endpoints)
     )
 
 
