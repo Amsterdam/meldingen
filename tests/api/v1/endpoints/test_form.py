@@ -49,6 +49,8 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest):
         for form in data:
             assert form.get("classification", "") is None
 
+        assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/10"
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "limit, offset, expected_result",
@@ -75,7 +77,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest):
         for form in data[1:]:
             assert form.get("classification", "") is None
 
-        assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/10"
+        assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/11"
 
 
 class TestFormRetrieve:
