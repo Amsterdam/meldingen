@@ -44,14 +44,20 @@ class UserUpdateInput(BaseModel):
     email: EmailStr | None = None
 
 
-class FormOnlyOutput(BaseModel):
+class BaseFormOutput(BaseModel):
     title: str
     display: str
 
 
-class FormOutput(BaseModel):
-    title: str
-    display: str
+class PrimaryFormOutput(BaseFormOutput):
+    components: list["FormComponentOutput"]
+
+
+class FormOnlyOutput(BaseFormOutput):
+    id: int
+
+
+class FormOutput(FormOnlyOutput):
     components: list["FormComponentOutput"]
 
 

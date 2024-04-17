@@ -59,6 +59,7 @@ class TestFormRetrieve:
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
+        assert data.get("id") == form.id
         assert data.get("title") == form.title
         assert data.get("display") == form.display
         assert len(data.get("components")) == len(await form.awaitable_attrs.components)
@@ -174,6 +175,7 @@ class TestFormUpdate(BaseUnauthorizedTest):
 
         data = response.json()
 
+        assert data.get("id") == form.id
         assert data["title"] == new_data["title"]
         assert data["display"] == new_data["display"]
         assert len(data["components"]) == len(new_data["components"])
@@ -235,6 +237,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert response.status_code == HTTP_201_CREATED
 
         data = response.json()
+        assert data.get("id", 0) == 1
         assert data.get("title") == "Formulier #1"
         assert data.get("display") == "form"
 

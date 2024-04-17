@@ -37,7 +37,7 @@ async def _hydrate_output(form: FormIoForm) -> FormOutput:
         for component in await form.awaitable_attrs.components
     ]
 
-    return FormOutput(title=form.title, display=form.display, components=components_output)
+    return FormOutput(id=form.id, title=form.title, display=form.display, components=components_output)
 
 
 @router.get("/", name="form:list", responses={**unauthorized_response})
@@ -54,7 +54,7 @@ async def list_form(
 
     output = []
     for db_form in forms:
-        output.append(FormOnlyOutput(title=db_form.title, display=db_form.display))
+        output.append(FormOnlyOutput(id=db_form.id, title=db_form.title, display=db_form.display))
 
     return output
 
