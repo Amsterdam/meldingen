@@ -128,15 +128,39 @@ async def create_form(
     return await _hydrate_output(db_form)
 
 
-@router.put("/{form_id}", name="form:update", responses={**unauthorized_response, **not_found_response})
+@router.put(
+    "/{form_id}",
+    name="form:update",
+    responses={
+        **unauthorized_response,
+        **not_found_response,
+        HTTP_400_BAD_REQUEST: {
+            "description": "Providing a classification id that does not exist",
+            "content": {"application/json": {"example": {"detail": "Classification not found"}}},
+        },
+    },
+)
 @inject
 async def update_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
     form_input: FormUpdateInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormUpdateAction = Depends(Provide(Container.form_update_action)),
+    classification_repository: ClassificationRepository = Depends(Provide(Container.classification_repository)),
 ) -> FormOutput:
-    form_data = form_input.model_dump(exclude_unset=True)
+    classification = None
+    if form_input.classification is not None:
+        classification = await classification_repository.retrieve(form_input.classification)
+        if classification is None:
+            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Classification not found")
+
+    form_data = form_input.model_dump(exclude_unset=True, by_alias=True)
+    form_data["classification"] = classification
+    form_data.pop("components")
+    components = []
+    for component in form_input.components:
+        components.append(component.model_dump())
+    form_data["components"] = components
 
     try:
         db_form = await action(form_id, form_data)

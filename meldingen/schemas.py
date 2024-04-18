@@ -106,6 +106,7 @@ class PrimaryFormUpdateInput(BaseModel):
 
 class FormUpdateInput(PrimaryFormUpdateInput):
     display: FormIoFormDisplayEnum
+    classification: int | None = Field(default=None, gt=0, serialization_alias="classification_id")
 
 
 class FormComponentUpdateInput(BaseModel):

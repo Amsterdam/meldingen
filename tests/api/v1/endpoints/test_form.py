@@ -230,6 +230,178 @@ class TestFormUpdate(BaseUnauthorizedTest):
         assert data.get("classification", "") is None
 
     @pytest.mark.asyncio
+    async def test_update_form_with_new_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: FormIoForm,
+        classification: Classification,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "pdf",
+            "classification": classification.id,
+            "components": [
+                {
+                    "label": "extra-vraag1",
+                    "description": "Heeft u meer informatie die u met ons wilt delen?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+                {
+                    "label": "extra-vraag2",
+                    "description": "Waarom meld u dit bij ons?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+            ],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data.get("id") == form.id
+        assert data["title"] == new_data["title"]
+        assert data["display"] == new_data["display"]
+        assert isinstance(new_data["components"], list)  # This is here for mypy
+        assert len(data["components"]) == len(new_data["components"])
+        assert data.get("classification", "") == classification.id
+
+    @pytest.mark.asyncio
+    async def test_update_form_change_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form_with_classification: FormIoForm,
+        classification: Classification,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "pdf",
+            "classification": classification.id,
+            "components": [
+                {
+                    "label": "extra-vraag1",
+                    "description": "Heeft u meer informatie die u met ons wilt delen?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+                {
+                    "label": "extra-vraag2",
+                    "description": "Waarom meld u dit bij ons?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+            ],
+        }
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, form_id=form_with_classification.id), json=new_data
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data.get("id") == form_with_classification.id
+        assert data["title"] == new_data["title"]
+        assert data["display"] == new_data["display"]
+        assert isinstance(new_data["components"], list)  # This is here for mypy
+        assert len(data["components"]) == len(new_data["components"])
+        assert data.get("classification", "") == classification.id
+
+    @pytest.mark.asyncio
+    async def test_update_form_with_classification_that_does_not_exist(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: FormIoForm,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "classification": 123456,
+            "components": [],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        assert body.get("detail") == "Classification not found"
+
+    @pytest.mark.asyncio
+    async def test_update_form_remove_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form_with_classification: FormIoForm,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "classification": None,
+            "components": [],
+        }
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, form_id=form_with_classification.id), json=new_data
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("classification", "") is None
+
+    @pytest.mark.asyncio
+    async def test_update_form_classification_id_validation(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: FormIoForm,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "classification": 0,
+            "components": [],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "greater_than"
+        assert violation.get("loc") == ["body", "classification"]
+        assert violation.get("msg") == "Input should be greater than 0"
+
+    @pytest.mark.asyncio
     async def test_unable_to_update_primary_form(
         self, app: FastAPI, client: AsyncClient, auth_user: None, primary_form: FormIoForm
     ) -> None:
