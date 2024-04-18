@@ -7,11 +7,12 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.models import FormIoForm
+from meldingen.models import Classification, FormIoForm
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
 
 
@@ -30,7 +31,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest):
         "limit, offset, expected_result",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
     )
-    async def test_list_users(
+    async def test_list_forms(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -46,8 +47,38 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest):
 
         data = response.json()
         assert len(data) == expected_result
+        for form in data:
+            assert form.get("classification", "") is None
 
         assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/10"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "limit, offset, expected_result",
+        [(11, 0, 11), (5, 0, 5)],
+    )
+    async def test_list_forms_first_with_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form_with_classification: FormIoForm,
+        limit: int,
+        offset: int,
+        expected_result: int,
+        test_forms: list[FormIoForm],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == expected_result
+        assert data[0].get("classification", "") == form_with_classification.classification_id
+        for form in data[1:]:
+            assert form.get("classification", "") is None
+
+        assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/11"
 
 
 class TestFormRetrieve:
@@ -65,6 +96,21 @@ class TestFormRetrieve:
         assert data.get("title") == form.title
         assert data.get("display") == form.display
         assert len(data.get("components")) == len(await form.awaitable_attrs.components)
+
+    @pytest.mark.asyncio
+    async def test_retrieve_form_with_classification(
+        self, app: FastAPI, client: AsyncClient, form_with_classification: FormIoForm
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=form_with_classification.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert data.get("id") == form_with_classification.id
+        assert data.get("title") == form_with_classification.title
+        assert data.get("display") == form_with_classification.display
+        assert len(data.get("components")) == len(await form_with_classification.awaitable_attrs.components)
+        assert data.get("classification") == form_with_classification.classification_id
 
     @pytest.mark.asyncio
     async def test_retrieve_form_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
@@ -181,6 +227,179 @@ class TestFormUpdate(BaseUnauthorizedTest):
         assert data["title"] == new_data["title"]
         assert data["display"] == new_data["display"]
         assert len(data["components"]) == len(new_data["components"])
+        assert data.get("classification", "") is None
+
+    @pytest.mark.asyncio
+    async def test_update_form_with_new_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: FormIoForm,
+        classification: Classification,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "pdf",
+            "classification": classification.id,
+            "components": [
+                {
+                    "label": "extra-vraag1",
+                    "description": "Heeft u meer informatie die u met ons wilt delen?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+                {
+                    "label": "extra-vraag2",
+                    "description": "Waarom meld u dit bij ons?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+            ],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data.get("id") == form.id
+        assert data["title"] == new_data["title"]
+        assert data["display"] == new_data["display"]
+        assert isinstance(new_data["components"], list)  # This is here for mypy
+        assert len(data["components"]) == len(new_data["components"])
+        assert data.get("classification", "") == classification.id
+
+    @pytest.mark.asyncio
+    async def test_update_form_change_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form_with_classification: FormIoForm,
+        classification: Classification,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "pdf",
+            "classification": classification.id,
+            "components": [
+                {
+                    "label": "extra-vraag1",
+                    "description": "Heeft u meer informatie die u met ons wilt delen?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+                {
+                    "label": "extra-vraag2",
+                    "description": "Waarom meld u dit bij ons?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+            ],
+        }
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, form_id=form_with_classification.id), json=new_data
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data.get("id") == form_with_classification.id
+        assert data["title"] == new_data["title"]
+        assert data["display"] == new_data["display"]
+        assert isinstance(new_data["components"], list)  # This is here for mypy
+        assert len(data["components"]) == len(new_data["components"])
+        assert data.get("classification", "") == classification.id
+
+    @pytest.mark.asyncio
+    async def test_update_form_with_classification_that_does_not_exist(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: FormIoForm,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "classification": 123456,
+            "components": [],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        assert body.get("detail") == "Classification not found"
+
+    @pytest.mark.asyncio
+    async def test_update_form_remove_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form_with_classification: FormIoForm,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "classification": None,
+            "components": [],
+        }
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, form_id=form_with_classification.id), json=new_data
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("classification", "") is None
+
+    @pytest.mark.asyncio
+    async def test_update_form_classification_id_validation(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: FormIoForm,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "classification": 0,
+            "components": [],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "greater_than"
+        assert violation.get("loc") == ["body", "classification"]
+        assert violation.get("msg") == "Input should be greater than 0"
 
     @pytest.mark.asyncio
     async def test_unable_to_update_primary_form(
@@ -242,6 +461,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert data.get("id", 0) == 1
         assert data.get("title") == "Formulier #1"
         assert data.get("display") == "form"
+        assert data.get("classification", "") is None
 
         components = data.get("components")
         assert isinstance(components, list)
@@ -265,6 +485,45 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert second_component.get("input") == True
         assert second_component.get("autoExpand") == True
         assert second_component.get("showCharCount") == True
+
+    @pytest.mark.asyncio
+    async def test_create_form_with_classification(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
+    ) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "classification": classification.id,
+            "components": [],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("title") == "Formulier #1"
+        assert data.get("display") == "form"
+        assert data.get("components") == []
+        assert data.get("classification") == classification.id
+
+    @pytest.mark.asyncio
+    async def test_create_form_with_classification_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "classification": 123456,
+            "components": [],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        assert body.get("detail") == "Classification not found"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -305,3 +564,21 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert violation.get("type") == error_type
         assert violation.get("loc") == error_loc
         assert violation.get("msg") == error_msg
+
+    @pytest.mark.asyncio
+    async def test_validation_of_classification_id(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME),
+            json={"title": "title", "display": "form", "classification": 0, "components": []},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "greater_than"
+        assert violation.get("loc") == ["body", "classification"]
+        assert violation.get("msg") == "Input should be greater than 0"

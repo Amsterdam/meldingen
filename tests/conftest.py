@@ -10,6 +10,8 @@ from httpx import AsyncClient
 from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
+from meldingen.containers import Container
+from meldingen.main import get_application, get_container
 from meldingen.models import BaseDBModel
 
 TEST_DATABASE_URL: str = "postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test"
@@ -35,11 +37,8 @@ async def test_database(alembic_engine: AsyncEngine) -> None:
         await conn.run_sync(BaseDBModel.metadata.create_all)
 
 
-@pytest_asyncio.fixture
-async def app(test_database: None, alembic_engine: AsyncEngine) -> FastAPI:
-    from meldingen.containers import Container
-    from meldingen.main import get_application, get_container
-
+@pytest.fixture
+def container(alembic_engine: AsyncEngine) -> Container:
     async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
         async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
         async with async_session() as session:
@@ -50,7 +49,12 @@ async def app(test_database: None, alembic_engine: AsyncEngine) -> FastAPI:
         database_engine: Object[AsyncEngine] = Object(alembic_engine)
         database_session: Resource[AsyncSession] = Resource(get_database_session, engine=database_engine)
 
-    return get_application(get_container())
+    return get_container()
+
+
+@pytest_asyncio.fixture
+async def app(test_database: None, container: Container) -> FastAPI:
+    return get_application(container)
 
 
 @pytest_asyncio.fixture
