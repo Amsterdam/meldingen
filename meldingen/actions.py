@@ -94,7 +94,7 @@ class BaseFormIoFormUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
 
         form_components = await form.awaitable_attrs.components
         for component_values in values.pop("components", []):
-            FormIoComponent(form=form, **component_values)
+            FormIoComponent(form=form, parent=None, **component_values)
         form_components.reorder()
 
         for key, value in values.items():
