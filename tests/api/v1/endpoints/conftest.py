@@ -11,6 +11,7 @@ from meldingen.models import (
     FormIoComponentTypeEnum,
     FormIoForm,
     FormIoFormDisplayEnum,
+    FormIoPanelComponent,
     FormIoPrimaryForm,
     Melding,
     User,

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from meldingen.models import FormIoForm, FormIoPrimaryForm
+from meldingen.models import FormIoComponentTypeEnum, FormIoForm, FormIoPrimaryForm
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 
 
