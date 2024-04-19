@@ -1,5 +1,5 @@
 import enum
-from typing import Any, Final
+from typing import Any, Final, NotRequired, Optional
 
 from meldingen_core.models import Answer as BaseAnswer
 from meldingen_core.models import Classification as BaseClassification
@@ -92,6 +92,7 @@ class FormIoForm(AsyncAttrs, BaseDBModel):
     is_primary: Mapped[bool] = mapped_column(Boolean(), default=False, nullable=False)
 
     components: Mapped[OrderingList["FormIoComponent"]] = relationship(
+        "FormIoComponent",
         back_populates="form",
         order_by="FormIoComponent.position",
         default_factory=list,
@@ -110,24 +111,72 @@ class FormIoPrimaryForm(FormIoForm):
         }
 
 
+class FormIoComponentTypeEnum(enum.StrEnum):
+    """The value of the type field"""
+
+    panel: Final[str] = "panel"
+    text_area: Final[str] = "textArea"
+
+
 class FormIoComponent(AsyncAttrs, BaseDBModel):
+    @declared_attr.directive
+    def __tablename__(cls) -> str:
+        return "form_io_component"
+
+    @declared_attr.directive
+    def __mapper_args__(self) -> dict[str, Any]:
+        return {
+            "polymorphic_on": "type",
+        }
+
     # Form.io attr's
     label: Mapped[str] = mapped_column(String(), nullable=True)
     description: Mapped[str] = mapped_column(String(), nullable=True)
 
     key: Mapped[str] = mapped_column(String())
-    type: Mapped[str] = mapped_column(String())
+    type: Mapped[str] = mapped_column(
+        Enum(FormIoComponentTypeEnum, name="form_io_component_type", default=FormIoComponentTypeEnum.text_area)
+    )
     input: Mapped[bool] = mapped_column(Boolean(), default=True)
 
     auto_expand: Mapped[bool] = mapped_column(Boolean(), default=False)
     show_char_count: Mapped[bool] = mapped_column(Boolean(), default=False)
 
     # Internal attr's
-    form_id: Mapped[int] = mapped_column(ForeignKey("form_io_form.id"), default=None)
-    form: Mapped["FormIoForm"] = relationship(back_populates="components", default_factory=list)
+    form_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_form.id"), default=None, nullable=True)
+    form: Mapped[FormIoForm | None] = relationship(back_populates="components", default_factory=list)
 
     # Used to keep the order of the components correct
     position: Mapped[int] = mapped_column(Integer(), nullable=False, default=1)
+
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_component.id"), default=None, nullable=True)
+    parent: Mapped[Optional["FormIoPanelComponent"]] = relationship(
+        back_populates="components", default_factory=list, remote_side="FormIoPanelComponent.id"
+    )
+
+
+class FormIoPanelComponent(FormIoComponent):
+    @declared_attr.directive
+    def __mapper_args__(self) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": FormIoComponentTypeEnum.panel,
+        }
+
+    components: Mapped[OrderingList[FormIoComponent]] = relationship(
+        cascade="all, delete, delete-orphan",
+        back_populates="parent",
+        order_by="FormIoComponent.position",
+        default_factory=list,
+        collection_class=ordering_list(attr="position", count_from=1),
+    )
+
+
+class FormIoTextAreaComponent(FormIoComponent):
+    @declared_attr.directive
+    def __mapper_args__(self) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": FormIoComponentTypeEnum.text_area,
+        }
 
 
 class Question(BaseDBModel, BaseQuestion):

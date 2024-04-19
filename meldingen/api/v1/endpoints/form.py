@@ -121,7 +121,7 @@ async def create_form(
     db_form = FormIoForm(**dumped_form_input)
     db_form.classification = classification
     for component_input in dumped_components_input:
-        FormIoComponent(**component_input, form=db_form)
+        FormIoComponent(**component_input, form=db_form, parent=None)
 
     await action(db_form)
 

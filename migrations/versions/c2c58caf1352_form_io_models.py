@@ -37,16 +37,25 @@ def upgrade() -> None:
         sa.Column("label", sa.String(), nullable=True),
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("key", sa.String(), nullable=False),
-        sa.Column("type", sa.String(), nullable=False),
+        sa.Column(
+            "type",
+            sa.Enum("panel", "text_area", name="form_io_component_type"),
+            nullable=False,
+        ),
         sa.Column("input", sa.Boolean(), nullable=False),
         sa.Column("auto_expand", sa.Boolean(), nullable=False),
         sa.Column("show_char_count", sa.Boolean(), nullable=False),
-        sa.Column("form_id", sa.Integer(), nullable=False),
+        sa.Column("form_id", sa.Integer(), nullable=True),
         sa.Column("position", sa.Integer(), nullable=False),
+        sa.Column("parent_id", sa.Integer(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["form_id"],
             ["form_io_form.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["parent_id"],
+            ["form_io_component.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -60,3 +69,4 @@ def downgrade() -> None:
     # ### end Alembic commands ###
 
     sa.Enum("form", "wizard", "pdf", name="form_io_form_display").drop(op.get_bind())
+    sa.Enum("panel", "text_area", name="form_io_component_type").drop(op.get_bind())
