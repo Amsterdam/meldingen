@@ -18,33 +18,13 @@ from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import FormIoComponent, FormIoForm, User
 from meldingen.repositories import ClassificationRepository, FormIoFormRepository
-from meldingen.schemas import FormComponentOutput, FormCreateInput, FormOnlyOutput, FormOutput, FormUpdateInput
+from meldingen.schema_renderer import FormOutPutRenderer
+from meldingen.schemas import FormCreateInput, FormOnlyOutput, FormOutput, FormUpdateInput
 
 router = APIRouter()
 
 
-async def _hydrate_output(form: FormIoForm) -> FormOutput:
-    components_output = [
-        FormComponentOutput(
-            label=component.label,
-            description=component.description,
-            key=component.key,
-            type=component.type,
-            input=component.input,
-            auto_expand=component.auto_expand,
-            show_char_count=component.show_char_count,
-            position=component.position,
-        )
-        for component in await form.awaitable_attrs.components
-    ]
-
-    return FormOutput(
-        id=form.id,
-        title=form.title,
-        display=form.display,
-        classification=form.classification_id,
-        components=components_output,
-    )
+_hydrate_output = FormOutPutRenderer()
 
 
 @router.get("/", name="form:list", responses={**unauthorized_response})

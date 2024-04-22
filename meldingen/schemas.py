@@ -1,3 +1,5 @@
+from typing import Union
+
 from meldingen_core.models import Classification, User
 from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field
 from pydantic.alias_generators import to_camel
@@ -50,7 +52,7 @@ class BaseFormOutput(BaseModel):
 
 
 class PrimaryFormOutput(BaseFormOutput):
-    components: list["FormComponentOutput"]
+    components: list[Union["FormComponentOutput", "FormPanelComponentOutput"]]
 
 
 class FormOnlyOutput(BaseFormOutput):
@@ -59,7 +61,7 @@ class FormOnlyOutput(BaseFormOutput):
 
 
 class FormOutput(FormOnlyOutput):
-    components: list["FormComponentOutput"]
+    components: list[Union["FormComponentOutput", "FormPanelComponentOutput"]]
 
 
 class FormComponentOutput(BaseModel):
@@ -76,6 +78,10 @@ class FormComponentOutput(BaseModel):
     show_char_count: bool
 
     position: int
+
+
+class FormPanelComponentOutput(FormComponentOutput):
+    components: list[FormComponentOutput]
 
 
 class FormCreateInput(BaseModel):
