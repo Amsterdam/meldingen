@@ -1,5 +1,5 @@
 import enum
-from typing import Any, Final, NotRequired, Optional
+from typing import Any, Final, Optional
 
 from meldingen_core.models import Answer as BaseAnswer
 from meldingen_core.models import Classification as BaseClassification
@@ -92,10 +92,10 @@ class FormIoForm(AsyncAttrs, BaseDBModel):
     is_primary: Mapped[bool] = mapped_column(Boolean(), default=False, nullable=False)
 
     components: Mapped[OrderingList["FormIoComponent"]] = relationship(
-        "FormIoComponent",
+        cascade="save-update, merge, delete, delete-orphan",
         back_populates="form",
-        order_by="FormIoComponent.position",
         default_factory=list,
+        order_by="FormIoComponent.position",
         collection_class=ordering_list(attr="position", count_from=1),
     )
 
@@ -144,14 +144,21 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
 
     # Internal attr's
     form_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_form.id"), default=None, nullable=True)
-    form: Mapped[FormIoForm | None] = relationship(back_populates="components", default_factory=list)
+    form: Mapped[FormIoForm | None] = relationship(
+        cascade="save-update, merge, delete",
+        back_populates="components",
+        default=None,
+    )
 
     # Used to keep the order of the components correct
     position: Mapped[int] = mapped_column(Integer(), nullable=False, default=1)
 
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_component.id"), default=None, nullable=True)
     parent: Mapped[Optional["FormIoPanelComponent"]] = relationship(
-        back_populates="components", default_factory=list, remote_side="FormIoPanelComponent.id"
+        cascade="save-update, merge, delete",
+        back_populates="components",
+        default=None,
+        remote_side="FormIoPanelComponent.id",
     )
 
 
@@ -163,10 +170,10 @@ class FormIoPanelComponent(FormIoComponent):
         }
 
     components: Mapped[OrderingList[FormIoComponent]] = relationship(
-        cascade="all, delete, delete-orphan",
+        cascade="save-update, merge, delete, delete-orphan",
         back_populates="parent",
-        order_by="FormIoComponent.position",
         default_factory=list,
+        order_by="FormIoComponent.position",
         collection_class=ordering_list(attr="position", count_from=1),
     )
 

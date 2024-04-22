@@ -5,7 +5,16 @@ from fastapi import FastAPI
 
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import Classification, FormIoForm, FormIoFormDisplayEnum, FormIoPrimaryForm, Melding, User
+from meldingen.models import (
+    Classification,
+    FormIoComponent,
+    FormIoComponentTypeEnum,
+    FormIoForm,
+    FormIoFormDisplayEnum,
+    FormIoPrimaryForm,
+    Melding,
+    User,
+)
 from meldingen.repositories import ClassificationRepository, FormIoFormRepository, MeldingRepository, UserRepository
 
 
@@ -164,7 +173,21 @@ async def form_repository(container: Container) -> FormIoFormRepository:
 
 @pytest_asyncio.fixture
 async def primary_form(form_repository: FormIoFormRepository) -> FormIoPrimaryForm:
-    primary_form = FormIoPrimaryForm(title="Primary Form", display=FormIoFormDisplayEnum.form.value, is_primary=True)
+    primary_form = FormIoPrimaryForm(title="Primary Form", display=FormIoFormDisplayEnum.form, is_primary=True)
+
+    component = FormIoComponent(
+        label="klacht",
+        description="Wat is uw klacht?",
+        key="klacht",
+        type=FormIoComponentTypeEnum.text_area,
+        input=True,
+        auto_expand=True,
+        show_char_count=True,
+    )
+
+    components = await primary_form.awaitable_attrs.components
+    components.append(component)
+
     await form_repository.save(primary_form)
 
     return primary_form
@@ -180,7 +203,21 @@ def form_title(request: SubRequest) -> str:
 
 @pytest_asyncio.fixture
 async def form(form_repository: FormIoFormRepository, form_title: str) -> FormIoForm:
-    form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form.value)
+    form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form)
+
+    component = FormIoComponent(
+        label="klacht",
+        description="Wat is uw klacht?",
+        key="klacht",
+        type=FormIoComponentTypeEnum.text_area,
+        input=True,
+        auto_expand=True,
+        show_char_count=True,
+    )
+
+    components = await form.awaitable_attrs.components
+    components.append(component)
+
     await form_repository.save(form)
 
     return form
@@ -192,7 +229,7 @@ async def form_with_classification(
 ) -> FormIoForm:
     classification = Classification("test_classification")
     await classification_repository.save(classification)
-    form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form.value, classification=classification)
+    form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form, classification=classification)
     await form_repository.save(form)
 
     return form

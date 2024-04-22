@@ -167,10 +167,6 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
         results = await self._session.execute(statement)
         return results.scalars().one_or_none()
 
-    async def delete_components(self, pk: int) -> None:
-        statement = delete(FormIoComponent).where(FormIoComponent.form_id == pk)
-        await self._session.execute(statement)
-
     async def count(self) -> int:
         _type = self.get_model_type()
         statement = select(func.count(_type.id)).where(_type.is_primary == False)
