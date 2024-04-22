@@ -90,12 +90,11 @@ class BaseFormIoFormUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
     _repository: FormIoFormRepository
 
     async def _update(self, form: FormIoForm, values: dict[str, Any]) -> FormIoForm:
-        await self._repository.delete_components(pk=form.id)
-
-        form_components = await form.awaitable_attrs.components
+        components = await form.awaitable_attrs.components
+        components.clear()
         for component_values in values.pop("components", []):
-            FormIoComponent(form=form, parent=None, **component_values)
-        form_components.reorder()
+            components.append(FormIoComponent(**component_values))
+        components.reorder()
 
         for key, value in values.items():
             setattr(form, key, value)
