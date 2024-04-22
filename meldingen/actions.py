@@ -1,4 +1,4 @@
-from typing import Any, override
+from typing import Any
 
 from meldingen_core.actions.base import (
     BaseCreateAction,
@@ -18,7 +18,15 @@ from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAc
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
 from meldingen_core.exceptions import NotFoundException
 
-from meldingen.models import Classification, FormIoComponent, FormIoForm, Melding, User
+from meldingen.models import (
+    Classification,
+    FormIoComponent,
+    FormIoComponentTypeEnum,
+    FormIoForm,
+    FormIoPanelComponent,
+    Melding,
+    User,
+)
 from meldingen.repositories import FormIoFormRepository
 
 
@@ -61,12 +69,34 @@ class FormIoComponentRetrieveAction(BaseRetrieveAction[FormIoComponent, FormIoCo
 class FormIoComponentDeleteAction(BaseDeleteAction[FormIoComponent, FormIoComponent]): ...
 
 
-class FormIoFormCreateAction(BaseCreateAction[FormIoForm, FormIoForm]):
-    @override
-    async def __call__(self, obj: FormIoForm) -> None:
-        form_components = await obj.awaitable_attrs.components
-        form_components.reorder()
+class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
+    _repository: FormIoFormRepository
 
+    async def _create_components(
+        self, parent: FormIoForm | FormIoPanelComponent, components_values: list[dict[str, Any]]
+    ) -> None:
+        parent_components = await parent.awaitable_attrs.components
+        parent_components.clear()
+
+        for component_values in components_values:
+            if component_values.get("type") == FormIoComponentTypeEnum.panel:
+                child_components_values = component_values.pop("components", [])
+                panel_component = FormIoPanelComponent(**component_values)
+
+                await self._create_components(parent=panel_component, components_values=child_components_values)
+
+                parent_components.append(panel_component)
+            else:
+                parent_components.append(FormIoComponent(**component_values))
+
+        parent_components.reorder()
+
+
+class FormIoFormCreateAction(BaseFormIoFormCreateUpdateAction):
+    async def __call__(self, obj: FormIoForm, values: dict[str, Any]) -> None:
+        component_values = values.pop("components", [])
+        if component_values:
+            await self._create_components(obj, component_values)
         await self._repository.save(obj)
 
 
@@ -86,22 +116,19 @@ class FormIoPrimaryFormRetrieveAction(BaseCRUDAction[FormIoForm, FormIoForm]):
         return await self._repository.retrieve_primary_form()
 
 
-class BaseFormIoFormUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
-    _repository: FormIoFormRepository
+class BaseFormIoFormUpdateAction(BaseFormIoFormCreateUpdateAction):
 
-    async def _update(self, form: FormIoForm, values: dict[str, Any]) -> FormIoForm:
-        components = await form.awaitable_attrs.components
-        components.clear()
-        for component_values in values.pop("components", []):
-            components.append(FormIoComponent(**component_values))
-        components.reorder()
+    async def _update(self, obj: FormIoForm, values: dict[str, Any]) -> FormIoForm:
+        component_values = values.pop("components", [])
+        if component_values:
+            await self._create_components(obj, component_values)
 
         for key, value in values.items():
-            setattr(form, key, value)
+            setattr(obj, key, value)
 
-        await self._repository.save(form)
+        await self._repository.save(obj)
 
-        return form
+        return obj
 
 
 class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):

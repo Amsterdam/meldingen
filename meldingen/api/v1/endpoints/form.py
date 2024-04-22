@@ -94,16 +94,15 @@ async def create_form(
 
     dumped_form_input = form_input.model_dump(by_alias=True)
     dumped_form_input.pop("components")
+
     dumped_components_input = []
     for component in form_input.components:
         dumped_components_input.append(component.model_dump())
 
     db_form = FormIoForm(**dumped_form_input)
     db_form.classification = classification
-    for component_input in dumped_components_input:
-        FormIoComponent(**component_input, form=db_form, parent=None)
 
-    await action(db_form)
+    await action(db_form, {"components": dumped_components_input})
 
     return await _hydrate_output(db_form)
 
