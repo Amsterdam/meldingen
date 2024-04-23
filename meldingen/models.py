@@ -131,16 +131,16 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
 
     # Form.io attr's
     label: Mapped[str] = mapped_column(String(), nullable=True)
-    description: Mapped[str] = mapped_column(String(), nullable=True)
-
     key: Mapped[str] = mapped_column(String())
+
+    description: Mapped[str] = mapped_column(String(), nullable=True, default=None)
     type: Mapped[str] = mapped_column(
-        Enum(FormIoComponentTypeEnum, name="form_io_component_type", default=FormIoComponentTypeEnum.text_area)
+        Enum(FormIoComponentTypeEnum, name="form_io_component_type"), default=FormIoComponentTypeEnum.text_area
     )
     input: Mapped[bool] = mapped_column(Boolean(), default=True)
 
-    auto_expand: Mapped[bool] = mapped_column(Boolean(), default=False)
-    show_char_count: Mapped[bool] = mapped_column(Boolean(), default=False)
+    auto_expand: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
+    show_char_count: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
 
     # Internal attr's
     form_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_form.id"), default=None, nullable=True)
