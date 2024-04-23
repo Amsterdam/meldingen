@@ -16,7 +16,7 @@ from meldingen.api.utils import PaginationParams, pagination_params
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import FormIoComponent, FormIoForm, User
+from meldingen.models import FormIoForm, User
 from meldingen.repositories import ClassificationRepository, FormIoFormRepository
 from meldingen.schema_renderer import FormOutPutRenderer
 from meldingen.schemas import FormCreateInput, FormOnlyOutput, FormOutput, FormUpdateInput
