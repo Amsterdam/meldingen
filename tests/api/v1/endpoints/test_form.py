@@ -189,25 +189,36 @@ class TestFormUpdate(BaseUnauthorizedTest):
     ) -> None:
         new_data = {
             "title": "Formulier #1",
-            "display": "pdf",
+            "display": "wizard",
             "components": [
                 {
-                    "label": "extra-vraag1",
+                    "label": "extra-vraag-1",
                     "description": "Heeft u meer informatie die u met ons wilt delen?",
                     "key": "textArea",
                     "type": "textArea",
                     "input": True,
-                    "autoExpand": True,
-                    "showCharCount": True,
+                    "autoExpand": False,
+                    "showCharCount": False,
                 },
                 {
-                    "label": "extra-vraag2",
-                    "description": "Waarom meld u dit bij ons?",
-                    "key": "textArea",
-                    "type": "textArea",
-                    "input": True,
-                    "autoExpand": True,
-                    "showCharCount": True,
+                    "label": "panel-1",
+                    "description": "Panel #1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "autoExpand": False,
+                    "showCharCount": False,
+                    "components": [
+                        {
+                            "label": "extra-vraag-2",
+                            "description": "Waarom meld u dit bij ons?",
+                            "key": "textArea",
+                            "type": "textArea",
+                            "input": True,
+                            "autoExpand": True,
+                            "showCharCount": True,
+                        },
+                    ],
                 },
             ],
         }
@@ -228,6 +239,46 @@ class TestFormUpdate(BaseUnauthorizedTest):
         assert data["display"] == new_data["display"]
         assert len(data["components"]) == len(new_data["components"])
         assert data.get("classification", "") is None
+
+        data = response.json()
+        assert data.get("id", 0) == 1
+        assert data.get("title") == "Formulier #1"
+        assert data.get("display") == "wizard"
+        assert data.get("classification", "") is None
+
+        components = data.get("components")
+        assert isinstance(components, list)
+        assert components is not None
+        assert len(components) == 2
+
+        first_component: dict[str, Any] = components[0]
+        assert first_component.get("label") == "extra-vraag-1"
+        assert first_component.get("description") == "Heeft u meer informatie die u met ons wilt delen?"
+        assert first_component.get("key") == "textArea"
+        assert first_component.get("type") == "textArea"
+        assert first_component.get("input")
+        assert not first_component.get("autoExpand")
+        assert not first_component.get("showCharCount")
+
+        second_component: dict[str, Any] = components[1]
+        assert second_component.get("label") == "panel-1"
+        assert second_component.get("description") == "Panel #1"
+        assert second_component.get("key") == "panel"
+        assert second_component.get("type") == "panel"
+        assert not second_component.get("input")
+        assert not second_component.get("autoExpand")
+        assert not second_component.get("showCharCount")
+
+        second_child_components: list[dict[str, Any]] = components[1].get("components")
+
+        second_child_component: dict[str, Any] = second_child_components[0]
+        assert second_child_component.get("label") == "extra-vraag-2"
+        assert second_child_component.get("description") == "Waarom meld u dit bij ons?"
+        assert second_child_component.get("key") == "textArea"
+        assert second_child_component.get("type") == "textArea"
+        assert second_child_component.get("input")
+        assert second_child_component.get("autoExpand")
+        assert second_child_component.get("showCharCount")
 
     @pytest.mark.asyncio
     async def test_update_form_with_new_classification(
@@ -442,13 +493,24 @@ class TestFormCreate(BaseUnauthorizedTest):
                     "showCharCount": False,
                 },
                 {
-                    "label": "extra-vraag-2",
-                    "description": "Waarom meld u dit bij ons?",
-                    "key": "textArea",
-                    "type": "textArea",
-                    "input": True,
-                    "autoExpand": True,
-                    "showCharCount": True,
+                    "label": "panel-1",
+                    "description": "Panel #1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "autoExpand": False,
+                    "showCharCount": False,
+                    "components": [
+                        {
+                            "label": "extra-vraag-2",
+                            "description": "Waarom meld u dit bij ons?",
+                            "key": "textArea",
+                            "type": "textArea",
+                            "input": True,
+                            "autoExpand": True,
+                            "showCharCount": True,
+                        },
+                    ],
                 },
             ],
         }
@@ -473,18 +535,29 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert first_component.get("description") == "Heeft u meer informatie die u met ons wilt delen?"
         assert first_component.get("key") == "textArea"
         assert first_component.get("type") == "textArea"
-        assert first_component.get("input") == True
-        assert first_component.get("autoExpand") == False
-        assert first_component.get("showCharCount") == False
+        assert first_component.get("input")
+        assert not first_component.get("autoExpand")
+        assert not first_component.get("showCharCount")
 
         second_component: dict[str, Any] = components[1]
-        assert second_component.get("label") == "extra-vraag-2"
-        assert second_component.get("description") == "Waarom meld u dit bij ons?"
-        assert second_component.get("key") == "textArea"
-        assert second_component.get("type") == "textArea"
-        assert second_component.get("input") == True
-        assert second_component.get("autoExpand") == True
-        assert second_component.get("showCharCount") == True
+        assert second_component.get("label") == "panel-1"
+        assert second_component.get("description") == "Panel #1"
+        assert second_component.get("key") == "panel"
+        assert second_component.get("type") == "panel"
+        assert not second_component.get("input")
+        assert not second_component.get("autoExpand")
+        assert not second_component.get("showCharCount")
+
+        second_child_components: list[dict[str, Any]] = components[1].get("components")
+
+        second_child_component: dict[str, Any] = second_child_components[0]
+        assert second_child_component.get("label") == "extra-vraag-2"
+        assert second_child_component.get("description") == "Waarom meld u dit bij ons?"
+        assert second_child_component.get("key") == "textArea"
+        assert second_child_component.get("type") == "textArea"
+        assert second_child_component.get("input")
+        assert second_child_component.get("autoExpand")
+        assert second_child_component.get("showCharCount")
 
     @pytest.mark.asyncio
     async def test_create_form_with_classification(

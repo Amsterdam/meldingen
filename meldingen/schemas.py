@@ -115,7 +115,7 @@ class FormCreateInput(BaseModel):
     title: str = Field(min_length=3)
     display: FormIoFormDisplayEnum
     classification: int | None = Field(default=None, gt=0, serialization_alias="classification_id")
-    components: list["FormComponentCreateInput"]
+    components: list[Union["FormComponentCreateInput", "FormPanelComponentCreateInput"]]
 
 
 class FormComponentCreateInput(BaseModel):
@@ -125,11 +125,17 @@ class FormComponentCreateInput(BaseModel):
     description: str
 
     key: str
-    type: str
+    type: Annotated[FormIoComponentTypeEnum, AfterValidator(_anything_but_type_panel_validator)]
     input: bool
 
     auto_expand: bool
     show_char_count: bool
+
+
+class FormPanelComponentCreateInput(FormComponentCreateInput):
+    type: Annotated[FormIoComponentTypeEnum, AfterValidator(_only_type_panel_validator)]
+
+    components: list["FormComponentCreateInput"]
 
 
 class PrimaryFormUpdateInput(BaseModel):
