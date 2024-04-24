@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from meldingen.models import FormIoComponentTypeEnum, FormIoForm, FormIoPrimaryForm
+from meldingen.models import FormIoForm, FormIoPrimaryForm
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 
 
@@ -79,12 +79,9 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
                 },
                 {
                     "label": "panel-1",
-                    "description": "Panel #1",
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "autoExpand": False,
-                    "showCharCount": False,
                     "components": [
                         {
                             "label": "aanvullend",

@@ -11,7 +11,7 @@ from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import User
 from meldingen.schema_renderer import PrimaryFormOutPutRenderer
-from meldingen.schemas import PrimaryFormOutput, PrimaryFormUpdateInput
+from meldingen.schemas import PrimaryFormInput, PrimaryFormOutput
 
 router = APIRouter()
 
@@ -35,7 +35,7 @@ async def retrieve_primary_form(
 @router.put("/", name="primary-form:update", responses={**unauthorized_response, **not_found_response})
 @inject
 async def update_primary_form(
-    form_input: PrimaryFormUpdateInput,
+    form_input: PrimaryFormInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoPrimaryFormUpdateAction = Depends(Provide(Container.primary_form_update_action)),
 ) -> PrimaryFormOutput:

@@ -202,12 +202,9 @@ class TestFormUpdate(BaseUnauthorizedTest):
                 },
                 {
                     "label": "panel-1",
-                    "description": "Panel #1",
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "autoExpand": False,
-                    "showCharCount": False,
                     "components": [
                         {
                             "label": "extra-vraag-2",
@@ -262,12 +259,9 @@ class TestFormUpdate(BaseUnauthorizedTest):
 
         second_component: dict[str, Any] = components[1]
         assert second_component.get("label") == "panel-1"
-        assert second_component.get("description") == "Panel #1"
         assert second_component.get("key") == "panel"
         assert second_component.get("type") == "panel"
         assert not second_component.get("input")
-        assert not second_component.get("autoExpand")
-        assert not second_component.get("showCharCount")
 
         second_child_components: list[dict[str, Any]] = components[1].get("components")
 
@@ -494,12 +488,9 @@ class TestFormCreate(BaseUnauthorizedTest):
                 },
                 {
                     "label": "panel-1",
-                    "description": "Panel #1",
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "autoExpand": False,
-                    "showCharCount": False,
                     "components": [
                         {
                             "label": "extra-vraag-2",
@@ -541,12 +532,9 @@ class TestFormCreate(BaseUnauthorizedTest):
 
         second_component: dict[str, Any] = components[1]
         assert second_component.get("label") == "panel-1"
-        assert second_component.get("description") == "Panel #1"
         assert second_component.get("key") == "panel"
         assert second_component.get("type") == "panel"
         assert not second_component.get("input")
-        assert not second_component.get("autoExpand")
-        assert not second_component.get("showCharCount")
 
         second_child_components: list[dict[str, Any]] = components[1].get("components")
 
