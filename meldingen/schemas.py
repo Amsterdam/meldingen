@@ -1,11 +1,11 @@
-from typing import Annotated, Literal, Union
+from typing import Annotated, Any, Union
 
 from meldingen_core.models import Classification, User
-from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, EmailStr, Field
+from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
 
 from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
-from meldingen.validators import create_match_validator, create_non_match_validator
+from meldingen.validators import create_non_match_validator
 
 
 class ClassificationInput(BaseModel, Classification):
@@ -98,22 +98,60 @@ class FormPanelComponentOutput(BaseModel):
     components: list[FormComponentOutput]
 
 
-_only_type_panel_validator = create_match_validator(FormIoComponentTypeEnum.panel, error_msg="only panel is allowed!")
-_anything_but_type_panel_validator = create_non_match_validator(
-    FormIoComponentTypeEnum.panel, error_msg="panel is not allowed!"
-)
+def _component_discriminator(value: Any) -> str:
+    """
+    The component discriminator knows the difference between a "panel" and a "normal" component.
+    It helps pydantic to make the correct choice when to validate a given dict to a specific model.
+
+    Example:
+        components: list[
+            Annotated[
+                Union[
+                    Annotated["FormPanelComponentInput", Tag("panel")],
+                    Annotated["FormComponentInput", Tag("component")],
+                ],
+                Discriminator(_component_discriminator),
+            ]
+        ]
+    """
+    if isinstance(value, dict) and value.get("type") == FormIoComponentTypeEnum.panel:
+        return "panel"
+    else:
+        return "component"
 
 
 class PrimaryFormInput(BaseModel):
     title: Annotated[str, Field(min_length=3)]
     components: list[
-        Annotated[Union["FormComponentInput", "FormPanelComponentInput"], Field(union_mode="left_to_right")]
+        Annotated[
+            Union[
+                Annotated["FormPanelComponentInput", Tag("panel")],
+                Annotated["FormComponentInput", Tag("component")],
+            ],
+            Discriminator(_component_discriminator),
+        ]
     ]
 
 
 class FormInput(PrimaryFormInput):
     display: FormIoFormDisplayEnum
     classification: Annotated[int | None, Field(default=None, gt=0, serialization_alias="classification_id")]
+
+
+class FormPanelComponentInput(BaseModel):
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
+
+    label: Annotated[str, Field(min_length=3)]
+
+    key: Annotated[str, Field(min_length=3)]
+    type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.panel)]
+    input: bool = False
+
+    components: list["FormComponentInput"]
+
+
+# Panel is not allowed validator
+panel_not_allowed = create_non_match_validator(FormIoComponentTypeEnum.panel, "{value} is not allowed")
 
 
 class FormComponentInput(BaseModel):
@@ -124,25 +162,9 @@ class FormComponentInput(BaseModel):
 
     key: Annotated[str, Field(min_length=3)]
     type: Annotated[
-        FormIoComponentTypeEnum,
-        Field(FormIoComponentTypeEnum.text_area),
-        AfterValidator(_anything_but_type_panel_validator),
+        FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.text_area), AfterValidator(panel_not_allowed)
     ]
     input: bool
 
     auto_expand: bool
     show_char_count: bool
-
-
-class FormPanelComponentInput(BaseModel):
-    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
-
-    label: Annotated[str, Field(min_length=3)]
-
-    key: Annotated[str, Field(min_length=3)]
-    type: Annotated[
-        FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.panel), AfterValidator(_only_type_panel_validator)
-    ]
-    input: bool = False
-
-    components: list[FormComponentInput]
