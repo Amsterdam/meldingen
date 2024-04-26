@@ -98,7 +98,7 @@ class FormPanelComponentOutput(BaseModel):
     components: list[FormComponentOutput]
 
 
-def _component_discriminator(value: Any) -> str:
+def _component_discriminator(value: Any) -> str | None:
     """
     The component discriminator knows the difference between a "panel" and a "normal" component.
     It helps pydantic to make the correct choice when to validate a given dict to a specific model.
@@ -114,10 +114,12 @@ def _component_discriminator(value: Any) -> str:
             ]
         ]
     """
-    if isinstance(value, dict) and value.get("type") == FormIoComponentTypeEnum.panel:
-        return "panel"
-    else:
-        return "component"
+    if isinstance(value, dict):
+        if value.get("type") == FormIoComponentTypeEnum.panel:
+            return "panel"
+        else:
+            return "component"
+    return None
 
 
 class PrimaryFormInput(BaseModel):
