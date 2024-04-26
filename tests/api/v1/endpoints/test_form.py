@@ -202,12 +202,9 @@ class TestFormUpdate(BaseUnauthorizedTest):
                 },
                 {
                     "label": "panel-1",
-                    "description": "Panel #1",
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "autoExpand": False,
-                    "showCharCount": False,
                     "components": [
                         {
                             "label": "extra-vraag-2",
@@ -262,12 +259,9 @@ class TestFormUpdate(BaseUnauthorizedTest):
 
         second_component: dict[str, Any] = components[1]
         assert second_component.get("label") == "panel-1"
-        assert second_component.get("description") == "Panel #1"
         assert second_component.get("key") == "panel"
         assert second_component.get("type") == "panel"
         assert not second_component.get("input")
-        assert not second_component.get("autoExpand")
-        assert not second_component.get("showCharCount")
 
         second_child_components: list[dict[str, Any]] = components[1].get("components")
 
@@ -494,12 +488,9 @@ class TestFormCreate(BaseUnauthorizedTest):
                 },
                 {
                     "label": "panel-1",
-                    "description": "Panel #1",
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "autoExpand": False,
-                    "showCharCount": False,
                     "components": [
                         {
                             "label": "extra-vraag-2",
@@ -541,12 +532,9 @@ class TestFormCreate(BaseUnauthorizedTest):
 
         second_component: dict[str, Any] = components[1]
         assert second_component.get("label") == "panel-1"
-        assert second_component.get("description") == "Panel #1"
         assert second_component.get("key") == "panel"
         assert second_component.get("type") == "panel"
         assert not second_component.get("input")
-        assert not second_component.get("autoExpand")
-        assert not second_component.get("showCharCount")
 
         second_child_components: list[dict[str, Any]] = components[1].get("components")
 
@@ -655,3 +643,64 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert violation.get("type") == "greater_than"
         assert violation.get("loc") == ["body", "classification"]
         assert violation.get("msg") == "Input should be greater than 0"
+
+    @pytest.mark.asyncio
+    async def test_create_form_invalid_nesting(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "extra-vraag-1",
+                            "description": "Heeft u meer informatie die u met ons wilt delen?",
+                            "key": "textArea",
+                            "type": "textArea",
+                            "input": True,
+                            "autoExpand": False,
+                            "showCharCount": False,
+                            "components": [
+                                {
+                                    "label": "extra-vraag-2",
+                                    "description": "Waarom meld u dit bij ons?",
+                                    "key": "textArea",
+                                    "type": "textArea",
+                                    "input": True,
+                                    "autoExpand": True,
+                                    "showCharCount": True,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "extra_forbidden"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "components"]
+        assert violation.get("msg") == "Extra inputs are not permitted"
+        assert violation.get("input") == [
+            {
+                "label": "extra-vraag-2",
+                "description": "Waarom meld u dit bij ons?",
+                "key": "textArea",
+                "type": "textArea",
+                "input": True,
+                "autoExpand": True,
+                "showCharCount": True,
+            },
+        ]

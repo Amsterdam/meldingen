@@ -19,7 +19,7 @@ from meldingen.containers import Container
 from meldingen.models import FormIoForm, User
 from meldingen.repositories import ClassificationRepository, FormIoFormRepository
 from meldingen.schema_renderer import FormOutPutRenderer
-from meldingen.schemas import FormCreateInput, FormOnlyOutput, FormOutput, FormUpdateInput
+from meldingen.schemas import FormInput, FormOnlyOutput, FormOutput
 
 router = APIRouter()
 
@@ -81,7 +81,7 @@ async def retrieve_form(
 )
 @inject
 async def create_form(
-    form_input: FormCreateInput,
+    form_input: FormInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormCreateAction = Depends(Provide(Container.form_create_action)),
     classification_repository: ClassificationRepository = Depends(Provide(Container.classification_repository)),
@@ -122,7 +122,7 @@ async def create_form(
 @inject
 async def update_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
-    form_input: FormUpdateInput,
+    form_input: FormInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormUpdateAction = Depends(Provide(Container.form_update_action)),
     classification_repository: ClassificationRepository = Depends(Provide(Container.classification_repository)),
