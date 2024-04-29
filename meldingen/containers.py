@@ -70,7 +70,7 @@ def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> A
     More info on: https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html#sqlalchemy.ext.asyncio.AsyncEngine.echo
     """
     echo: bool | str = False
-    match log_level:
+    match log_level:  # pragma: no cover
         case logging.INFO:
             echo = True
         case logging.DEBUG:
