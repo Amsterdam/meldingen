@@ -54,21 +54,6 @@ class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classificati
 class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, Classification]): ...
 
 
-class FormIoComponentCreateAction(BaseCreateAction[FormIoComponent, FormIoComponent]): ...
-
-
-class FormIoComponentUpdateAction(BaseUpdateAction[FormIoComponent, FormIoComponent]): ...
-
-
-class FormIoComponentListAction(BaseListAction[FormIoComponent, FormIoComponent]): ...
-
-
-class FormIoComponentRetrieveAction(BaseRetrieveAction[FormIoComponent, FormIoComponent]): ...
-
-
-class FormIoComponentDeleteAction(BaseDeleteAction[FormIoComponent, FormIoComponent]): ...
-
-
 class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
     _repository: FormIoFormRepository
 

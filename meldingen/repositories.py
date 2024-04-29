@@ -16,17 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
 
-from meldingen.models import (
-    Answer,
-    BaseDBModel,
-    Classification,
-    FormIoComponent,
-    FormIoForm,
-    Group,
-    Melding,
-    Question,
-    User,
-)
+from meldingen.models import Answer, BaseDBModel, Classification, FormIoForm, Group, Melding, Question, User
 
 T = TypeVar("T", bound=BaseDBModel)
 T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
@@ -175,17 +165,13 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
         return result.scalars().one()
 
 
-class FormIoComponentRepository(BaseSQLAlchemyRepository[FormIoComponent, FormIoComponent]):
-    @override
-    def get_model_type(self) -> type[FormIoComponent]:
-        return FormIoComponent
-
-
 class QuestionRepository(BaseSQLAlchemyRepository[Question, Question], BaseQuestionRepository):
+    @override
     def get_model_type(self) -> type[Question]:
         return Question
 
 
 class AnswerRepository(BaseSQLAlchemyRepository[Answer, Answer], BaseAnswerRepository):
+    @override
     def get_model_type(self) -> type[Answer]:
         return Answer
