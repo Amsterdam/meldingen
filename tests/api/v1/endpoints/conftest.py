@@ -1,7 +1,10 @@
+from datetime import datetime, timedelta
+
 import pytest
 import pytest_asyncio
 from _pytest.fixtures import SubRequest
 from fastapi import FastAPI
+from pydantic import TypeAdapter
 
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -42,13 +45,42 @@ def melding_state(request: SubRequest) -> str | None:
         return None
 
 
+@pytest.fixture
+def melding_token(request: SubRequest) -> str | None:
+    if hasattr(request, "param"):
+        return str(request.param)
+
+    return None
+
+
+@pytest.fixture
+def melding_token_expires(request: SubRequest) -> datetime | None:
+    if hasattr(request, "param"):
+        timedelta_adapter = TypeAdapter(timedelta)
+        return datetime.now() - timedelta_adapter.validate_python(request.param)
+
+    return None
+
+
 @pytest_asyncio.fixture
-async def test_melding(melding_repository: MeldingRepository, melding_text: str, melding_state: str | None) -> Melding:
+async def test_melding(
+    melding_repository: MeldingRepository,
+    melding_text: str,
+    melding_state: str | None,
+    melding_token: str | None,
+    melding_token_expires: datetime | None,
+) -> Melding:
     """Fixture providing a single test melding instance."""
 
     melding = Melding(text=melding_text)
     if melding_state is not None:
         melding.state = melding_state
+
+    if melding_token is not None:
+        melding.token = melding_token
+
+    if melding_token_expires is not None:
+        melding.token_expires = melding_token_expires
 
     await melding_repository.save(melding)
 
