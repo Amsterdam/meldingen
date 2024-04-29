@@ -16,17 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
 
-from meldingen.models import (
-    Answer,
-    BaseDBModel,
-    Classification,
-    FormIoComponent,
-    FormIoForm,
-    Group,
-    Melding,
-    Question,
-    User,
-)
+from meldingen.models import Answer, BaseDBModel, Classification, FormIoForm, Group, Melding, Question, User
 
 T = TypeVar("T", bound=BaseDBModel)
 T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
@@ -89,13 +79,11 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
 class MeldingRepository(BaseSQLAlchemyRepository[Melding, Melding], BaseMeldingRepository[Melding, Melding]):
     """Repository for Melding model."""
 
-    @override
     def get_model_type(self) -> type[Melding]:
         return Melding
 
 
 class UserRepository(BaseSQLAlchemyRepository[User, User], BaseUserRepository):
-    @override
     def get_model_type(self) -> type[User]:
         return User
 
@@ -108,7 +96,6 @@ class UserRepository(BaseSQLAlchemyRepository[User, User], BaseUserRepository):
 
 
 class GroupRepository(BaseSQLAlchemyRepository[Group, Group]):
-    @override
     def get_model_type(self) -> type[Group]:
         return Group
 
@@ -135,7 +122,6 @@ class ClassificationRepository(BaseSQLAlchemyRepository[Classification, Classifi
 
 
 class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
-    @override
     def get_model_type(self) -> type[FormIoForm]:
         return FormIoForm
 
@@ -173,12 +159,6 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
         result = await self._session.execute(statement)
 
         return result.scalars().one()
-
-
-class FormIoComponentRepository(BaseSQLAlchemyRepository[FormIoComponent, FormIoComponent]):
-    @override
-    def get_model_type(self) -> type[FormIoComponent]:
-        return FormIoComponent
 
 
 class QuestionRepository(BaseSQLAlchemyRepository[Question, Question], BaseQuestionRepository):

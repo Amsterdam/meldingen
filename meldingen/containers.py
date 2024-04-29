@@ -40,7 +40,6 @@ from meldingen.classification import DummyClassifierAdapter
 from meldingen.models import Melding
 from meldingen.repositories import (
     ClassificationRepository,
-    FormIoComponentRepository,
     FormIoFormRepository,
     GroupRepository,
     MeldingRepository,
@@ -125,9 +124,6 @@ class Container(DeclarativeContainer):
         ClassificationRepository, session=database_session
     )
     form_repository: Factory[FormIoFormRepository] = Factory(FormIoFormRepository, session=database_session)
-    form_component_repository: Factory[FormIoComponentRepository] = Factory(
-        FormIoComponentRepository, session=database_session
-    )
 
     # state machine
     melding_process_transition: Singleton[Process] = Singleton(Process)
@@ -160,7 +156,7 @@ class Container(DeclarativeContainer):
     token_generator: Singleton[UrlSafeTokenGenerator] = Singleton(UrlSafeTokenGenerator)
     token_verifier: Singleton[TokenVerifier[Melding]] = Singleton(TokenVerifier)
 
-    # actions
+    # Meldingen actions
     melding_create_action: Factory[MeldingCreateAction[Melding, Melding]] = Factory(
         MeldingCreateAction,
         repository=melding_repository,
@@ -186,11 +182,15 @@ class Container(DeclarativeContainer):
     melding_complete_action: Factory[MeldingCompleteAction[Melding, Melding]] = Factory(
         MeldingCompleteAction, state_machine=melding_state_machine, repository=melding_repository
     )
+
+    # User actions
     user_create_action: Factory[UserCreateAction] = Factory(UserCreateAction, repository=user_repository)
     user_list_action: Factory[UserListAction] = Factory(UserListAction, repository=user_repository)
     user_retrieve_action: Factory[UserRetrieveAction] = Factory(UserRetrieveAction, repository=user_repository)
     user_delete_action: Factory[UserDeleteAction] = Factory(UserDeleteAction, repository=user_repository)
     user_update_action: Factory[UserUpdateAction] = Factory(UserUpdateAction, repository=user_repository)
+
+    # Classification actions
     classification_create_action: Factory[ClassificationCreateAction] = Factory(
         ClassificationCreateAction, repository=classification_repository
     )
