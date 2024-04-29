@@ -98,7 +98,7 @@ class FormPanelComponentOutput(BaseModel):
     components: list[FormComponentOutput]
 
 
-def _component_discriminator(value: Any) -> str | None:
+def component_discriminator(value: Any) -> str | None:
     """
     The component discriminator knows the difference between a "panel" and a "normal" component.
     It helps pydantic to make the correct choice when to validate a given dict to a specific model.
@@ -130,7 +130,7 @@ class PrimaryFormInput(BaseModel):
                 Annotated["FormPanelComponentInput", Tag("panel")],
                 Annotated["FormComponentInput", Tag("component")],
             ],
-            Discriminator(_component_discriminator),
+            Discriminator(component_discriminator),
         ]
     ]
 

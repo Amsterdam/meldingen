@@ -460,6 +460,77 @@ class TestFormUpdate(BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
+    @pytest.mark.asyncio
+    async def test_update_form_invalid_nesting_panel_with_panel(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form: FormIoForm
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "panel-2",
+                            "key": "panel",
+                            "type": "panel",
+                            "input": False,
+                            "components": [
+                                {
+                                    "label": "extra-vraag-1",
+                                    "description": "Heeft u meer informatie die u met ons wilt delen?",
+                                    "key": "textArea",
+                                    "type": "textArea",
+                                    "input": True,
+                                    "autoExpand": False,
+                                    "showCharCount": False,
+                                }
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 5
+
+        # The import error
+        violation = detail[1]
+        assert violation.get("type") == "assertion_error"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "type"]
+        assert violation.get("msg") == "Assertion failed, panel is not allowed"
+
+        # The additional errors
+        violation = detail[0]
+        assert violation.get("type") == "missing"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "description"]
+        assert violation.get("msg") == "Field required"
+
+        violation = detail[2]
+        assert violation.get("type") == "missing"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "autoExpand"]
+        assert violation.get("msg") == "Field required"
+
+        violation = detail[3]
+        assert violation.get("type") == "missing"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "showCharCount"]
+        assert violation.get("msg") == "Field required"
+
+        violation = detail[4]
+        assert violation.get("type") == "extra_forbidden"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "components"]
+        assert violation.get("msg") == "Extra inputs are not permitted"
+
 
 class TestFormCreate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "form:create"
@@ -704,3 +775,74 @@ class TestFormCreate(BaseUnauthorizedTest):
                 "showCharCount": True,
             },
         ]
+
+    @pytest.mark.asyncio
+    async def test_create_form_invalid_nesting_panel_with_panel(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "panel-2",
+                            "key": "panel",
+                            "type": "panel",
+                            "input": False,
+                            "components": [
+                                {
+                                    "label": "extra-vraag-1",
+                                    "description": "Heeft u meer informatie die u met ons wilt delen?",
+                                    "key": "textArea",
+                                    "type": "textArea",
+                                    "input": True,
+                                    "autoExpand": False,
+                                    "showCharCount": False,
+                                }
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 5
+
+        # The import error
+        violation = detail[1]
+        assert violation.get("type") == "assertion_error"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "type"]
+        assert violation.get("msg") == "Assertion failed, panel is not allowed"
+
+        # The additional errors
+        violation = detail[0]
+        assert violation.get("type") == "missing"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "description"]
+        assert violation.get("msg") == "Field required"
+
+        violation = detail[2]
+        assert violation.get("type") == "missing"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "autoExpand"]
+        assert violation.get("msg") == "Field required"
+
+        violation = detail[3]
+        assert violation.get("type") == "missing"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "showCharCount"]
+        assert violation.get("msg") == "Field required"
+
+        violation = detail[4]
+        assert violation.get("type") == "extra_forbidden"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "components"]
+        assert violation.get("msg") == "Extra inputs are not permitted"
