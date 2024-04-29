@@ -112,6 +112,49 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
         assert len(data["components"]) == len(new_data["components"])
 
     @pytest.mark.asyncio
+    async def test_update_no_primary_form(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "components": [
+                {
+                    "label": "klacht",
+                    "description": "Wat is uw klacht?",
+                    "key": "textArea",
+                    "type": "textArea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                },
+                {
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "aanvullend",
+                            "description": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
+                            "key": "textArea",
+                            "type": "textArea",
+                            "input": True,
+                            "autoExpand": True,
+                            "showCharCount": True,
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME), json=new_data)
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.asyncio
     async def test_update_form_invalid_nesting(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         data = {
             "title": "Formulier #1",
