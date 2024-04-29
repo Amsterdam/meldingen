@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
-from jwt import PyJWKClient
+from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
 from meldingen_core.actions.melding import (
     MeldingCompleteAction,
@@ -225,4 +225,5 @@ class Container(DeclarativeContainer):
     form_delete_action: Factory[FormIoFormDeleteAction] = Factory(FormIoFormDeleteAction, repository=form_repository)
 
     # authentication
+    py_jwt: Singleton[PyJWT] = Singleton(PyJWT)
     jwks_client: Singleton[PyJWKClient] = Singleton(PyJWKClient, uri=settings.jwks_url)

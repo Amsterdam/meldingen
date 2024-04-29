@@ -1,7 +1,7 @@
 from dependency_injector.wiring import Provide, inject
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2AuthorizationCodeBearer
-from jwt import ExpiredSignatureError, PyJWKClient, decode
+from jwt import ExpiredSignatureError, PyJWKClient, PyJWT
 from sqlalchemy.exc import NoResultFound
 from starlette.status import HTTP_401_UNAUTHORIZED
 
@@ -24,12 +24,13 @@ class UnauthenticatedException(HTTPException):
 async def get_user(
     token: str,
     jwks_client: PyJWKClient = Provide["jwks_client"],
+    py_jwt: PyJWT = Provide["py_jwt"],
     user_repository: UserRepository = Provide["user_repository"],
 ) -> User:
     signing_key = jwks_client.get_signing_key_from_jwt(token)
 
     try:
-        payload = decode(token, signing_key.key, algorithms=["RS256"], audience="account")
+        payload = py_jwt.decode(token, signing_key.key, algorithms=["RS256"], audience="account")
     except ExpiredSignatureError:
         raise UnauthenticatedException("Token has expired")
 
