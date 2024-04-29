@@ -74,3 +74,10 @@ strict = true
 
 [tool.mypy-baseline]
 baseline_path = "mypy-baseline.txt"
+
+[tool.coverage.run]
+concurrency = ["greenlet"]
+omit = [
+  "tests/*",
+  "migrations/env.py"
+]
