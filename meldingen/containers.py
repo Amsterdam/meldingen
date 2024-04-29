@@ -174,7 +174,11 @@ class Container(DeclarativeContainer):
         MeldingRetrieveAction, repository=melding_repository
     )
     melding_update_action: Factory[MeldingUpdateAction[Melding, Melding]] = Factory(
-        MeldingUpdateAction, repository=melding_repository, token_verifier=token_verifier
+        MeldingUpdateAction,
+        repository=melding_repository,
+        token_verifier=token_verifier,
+        classifier=classifier,
+        state_machine=melding_state_machine,
     )
     melding_process_action: Factory[MeldingProcessAction[Melding, Melding]] = Factory(
         MeldingProcessAction, state_machine=melding_state_machine, repository=melding_repository
