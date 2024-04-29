@@ -14,7 +14,7 @@ from meldingen.api.utils import pagination_params
         (10, 5, 10, 5),  # 10 is the expected limit and 5 is the expected offset
     ],
 )
-def test_component_discriminator(limit: int, offset: int, match_limit: int, match_offset: int) -> None:
+def test_pagination_params(limit: int, offset: int, match_limit: int, match_offset: int) -> None:
     if limit is None:
         result = pagination_params(offset=offset)
     else:
