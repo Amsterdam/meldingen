@@ -1087,7 +1087,7 @@ develop = false
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "HEAD"
-resolved_reference = "af490f184e9095c64b48cb03157898eb83ff406d"
+resolved_reference = "940a37533d93d674e2e639864b429adbdedef24d"
 
 [[package]]
 name = "mergedeep"
