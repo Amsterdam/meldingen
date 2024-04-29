@@ -5,10 +5,16 @@ from dependency_injector.containers import DeclarativeContainer, WiringConfigura
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
-from meldingen_core.actions.melding import MeldingCompleteAction, MeldingCreateAction, MeldingProcessAction
+from meldingen_core.actions.melding import (
+    MeldingCompleteAction,
+    MeldingCreateAction,
+    MeldingProcessAction,
+    MeldingUpdateAction,
+)
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
 from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
+from meldingen_core.token import TokenVerifier
 from mp_fsm.statemachine import BaseGuard, BaseTransition
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
@@ -152,6 +158,7 @@ class Container(DeclarativeContainer):
 
     # token
     token_generator: Singleton[UrlSafeTokenGenerator] = Singleton(UrlSafeTokenGenerator)
+    token_verifier: Singleton[TokenVerifier[Melding]] = Singleton(TokenVerifier)
 
     # actions
     melding_create_action: Factory[MeldingCreateAction[Melding, Melding]] = Factory(
@@ -165,6 +172,9 @@ class Container(DeclarativeContainer):
     melding_list_action: Factory[MeldingListAction] = Factory(MeldingListAction, repository=melding_repository)
     melding_retrieve_action: Factory[MeldingRetrieveAction] = Factory(
         MeldingRetrieveAction, repository=melding_repository
+    )
+    melding_update_action: Factory[MeldingUpdateAction[Melding, Melding]] = Factory(
+        MeldingUpdateAction, repository=melding_repository, token_verifier=token_verifier
     )
     melding_process_action: Factory[MeldingProcessAction[Melding, Melding]] = Factory(
         MeldingProcessAction, state_machine=melding_state_machine, repository=melding_repository
