@@ -2,11 +2,25 @@ from typing import Annotated, Any
 
 import structlog
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Path
-from meldingen_core.actions.melding import MeldingCompleteAction, MeldingCreateAction, MeldingProcessAction
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from meldingen_core.actions.melding import (
+    MeldingCompleteAction,
+    MeldingCreateAction,
+    MeldingProcessAction,
+    MeldingUpdateAction,
+)
+from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.token import TokenException
 from mp_fsm.statemachine import WrongStateException
-from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+)
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction
 from meldingen.api.utils import PaginationParams, pagination_params
@@ -76,6 +90,32 @@ async def retrieve_melding(
 
     if not melding:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    return _hydrate_output(melding)
+
+
+@router.patch(
+    "/{melding_id}",
+    name="melding:update",
+    status_code=HTTP_200_OK,
+    responses={**unauthorized_response, **not_found_response},
+)
+@inject
+async def update_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    melding_input: MeldingInput,
+    action: MeldingUpdateAction[Melding, Melding] = Depends(Provide(Container.melding_update_action)),
+) -> MeldingOutput:
+    try:
+        melding = await action(pk=melding_id, values=melding_input.model_dump(), token=token)
+    except ClassificationNotFoundException:
+        logger.error("Classifier failed to find classification!")
+        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return _hydrate_output(melding)
 

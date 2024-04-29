@@ -8,8 +8,10 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
 from meldingen.models import Classification, Melding
@@ -137,6 +139,101 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
 
         body = response.json()
         assert body.get("detail") == "Not Found"
+
+
+class TestMeldingUpdate:
+    ROUTE_NAME: Final[str] = "melding:update"
+
+    @pytest.mark.asyncio
+    async def test_update_token_missing(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1), json={"text": "classification_name"}
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["query", "token"]
+        assert detail[0].get("msg") == "Field required"
+
+    @pytest.mark.asyncio
+    async def test_update_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": ""}, json={"text": "classification_name"}
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.asyncio
+    async def test_update_melding_unauthorized_token_invalid(
+        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": ""}, json={"text": "classification_name"}
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
+        indirect=True,
+    )
+    async def test_update_melding_unauthorized_token_expired(
+        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1),
+            params={"token": "supersecuretoken"},
+            json={"text": "classification_name"},
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_update_melding_classification_not_found(
+        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1),
+            params={"token": "supersecuretoken"},
+            json={"text": "classification_name"},
+        )
+
+        assert response.status_code == HTTP_500_INTERNAL_SERVER_ERROR
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "classification_name")],
+        indirect=True,
+    )
+    async def test_update_melding(
+        self, app: FastAPI, client: AsyncClient, test_melding: Melding, classification: Classification
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1),
+            params={"token": "supersecuretoken"},
+            json={"text": "classification_name"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") == test_melding.id
+        assert body.get("text") == "classification_name"
+        assert body.get("state") == MeldingStates.CLASSIFIED
+        assert body.get("classification") == classification.id
 
 
 class TestMeldingProcess(BaseUnauthorizedTest):
