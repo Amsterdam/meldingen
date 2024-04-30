@@ -1,13 +1,7 @@
 from typing import Any
 
-from meldingen_core.actions.base import (
-    BaseCreateAction,
-    BaseCRUDAction,
-    BaseDeleteAction,
-    BaseListAction,
-    BaseRetrieveAction,
-    BaseUpdateAction,
-)
+from fastapi import HTTPException
+from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction, BaseListAction, BaseRetrieveAction
 from meldingen_core.actions.classification import ClassificationListAction as BaseClassificationListAction
 from meldingen_core.actions.classification import ClassificationRetrieveAction as BaseClassificationRetrieveAction
 from meldingen_core.actions.classification import ClassificationUpdateAction as BaseClassificationUpdateAction
@@ -17,6 +11,7 @@ from meldingen_core.actions.user import UserListAction as BaseUserListAction
 from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
 from meldingen_core.exceptions import NotFoundException
+from starlette.status import HTTP_400_BAD_REQUEST
 
 from meldingen.models import (
     Classification,
@@ -27,7 +22,8 @@ from meldingen.models import (
     Melding,
     User,
 )
-from meldingen.repositories import FormIoFormRepository
+from meldingen.repositories import ClassificationRepository, FormIoFormRepository
+from meldingen.schemas import FormInput
 
 
 class UserListAction(BaseUserListAction[User, User]): ...
@@ -78,11 +74,35 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
 
 
 class FormIoFormCreateAction(BaseFormIoFormCreateUpdateAction):
-    async def __call__(self, obj: FormIoForm, values: dict[str, Any]) -> None:
-        component_values = values.pop("components", [])
+    _classification_repository: ClassificationRepository
+
+    def __init__(self, repository: FormIoFormRepository, classification_repository: ClassificationRepository):
+        super().__init__(repository)
+        self._classification_repository = classification_repository
+
+    async def __call__(self, form_input: FormInput) -> FormIoForm:
+        classification = None
+        if form_input.classification is not None:
+            classification = await self._classification_repository.retrieve(form_input.classification)
+            if classification is None:
+                raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Classification not found")
+
+        dumped_form_input = form_input.model_dump(by_alias=True)
+        dumped_form_input.pop("components")
+
+        dumped_components_input = []
+        for component in form_input.components:
+            dumped_components_input.append(component.model_dump())
+
+        form = FormIoForm(**dumped_form_input)
+        form.classification = classification
+
+        component_values = dumped_components_input
         if component_values:
-            await self._create_components(obj, component_values)
-        await self._repository.save(obj)
+            await self._create_components(form, component_values)
+        await self._repository.save(form)
+
+        return form
 
 
 class FormIoFormListAction(BaseListAction[FormIoForm, FormIoForm]): ...
