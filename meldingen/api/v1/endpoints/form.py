@@ -16,8 +16,8 @@ from meldingen.api.utils import PaginationParams, pagination_params
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import FormIoForm, User
-from meldingen.repositories import ClassificationRepository, FormIoFormRepository
+from meldingen.models import User
+from meldingen.repositories import FormIoFormRepository
 from meldingen.schema_renderer import FormOutPutRenderer
 from meldingen.schemas import FormInput, FormOnlyOutput, FormOutput
 
@@ -84,27 +84,10 @@ async def create_form(
     form_input: FormInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormCreateAction = Depends(Provide(Container.form_create_action)),
-    classification_repository: ClassificationRepository = Depends(Provide(Container.classification_repository)),
 ) -> FormOutput:
-    classification = None
-    if form_input.classification is not None:
-        classification = await classification_repository.retrieve(form_input.classification)
-        if classification is None:
-            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Classification not found")
+    form = await action(form_input)
 
-    dumped_form_input = form_input.model_dump(by_alias=True)
-    dumped_form_input.pop("components")
-
-    dumped_components_input = []
-    for component in form_input.components:
-        dumped_components_input.append(component.model_dump())
-
-    db_form = FormIoForm(**dumped_form_input)
-    db_form.classification = classification
-
-    await action(db_form, {"components": dumped_components_input})
-
-    return await _hydrate_output(db_form)
+    return await _hydrate_output(form)
 
 
 @router.put(
@@ -125,26 +108,8 @@ async def update_form(
     form_input: FormInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormUpdateAction = Depends(Provide(Container.form_update_action)),
-    classification_repository: ClassificationRepository = Depends(Provide(Container.classification_repository)),
 ) -> FormOutput:
-    classification = None
-    if form_input.classification is not None:
-        classification = await classification_repository.retrieve(form_input.classification)
-        if classification is None:
-            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Classification not found")
-
-    form_data = form_input.model_dump(exclude_unset=True, by_alias=True)
-    form_data["classification"] = classification
-    form_data.pop("components")
-    components = []
-    for component in form_input.components:
-        components.append(component.model_dump())
-    form_data["components"] = components
-
-    try:
-        db_form = await action(form_id, form_data)
-    except NotFoundException:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    db_form = await action(form_id, form_input)
 
     return await _hydrate_output(form=db_form)
 
