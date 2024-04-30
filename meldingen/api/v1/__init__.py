@@ -1,6 +1,6 @@
 from typing import Any, Final
 
-from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT, HTTP_200_OK
+from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
 
 not_found_response: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_404_NOT_FOUND: {
@@ -31,10 +31,8 @@ list_response: Final[dict[str, Any]] = {
     HTTP_200_OK: {
         "headers": {
             "Content-Range": {
-                "schema": {
-                    "type": "string"
-                },
-                "description": "Range and total number of results for pagination."
+                "schema": {"type": "string"},
+                "description": "Range and total number of results for pagination.",
             }
         }
     }

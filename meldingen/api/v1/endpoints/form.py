@@ -14,7 +14,7 @@ from meldingen.actions import (
     FormIoFormUpdateAction,
 )
 from meldingen.api.utils import PaginationParams, pagination_params
-from meldingen.api.v1 import not_found_response, unauthorized_response
+from meldingen.api.v1 import list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import User
@@ -28,7 +28,7 @@ router = APIRouter()
 _hydrate_output = FormOutPutRenderer()
 
 
-@router.get("/", name="form:list", responses={**unauthorized_response})
+@router.get("/", name="form:list", responses={**list_response, **unauthorized_response})
 @inject
 async def list_form(
     response: Response,
