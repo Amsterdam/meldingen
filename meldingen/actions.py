@@ -52,11 +52,6 @@ class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, 
 
 class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
     _repository: FormIoFormRepository
-    _classification_repository: ClassificationRepository
-
-    def __init__(self, repository: FormIoFormRepository, classification_repository: ClassificationRepository):
-        super().__init__(repository)
-        self._classification_repository = classification_repository
 
     async def _create_components(
         self, parent: FormIoForm | FormIoPanelComponent, components_values: list[dict[str, Any]]
@@ -79,6 +74,12 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
 
 
 class FormIoFormCreateAction(BaseFormIoFormCreateUpdateAction):
+    _classification_repository: ClassificationRepository
+
+    def __init__(self, repository: FormIoFormRepository, classification_repository: ClassificationRepository):
+        super().__init__(repository)
+        self._classification_repository = classification_repository
+
     async def __call__(self, form_input: FormInput) -> FormIoForm:
         classification = None
         if form_input.classification is not None:
@@ -119,6 +120,11 @@ class FormIoPrimaryFormRetrieveAction(BaseCRUDAction[FormIoForm, FormIoForm]):
 
 
 class BaseFormIoFormUpdateAction(BaseFormIoFormCreateUpdateAction):
+    _classification_repository: ClassificationRepository
+
+    def __init__(self, repository: FormIoFormRepository, classification_repository: ClassificationRepository):
+        super().__init__(repository)
+        self._classification_repository = classification_repository
 
     async def _update(self, obj: FormIoForm, values: dict[str, Any]) -> FormIoForm:
         component_values = values.pop("components", [])
