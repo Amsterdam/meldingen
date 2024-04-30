@@ -97,9 +97,7 @@ class FormIoFormCreateAction(BaseFormIoFormCreateUpdateAction):
         form = FormIoForm(**dumped_form_input)
         form.classification = classification
 
-        component_values = dumped_components_input
-        if component_values:
-            await self._create_components(form, component_values)
+        await self._create_components(form, dumped_components_input)
         await self._repository.save(form)
 
         return form
