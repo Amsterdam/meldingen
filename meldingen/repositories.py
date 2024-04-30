@@ -156,6 +156,18 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
 
         return result.scalars().one()
 
+    async def find_by_classification_id(self, classification_id: int) -> FormIoForm:
+        _type = self.get_model_type()
+        statement = select(_type).where(_type.classification_id == classification_id)
+
+        result = await self._session.execute(statement)
+        form = result.scalars().one_or_none()
+
+        if form is None:
+            raise NotFoundException()
+
+        return form
+
 
 class QuestionRepository(BaseSQLAlchemyRepository[Question, Question], BaseQuestionRepository):
     def get_model_type(self) -> type[Question]:
