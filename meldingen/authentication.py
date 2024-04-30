@@ -45,4 +45,4 @@ async def get_user(
 
 
 async def authenticate_user(token: str = Depends(oauth2_scheme)) -> User:
-    return await get_user(token) # pragma: no cover
+    return await get_user(token)  # pragma: no cover
