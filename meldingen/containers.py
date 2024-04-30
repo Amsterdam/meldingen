@@ -223,7 +223,9 @@ class Container(DeclarativeContainer):
     form_create_action: Factory[FormIoFormCreateAction] = Factory(
         FormIoFormCreateAction, repository=form_repository, classification_repository=classification_repository
     )
-    form_update_action: Factory[FormIoFormUpdateAction] = Factory(FormIoFormUpdateAction, repository=form_repository)
+    form_update_action: Factory[FormIoFormUpdateAction] = Factory(
+        FormIoFormUpdateAction, repository=form_repository, classification_repository=classification_repository
+    )
     form_delete_action: Factory[FormIoFormDeleteAction] = Factory(FormIoFormDeleteAction, repository=form_repository)
 
     # authentication

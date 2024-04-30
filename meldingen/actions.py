@@ -11,7 +11,7 @@ from meldingen_core.actions.user import UserListAction as BaseUserListAction
 from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
 from meldingen_core.exceptions import NotFoundException
-from starlette.status import HTTP_400_BAD_REQUEST
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from meldingen.models import (
     Classification,
@@ -52,6 +52,11 @@ class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, 
 
 class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
     _repository: FormIoFormRepository
+    _classification_repository: ClassificationRepository
+
+    def __init__(self, repository: FormIoFormRepository, classification_repository: ClassificationRepository):
+        super().__init__(repository)
+        self._classification_repository = classification_repository
 
     async def _create_components(
         self, parent: FormIoForm | FormIoPanelComponent, components_values: list[dict[str, Any]]
@@ -74,12 +79,6 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
 
 
 class FormIoFormCreateAction(BaseFormIoFormCreateUpdateAction):
-    _classification_repository: ClassificationRepository
-
-    def __init__(self, repository: FormIoFormRepository, classification_repository: ClassificationRepository):
-        super().__init__(repository)
-        self._classification_repository = classification_repository
-
     async def __call__(self, form_input: FormInput) -> FormIoForm:
         classification = None
         if form_input.classification is not None:
@@ -135,12 +134,26 @@ class BaseFormIoFormUpdateAction(BaseFormIoFormCreateUpdateAction):
 
 
 class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):
-    async def __call__(self, pk: int, values: dict[str, Any]) -> FormIoForm:
+    async def __call__(self, pk: int, form_input: FormInput) -> FormIoForm:
         obj = await self._repository.retrieve(pk=pk)
         if obj is None:
-            raise NotFoundException()
+            raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-        return await self._update(obj, values)
+        classification = None
+        if form_input.classification is not None:
+            classification = await self._classification_repository.retrieve(form_input.classification)
+            if classification is None:
+                raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Classification not found")
+
+        form_data = form_input.model_dump(exclude_unset=True, by_alias=True)
+        form_data["classification"] = classification
+        form_data.pop("components")
+        components = []
+        for component in form_input.components:
+            components.append(component.model_dump())
+        form_data["components"] = components
+
+        return await self._update(obj, form_data)
 
 
 class FormIoPrimaryFormUpdateAction(BaseFormIoFormUpdateAction):
