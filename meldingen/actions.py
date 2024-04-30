@@ -120,12 +120,6 @@ class FormIoPrimaryFormRetrieveAction(BaseCRUDAction[FormIoForm, FormIoForm]):
 
 
 class BaseFormIoFormUpdateAction(BaseFormIoFormCreateUpdateAction):
-    _classification_repository: ClassificationRepository
-
-    def __init__(self, repository: FormIoFormRepository, classification_repository: ClassificationRepository):
-        super().__init__(repository)
-        self._classification_repository = classification_repository
-
     async def _update(self, obj: FormIoForm, values: dict[str, Any]) -> FormIoForm:
         component_values = values.pop("components", [])
         if component_values:
@@ -140,6 +134,12 @@ class BaseFormIoFormUpdateAction(BaseFormIoFormCreateUpdateAction):
 
 
 class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):
+    _classification_repository: ClassificationRepository
+
+    def __init__(self, repository: FormIoFormRepository, classification_repository: ClassificationRepository):
+        super().__init__(repository)
+        self._classification_repository = classification_repository
+
     async def __call__(self, pk: int, form_input: FormInput) -> FormIoForm:
         obj = await self._repository.retrieve(pk=pk)
         if obj is None:
