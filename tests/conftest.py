@@ -1,4 +1,5 @@
 from typing import AsyncGenerator
+from unittest.mock import Mock
 
 import pytest
 import pytest_asyncio
@@ -7,12 +8,15 @@ from dependency_injector import containers
 from dependency_injector.providers import Object, Resource
 from fastapi import FastAPI
 from httpx import AsyncClient
+from jwt import PyJWKClient, PyJWT
 from pytest_alembic.config import Config as PytestAlembicConfig
+from pytest_asyncio.plugin import SubRequest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.containers import Container
 from meldingen.main import get_application, get_container
-from meldingen.models import BaseDBModel
+from meldingen.models import BaseDBModel, User
+from meldingen.repositories import UserRepository
 
 TEST_DATABASE_URL: str = "postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test"
 
@@ -38,7 +42,68 @@ async def test_database(alembic_engine: AsyncEngine) -> None:
 
 
 @pytest.fixture
-def container(alembic_engine: AsyncEngine) -> Container:
+def jwks_client_mock() -> PyJWKClient:
+    return Mock(PyJWKClient)
+
+
+@pytest.fixture
+def py_jwt_mock() -> PyJWT:
+    return Mock(PyJWT)
+
+
+@pytest_asyncio.fixture
+async def user_repository(container: Container) -> UserRepository:
+    return await container.user_repository()
+
+
+@pytest.fixture
+def user_username(request: SubRequest) -> str:
+    """Fixture providing a username."""
+
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return "meldingen_user"
+
+
+@pytest.fixture
+def user_email(request: SubRequest) -> str:
+    """Fixture providing a email."""
+
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return "user@example.com"
+
+
+@pytest_asyncio.fixture
+async def test_user(user_repository: UserRepository, user_username: str, user_email: str) -> User:
+    """Fixture providing a single test user instance."""
+
+    user = User(username=user_username, email=user_email)
+
+    await user_repository.save(user)
+
+    return user
+
+
+@pytest_asyncio.fixture
+async def test_users(user_repository: UserRepository) -> list[User]:
+    """Fixture providing a list test user instances."""
+
+    users = []
+    for n in range(10):
+        user = User(username=f"test_user_{n}", email=f"test_email_{n}@example.com")
+
+        await user_repository.save(user)
+
+        users.append(user)
+
+    return users
+
+
+@pytest.fixture
+def container(alembic_engine: AsyncEngine, jwks_client_mock: PyJWKClient, py_jwt_mock: PyJWT) -> Container:
     async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
         async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
         async with async_session() as session:
@@ -48,6 +113,8 @@ def container(alembic_engine: AsyncEngine) -> Container:
     class TestContainer(containers.DeclarativeContainer):
         database_engine: Object[AsyncEngine] = Object(alembic_engine)
         database_session: Resource[AsyncSession] = Resource(get_database_session, engine=database_engine)
+        jwks_client: Object[PyJWKClient] = Object(jwks_client_mock)
+        py_jwt: Object[PyJWT] = Object(py_jwt_mock)
 
     return get_container()
 

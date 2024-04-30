@@ -14,12 +14,11 @@ from meldingen.models import (
     FormIoComponentTypeEnum,
     FormIoForm,
     FormIoFormDisplayEnum,
-    FormIoPanelComponent,
     FormIoPrimaryForm,
     Melding,
     User,
 )
-from meldingen.repositories import ClassificationRepository, FormIoFormRepository, MeldingRepository, UserRepository
+from meldingen.repositories import ClassificationRepository, FormIoFormRepository, MeldingRepository
 
 
 @pytest_asyncio.fixture
@@ -111,57 +110,6 @@ async def authenticate_user_override(token: str | None = None) -> User:
 @pytest.fixture
 def auth_user(app: FastAPI) -> None:
     app.dependency_overrides[authenticate_user] = authenticate_user_override
-
-
-@pytest_asyncio.fixture
-async def user_repository(container: Container) -> UserRepository:
-    return await container.user_repository()
-
-
-@pytest.fixture
-def user_username(request: SubRequest) -> str:
-    """Fixture providing a username."""
-
-    if hasattr(request, "param"):
-        return str(request.param)
-    else:
-        return "meldingen_user"
-
-
-@pytest.fixture
-def user_email(request: SubRequest) -> str:
-    """Fixture providing a email."""
-
-    if hasattr(request, "param"):
-        return str(request.param)
-    else:
-        return "user@example.com"
-
-
-@pytest_asyncio.fixture
-async def test_user(user_repository: UserRepository, user_username: str, user_email: str) -> User:
-    """Fixture providing a single test user instance."""
-
-    user = User(username=user_username, email=user_email)
-
-    await user_repository.save(user)
-
-    return user
-
-
-@pytest_asyncio.fixture
-async def test_users(user_repository: UserRepository) -> list[User]:
-    """Fixture providing a list test user instances."""
-
-    users = []
-    for n in range(10):
-        user = User(username=f"test_user_{n}", email=f"test_email_{n}@example.com")
-
-        await user_repository.save(user)
-
-        users.append(user)
-
-    return users
 
 
 @pytest_asyncio.fixture
