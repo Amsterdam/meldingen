@@ -875,9 +875,7 @@ class TestFormClassification:
         self, app: FastAPI, client: AsyncClient, form_with_classification: FormIoForm
     ) -> None:
         classification = await form_with_classification.awaitable_attrs.classification
-        response = await client.get(
-            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id)
-        )
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
 
         assert response.status_code == HTTP_200_OK
 
