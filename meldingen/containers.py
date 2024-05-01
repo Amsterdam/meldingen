@@ -27,6 +27,7 @@ from meldingen.actions import (
     FormIoFormDeleteAction,
     FormIoFormListAction,
     FormIoFormRetrieveAction,
+    FormIoFormRetrieveByClassificationAction,
     FormIoFormUpdateAction,
     FormIoPrimaryFormRetrieveAction,
     FormIoPrimaryFormUpdateAction,
@@ -227,6 +228,9 @@ class Container(DeclarativeContainer):
         FormIoFormUpdateAction, repository=form_repository, classification_repository=classification_repository
     )
     form_delete_action: Factory[FormIoFormDeleteAction] = Factory(FormIoFormDeleteAction, repository=form_repository)
+    form_classification_action: Factory[FormIoFormRetrieveByClassificationAction] = Factory(
+        FormIoFormRetrieveByClassificationAction, repository=form_repository
+    )
 
     # authentication
     py_jwt: Singleton[PyJWT] = Singleton(PyJWT)

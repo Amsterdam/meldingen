@@ -169,3 +169,13 @@ class FormIoPrimaryFormUpdateAction(BaseFormIoFormUpdateAction):
             raise NotFoundException()
 
         return await self._update(obj, values)
+
+
+class FormIoFormRetrieveByClassificationAction(BaseCRUDAction[FormIoForm, FormIoForm]):
+    _repository: FormIoFormRepository
+
+    async def __call__(self, classification_id: int) -> FormIoForm:
+        try:
+            return await self._repository.find_by_classification_id(classification_id)
+        except NotFoundException:
+            raise HTTPException(status_code=HTTP_404_NOT_FOUND)

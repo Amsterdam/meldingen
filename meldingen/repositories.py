@@ -33,7 +33,6 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
     @abstractmethod
     def get_model_type(self) -> type[Any]: ...
 
-    @override
     async def save(self, model: T) -> None:
         self._session.add(model)
 
@@ -45,7 +44,6 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         else:
             await self._session.refresh(model)
 
-    @override
     async def list(self, *, limit: int | None = None, offset: int | None = None) -> Collection[T_co]:
         statement = select(self.get_model_type())
 
@@ -59,14 +57,12 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
 
         return results.scalars().unique().all()
 
-    @override
     async def retrieve(self, pk: int) -> T | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.id == pk)
         results = await self._session.execute(statement)
         return results.scalars().unique().one_or_none()
 
-    @override
     async def delete(self, pk: int) -> None:
         db_item = await self.retrieve(pk=pk)
         if db_item is None:
@@ -159,6 +155,18 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
         result = await self._session.execute(statement)
 
         return result.scalars().one()
+
+    async def find_by_classification_id(self, classification_id: int) -> FormIoForm:
+        _type = self.get_model_type()
+        statement = select(_type).where(_type.classification_id == classification_id)
+
+        result = await self._session.execute(statement)
+        form = result.scalars().one_or_none()
+
+        if form is None:
+            raise NotFoundException()
+
+        return form
 
 
 class QuestionRepository(BaseSQLAlchemyRepository[Question, Question], BaseQuestionRepository):

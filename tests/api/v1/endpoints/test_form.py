@@ -846,3 +846,41 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert violation.get("type") == "extra_forbidden"
         assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "components"]
         assert violation.get("msg") == "Extra inputs are not permitted"
+
+
+class TestFormClassification:
+    ROUTE_NAME: Final[str] = "form:classification"
+
+    @pytest.mark.asyncio
+    async def test_form_classification_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=1))
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.asyncio
+    async def test_form_classification_id_validation(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=0))
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("type") == "greater_than_equal"
+        assert detail[0].get("loc") == ["path", "classification_id"]
+        assert detail[0].get("msg") == "Input should be greater than or equal to 1"
+
+    @pytest.mark.asyncio
+    async def test_form_classification(
+        self, app: FastAPI, client: AsyncClient, form_with_classification: FormIoForm
+    ) -> None:
+        classification = await form_with_classification.awaitable_attrs.classification
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("title") == form_with_classification.title
+        assert body.get("display") == form_with_classification.display
+        assert body.get("components") == []
+        assert body.get("id") == form_with_classification.id
