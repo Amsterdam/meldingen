@@ -29,6 +29,7 @@ class BaseFormOutPutRenderer:
             auto_expand=component.auto_expand,
             show_char_count=component.show_char_count,
             position=component.position,
+            question=component.question_id,
         )
 
     async def _render_components(

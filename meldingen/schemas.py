@@ -83,6 +83,8 @@ class FormComponentOutput(BaseModel):
 
     position: int
 
+    question: int | None = None
+
 
 class FormPanelComponentOutput(BaseModel):
     model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))

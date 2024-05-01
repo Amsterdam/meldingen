@@ -12,8 +12,49 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.models import Classification, FormIoForm
+from meldingen.models import Classification, FormIoComponent, FormIoComponentTypeEnum, FormIoForm, FormIoPanelComponent
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
+
+
+class BaseFormTest:
+    async def _assert_components(
+        self, data: list[dict[str, Any]], components: list[FormIoPanelComponent | FormIoComponent]
+    ) -> None:
+        assert len(data) == len(components)
+
+        for component in components:
+            component_data = data[component.position - 1]
+            if component.type == FormIoComponentTypeEnum.panel:
+                assert isinstance(component, FormIoPanelComponent)
+                await self._assert_panel_component(component_data, component)
+            else:
+                assert isinstance(component, FormIoComponent)
+                await self._assert_component(component_data, component)
+
+    async def _assert_panel_component(self, data: dict[str, Any], component: FormIoPanelComponent) -> None:
+        assert data.get("label") == component.label
+        assert data.get("key") == component.key
+        assert data.get("type") == component.type
+        assert data.get("input") == component.input
+
+        component_data = data.get("components", [])
+        assert isinstance(component_data, list)  # This is here for mypy
+
+        components = await component.awaitable_attrs.components
+        if components:
+            await self._assert_components(component_data, components)
+
+    async def _assert_component(self, data: dict[str, Any], component: FormIoComponent) -> None:
+        assert data.get("label") == component.label
+        assert data.get("description") == component.description
+        assert data.get("key") == component.key
+        assert data.get("type") == component.type
+        assert data.get("input") == component.input
+
+        assert data.get("autoExpand") == component.auto_expand
+        assert data.get("showCharCount") == component.show_char_count
+        assert data.get("position") == component.position
+        assert data.get("question") == component.question_id
 
 
 class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest):
@@ -81,7 +122,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest):
         assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/11"
 
 
-class TestFormRetrieve:
+class TestFormRetrieve(BaseFormTest):
     ROUTE_NAME: Final[str] = "form:retrieve"
     METHOD: Final[str] = "GET"
 
@@ -95,7 +136,8 @@ class TestFormRetrieve:
         assert data.get("id") == form.id
         assert data.get("title") == form.title
         assert data.get("display") == form.display
-        assert len(data.get("components")) == len(await form.awaitable_attrs.components)
+
+        await self._assert_components(data.get("components"), await form.awaitable_attrs.components)
 
     @pytest.mark.asyncio
     async def test_retrieve_form_with_classification(
@@ -165,7 +207,7 @@ class TestFormDelete(BaseUnauthorizedTest):
         assert response.status_code == HTTP_404_NOT_FOUND
 
 
-class TestFormUpdate(BaseUnauthorizedTest):
+class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
     ROUTE_NAME: Final[str] = "form:update"
     METHOD: Final[str] = "PUT"
     PATH_PARAMS: dict[str, Any] = {"form_id": 1}
@@ -234,45 +276,10 @@ class TestFormUpdate(BaseUnauthorizedTest):
         assert data.get("id") == form.id
         assert data["title"] == new_data["title"]
         assert data["display"] == new_data["display"]
-        assert len(data["components"]) == len(new_data["components"])
         assert data.get("classification", "") is None
 
-        data = response.json()
-        assert data.get("id", 0) == 1
-        assert data.get("title") == "Formulier #1"
-        assert data.get("display") == "wizard"
-        assert data.get("classification", "") is None
-
-        components = data.get("components")
-        assert isinstance(components, list)
-        assert components is not None
-        assert len(components) == 2
-
-        first_component: dict[str, Any] = components[0]
-        assert first_component.get("label") == "extra-vraag-1"
-        assert first_component.get("description") == "Heeft u meer informatie die u met ons wilt delen?"
-        assert first_component.get("key") == "textArea"
-        assert first_component.get("type") == "textArea"
-        assert first_component.get("input")
-        assert not first_component.get("autoExpand")
-        assert not first_component.get("showCharCount")
-
-        second_component: dict[str, Any] = components[1]
-        assert second_component.get("label") == "panel-1"
-        assert second_component.get("key") == "panel"
-        assert second_component.get("type") == "panel"
-        assert not second_component.get("input")
-
-        second_child_components: list[dict[str, Any]] = components[1].get("components")
-
-        second_child_component: dict[str, Any] = second_child_components[0]
-        assert second_child_component.get("label") == "extra-vraag-2"
-        assert second_child_component.get("description") == "Waarom meld u dit bij ons?"
-        assert second_child_component.get("key") == "textArea"
-        assert second_child_component.get("type") == "textArea"
-        assert second_child_component.get("input")
-        assert second_child_component.get("autoExpand")
-        assert second_child_component.get("showCharCount")
+        components = await form.awaitable_attrs.components
+        await self._assert_components(data.get("components"), components)
 
     @pytest.mark.asyncio
     async def test_update_form_with_new_classification(
@@ -318,9 +325,10 @@ class TestFormUpdate(BaseUnauthorizedTest):
         assert data.get("id") == form.id
         assert data["title"] == new_data["title"]
         assert data["display"] == new_data["display"]
-        assert isinstance(new_data["components"], list)  # This is here for mypy
-        assert len(data["components"]) == len(new_data["components"])
         assert data.get("classification", "") == classification.id
+
+        components = await form.awaitable_attrs.components
+        await self._assert_components(data.get("components"), components)
 
     @pytest.mark.asyncio
     async def test_update_form_change_classification(
@@ -368,9 +376,10 @@ class TestFormUpdate(BaseUnauthorizedTest):
         assert data.get("id") == form_with_classification.id
         assert data["title"] == new_data["title"]
         assert data["display"] == new_data["display"]
-        assert isinstance(new_data["components"], list)  # This is here for mypy
-        assert len(data["components"]) == len(new_data["components"])
         assert data.get("classification", "") == classification.id
+
+        components = await form_with_classification.awaitable_attrs.components
+        await self._assert_components(data.get("components"), components)
 
     @pytest.mark.asyncio
     async def test_update_form_with_classification_that_does_not_exist(

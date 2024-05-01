@@ -19,10 +19,12 @@ from meldingen.models import (
     FormIoComponentTypeEnum,
     FormIoForm,
     FormIoPanelComponent,
+    FormIoPrimaryForm,
     Melding,
+    Question,
     User,
 )
-from meldingen.repositories import ClassificationRepository, FormIoFormRepository
+from meldingen.repositories import ClassificationRepository, FormIoFormRepository, QuestionRepository
 from meldingen.schemas import FormInput
 
 
@@ -52,6 +54,39 @@ class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, 
 
 class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
     _repository: FormIoFormRepository
+    _question_repository: QuestionRepository
+
+    def __init__(
+        self,
+        repository: FormIoFormRepository,
+        question_repository: QuestionRepository,
+    ) -> None:
+        super().__init__(repository)
+        self._question_repository = question_repository
+
+    async def _create_question(self, component: FormIoComponent) -> None:
+        """
+        A question will only be created if:
+            - A panel component is NOT a decorative component
+            - A component must be part of a form
+            - A component form is NOT the primary form
+        """
+        if (
+            component.type == FormIoComponentTypeEnum.panel
+            or not component.form
+            or isinstance(component.form, FormIoPrimaryForm)
+        ):
+            return
+
+        # If the question already exists use the one from the database
+        question = await self._question_repository.retrieve_by_text_and_form_id(
+            text=component.description, form_id=component.form.id
+        )
+        if not question:
+            question = Question(text=component.description, form=component.form)
+            await self._question_repository.save(question)
+
+        component.question = question
 
     async def _create_components(
         self, parent: FormIoForm | FormIoPanelComponent, components_values: list[dict[str, Any]]
@@ -68,7 +103,10 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
 
                 parent_components.append(panel_component)
             else:
-                parent_components.append(FormIoComponent(**component_values))
+                component = FormIoComponent(**component_values)
+                parent_components.append(component)
+
+                await self._create_question(component=component)
 
         parent_components.reorder()
 
@@ -76,8 +114,13 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
 class FormIoFormCreateAction(BaseFormIoFormCreateUpdateAction):
     _classification_repository: ClassificationRepository
 
-    def __init__(self, repository: FormIoFormRepository, classification_repository: ClassificationRepository):
-        super().__init__(repository)
+    def __init__(
+        self,
+        repository: FormIoFormRepository,
+        classification_repository: ClassificationRepository,
+        question_repository: QuestionRepository,
+    ):
+        super().__init__(repository, question_repository)
         self._classification_repository = classification_repository
 
     async def __call__(self, form_input: FormInput) -> FormIoForm:
@@ -136,8 +179,13 @@ class BaseFormIoFormUpdateAction(BaseFormIoFormCreateUpdateAction):
 class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):
     _classification_repository: ClassificationRepository
 
-    def __init__(self, repository: FormIoFormRepository, classification_repository: ClassificationRepository):
-        super().__init__(repository)
+    def __init__(
+        self,
+        repository: FormIoFormRepository,
+        classification_repository: ClassificationRepository,
+        question_repository: QuestionRepository,
+    ):
+        super().__init__(repository, question_repository)
         self._classification_repository = classification_repository
 
     async def __call__(self, pk: int, form_input: FormInput) -> FormIoForm:
