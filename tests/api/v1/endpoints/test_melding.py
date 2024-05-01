@@ -96,6 +96,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest):
 
         data = response.json()
         assert len(data) == expected_result
+        assert response.headers.get("content-range") == f"melding {offset}-{limit - 1 + offset}/10"
 
 
 class TestMeldingRetrieve(BaseUnauthorizedTest):

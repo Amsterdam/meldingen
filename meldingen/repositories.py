@@ -71,6 +71,13 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         await self._session.delete(db_item)
         await self._session.commit()
 
+    async def count(self) -> int:
+        _type = self.get_model_type()
+        statement = select(func.count(_type.id))
+        result = await self._session.execute(statement)
+
+        return result.scalars().one()
+
 
 class MeldingRepository(BaseSQLAlchemyRepository[Melding, Melding], BaseMeldingRepository[Melding, Melding]):
     """Repository for Melding model."""
@@ -149,6 +156,7 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
         results = await self._session.execute(statement)
         return results.scalars().one_or_none()
 
+    @override
     async def count(self) -> int:
         _type = self.get_model_type()
         statement = select(func.count(_type.id)).where(_type.is_primary == False)

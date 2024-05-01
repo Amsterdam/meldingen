@@ -90,6 +90,8 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest):
 
         assert len(data) == len(classifications)
 
+        assert response.headers.get("content-range") == "classification 0-49/10"
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "limit, offset, expected",
@@ -111,6 +113,8 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest):
 
         data = response.json()
         assert len(data) == expected
+
+        assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
 
 
 class TestClassificationRetrieve(BaseUnauthorizedTest):
