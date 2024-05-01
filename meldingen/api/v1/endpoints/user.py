@@ -1,17 +1,18 @@
 from typing import Annotated
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.api.utils import PaginationParams, pagination_params
-from meldingen.api.v1 import conflict_response, not_found_response, unauthorized_response
+from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import User
+from meldingen.repositories import UserRepository
 from meldingen.schemas import UserCreateInput, UserOutput, UserUpdateInput
 
 router = APIRouter()
@@ -34,12 +35,14 @@ async def create_user(
     return output
 
 
-@router.get("/", name="user:list", responses={**unauthorized_response})
+@router.get("/", name="user:list", responses={**list_response, **unauthorized_response})
 @inject
 async def list_users(
+    response: Response,
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     user: Annotated[User, Depends(authenticate_user)],
     action: UserListAction = Depends(Provide(Container.user_list_action)),
+    repository: UserRepository = Depends(Provide(Container.user_repository)),
 ) -> list[UserOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -49,6 +52,8 @@ async def list_users(
     output = []
     for db_user in users:
         output.append(UserOutput(id=db_user.id, email=db_user.email, username=db_user.username))
+
+    response.headers["Content-Range"] = f"user {offset}-{limit - 1 + offset}/{await repository.count()}"
 
     return output
 
