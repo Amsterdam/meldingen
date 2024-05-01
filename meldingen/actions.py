@@ -171,7 +171,7 @@ class FormIoPrimaryFormUpdateAction(BaseFormIoFormUpdateAction):
         return await self._update(obj, values)
 
 
-class FormIoClassificationAction(BaseCRUDAction[FormIoForm, FormIoForm]):
+class FormIoFormRetrieveByClassificationAction(BaseCRUDAction[FormIoForm, FormIoForm]):
     _repository: FormIoFormRepository
 
     async def __call__(self, classification_id: int) -> FormIoForm:

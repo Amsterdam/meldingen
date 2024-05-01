@@ -6,11 +6,11 @@ from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from meldingen.actions import (
-    FormIoClassificationAction,
     FormIoFormCreateAction,
     FormIoFormDeleteAction,
     FormIoFormListAction,
     FormIoFormRetrieveAction,
+    FormIoFormRetrieveByClassificationAction,
     FormIoFormUpdateAction,
 )
 from meldingen.api.utils import PaginationParams, pagination_params
@@ -70,9 +70,9 @@ async def retrieve_form(
 
 @router.get("/classification/{classification_id}", name="form:classification", responses={**not_found_response})
 @inject
-async def classification_form(
+async def retrieve_form_by_classification(
     classification_id: Annotated[int, Path(description="The id of the classification that the form belongs to.", ge=1)],
-    action: FormIoClassificationAction = Depends(Provide(Container.form_classification_action)),
+    action: FormIoFormRetrieveByClassificationAction = Depends(Provide(Container.form_classification_action)),
 ) -> FormOutput:
     form = await action(classification_id)
 
