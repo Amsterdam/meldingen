@@ -44,6 +44,7 @@ from meldingen.repositories import (
     FormIoFormRepository,
     GroupRepository,
     MeldingRepository,
+    QuestionRepository,
     UserRepository,
 )
 from meldingen.statemachine import (
@@ -125,6 +126,7 @@ class Container(DeclarativeContainer):
         ClassificationRepository, session=database_session
     )
     form_repository: Factory[FormIoFormRepository] = Factory(FormIoFormRepository, session=database_session)
+    question_repository: Factory[QuestionRepository] = Factory(QuestionRepository, session=database_session)
 
     # state machine
     melding_process_transition: Singleton[Process] = Singleton(Process)
@@ -213,7 +215,7 @@ class Container(DeclarativeContainer):
         FormIoPrimaryFormRetrieveAction, repository=form_repository
     )
     primary_form_update_action: Factory[FormIoPrimaryFormUpdateAction] = Factory(
-        FormIoPrimaryFormUpdateAction, repository=form_repository
+        FormIoPrimaryFormUpdateAction, repository=form_repository, question_repository=question_repository
     )
 
     # Form actions
@@ -222,10 +224,16 @@ class Container(DeclarativeContainer):
         FormIoFormRetrieveAction, repository=form_repository
     )
     form_create_action: Factory[FormIoFormCreateAction] = Factory(
-        FormIoFormCreateAction, repository=form_repository, classification_repository=classification_repository
+        FormIoFormCreateAction,
+        repository=form_repository,
+        classification_repository=classification_repository,
+        question_repository=question_repository,
     )
     form_update_action: Factory[FormIoFormUpdateAction] = Factory(
-        FormIoFormUpdateAction, repository=form_repository, classification_repository=classification_repository
+        FormIoFormUpdateAction,
+        repository=form_repository,
+        classification_repository=classification_repository,
+        question_repository=question_repository,
     )
     form_delete_action: Factory[FormIoFormDeleteAction] = Factory(FormIoFormDeleteAction, repository=form_repository)
     form_classification_action: Factory[FormIoFormRetrieveByClassificationAction] = Factory(

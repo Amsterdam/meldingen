@@ -11,7 +11,7 @@ from meldingen_core.repositories import (
     BaseRepository,
     BaseUserRepository,
 )
-from sqlalchemy import delete, select
+from sqlalchemy import delete, desc, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
@@ -172,6 +172,15 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
 class QuestionRepository(BaseSQLAlchemyRepository[Question, Question], BaseQuestionRepository):
     def get_model_type(self) -> type[Question]:
         return Question
+
+    async def retrieve_by_text_and_form_id(self, text: str, form_id: int) -> Question | None:
+        _type = self.get_model_type()
+        statement = (
+            select(_type).where(_type.form_id == form_id).where(_type.text == text).order_by(desc(_type.id)).limit(1)
+        )
+        results = await self._session.execute(statement)
+
+        return results.scalars().one_or_none()
 
 
 class AnswerRepository(BaseSQLAlchemyRepository[Answer, Answer], BaseAnswerRepository):

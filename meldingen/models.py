@@ -1,5 +1,5 @@
 import enum
-from typing import Any, Final, Optional
+from typing import Any, Final, Optional, Union
 
 from meldingen_core.models import Answer as BaseAnswer
 from meldingen_core.models import Classification as BaseClassification
@@ -161,6 +161,9 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
         remote_side="FormIoPanelComponent.id",
     )
 
+    question_id: Mapped[int | None] = mapped_column(ForeignKey("question.id", ondelete="SET NULL"), default=None)
+    question: Mapped[Union["Question", None]] = relationship(default=None)
+
 
 class FormIoPanelComponent(FormIoComponent):
     @declared_attr.directive
@@ -188,6 +191,9 @@ class FormIoTextAreaComponent(FormIoComponent):
 
 class Question(BaseDBModel, BaseQuestion):
     text: Mapped[str] = mapped_column(String())
+
+    form_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_form.id", ondelete="SET NULL"), default=None)
+    form: Mapped[FormIoForm | None] = relationship(default=None)
 
 
 class Answer(BaseDBModel, BaseAnswer):

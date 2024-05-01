@@ -16,9 +16,10 @@ from meldingen.models import (
     FormIoFormDisplayEnum,
     FormIoPrimaryForm,
     Melding,
+    Question,
     User,
 )
-from meldingen.repositories import ClassificationRepository, FormIoFormRepository, MeldingRepository
+from meldingen.repositories import ClassificationRepository, FormIoFormRepository, MeldingRepository, QuestionRepository
 
 
 @pytest_asyncio.fixture
@@ -153,6 +154,11 @@ async def form_repository(container: Container) -> FormIoFormRepository:
 
 
 @pytest_asyncio.fixture
+async def question_repository(container: Container) -> QuestionRepository:
+    return await container.question_repository()
+
+
+@pytest_asyncio.fixture
 async def primary_form(form_repository: FormIoFormRepository) -> FormIoPrimaryForm:
     primary_form = FormIoPrimaryForm(title="Primary Form", display=FormIoFormDisplayEnum.form, is_primary=True)
 
@@ -183,7 +189,9 @@ def form_title(request: SubRequest) -> str:
 
 
 @pytest_asyncio.fixture
-async def form(form_repository: FormIoFormRepository, form_title: str) -> FormIoForm:
+async def form(
+    form_repository: FormIoFormRepository, question_repository: QuestionRepository, form_title: str
+) -> FormIoForm:
     form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form)
 
     component = FormIoComponent(
@@ -200,6 +208,10 @@ async def form(form_repository: FormIoFormRepository, form_title: str) -> FormIo
     components.append(component)
 
     await form_repository.save(form)
+
+    question = Question(text=component.description, form=form)
+
+    await question_repository.save(question)
 
     return form
 
