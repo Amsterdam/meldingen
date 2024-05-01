@@ -13,7 +13,7 @@ from meldingen.actions import (
     FormIoFormRetrieveByClassificationAction,
     FormIoFormUpdateAction,
 )
-from meldingen.api.utils import PaginationParams, pagination_params
+from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagination_params
 from meldingen.api.v1 import list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -28,14 +28,26 @@ router = APIRouter()
 _hydrate_output = FormOutPutRenderer()
 
 
-@router.get("/", name="form:list", responses={**list_response, **unauthorized_response})
+@inject
+async def _add_content_range_header(
+    response: Response,
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    repo: FormIoFormRepository = Depends(Provide[Container.form_repository]),
+) -> None:
+    await ContentRangeHeaderAdder(repo, "form")(response, pagination)
+
+
+@router.get(
+    "/",
+    name="form:list",
+    responses={**list_response, **unauthorized_response},
+    dependencies=[Depends(_add_content_range_header)],
+)
 @inject
 async def list_form(
-    response: Response,
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormListAction = Depends(Provide(Container.form_list_action)),
-    repository: FormIoFormRepository = Depends(Provide(Container.form_repository)),
 ) -> list[FormOnlyOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -49,8 +61,6 @@ async def list_form(
                 id=db_form.id, title=db_form.title, display=db_form.display, classification=db_form.classification_id
             )
         )
-
-    response.headers["Content-Range"] = f"form {offset}-{limit - 1 + offset}/{await repository.count()}"
 
     return output
 
