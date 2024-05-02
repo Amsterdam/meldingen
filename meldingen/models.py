@@ -1,4 +1,5 @@
 import enum
+from datetime import datetime
 from typing import Any, Final, Optional, Union
 
 from meldingen_core.models import Answer as BaseAnswer
@@ -9,7 +10,7 @@ from meldingen_core.models import User as BaseUser
 from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
 from pydantic.alias_generators import to_snake
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Table
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Table, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
@@ -17,6 +18,9 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_
 
 class BaseDBModel(MappedAsDataclass, DeclarativeBase):
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
+
+    created_at: Mapped[datetime] = mapped_column(init=False, default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(init=False, default=func.now(), onupdate=func.now())
 
     @declared_attr.directive
     def __tablename__(cls) -> str:
