@@ -14,9 +14,12 @@ Now let's clone the repository:
 git clone https://github.com/Amsterdam/meldingen.git
 ```
 
+## Copy the `.env.example` to `.env`
+After cloning the repository, navigate to the root directory and copy the 
+`.env.example` to `.env.`.
+
 ## Building the Docker images
-After cloning the repository, navigate to the root directory and pull the
-relevant images and build the services:
+While in the root directory now pull the relevant images and build the services:
 
 ```bash
 cd meldingen/
