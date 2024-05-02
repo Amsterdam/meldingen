@@ -23,7 +23,7 @@ from starlette.status import (
 )
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction
-from meldingen.api.utils import PaginationParams, pagination_params
+from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagination_params
 from meldingen.api.v1 import default_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -62,14 +62,26 @@ async def create_melding(
     )
 
 
-@router.get("/", name="melding:list", responses={**list_response, **unauthorized_response})
+@inject
+async def _add_content_range_header(
+    response: Response,
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    repo: MeldingRepository = Depends(Provide[Container.melding_repository]),
+) -> None:
+    await ContentRangeHeaderAdder(repo, "melding")(response, pagination)
+
+
+@router.get(
+    "/",
+    name="melding:list",
+    responses={**list_response, **unauthorized_response},
+    dependencies=[Depends(_add_content_range_header)],
+)
 @inject
 async def list_meldingen(
-    response: Response,
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     user: Annotated[User, Depends(authenticate_user)],
     action: MeldingListAction = Depends(Provide(Container.melding_list_action)),
-    repository: MeldingRepository = Depends(Provide(Container.melding_repository)),
 ) -> list[MeldingOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -78,8 +90,6 @@ async def list_meldingen(
     output = []
     for melding in meldingen:
         output.append(_hydrate_output(melding))
-
-    response.headers["Content-Range"] = f"melding {offset}-{limit - 1 + offset}/{await repository.count()}"
 
     return output
 

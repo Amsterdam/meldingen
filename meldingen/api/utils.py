@@ -1,8 +1,10 @@
-from typing import Annotated, TypedDict
+from typing import Annotated, Generic, TypedDict, TypeVar
 
-from fastapi import Query
+from fastapi import Depends, Query, Response
 
 from meldingen.config import settings
+from meldingen.models import BaseDBModel
+from meldingen.repositories import BaseSQLAlchemyRepository
 
 
 class PaginationParams(TypedDict):
@@ -15,3 +17,30 @@ def pagination_params(
     offset: Annotated[int | None, Query(title="The offset of the page", ge=0)] = None,
 ) -> PaginationParams:
     return {"limit": limit, "offset": offset}
+
+
+T = TypeVar("T", bound=BaseDBModel)
+T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
+
+
+class ContentRangeHeaderAdder(Generic[T, T_co]):
+    _repository: BaseSQLAlchemyRepository[T, T_co]
+    _identifier: str
+
+    def __init__(self, repository: BaseSQLAlchemyRepository[T, T_co], identifier: str) -> None:
+        self._repository = repository
+        self._identifier = identifier
+
+    async def __call__(
+        self,
+        response: Response,
+        pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    ) -> int:
+        limit = pagination["limit"] or 0
+        offset = pagination["offset"] or 0
+
+        response.headers["Content-Range"] = (
+            f"{self._identifier} {offset}-{limit - 1 + offset}/{await self._repository.count()}"
+        )
+
+        return 0

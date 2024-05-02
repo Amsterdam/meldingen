@@ -7,7 +7,7 @@ from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions import ClassificationListAction, ClassificationRetrieveAction, ClassificationUpdateAction
-from meldingen.api.utils import PaginationParams, pagination_params
+from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagination_params
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -37,14 +37,26 @@ async def create_classification(
     return ClassificationOutput(id=db_model.id, name=db_model.name)
 
 
-@router.get("/", name="classification:list", responses={**list_response, **unauthorized_response})
+@inject
+async def _add_content_range_header(
+    response: Response,
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    repo: ClassificationRepository = Depends(Provide[Container.classification_repository]),
+) -> None:
+    await ContentRangeHeaderAdder(repo, "classification")(response, pagination)
+
+
+@router.get(
+    "/",
+    name="classification:list",
+    responses={**list_response, **unauthorized_response},
+    dependencies=[Depends(_add_content_range_header)],
+)
 @inject
 async def list_classifications(
-    response: Response,
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationListAction = Depends(Provide[Container.classification_list_action]),
-    repository: ClassificationRepository = Depends(Provide[Container.classification_repository]),
 ) -> list[ClassificationOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -54,8 +66,6 @@ async def list_classifications(
     output = []
     for classification in classifications:
         output.append(ClassificationOutput(id=classification.id, name=classification.name))
-
-    response.headers["Content-Range"] = f"classification {offset}-{limit - 1 + offset}/{await repository.count()}"
 
     return output
 
