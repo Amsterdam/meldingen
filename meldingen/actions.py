@@ -80,10 +80,10 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
 
         # If the question already exists use the one from the database
         question = await self._question_repository.retrieve_by_text_and_form_id(
-            text=component.description, form_id=component.form.id
+            text=component.label, form_id=component.form.id
         )
         if not question:
-            question = Question(text=component.description, form=component.form)
+            question = Question(text=component.label, form=component.form)
             await self._question_repository.save(question)
 
         component.question = question

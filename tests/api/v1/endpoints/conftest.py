@@ -163,9 +163,9 @@ async def primary_form(form_repository: FormIoFormRepository) -> FormIoPrimaryFo
     primary_form = FormIoPrimaryForm(title="Primary Form", display=FormIoFormDisplayEnum.form, is_primary=True)
 
     component = FormIoComponent(
-        label="klacht",
-        description="Wat is uw klacht?",
-        key="klacht",
+        label="Wat is uw klacht?",
+        description="",
+        key="wat-is-uw_klacht",
         type=FormIoComponentTypeEnum.text_area,
         input=True,
         auto_expand=True,
@@ -195,9 +195,9 @@ async def form(
     form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form)
 
     component = FormIoComponent(
-        label="klacht",
-        description="Wat is uw klacht?",
-        key="klacht",
+        label="Wat is uw klacht?",
+        description="",
+        key="wat-is-uw_klacht",
         type=FormIoComponentTypeEnum.text_area,
         input=True,
         auto_expand=True,

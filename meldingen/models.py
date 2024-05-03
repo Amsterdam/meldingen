@@ -115,7 +115,7 @@ class FormIoComponentTypeEnum(enum.StrEnum):
     """The value of the type field"""
 
     panel: Final[str] = "panel"
-    text_area: Final[str] = "textArea"
+    text_area: Final[str] = "textarea"
 
 
 class FormIoComponent(AsyncAttrs, BaseDBModel):
