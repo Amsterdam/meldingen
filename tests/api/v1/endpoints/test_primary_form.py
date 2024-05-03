@@ -69,10 +69,10 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
             "title": "Formulier #1",
             "components": [
                 {
-                    "label": "klacht",
-                    "description": "Wat is uw klacht?",
-                    "key": "textArea",
-                    "type": "textArea",
+                    "label": "Wat is uw klacht?",
+                    "description": "",
+                    "key": "wat-is-uw-klacht",
+                    "type": "textarea",
                     "input": True,
                     "autoExpand": True,
                     "showCharCount": True,
@@ -84,10 +84,10 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
                     "input": False,
                     "components": [
                         {
-                            "label": "aanvullend",
-                            "description": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
-                            "key": "textArea",
-                            "type": "textArea",
+                            "label": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-no-aanvullend",
+                            "type": "textarea",
                             "input": True,
                             "autoExpand": True,
                             "showCharCount": True,
@@ -122,10 +122,10 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
             "title": "Formulier #1",
             "components": [
                 {
-                    "label": "klacht",
-                    "description": "Wat is uw klacht?",
-                    "key": "textArea",
-                    "type": "textArea",
+                    "label": "Wat is uw klacht?",
+                    "description": "",
+                    "key": "wat-is-uw-klacht",
+                    "type": "textarea",
                     "input": True,
                     "autoExpand": True,
                     "showCharCount": True,
@@ -137,10 +137,10 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
                     "input": False,
                     "components": [
                         {
-                            "label": "aanvullend",
-                            "description": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
-                            "key": "textArea",
-                            "type": "textArea",
+                            "label": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-no-aanvullend",
+                            "type": "textarea",
                             "input": True,
                             "autoExpand": True,
                             "showCharCount": True,
@@ -162,19 +162,19 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
             "title": "Formulier #1",
             "components": [
                 {
-                    "label": "klacht",
-                    "description": "Wat is uw klacht?",
-                    "key": "textArea",
-                    "type": "textArea",
+                    "label": "Wat is uw klacht?",
+                    "description": "",
+                    "key": "wat-is-uw-klacht",
+                    "type": "textarea",
                     "input": True,
                     "autoExpand": True,
                     "showCharCount": True,
                     "components": [
                         {
-                            "label": "aanvullend",
-                            "description": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
-                            "key": "textArea",
-                            "type": "textArea",
+                            "label": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-no-aanvullend",
+                            "type": "textarea",
                             "input": True,
                             "autoExpand": True,
                             "showCharCount": True,
@@ -198,10 +198,10 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
         assert violation.get("msg") == "Extra inputs are not permitted"
         assert violation.get("input") == [
             {
-                "label": "aanvullend",
-                "description": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
-                "key": "textArea",
-                "type": "textArea",
+                "label": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
+                "description": "Help tekst bij de vraag.",
+                "key": "heeft-u-no-aanvullend",
+                "type": "textarea",
                 "input": True,
                 "autoExpand": True,
                 "showCharCount": True,
@@ -229,10 +229,10 @@ class TestPrimaryFormUpdate(BaseUnauthorizedTest):
                             "input": False,
                             "components": [
                                 {
-                                    "label": "extra-vraag-1",
-                                    "description": "Heeft u meer informatie die u met ons wilt delen?",
-                                    "key": "textArea",
-                                    "type": "textArea",
+                                    "label": "Heeft u nog aanvullende informatie die belangrijk kan zijn voor ons?",
+                                    "description": "Help tekst bij de vraag.",
+                                    "key": "heeft-u-no-aanvullend",
+                                    "type": "textarea",
                                     "input": True,
                                     "autoExpand": False,
                                     "showCharCount": False,

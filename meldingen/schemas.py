@@ -162,7 +162,7 @@ class FormComponentInput(BaseModel):
     model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
 
     label: Annotated[str, Field(min_length=3)]
-    description: Annotated[str, Field(min_length=3)]
+    description: str | None
 
     key: Annotated[str, Field(min_length=3)]
     type: Annotated[

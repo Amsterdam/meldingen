@@ -234,10 +234,10 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "display": "wizard",
             "components": [
                 {
-                    "label": "extra-vraag-1",
-                    "description": "Heeft u meer informatie die u met ons wilt delen?",
-                    "key": "textArea",
-                    "type": "textArea",
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": "textarea",
                     "input": True,
                     "autoExpand": False,
                     "showCharCount": False,
@@ -249,10 +249,10 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "input": False,
                     "components": [
                         {
-                            "label": "extra-vraag-2",
-                            "description": "Waarom meld u dit bij ons?",
-                            "key": "textArea",
-                            "type": "textArea",
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": "textarea",
                             "input": True,
                             "autoExpand": True,
                             "showCharCount": True,
@@ -296,19 +296,19 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "classification": classification.id,
             "components": [
                 {
-                    "label": "extra-vraag1",
-                    "description": "Heeft u meer informatie die u met ons wilt delen?",
-                    "key": "textArea",
-                    "type": "textArea",
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": "textarea",
                     "input": True,
                     "autoExpand": True,
                     "showCharCount": True,
                 },
                 {
-                    "label": "extra-vraag2",
-                    "description": "Waarom meld u dit bij ons?",
-                    "key": "textArea",
-                    "type": "textArea",
+                    "label": "Waarom meld u dit bij ons?",
+                    "description": "",
+                    "key": "waarom-meld-u-dit-bij-ons",
+                    "type": "textarea",
                     "input": True,
                     "autoExpand": True,
                     "showCharCount": True,
@@ -345,19 +345,19 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "classification": classification.id,
             "components": [
                 {
-                    "label": "extra-vraag1",
-                    "description": "Heeft u meer informatie die u met ons wilt delen?",
-                    "key": "textArea",
-                    "type": "textArea",
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": "textarea",
                     "input": True,
                     "autoExpand": True,
                     "showCharCount": True,
                 },
                 {
-                    "label": "extra-vraag2",
-                    "description": "Waarom meld u dit bij ons?",
-                    "key": "textArea",
-                    "type": "textArea",
+                    "label": "Waarom meld u dit bij ons?",
+                    "description": "",
+                    "key": "waarom-meld-u-dit-bij-ons",
+                    "type": "textarea",
                     "input": True,
                     "autoExpand": True,
                     "showCharCount": True,
@@ -490,10 +490,10 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "input": False,
                             "components": [
                                 {
-                                    "label": "extra-vraag-1",
-                                    "description": "Heeft u meer informatie die u met ons wilt delen?",
-                                    "key": "textArea",
-                                    "type": "textArea",
+                                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                                    "description": "Help tekst bij de vraag.",
+                                    "key": "heeft-u-meer-informatie",
+                                    "type": "textarea",
                                     "input": True,
                                     "autoExpand": False,
                                     "showCharCount": False,
@@ -558,10 +558,10 @@ class TestFormCreate(BaseUnauthorizedTest):
             "display": "form",
             "components": [
                 {
-                    "label": "extra-vraag-1",
-                    "description": "Heeft u meer informatie die u met ons wilt delen?",
-                    "key": "textArea",
-                    "type": "textArea",
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": "textarea",
                     "input": True,
                     "autoExpand": False,
                     "showCharCount": False,
@@ -573,10 +573,10 @@ class TestFormCreate(BaseUnauthorizedTest):
                     "input": False,
                     "components": [
                         {
-                            "label": "extra-vraag-2",
-                            "description": "Waarom meld u dit bij ons?",
-                            "key": "textArea",
-                            "type": "textArea",
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": "textarea",
                             "input": True,
                             "autoExpand": True,
                             "showCharCount": True,
@@ -602,10 +602,10 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert len(components) == 2
 
         first_component: dict[str, Any] = components[0]
-        assert first_component.get("label") == "extra-vraag-1"
-        assert first_component.get("description") == "Heeft u meer informatie die u met ons wilt delen?"
-        assert first_component.get("key") == "textArea"
-        assert first_component.get("type") == "textArea"
+        assert first_component.get("label") == "Heeft u meer informatie die u met ons wilt delen?"
+        assert first_component.get("description") == "Help tekst bij de vraag."
+        assert first_component.get("key") == "heeft-u-meer-informatie"
+        assert first_component.get("type") == "textarea"
         assert first_component.get("input")
         assert not first_component.get("autoExpand")
         assert not first_component.get("showCharCount")
@@ -619,10 +619,10 @@ class TestFormCreate(BaseUnauthorizedTest):
         second_child_components: list[dict[str, Any]] = components[1].get("components")
 
         second_child_component: dict[str, Any] = second_child_components[0]
-        assert second_child_component.get("label") == "extra-vraag-2"
-        assert second_child_component.get("description") == "Waarom meld u dit bij ons?"
-        assert second_child_component.get("key") == "textArea"
-        assert second_child_component.get("type") == "textArea"
+        assert second_child_component.get("label") == "Waarom meld u dit bij ons?"
+        assert second_child_component.get("description") == ""
+        assert second_child_component.get("key") == "waarom-meld-u-dit-bij-ons"
+        assert second_child_component.get("type") == "textarea"
         assert second_child_component.get("input")
         assert second_child_component.get("autoExpand")
         assert second_child_component.get("showCharCount")
@@ -737,19 +737,19 @@ class TestFormCreate(BaseUnauthorizedTest):
                     "input": False,
                     "components": [
                         {
-                            "label": "extra-vraag-1",
-                            "description": "Heeft u meer informatie die u met ons wilt delen?",
-                            "key": "textArea",
-                            "type": "textArea",
+                            "label": "Heeft u meer informatie die u met ons wilt delen?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-meer-informatie",
+                            "type": "textarea",
                             "input": True,
                             "autoExpand": False,
                             "showCharCount": False,
                             "components": [
                                 {
-                                    "label": "extra-vraag-2",
-                                    "description": "Waarom meld u dit bij ons?",
-                                    "key": "textArea",
-                                    "type": "textArea",
+                                    "label": "Waarom meld u dit bij ons?",
+                                    "description": "",
+                                    "key": "waarom-meld-u-dit-bij-ons",
+                                    "type": "textarea",
                                     "input": True,
                                     "autoExpand": True,
                                     "showCharCount": True,
@@ -775,10 +775,10 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert violation.get("msg") == "Extra inputs are not permitted"
         assert violation.get("input") == [
             {
-                "label": "extra-vraag-2",
-                "description": "Waarom meld u dit bij ons?",
-                "key": "textArea",
-                "type": "textArea",
+                "label": "Waarom meld u dit bij ons?",
+                "description": "",
+                "key": "waarom-meld-u-dit-bij-ons",
+                "type": "textarea",
                 "input": True,
                 "autoExpand": True,
                 "showCharCount": True,
@@ -806,10 +806,10 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "input": False,
                             "components": [
                                 {
-                                    "label": "extra-vraag-1",
-                                    "description": "Heeft u meer informatie die u met ons wilt delen?",
-                                    "key": "textArea",
-                                    "type": "textArea",
+                                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                                    "description": "Help tekst bij de vraag.",
+                                    "key": "heeft-u-meer-informatie",
+                                    "type": "textarea",
                                     "input": True,
                                     "autoExpand": False,
                                     "showCharCount": False,
