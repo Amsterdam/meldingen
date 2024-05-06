@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import Annotated, Generic, TypedDict, TypeVar
 
 from fastapi import Depends, Query, Response
@@ -17,6 +18,20 @@ def pagination_params(
     offset: Annotated[int | None, Query(title="The offset of the page", ge=0)] = None,
 ) -> PaginationParams:
     return {"limit": limit, "offset": offset}
+
+
+class SortingDirection(StrEnum):
+    ASC = "ASC"
+    DESC = "DESC"
+
+
+class SortingParams(TypedDict):
+    column: str
+    direction: SortingDirection
+
+
+def sort_param(sort: Annotated[tuple[str, SortingDirection], Query()] = ("id", SortingDirection.ASC)) -> SortingParams:
+    return {"column": sort[0], "direction": sort[1]}
 
 
 T = TypeVar("T", bound=BaseDBModel)
