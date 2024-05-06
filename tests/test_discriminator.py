@@ -18,7 +18,7 @@ from meldingen.schemas import component_discriminator
         (["type", "panel"], None),
     ],
 )
-def test_component_discriminator(value: Any, match_value: Any) -> None:
+async def test_component_discriminator(value: Any, match_value: Any) -> None:
     result = component_discriminator(value)
 
     assert result == match_value
