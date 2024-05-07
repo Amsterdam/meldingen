@@ -20,7 +20,11 @@ from sqlalchemy.sql import func
 from meldingen.models import Answer, BaseDBModel, Classification, FormIoForm, Group, Melding, Question, User
 
 
-class AttributeNotFoundException(Exception): ...
+class AttributeNotFoundException(Exception):
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
 
 
 T = TypeVar("T", bound=BaseDBModel)
