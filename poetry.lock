@@ -1087,7 +1087,7 @@ develop = false
 type = "git"
 url = "https://github.com/amsterdam/meldingen-core.git"
 reference = "feat/support-sorting"
-resolved_reference = "d1fdc3ff47f88803c0c569e22bb95ff4100143ea"
+resolved_reference = "5db880411598af9cd47a9fc37480ea872b48034b"
 
 [[package]]
 name = "mergedeep"
