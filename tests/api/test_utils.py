@@ -1,6 +1,7 @@
 import pytest
+from fastapi import HTTPException
 
-from meldingen.api.utils import pagination_params
+from meldingen.api.utils import pagination_params, sort_param
 
 
 @pytest.mark.parametrize(
@@ -19,3 +20,19 @@ def test_pagination_params(limit: int, offset: int, match_limit: int, match_offs
 
     assert result["limit"] == match_limit
     assert result["offset"] == match_offset
+
+
+@pytest.mark.parametrize(
+    "attribute, direction",
+    [("id", "ASC"), ("id", "DESC")],
+)
+def test_sort_param(attribute: str, direction: str) -> None:
+    params = sort_param(f'["{attribute}","{direction}"]')
+
+    assert params.get_attribute_name() == attribute
+    assert params.get_direction() == direction
+
+
+def test_sort_param_invalid_input() -> None:
+    with pytest.raises(HTTPException):
+        sort_param("asdf")
