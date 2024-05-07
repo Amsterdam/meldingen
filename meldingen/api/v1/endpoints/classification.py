@@ -7,7 +7,7 @@ from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions import ClassificationListAction, ClassificationRetrieveAction, ClassificationUpdateAction
-from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagination_params
+from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -55,13 +55,16 @@ async def _add_content_range_header(
 @inject
 async def list_classifications(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    sort: Annotated[SortParams, Depends(sort_param)],
     user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationListAction = Depends(Provide[Container.classification_list_action]),
 ) -> list[ClassificationOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
-    classifications = await action(limit=limit, offset=offset)
+    classifications = await action(
+        limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+    )
 
     output = []
     for classification in classifications:
