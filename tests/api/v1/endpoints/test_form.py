@@ -13,7 +13,7 @@ from starlette.status import (
 )
 
 from meldingen.models import Classification, FormIoComponent, FormIoComponentTypeEnum, FormIoForm, FormIoPanelComponent
-from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
+from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
 class BaseFormTest:
@@ -57,7 +57,7 @@ class BaseFormTest:
         assert data.get("question") == component.question_id
 
 
-class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest):
+class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
     ROUTE_NAME: Final[str] = "form:list"
     METHOD: Final[str] = "GET"
 

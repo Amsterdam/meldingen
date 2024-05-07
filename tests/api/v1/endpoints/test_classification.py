@@ -13,7 +13,7 @@ from starlette.status import (
 )
 
 from meldingen.models import Classification
-from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
+from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
 class TestClassificationCreate(BaseUnauthorizedTest):
@@ -68,7 +68,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         )
 
 
-class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest):
+class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
     ROUTE_NAME: Final[str] = "classification:list"
     METHOD: Final[str] = "GET"
 

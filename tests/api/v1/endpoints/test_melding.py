@@ -15,7 +15,7 @@ from starlette.status import (
 )
 
 from meldingen.models import Classification, Melding
-from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
+from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
 class TestMeldingCreate:
@@ -65,7 +65,7 @@ class TestMeldingCreate:
         assert violation.get("msg") == "String should have at least 1 character"
 
 
-class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest):
+class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
     ROUTE_NAME: Final[str] = "melding:list"
     METHOD: Final[str] = "GET"
 

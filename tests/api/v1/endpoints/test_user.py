@@ -14,7 +14,7 @@ from starlette.status import (
 )
 
 from meldingen.models import User
-from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseUnauthorizedTest
+from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
 class TestUserCreate(BaseUnauthorizedTest):
@@ -104,7 +104,7 @@ class TestUserCreate(BaseUnauthorizedTest):
         )
 
 
-class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest):
+class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
     ROUTE_NAME: Final[str] = "user:list"
     METHOD: Final[str] = "GET"
 
