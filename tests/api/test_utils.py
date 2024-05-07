@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 
 from meldingen.api.utils import pagination_params
