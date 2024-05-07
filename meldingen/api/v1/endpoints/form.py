@@ -13,7 +13,7 @@ from meldingen.actions import (
     FormIoFormRetrieveByClassificationAction,
     FormIoFormUpdateAction,
 )
-from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagination_params
+from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -46,13 +46,16 @@ async def _add_content_range_header(
 @inject
 async def list_form(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    sort: Annotated[SortParams, Depends(sort_param)],
     user: Annotated[User, Depends(authenticate_user)],
     action: FormIoFormListAction = Depends(Provide(Container.form_list_action)),
 ) -> list[FormOnlyOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
-    forms = await action(limit=limit, offset=offset)
+    forms = await action(
+        limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+    )
 
     output = []
     for db_form in forms:

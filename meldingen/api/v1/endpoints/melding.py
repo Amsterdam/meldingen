@@ -23,7 +23,7 @@ from starlette.status import (
 )
 
 from meldingen.actions import MeldingListAction, MeldingRetrieveAction
-from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagination_params
+from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import default_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -80,13 +80,16 @@ async def _add_content_range_header(
 @inject
 async def list_meldingen(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    sort: Annotated[SortParams, Depends(sort_param)],
     user: Annotated[User, Depends(authenticate_user)],
     action: MeldingListAction = Depends(Provide(Container.melding_list_action)),
 ) -> list[MeldingOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
-    meldingen = await action(limit=limit, offset=offset)
+    meldingen = await action(
+        limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+    )
     output = []
     for melding in meldingen:
         output.append(_hydrate_output(melding))
