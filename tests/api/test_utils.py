@@ -3,7 +3,6 @@ import pytest
 from meldingen.api.utils import pagination_params
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "limit, offset, match_limit, match_offset",
     [
