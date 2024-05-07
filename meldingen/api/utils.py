@@ -32,7 +32,7 @@ class SortParams(RootModel[tuple[str, SortingDirection]]):
         return self.root[1]
 
 
-def sort_param(sort: Annotated[str, Query()] = '["id","{SortingDirection.ASC}"]') -> SortParams:
+def sort_param(sort: Annotated[str, Query()] = f'["id","{SortingDirection.ASC}"]') -> SortParams:
     try:
         return SortParams.model_validate_json(sort)
     except ValidationError as e:
