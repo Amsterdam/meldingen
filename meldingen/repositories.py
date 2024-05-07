@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
 from typing import Any, TypeVar, override
 
+from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import (
     BaseAnswerRepository,
@@ -11,12 +12,16 @@ from meldingen_core.repositories import (
     BaseRepository,
     BaseUserRepository,
 )
-from sqlalchemy import delete, desc, select
+from sqlalchemy import desc, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
 
 from meldingen.models import Answer, BaseDBModel, Classification, FormIoForm, Group, Melding, Question, User
+
+
+class AttributeNotFoundException(Exception): ...
+
 
 T = TypeVar("T", bound=BaseDBModel)
 T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
@@ -44,8 +49,26 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         else:
             await self._session.refresh(model)
 
-    async def list(self, *, limit: int | None = None, offset: int | None = None) -> Collection[T_co]:
-        statement = select(self.get_model_type())
+    async def list(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+    ) -> Collection[T_co]:
+        _type = self.get_model_type()
+        statement = select(_type)
+
+        if sort_attribute_name is not None:
+            sort_attribute = _type.__mapper__.attrs.get(sort_attribute_name)
+            if sort_attribute is None:
+                raise AttributeNotFoundException(f"Attribute {sort_attribute_name} not found")
+
+            if sort_direction is None or sort_direction == SortingDirection.ASC:
+                statement = statement.order_by(sort_attribute)
+            elif sort_direction == SortingDirection.DESC:
+                statement = statement.order_by(sort_attribute.desc())
 
         if limit:
             statement = statement.limit(limit)
