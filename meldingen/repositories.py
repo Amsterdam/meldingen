@@ -68,7 +68,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
             if sort_direction is None or sort_direction == SortingDirection.ASC:
                 statement = statement.order_by(sort_attribute)
             elif sort_direction == SortingDirection.DESC:
-                statement = statement.order_by(sort_attribute.desc())
+                statement = statement.order_by(desc(sort_attribute))
 
         if limit:
             statement = statement.limit(limit)
