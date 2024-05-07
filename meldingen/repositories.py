@@ -12,7 +12,7 @@ from meldingen_core.repositories import (
     BaseRepository,
     BaseUserRepository,
 )
-from sqlalchemy import desc, select
+from sqlalchemy import Select, desc, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
@@ -64,15 +64,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         _type = self.get_model_type()
         statement = select(_type)
 
-        if sort_attribute_name is not None:
-            sort_attribute = _type.__mapper__.attrs.get(sort_attribute_name)
-            if sort_attribute is None:
-                raise AttributeNotFoundException(f"Attribute {sort_attribute_name} not found")
-
-            if sort_direction is None or sort_direction == SortingDirection.ASC:
-                statement = statement.order_by(sort_attribute)
-            elif sort_direction == SortingDirection.DESC:
-                statement = statement.order_by(desc(sort_attribute))
+        statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
 
         if limit:
             statement = statement.limit(limit)
@@ -104,6 +96,25 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         result = await self._session.execute(statement)
 
         return result.scalars().one()
+
+    def _handle_sorting(
+        self,
+        _type: type[Any],
+        statement: Select[Any],
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+    ) -> Select[Any]:
+        if sort_attribute_name is not None:
+            sort_attribute = _type.__mapper__.attrs.get(sort_attribute_name)
+            if sort_attribute is None:
+                raise AttributeNotFoundException(f"Attribute {sort_attribute_name} not found")
+
+            if sort_direction is None or sort_direction == SortingDirection.ASC:
+                statement = statement.order_by(sort_attribute)
+            elif sort_direction == SortingDirection.DESC:
+                statement = statement.order_by(desc(sort_attribute))
+
+        return statement
 
 
 class MeldingRepository(BaseSQLAlchemyRepository[Melding, Melding], BaseMeldingRepository[Melding, Melding]):
@@ -156,9 +167,18 @@ class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
         return FormIoForm
 
     @override
-    async def list(self, *, limit: int | None = None, offset: int | None = None) -> Collection[FormIoForm]:
+    async def list(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+    ) -> Collection[FormIoForm]:
         _type = self.get_model_type()
         statement = select(self.get_model_type()).where(_type.is_primary == False)
+
+        statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
 
         if limit:
             statement = statement.limit(limit)
