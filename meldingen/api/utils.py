@@ -1,7 +1,9 @@
-from enum import StrEnum
 from typing import Annotated, Generic, TypedDict, TypeVar
 
-from fastapi import Depends, Query, Response
+from fastapi import Depends, HTTPException, Query, Response
+from meldingen_core import SortingDirection
+from pydantic import RootModel, ValidationError
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from meldingen.config import settings
 from meldingen.models import BaseDBModel
@@ -20,18 +22,25 @@ def pagination_params(
     return {"limit": limit, "offset": offset}
 
 
-class SortingDirection(StrEnum):
-    ASC = "ASC"
-    DESC = "DESC"
+class SortParams(RootModel[tuple[str, SortingDirection]]):
+    root: tuple[str, SortingDirection]
+
+    def get_attribute_name(self) -> str:
+        return self.root[0]
+
+    def get_direction(self) -> SortingDirection:
+        return self.root[1]
 
 
-class SortingParams(TypedDict):
-    column: str
-    direction: SortingDirection
+def sort_param(sort: Annotated[str, Query()] = '["id","{SortingDirection.ASC}"]') -> SortParams:
+    try:
+        return SortParams.model_validate_json(sort)
+    except ValidationError as e:
+        errors = e.errors()
+        for error in errors:
+            error["loc"] = ("query", "sort")
 
-
-def sort_param(sort: Annotated[tuple[str, SortingDirection], Query()] = ("id", SortingDirection.ASC)) -> SortingParams:
-    return {"column": sort[0], "direction": sort[1]}
+        raise HTTPException(HTTP_422_UNPROCESSABLE_ENTITY, errors)
 
 
 T = TypeVar("T", bound=BaseDBModel)
