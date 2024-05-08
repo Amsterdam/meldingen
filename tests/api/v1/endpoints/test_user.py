@@ -3,6 +3,7 @@ from typing import Any, Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
+from meldingen_core import SortingDirection
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -119,7 +120,7 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         "limit, offset, expected_result",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
     )
-    async def test_list_users(
+    async def test_list_users_paginated(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -135,6 +136,148 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
 
         data = response.json()
         assert len(data) == expected_result
+        assert response.headers.get("content-range") == f"user {offset}-{limit - 1 + offset}/10"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "attribute, direction, expected",
+        [
+            (
+                "id",
+                SortingDirection.ASC,
+                [
+                    {"id": 1, "email": "test_email_0@example.com", "username": "test_user_0"},
+                    {"id": 2, "email": "test_email_1@example.com", "username": "test_user_1"},
+                    {"id": 3, "email": "test_email_2@example.com", "username": "test_user_2"},
+                    {"id": 4, "email": "test_email_3@example.com", "username": "test_user_3"},
+                    {"id": 5, "email": "test_email_4@example.com", "username": "test_user_4"},
+                    {"id": 6, "email": "test_email_5@example.com", "username": "test_user_5"},
+                    {"id": 7, "email": "test_email_6@example.com", "username": "test_user_6"},
+                    {"id": 8, "email": "test_email_7@example.com", "username": "test_user_7"},
+                    {"id": 9, "email": "test_email_8@example.com", "username": "test_user_8"},
+                    {"id": 10, "email": "test_email_9@example.com", "username": "test_user_9"},
+                ],
+            ),
+            (
+                "id",
+                SortingDirection.DESC,
+                [
+                    {"id": 10, "email": "test_email_9@example.com", "username": "test_user_9"},
+                    {"id": 9, "email": "test_email_8@example.com", "username": "test_user_8"},
+                    {"id": 8, "email": "test_email_7@example.com", "username": "test_user_7"},
+                    {"id": 7, "email": "test_email_6@example.com", "username": "test_user_6"},
+                    {"id": 6, "email": "test_email_5@example.com", "username": "test_user_5"},
+                    {"id": 5, "email": "test_email_4@example.com", "username": "test_user_4"},
+                    {"id": 4, "email": "test_email_3@example.com", "username": "test_user_3"},
+                    {"id": 3, "email": "test_email_2@example.com", "username": "test_user_2"},
+                    {"id": 2, "email": "test_email_1@example.com", "username": "test_user_1"},
+                    {"id": 1, "email": "test_email_0@example.com", "username": "test_user_0"},
+                ],
+            ),
+            (
+                "username",
+                SortingDirection.ASC,
+                [
+                    {"id": 1, "email": "test_email_0@example.com", "username": "test_user_0"},
+                    {"id": 2, "email": "test_email_1@example.com", "username": "test_user_1"},
+                    {"id": 3, "email": "test_email_2@example.com", "username": "test_user_2"},
+                    {"id": 4, "email": "test_email_3@example.com", "username": "test_user_3"},
+                    {"id": 5, "email": "test_email_4@example.com", "username": "test_user_4"},
+                    {"id": 6, "email": "test_email_5@example.com", "username": "test_user_5"},
+                    {"id": 7, "email": "test_email_6@example.com", "username": "test_user_6"},
+                    {"id": 8, "email": "test_email_7@example.com", "username": "test_user_7"},
+                    {"id": 9, "email": "test_email_8@example.com", "username": "test_user_8"},
+                    {"id": 10, "email": "test_email_9@example.com", "username": "test_user_9"},
+                ],
+            ),
+            (
+                "username",
+                SortingDirection.DESC,
+                [
+                    {"id": 10, "email": "test_email_9@example.com", "username": "test_user_9"},
+                    {"id": 9, "email": "test_email_8@example.com", "username": "test_user_8"},
+                    {"id": 8, "email": "test_email_7@example.com", "username": "test_user_7"},
+                    {"id": 7, "email": "test_email_6@example.com", "username": "test_user_6"},
+                    {"id": 6, "email": "test_email_5@example.com", "username": "test_user_5"},
+                    {"id": 5, "email": "test_email_4@example.com", "username": "test_user_4"},
+                    {"id": 4, "email": "test_email_3@example.com", "username": "test_user_3"},
+                    {"id": 3, "email": "test_email_2@example.com", "username": "test_user_2"},
+                    {"id": 2, "email": "test_email_1@example.com", "username": "test_user_1"},
+                    {"id": 1, "email": "test_email_0@example.com", "username": "test_user_0"},
+                ],
+            ),
+        ],
+    )
+    async def test_list_users_sorted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        attribute: str,
+        direction: SortingDirection,
+        expected: list[dict[str, Any]],
+        test_users: list[User],
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data == expected
+        assert response.headers.get("content-range") == "user 0-49/10"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "limit, offset, attribute, direction, expected",
+        [
+            (
+                2,
+                2,
+                "username",
+                SortingDirection.DESC,
+                [
+                    {"id": 8, "email": "test_email_7@example.com", "username": "test_user_7"},
+                    {"id": 7, "email": "test_email_6@example.com", "username": "test_user_6"},
+                ],
+            ),
+            (
+                3,
+                1,
+                "username",
+                SortingDirection.ASC,
+                [
+                    {"id": 2, "email": "test_email_1@example.com", "username": "test_user_1"},
+                    {"id": 3, "email": "test_email_2@example.com", "username": "test_user_2"},
+                    {"id": 4, "email": "test_email_3@example.com", "username": "test_user_3"},
+                ],
+            ),
+        ],
+    )
+    async def test_list_users_paginated_and_sorted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        limit: int,
+        offset: int,
+        attribute: str,
+        direction: SortingDirection,
+        expected: list[dict[str, Any]],
+        test_users: list[User],
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME),
+            params={"limit": limit, "offset": offset, "sort": f'["{attribute}", "{direction}"]'},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data == expected
         assert response.headers.get("content-range") == f"user {offset}-{limit - 1 + offset}/10"
 
 
