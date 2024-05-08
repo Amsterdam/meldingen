@@ -17,6 +17,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
+from meldingen.exceptions import ClassificationMismatchException, MeldingNotClassifiedException
 from meldingen.models import (
     Answer,
     Classification,
@@ -304,7 +305,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         self._token_verifier(melding, token)
 
         if not melding.classification:
-            raise Exception("Not classified")  # TODO Make a nice exception for this
+            raise MeldingNotClassifiedException()
 
         question = await self._question_repository.retrieve(question_id)
         if question is None:
@@ -312,7 +313,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
 
         assert question.form and question.form.classification
         if melding.classification.id != question.form.classification.id:
-            raise Exception("Question does not match")  # TODO Make a nice exception for this
+            raise ClassificationMismatchException()
 
         answer_data = answer_input.model_dump(by_alias=True)
 

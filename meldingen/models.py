@@ -193,7 +193,7 @@ class FormIoTextAreaComponent(FormIoComponent):
         }
 
 
-class Question(BaseDBModel, BaseQuestion):
+class Question(AsyncAttrs, BaseDBModel, BaseQuestion):
     text: Mapped[str] = mapped_column(String())
 
     form_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_form.id", ondelete="SET NULL"), default=None)

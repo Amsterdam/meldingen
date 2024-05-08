@@ -644,7 +644,7 @@ class TestMeldingQuestionAnswer:
 
         body = response.json()
 
-        assert body.get("detail") == "Bad Request"
+        assert body.get("detail") == "Melding not classified"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -681,4 +681,4 @@ class TestMeldingQuestionAnswer:
 
         body = response.json()
 
-        assert body.get("detail") == "Bad Request"
+        assert body.get("detail") == "Classification mismatch"
