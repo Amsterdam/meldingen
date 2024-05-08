@@ -1086,8 +1086,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/amsterdam/meldingen-core.git"
-reference = "feat/support-sorting"
-resolved_reference = "5db880411598af9cd47a9fc37480ea872b48034b"
+reference = "HEAD"
+resolved_reference = "1442b1cd55fe017292854fe5f996d118960c7e19"
 
 [[package]]
 name = "mergedeep"
@@ -2456,4 +2456,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "69302d1ea3ae2e638c53e7b4394ecaab8e299483ba5358c2f71beae39ef5491d"
+content-hash = "d2bcf047902ff3e87906786374fa4e4b44d5d48ad70ae4ce7bf1336342b5b5d8"
