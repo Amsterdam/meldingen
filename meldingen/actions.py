@@ -30,8 +30,8 @@ from meldingen.models import (
     User,
 )
 from meldingen.repositories import (
-    AttributeNotFoundException,
     AnswerRepository,
+    AttributeNotFoundException,
     ClassificationRepository,
     FormIoFormRepository,
     MeldingRepository,
