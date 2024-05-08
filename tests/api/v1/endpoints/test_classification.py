@@ -3,6 +3,7 @@ from typing import Any, Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
+from meldingen_core import SortingDirection
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -97,7 +98,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         "limit, offset, expected",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
     )
-    async def test_list_classifications(
+    async def test_list_classifications_paginated(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -114,6 +115,141 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         data = response.json()
         assert len(data) == expected
 
+        assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "attribute, direction, expected",
+        [
+            (
+                "id",
+                SortingDirection.ASC,
+                [
+                    {"name": "category: 0", "id": 1},
+                    {"name": "category: 1", "id": 2},
+                    {"name": "category: 2", "id": 3},
+                    {"name": "category: 3", "id": 4},
+                    {"name": "category: 4", "id": 5},
+                    {"name": "category: 5", "id": 6},
+                    {"name": "category: 6", "id": 7},
+                    {"name": "category: 7", "id": 8},
+                    {"name": "category: 8", "id": 9},
+                    {"name": "category: 9", "id": 10},
+                ],
+            ),
+            (
+                "id",
+                SortingDirection.DESC,
+                [
+                    {"name": "category: 9", "id": 10},
+                    {"name": "category: 8", "id": 9},
+                    {"name": "category: 7", "id": 8},
+                    {"name": "category: 6", "id": 7},
+                    {"name": "category: 5", "id": 6},
+                    {"name": "category: 4", "id": 5},
+                    {"name": "category: 3", "id": 4},
+                    {"name": "category: 2", "id": 3},
+                    {"name": "category: 1", "id": 2},
+                    {"name": "category: 0", "id": 1},
+                ],
+            ),
+            (
+                "name",
+                SortingDirection.ASC,
+                [
+                    {"name": "category: 0", "id": 1},
+                    {"name": "category: 1", "id": 2},
+                    {"name": "category: 2", "id": 3},
+                    {"name": "category: 3", "id": 4},
+                    {"name": "category: 4", "id": 5},
+                    {"name": "category: 5", "id": 6},
+                    {"name": "category: 6", "id": 7},
+                    {"name": "category: 7", "id": 8},
+                    {"name": "category: 8", "id": 9},
+                    {"name": "category: 9", "id": 10},
+                ],
+            ),
+            (
+                "name",
+                SortingDirection.DESC,
+                [
+                    {"name": "category: 9", "id": 10},
+                    {"name": "category: 8", "id": 9},
+                    {"name": "category: 7", "id": 8},
+                    {"name": "category: 6", "id": 7},
+                    {"name": "category: 5", "id": 6},
+                    {"name": "category: 4", "id": 5},
+                    {"name": "category: 3", "id": 4},
+                    {"name": "category: 2", "id": 3},
+                    {"name": "category: 1", "id": 2},
+                    {"name": "category: 0", "id": 1},
+                ],
+            ),
+        ],
+    )
+    async def test_list_classifications_sorted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        attribute: str,
+        direction: SortingDirection,
+        expected: list[dict[str, Any]],
+        classifications: list[Classification],
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data == expected
+        assert response.headers.get("content-range") == "classification 0-49/10"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "limit, offset, attribute, direction, expected",
+        [
+            (
+                2,
+                2,
+                "name",
+                SortingDirection.DESC,
+                [{"name": "category: 7", "id": 8}, {"name": "category: 6", "id": 7}],
+            ),
+            (
+                3,
+                1,
+                "name",
+                SortingDirection.ASC,
+                [{"name": "category: 1", "id": 2}, {"name": "category: 2", "id": 3}, {"name": "category: 3", "id": 4}],
+            ),
+        ],
+    )
+    async def test_list_classifications_paginated_and_sorted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        limit: int,
+        offset: int,
+        attribute: str,
+        direction: SortingDirection,
+        expected: list[dict[str, Any]],
+        classifications: list[Classification],
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME),
+            params={"limit": limit, "offset": offset, "sort": f'["{attribute}", "{direction}"]'},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data == expected
         assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
 
 
