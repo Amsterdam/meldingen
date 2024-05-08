@@ -3,6 +3,7 @@ from typing import Any, Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
+from meldingen_core import SortingDirection
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -72,7 +73,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         "limit, offset, expected_result",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
     )
-    async def test_list_forms(
+    async def test_list_forms_paginated(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -120,6 +121,148 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
             assert form.get("classification", "") is None
 
         assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/11"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "attribute, direction, expected",
+        [
+            (
+                "id",
+                SortingDirection.ASC,
+                [
+                    {"title": "Form #1", "display": "form", "id": 1, "classification": None},
+                    {"title": "Form #2", "display": "form", "id": 2, "classification": None},
+                    {"title": "Form #3", "display": "form", "id": 3, "classification": None},
+                    {"title": "Form #4", "display": "form", "id": 4, "classification": None},
+                    {"title": "Form #5", "display": "form", "id": 5, "classification": None},
+                    {"title": "Form #6", "display": "form", "id": 6, "classification": None},
+                    {"title": "Form #7", "display": "form", "id": 7, "classification": None},
+                    {"title": "Form #8", "display": "form", "id": 8, "classification": None},
+                    {"title": "Form #9", "display": "form", "id": 9, "classification": None},
+                    {"title": "Form #10", "display": "form", "id": 10, "classification": None},
+                ],
+            ),
+            (
+                "id",
+                SortingDirection.DESC,
+                [
+                    {"title": "Form #10", "display": "form", "id": 10, "classification": None},
+                    {"title": "Form #9", "display": "form", "id": 9, "classification": None},
+                    {"title": "Form #8", "display": "form", "id": 8, "classification": None},
+                    {"title": "Form #7", "display": "form", "id": 7, "classification": None},
+                    {"title": "Form #6", "display": "form", "id": 6, "classification": None},
+                    {"title": "Form #5", "display": "form", "id": 5, "classification": None},
+                    {"title": "Form #4", "display": "form", "id": 4, "classification": None},
+                    {"title": "Form #3", "display": "form", "id": 3, "classification": None},
+                    {"title": "Form #2", "display": "form", "id": 2, "classification": None},
+                    {"title": "Form #1", "display": "form", "id": 1, "classification": None},
+                ],
+            ),
+            (
+                "title",
+                SortingDirection.ASC,
+                [
+                    {"title": "Form #1", "display": "form", "id": 1, "classification": None},
+                    {"title": "Form #10", "display": "form", "id": 10, "classification": None},
+                    {"title": "Form #2", "display": "form", "id": 2, "classification": None},
+                    {"title": "Form #3", "display": "form", "id": 3, "classification": None},
+                    {"title": "Form #4", "display": "form", "id": 4, "classification": None},
+                    {"title": "Form #5", "display": "form", "id": 5, "classification": None},
+                    {"title": "Form #6", "display": "form", "id": 6, "classification": None},
+                    {"title": "Form #7", "display": "form", "id": 7, "classification": None},
+                    {"title": "Form #8", "display": "form", "id": 8, "classification": None},
+                    {"title": "Form #9", "display": "form", "id": 9, "classification": None},
+                ],
+            ),
+            (
+                "title",
+                SortingDirection.DESC,
+                [
+                    {"title": "Form #9", "display": "form", "id": 9, "classification": None},
+                    {"title": "Form #8", "display": "form", "id": 8, "classification": None},
+                    {"title": "Form #7", "display": "form", "id": 7, "classification": None},
+                    {"title": "Form #6", "display": "form", "id": 6, "classification": None},
+                    {"title": "Form #5", "display": "form", "id": 5, "classification": None},
+                    {"title": "Form #4", "display": "form", "id": 4, "classification": None},
+                    {"title": "Form #3", "display": "form", "id": 3, "classification": None},
+                    {"title": "Form #2", "display": "form", "id": 2, "classification": None},
+                    {"title": "Form #10", "display": "form", "id": 10, "classification": None},
+                    {"title": "Form #1", "display": "form", "id": 1, "classification": None},
+                ],
+            ),
+        ],
+    )
+    async def test_list_forms_sorted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        attribute: str,
+        direction: SortingDirection,
+        expected: list[dict[str, Any]],
+        test_forms: list[FormIoForm],
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data == expected
+        assert response.headers.get("content-range") == "form 0-49/10"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "limit, offset, attribute, direction, expected",
+        [
+            (
+                2,
+                2,
+                "title",
+                SortingDirection.DESC,
+                [
+                    {"title": "Form #7", "display": "form", "id": 7, "classification": None},
+                    {"title": "Form #6", "display": "form", "id": 6, "classification": None},
+                ],
+            ),
+            (
+                3,
+                1,
+                "title",
+                SortingDirection.ASC,
+                [
+                    {"title": "Form #10", "display": "form", "id": 10, "classification": None},
+                    {"title": "Form #2", "display": "form", "id": 2, "classification": None},
+                    {"title": "Form #3", "display": "form", "id": 3, "classification": None},
+                ],
+            ),
+        ],
+    )
+    async def test_list_forms_paginated_and_sorted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        limit: int,
+        offset: int,
+        attribute: str,
+        direction: SortingDirection,
+        expected: list[dict[str, Any]],
+        test_forms: list[FormIoForm],
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME),
+            params={"limit": limit, "offset": offset, "sort": f'["{attribute}", "{direction}"]'},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data == expected
+        assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/10"
 
 
 class TestFormRetrieve(BaseFormTest):
