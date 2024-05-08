@@ -92,8 +92,8 @@ async def test_meldingen(melding_repository: MeldingRepository, melding_text: st
     """Fixture providing a list test melding instances."""
 
     meldingen = []
-    for _ in range(10):
-        melding = Melding(text=melding_text)
+    for i in range(10):
+        melding = Melding(text=f"{melding_text} {i}")
 
         await melding_repository.save(melding)
 

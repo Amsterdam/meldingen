@@ -3,6 +3,7 @@ from typing import Any, Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
+from meldingen_core import SortingDirection
 from meldingen_core.statemachine import MeldingStates
 from starlette.status import (
     HTTP_200_OK,
@@ -80,7 +81,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         "limit, offset, expected_result",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
     )
-    async def test_list_meldingen(
+    async def test_list_meldingen_paginated(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -96,6 +97,148 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
 
         data = response.json()
         assert len(data) == expected_result
+        assert response.headers.get("content-range") == f"melding {offset}-{limit - 1 + offset}/10"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "attribute, direction, expected",
+        [
+            (
+                "id",
+                SortingDirection.ASC,
+                [
+                    {'id': 1, 'text': 'This is a test melding. 0', 'state': 'new', 'classification': None},
+                    {'id': 2, 'text': 'This is a test melding. 1', 'state': 'new', 'classification': None},
+                    {'id': 3, 'text': 'This is a test melding. 2', 'state': 'new', 'classification': None},
+                    {'id': 4, 'text': 'This is a test melding. 3', 'state': 'new', 'classification': None},
+                    {'id': 5, 'text': 'This is a test melding. 4', 'state': 'new', 'classification': None},
+                    {'id': 6, 'text': 'This is a test melding. 5', 'state': 'new', 'classification': None},
+                    {'id': 7, 'text': 'This is a test melding. 6', 'state': 'new', 'classification': None},
+                    {'id': 8, 'text': 'This is a test melding. 7', 'state': 'new', 'classification': None},
+                    {'id': 9, 'text': 'This is a test melding. 8', 'state': 'new', 'classification': None},
+                    {'id': 10, 'text': 'This is a test melding. 9', 'state': 'new', 'classification': None},
+                ],
+            ),
+            (
+                "id",
+                SortingDirection.DESC,
+                [
+                    {'id': 10, 'text': 'This is a test melding. 9', 'state': 'new', 'classification': None},
+                    {'id': 9, 'text': 'This is a test melding. 8', 'state': 'new', 'classification': None},
+                    {'id': 8, 'text': 'This is a test melding. 7', 'state': 'new', 'classification': None},
+                    {'id': 7, 'text': 'This is a test melding. 6', 'state': 'new', 'classification': None},
+                    {'id': 6, 'text': 'This is a test melding. 5', 'state': 'new', 'classification': None},
+                    {'id': 5, 'text': 'This is a test melding. 4', 'state': 'new', 'classification': None},
+                    {'id': 4, 'text': 'This is a test melding. 3', 'state': 'new', 'classification': None},
+                    {'id': 3, 'text': 'This is a test melding. 2', 'state': 'new', 'classification': None},
+                    {'id': 2, 'text': 'This is a test melding. 1', 'state': 'new', 'classification': None},
+                    {'id': 1, 'text': 'This is a test melding. 0', 'state': 'new', 'classification': None},
+                ],
+            ),
+            (
+                "text",
+                SortingDirection.ASC,
+                [
+                    {'id': 1, 'text': 'This is a test melding. 0', 'state': 'new', 'classification': None},
+                    {'id': 2, 'text': 'This is a test melding. 1', 'state': 'new', 'classification': None},
+                    {'id': 3, 'text': 'This is a test melding. 2', 'state': 'new', 'classification': None},
+                    {'id': 4, 'text': 'This is a test melding. 3', 'state': 'new', 'classification': None},
+                    {'id': 5, 'text': 'This is a test melding. 4', 'state': 'new', 'classification': None},
+                    {'id': 6, 'text': 'This is a test melding. 5', 'state': 'new', 'classification': None},
+                    {'id': 7, 'text': 'This is a test melding. 6', 'state': 'new', 'classification': None},
+                    {'id': 8, 'text': 'This is a test melding. 7', 'state': 'new', 'classification': None},
+                    {'id': 9, 'text': 'This is a test melding. 8', 'state': 'new', 'classification': None},
+                    {'id': 10, 'text': 'This is a test melding. 9', 'state': 'new', 'classification': None}
+                ],
+            ),
+            (
+                "text",
+                SortingDirection.DESC,
+                [
+                    {'id': 10, 'text': 'This is a test melding. 9', 'state': 'new', 'classification': None},
+                    {'id': 9, 'text': 'This is a test melding. 8', 'state': 'new', 'classification': None},
+                    {'id': 8, 'text': 'This is a test melding. 7', 'state': 'new', 'classification': None},
+                    {'id': 7, 'text': 'This is a test melding. 6', 'state': 'new', 'classification': None},
+                    {'id': 6, 'text': 'This is a test melding. 5', 'state': 'new', 'classification': None},
+                    {'id': 5, 'text': 'This is a test melding. 4', 'state': 'new', 'classification': None},
+                    {'id': 4, 'text': 'This is a test melding. 3', 'state': 'new', 'classification': None},
+                    {'id': 3, 'text': 'This is a test melding. 2', 'state': 'new', 'classification': None},
+                    {'id': 2, 'text': 'This is a test melding. 1', 'state': 'new', 'classification': None},
+                    {'id': 1, 'text': 'This is a test melding. 0', 'state': 'new', 'classification': None},
+                ],
+            ),
+        ],
+    )
+    async def test_list_meldingen_sorted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        attribute: str,
+        direction: SortingDirection,
+        expected: list[dict[str, Any]],
+        test_meldingen: list[Melding],
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data == expected
+        assert response.headers.get("content-range") == "melding 0-49/10"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "limit, offset, attribute, direction, expected",
+        [
+            (
+                2,
+                2,
+                "text",
+                SortingDirection.DESC,
+                [
+                    {'id': 8, 'text': 'This is a test melding. 7', 'state': 'new', 'classification': None},
+                    {'id': 7, 'text': 'This is a test melding. 6', 'state': 'new', 'classification': None}
+                ],
+            ),
+            (
+                3,
+                1,
+                "text",
+                SortingDirection.ASC,
+                [
+                    {'id': 2, 'text': 'This is a test melding. 1', 'state': 'new', 'classification': None},
+                    {'id': 3, 'text': 'This is a test melding. 2', 'state': 'new', 'classification': None},
+                    {'id': 4, 'text': 'This is a test melding. 3', 'state': 'new', 'classification': None}
+                 ],
+            ),
+        ],
+    )
+    async def test_list_meldingen_paginated_and_sorted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        limit: int,
+        offset: int,
+        attribute: str,
+        direction: SortingDirection,
+        expected: list[dict[str, Any]],
+        test_meldingen: list[Melding],
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME),
+            params={"limit": limit, "offset": offset, "sort": f'["{attribute}", "{direction}"]'},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data == expected
         assert response.headers.get("content-range") == f"melding {offset}-{limit - 1 + offset}/10"
 
 
