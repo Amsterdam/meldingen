@@ -17,7 +17,7 @@ dependency-injector = {git = "https://github.com/anton-petrov/python-dependency-
 fastapi = "^0.109.1"
 geoalchemy2 = "^0.14.7"
 geojson-pydantic = "^1.0.2"
-meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
+meldingen-core = {git = "https://github.com/amsterdam/meldingen-core.git"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
 pydantic = {extras = ["email"], version = "^2.6.1"}
 pydantic-settings = "^2.1.0"

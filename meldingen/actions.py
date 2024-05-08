@@ -1,7 +1,10 @@
-from typing import Any
+from typing import Any, Collection, TypeVar
 
 from fastapi import HTTPException
-from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction, BaseListAction, BaseRetrieveAction
+from meldingen_core import SortingDirection
+from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction
+from meldingen_core.actions.base import BaseListAction as BaseCoreListAction
+from meldingen_core.actions.base import BaseRetrieveAction
 from meldingen_core.actions.classification import ClassificationListAction as BaseClassificationListAction
 from meldingen_core.actions.classification import ClassificationRetrieveAction as BaseClassificationRetrieveAction
 from meldingen_core.actions.classification import ClassificationUpdateAction as BaseClassificationUpdateAction
@@ -11,7 +14,7 @@ from meldingen_core.actions.user import UserListAction as BaseUserListAction
 from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
 from meldingen_core.exceptions import NotFoundException
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 from meldingen.models import (
     Classification,
@@ -24,11 +27,39 @@ from meldingen.models import (
     Question,
     User,
 )
-from meldingen.repositories import ClassificationRepository, FormIoFormRepository, QuestionRepository
+from meldingen.repositories import (
+    AttributeNotFoundException,
+    ClassificationRepository,
+    FormIoFormRepository,
+    QuestionRepository,
+)
 from meldingen.schemas import FormInput
 
+T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
 
-class UserListAction(BaseUserListAction[User, User]): ...
+
+class BaseListAction(BaseCoreListAction[T, T_co]):
+    async def __call__(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+    ) -> Collection[T_co]:
+        try:
+            return await super().__call__(
+                limit=limit, offset=offset, sort_attribute_name=sort_attribute_name, sort_direction=sort_direction
+            )
+        except AttributeNotFoundException as e:
+            raise HTTPException(
+                HTTP_422_UNPROCESSABLE_ENTITY,
+                [{"loc": ("query", "sort"), "msg": e.message, "type": "attribute_not_found"}],
+            )
+
+
+class UserListAction(BaseUserListAction[User, User], BaseListAction[User, User]): ...
 
 
 class UserRetrieveAction(BaseUserRetrieveAction[User, User]): ...
@@ -37,13 +68,15 @@ class UserRetrieveAction(BaseUserRetrieveAction[User, User]): ...
 class UserUpdateAction(BaseUserUpdateAction[User, User]): ...
 
 
-class MeldingListAction(BaseMeldingListAction[Melding, Melding]): ...
+class MeldingListAction(BaseMeldingListAction[Melding, Melding], BaseListAction[Melding, Melding]): ...
 
 
 class MeldingRetrieveAction(BaseMeldingRetrieveAction[Melding, Melding]): ...
 
 
-class ClassificationListAction(BaseClassificationListAction[Classification, Classification]): ...
+class ClassificationListAction(
+    BaseClassificationListAction[Classification, Classification], BaseListAction[Classification, Classification]
+): ...
 
 
 class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classification, Classification]): ...

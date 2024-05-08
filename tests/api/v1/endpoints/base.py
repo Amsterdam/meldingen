@@ -81,3 +81,70 @@ class BasePaginationParamsTest(metaclass=ABCMeta):
         assert violation.get("type") == type
         assert violation.get("loc") == ["query", "offset"]
         assert violation.get("msg") == msg
+
+
+class BaseSortParamsTest(metaclass=ABCMeta):
+    @abstractmethod
+    def get_route_name(self) -> str: ...
+
+    @pytest.mark.asyncio
+    async def test_list_sort_invalid_json(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"sort": '["id", "ASC", "bla"'})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "json_invalid"
+        assert violation.get("loc") == ["query", "sort"]
+        assert violation.get("msg") == "Invalid JSON: EOF while parsing a list at line 1 column 19"
+
+    @pytest.mark.asyncio
+    async def test_list_sort_invalid_json_array(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"sort": '["id", "ASC", "bla"]'})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "too_long"
+        assert violation.get("loc") == ["query", "sort"]
+        assert violation.get("msg") == "Tuple should have at most 2 items after validation, not 3"
+
+    @pytest.mark.asyncio
+    async def test_list_sort_invalid_direction(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"sort": '["id", "ASCC"]'})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "enum"
+        assert violation.get("loc") == ["query", "sort"]
+        assert violation.get("msg") == "Input should be 'ASC' or 'DESC'"
+
+    @pytest.mark.asyncio
+    async def test_list_sort_invalid_attribute_name(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.get(
+            app.url_path_for(self.get_route_name()), params={"sort": '["very_unlikely_attribute_name", "ASC"]'}
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "attribute_not_found"
+        assert violation.get("loc") == ["query", "sort"]
+        assert violation.get("msg") == "Attribute very_unlikely_attribute_name not found"
