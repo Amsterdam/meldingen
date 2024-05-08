@@ -219,5 +219,7 @@ async def answer_additional_question(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+    except Exception:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST)
 
     return AnswerOutput(id=answer.id)
