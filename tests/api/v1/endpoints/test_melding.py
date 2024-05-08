@@ -558,3 +558,27 @@ class TestMeldingQuestionAnswer:
 
         data = response.json()
         assert data.get("detail") == "Not Found"
+
+    @pytest.mark.asyncio
+    async def test_answer_question_unauthorized_token_invalid(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        test_melding: Melding,
+        form_with_classification: FormIoForm,
+    ) -> None:
+        components = await form_with_classification.awaitable_attrs.components
+        assert len(components) > 0
+
+        question = await components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        data = {"text": "dit is het antwoord op de vraag"}
+
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id, question_id=question.id),
+            params={"token": "supersecuretoken"},
+            json=data,
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
