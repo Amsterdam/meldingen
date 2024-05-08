@@ -1034,5 +1034,5 @@ class TestFormClassification:
         body = response.json()
         assert body.get("title") == form_with_classification.title
         assert body.get("display") == form_with_classification.display
-        assert body.get("components") == []
+        assert len(body.get("components")) == 1
         assert body.get("id") == form_with_classification.id

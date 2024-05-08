@@ -22,14 +22,14 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from meldingen.actions import MeldingListAction, MeldingRetrieveAction
+from meldingen.actions import AnswerCreateAction, MeldingListAction, MeldingRetrieveAction
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import default_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
-from meldingen.schemas import MeldingCreateOutput, MeldingInput, MeldingOutput
+from meldingen.schemas import AnswerInput, AnswerOutput, MeldingCreateOutput, MeldingInput, MeldingOutput
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -194,3 +194,30 @@ async def complete_melding(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
     return _hydrate_output(melding)
+
+
+@router.post(
+    "/{melding_id}/question/{question_id}",
+    name="melding:answer-question",
+    status_code=HTTP_201_CREATED,
+    responses={
+        **not_found_response,
+        **default_response,
+    },
+)
+@inject
+async def answer_additional_question(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    question_id: Annotated[int, Path(description="The id of the question.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    answer_input: AnswerInput,
+    action: AnswerCreateAction = Depends(Provide(Container.answer_create_action)),
+) -> AnswerOutput:
+    try:
+        answer = await action(melding_id, token, question_id, answer_input)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return AnswerOutput(id=answer.id)

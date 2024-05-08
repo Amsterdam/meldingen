@@ -1,4 +1,4 @@
-from typing import Any, Final
+from typing import Any, Callable, Final
 
 import pytest
 from fastapi import FastAPI
@@ -15,7 +15,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from meldingen.models import Classification, Melding
+from meldingen.models import Classification, FormIoForm, Melding, Question
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -492,3 +492,43 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         body = response.json()
 
         assert body.get("detail") == "Transition not allowed from current state"
+
+
+class TestMeldingQuestionAnswer:
+    ROUTE_NAME_CREATE: Final[str] = "melding:answer-question"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "test_classification")],
+        indirect=[
+            "classification_name",
+        ],
+    )
+    async def test_answer_question(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        test_melding_with_classification: Melding,
+        form_with_classification: FormIoForm,
+    ) -> None:
+        components = await form_with_classification.awaitable_attrs.components
+        assert len(components) > 0
+
+        question = await components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        data = {"text": "dit is het antwoord op de vraag"}
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE, melding_id=test_melding_with_classification.id, question_id=question.id
+            ),
+            params={"token": "supersecuretoken"},
+            json=data,
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("id") is not None

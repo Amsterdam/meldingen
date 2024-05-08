@@ -4,6 +4,7 @@ import pytest
 import pytest_asyncio
 from _pytest.fixtures import SubRequest
 from fastapi import FastAPI
+from meldingen_core.exceptions import NotFoundException
 from pydantic import TypeAdapter
 
 from meldingen.authentication import authenticate_user
@@ -88,6 +89,19 @@ async def test_melding(
 
 
 @pytest_asyncio.fixture
+async def test_melding_with_classification(
+    melding_repository: MeldingRepository,
+    test_melding: Melding,
+    classification: Classification,
+) -> Melding:
+    test_melding.classification = classification
+
+    await melding_repository.save(test_melding)
+
+    return test_melding
+
+
+@pytest_asyncio.fixture
 async def test_meldingen(melding_repository: MeldingRepository, melding_text: str) -> list[Melding]:
     """Fixture providing a list test melding instances."""
 
@@ -130,9 +144,11 @@ def classification_name(request: SubRequest) -> str:
 async def classification(
     classification_repository: ClassificationRepository, classification_name: str
 ) -> Classification:
-    classification = Classification(name=classification_name)
-
-    await classification_repository.save(classification)
+    try:
+        classification = await classification_repository.find_by_name(classification_name)
+    except NotFoundException:
+        classification = Classification(name=classification_name)
+        await classification_repository.save(classification)
 
     return classification
 
@@ -213,16 +229,24 @@ async def form(
 
     await question_repository.save(question)
 
+    component.question = question
+
+    await form_repository.save(form)
+
     return form
 
 
 @pytest_asyncio.fixture
 async def form_with_classification(
-    classification_repository: ClassificationRepository, form_repository: FormIoFormRepository, form_title: str
+    classification_repository: ClassificationRepository, form_repository: FormIoFormRepository, form: FormIoForm
 ) -> FormIoForm:
-    classification = Classification("test_classification")
-    await classification_repository.save(classification)
-    form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form, classification=classification)
+    try:
+        classification = await classification_repository.find_by_name("test_classification")
+    except NotFoundException:
+        classification = Classification("test_classification")
+        await classification_repository.save(classification)
+
+    form.classification = classification
     await form_repository.save(form)
 
     return form

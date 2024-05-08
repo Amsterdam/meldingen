@@ -203,8 +203,8 @@ class Question(BaseDBModel, BaseQuestion):
 class Answer(BaseDBModel, BaseAnswer):
     text: Mapped[str] = mapped_column(String())
 
-    question_id: Mapped[int] = mapped_column(ForeignKey("question.id"))
+    question_id: Mapped[int] = mapped_column(ForeignKey("question.id"), init=False)
     question: Mapped[Question] = relationship()
 
-    melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"))
+    melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
     melding: Mapped[Melding] = relationship()

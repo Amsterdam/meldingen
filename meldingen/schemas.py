@@ -1,6 +1,6 @@
 from typing import Annotated, Any, Union
 
-from meldingen_core.models import Classification, User
+from meldingen_core.models import Answer, Classification, User
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
 
@@ -172,3 +172,11 @@ class FormComponentInput(BaseModel):
 
     auto_expand: bool
     show_char_count: bool
+
+
+class AnswerInput(BaseModel):
+    text: str = Field(min_length=1)
+
+
+class AnswerOutput(BaseModel):
+    id: int

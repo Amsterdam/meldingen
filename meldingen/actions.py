@@ -14,9 +14,11 @@ from meldingen_core.actions.user import UserListAction as BaseUserListAction
 from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 from meldingen.models import (
+    Answer,
     Classification,
     FormIoComponent,
     FormIoComponentTypeEnum,
@@ -29,11 +31,13 @@ from meldingen.models import (
 )
 from meldingen.repositories import (
     AttributeNotFoundException,
+    AnswerRepository,
     ClassificationRepository,
     FormIoFormRepository,
+    MeldingRepository,
     QuestionRepository,
 )
-from meldingen.schemas import FormInput
+from meldingen.schemas import AnswerInput, FormInput
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
@@ -260,3 +264,60 @@ class FormIoFormRetrieveByClassificationAction(BaseCRUDAction[FormIoForm, FormIo
             return await self._repository.find_by_classification_id(classification_id)
         except NotFoundException:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+
+class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
+    _token_verifier: TokenVerifier[Melding]
+    _melding_repository: MeldingRepository
+    _question_repository: QuestionRepository
+
+    def __init__(
+        self,
+        repository: AnswerRepository,
+        token_verifier: TokenVerifier[Melding],
+        melding_repository: MeldingRepository,
+        question_repository: QuestionRepository,
+    ):
+        super().__init__(repository)
+        self._token_verifier = token_verifier
+        self._melding_repository = melding_repository
+        self._question_repository = question_repository
+
+    async def __call__(self, melding_id: int, token: str, question_id: int, answer_input: AnswerInput) -> Answer:
+        """
+        Create and store an Answer in the database, subject to several conditions:
+
+        Conditions:
+        1. The melding must exist.
+        2. The provided token must be valid.
+        3. The melding must be classified.
+        4. The question must exist.
+        5. The question must belong to an existing and active form.
+        6. The form's classification must match the melding's classification.
+
+        TODO: Validate the answer against the rules stored in the component (using jsonlogic?).
+        """
+        melding = await self._melding_repository.retrieve(melding_id)
+        if melding is None:
+            raise NotFoundException()
+
+        self._token_verifier(melding, token)
+
+        if not melding.classification:
+            raise Exception("Not classified")  # TODO Make a nice exception for this
+
+        question = await self._question_repository.retrieve(question_id)
+        if question is None:
+            raise NotFoundException()
+
+        assert question.form and question.form.classification
+        if melding.classification.id != question.form.classification.id:
+            raise Exception("Question does not match")  # TODO Make a nice exception for this
+
+        answer_data = answer_input.model_dump(by_alias=True)
+
+        answer = Answer(**answer_data, melding=melding, question=question)
+
+        await self._repository.save(answer)
+
+        return answer
