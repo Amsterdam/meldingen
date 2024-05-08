@@ -645,3 +645,40 @@ class TestMeldingQuestionAnswer:
         body = response.json()
 
         assert body.get("detail") == "Bad Request"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "not-the-same-as-the-form")],
+        indirect=[
+            "classification_name",
+        ],
+    )
+    async def test_answer_question_melding_classification_does_not_match_form_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        test_melding_with_classification: Melding,
+        form_with_classification: FormIoForm,
+    ) -> None:
+        components = await form_with_classification.awaitable_attrs.components
+        assert len(components) > 0
+
+        question = await components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        data = {"text": "dit is het antwoord op de vraag"}
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE, melding_id=test_melding_with_classification.id, question_id=question.id
+            ),
+            params={"token": "supersecuretoken"},
+            json=data,
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+
+        assert body.get("detail") == "Bad Request"
