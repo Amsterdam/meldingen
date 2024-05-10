@@ -16,6 +16,7 @@ from starlette.status import (
 )
 
 from meldingen.models import Classification, FormIoForm, Melding, Question
+from meldingen.repositories import QuestionRepository
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -694,6 +695,39 @@ class TestMeldingQuestionAnswer:
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id, question_id=999),
+            params={"token": "supersecuretoken"},
+            json=data,
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        data = response.json()
+        assert data.get("detail") == "Not Found"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "test_classification")],
+        indirect=[
+            "classification_name",
+        ],
+    )
+    async def test_answer_question_not_connected_to_form(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        test_melding_with_classification: Melding,
+        question_repository: QuestionRepository,
+    ) -> None:
+        question = Question(text="is dit een vraag?")
+        await question_repository.save(question)
+
+        data = {"text": "Ja, dit is een vraag"}
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE, melding_id=test_melding_with_classification.id, question_id=question.id
+            ),
             params={"token": "supersecuretoken"},
             json=data,
         )
