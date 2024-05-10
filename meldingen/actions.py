@@ -296,25 +296,36 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         5. The question must belong to an existing and active form.
         6. The form's classification must match the melding's classification.
 
-        TODO: Validate the answer against the rules stored in the component (using jsonlogic?).
+        TODO: Validate the answer against the rules stored in the component (using JSONLogic?).
         """
-        melding = await self._melding_repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
-
-        self._token_verifier(melding, token)
-
-        if not melding.classification:
-            raise MeldingNotClassifiedException()
-
+        # Question must exist
         question = await self._question_repository.retrieve(question_id)
         if question is None:
             raise NotFoundException()
 
-        assert question.form and question.form.classification
-        if melding.classification.id != question.form.classification.id:
+        # Melding must exist
+        melding = await self._melding_repository.retrieve(melding_id)
+        if melding is None:
+            raise NotFoundException()
+
+        # Token must valid
+        self._token_verifier(melding, token)
+
+        # Melding must be classified
+        if not melding.classification:
+            raise MeldingNotClassifiedException()
+
+        # Question must belong to a form
+        form = await question.awaitable_attrs.form
+        if form is None:
+            raise NotFoundException()
+
+        # Melding classification must match the form classification
+        if melding.classification_id != form.classification_id:
             raise ClassificationMismatchException()
 
+        # Store the answer
+        # TODO: Add validation (using JSONLogic?)
         answer_data = answer_input.model_dump(by_alias=True)
 
         answer = Answer(**answer_data, melding=melding, question=question)
