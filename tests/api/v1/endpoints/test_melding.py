@@ -682,3 +682,23 @@ class TestMeldingQuestionAnswer:
         body = response.json()
 
         assert body.get("detail") == "Classification mismatch"
+
+    @pytest.mark.asyncio
+    async def test_answer_question_does_not_exists(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        test_melding: Melding,
+    ) -> None:
+        data = {"text": "dit is het antwoord op de vraag"}
+
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id, question_id=999),
+            params={"token": "supersecuretoken"},
+            json=data,
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        data = response.json()
+        assert data.get("detail") == "Not Found"
