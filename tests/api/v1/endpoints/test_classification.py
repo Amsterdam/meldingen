@@ -13,7 +13,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.models import Classification
+from meldingen.models import Classification, FormIoForm
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -36,6 +36,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         data = response.json()
         assert data.get("id") == 1
         assert data.get("name") == "bla"
+        assert data.get("form", "") is None
 
     @pytest.mark.asyncio
     async def test_create_classification_name_min_length_violation(
@@ -125,64 +126,64 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
                 "id",
                 SortingDirection.ASC,
                 [
-                    {"name": "category: 0", "id": 1},
-                    {"name": "category: 1", "id": 2},
-                    {"name": "category: 2", "id": 3},
-                    {"name": "category: 3", "id": 4},
-                    {"name": "category: 4", "id": 5},
-                    {"name": "category: 5", "id": 6},
-                    {"name": "category: 6", "id": 7},
-                    {"name": "category: 7", "id": 8},
-                    {"name": "category: 8", "id": 9},
-                    {"name": "category: 9", "id": 10},
+                    {"name": "category: 0", "id": 1, "form": None},
+                    {"name": "category: 1", "id": 2, "form": None},
+                    {"name": "category: 2", "id": 3, "form": None},
+                    {"name": "category: 3", "id": 4, "form": None},
+                    {"name": "category: 4", "id": 5, "form": None},
+                    {"name": "category: 5", "id": 6, "form": None},
+                    {"name": "category: 6", "id": 7, "form": None},
+                    {"name": "category: 7", "id": 8, "form": None},
+                    {"name": "category: 8", "id": 9, "form": None},
+                    {"name": "category: 9", "id": 10, "form": None},
                 ],
             ),
             (
                 "id",
                 SortingDirection.DESC,
                 [
-                    {"name": "category: 9", "id": 10},
-                    {"name": "category: 8", "id": 9},
-                    {"name": "category: 7", "id": 8},
-                    {"name": "category: 6", "id": 7},
-                    {"name": "category: 5", "id": 6},
-                    {"name": "category: 4", "id": 5},
-                    {"name": "category: 3", "id": 4},
-                    {"name": "category: 2", "id": 3},
-                    {"name": "category: 1", "id": 2},
-                    {"name": "category: 0", "id": 1},
+                    {"name": "category: 9", "id": 10, "form": None},
+                    {"name": "category: 8", "id": 9, "form": None},
+                    {"name": "category: 7", "id": 8, "form": None},
+                    {"name": "category: 6", "id": 7, "form": None},
+                    {"name": "category: 5", "id": 6, "form": None},
+                    {"name": "category: 4", "id": 5, "form": None},
+                    {"name": "category: 3", "id": 4, "form": None},
+                    {"name": "category: 2", "id": 3, "form": None},
+                    {"name": "category: 1", "id": 2, "form": None},
+                    {"name": "category: 0", "id": 1, "form": None},
                 ],
             ),
             (
                 "name",
                 SortingDirection.ASC,
                 [
-                    {"name": "category: 0", "id": 1},
-                    {"name": "category: 1", "id": 2},
-                    {"name": "category: 2", "id": 3},
-                    {"name": "category: 3", "id": 4},
-                    {"name": "category: 4", "id": 5},
-                    {"name": "category: 5", "id": 6},
-                    {"name": "category: 6", "id": 7},
-                    {"name": "category: 7", "id": 8},
-                    {"name": "category: 8", "id": 9},
-                    {"name": "category: 9", "id": 10},
+                    {"name": "category: 0", "id": 1, "form": None},
+                    {"name": "category: 1", "id": 2, "form": None},
+                    {"name": "category: 2", "id": 3, "form": None},
+                    {"name": "category: 3", "id": 4, "form": None},
+                    {"name": "category: 4", "id": 5, "form": None},
+                    {"name": "category: 5", "id": 6, "form": None},
+                    {"name": "category: 6", "id": 7, "form": None},
+                    {"name": "category: 7", "id": 8, "form": None},
+                    {"name": "category: 8", "id": 9, "form": None},
+                    {"name": "category: 9", "id": 10, "form": None},
                 ],
             ),
             (
                 "name",
                 SortingDirection.DESC,
                 [
-                    {"name": "category: 9", "id": 10},
-                    {"name": "category: 8", "id": 9},
-                    {"name": "category: 7", "id": 8},
-                    {"name": "category: 6", "id": 7},
-                    {"name": "category: 5", "id": 6},
-                    {"name": "category: 4", "id": 5},
-                    {"name": "category: 3", "id": 4},
-                    {"name": "category: 2", "id": 3},
-                    {"name": "category: 1", "id": 2},
-                    {"name": "category: 0", "id": 1},
+                    {"name": "category: 9", "id": 10, "form": None},
+                    {"name": "category: 8", "id": 9, "form": None},
+                    {"name": "category: 7", "id": 8, "form": None},
+                    {"name": "category: 6", "id": 7, "form": None},
+                    {"name": "category: 5", "id": 6, "form": None},
+                    {"name": "category: 4", "id": 5, "form": None},
+                    {"name": "category: 3", "id": 4, "form": None},
+                    {"name": "category: 2", "id": 3, "form": None},
+                    {"name": "category: 1", "id": 2, "form": None},
+                    {"name": "category: 0", "id": 1, "form": None},
                 ],
             ),
         ],
@@ -217,14 +218,18 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
                 2,
                 "name",
                 SortingDirection.DESC,
-                [{"name": "category: 7", "id": 8}, {"name": "category: 6", "id": 7}],
+                [{"name": "category: 7", "id": 8, "form": None}, {"name": "category: 6", "id": 7, "form": None}],
             ),
             (
                 3,
                 1,
                 "name",
                 SortingDirection.ASC,
-                [{"name": "category: 1", "id": 2}, {"name": "category: 2", "id": 3}, {"name": "category: 3", "id": 4}],
+                [
+                    {"name": "category: 1", "id": 2, "form": None},
+                    {"name": "category: 2", "id": 3, "form": None},
+                    {"name": "category: 3", "id": 4, "form": None},
+                ],
             ),
         ],
     )
@@ -251,6 +256,18 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         assert data == expected
         assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
+
+    @pytest.mark.asyncio
+    async def test_list_classification_with_form(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: FormIoForm
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert len(body) == 1
+        assert body[0].get("form") == form_with_classification.id
 
 
 class TestClassificationRetrieve(BaseUnauthorizedTest):
@@ -279,6 +296,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         data = response.json()
         assert data.get("id") == 1
         assert data.get("name") == "bla"
+        assert data.get("form", "") is None
 
     @pytest.mark.asyncio
     async def test_retrieve_classification_that_does_not_exist(
@@ -290,6 +308,17 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
 
         body = response.json()
         assert body.get("detail") == "Not Found"
+
+    @pytest.mark.asyncio
+    async def test_retrieve_classification_with_form(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification_with_form.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("form") == classification_with_form.id
 
 
 class TestClassificationUpdate(BaseUnauthorizedTest):
@@ -319,6 +348,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
 
         data = response.json()
         assert data.get("name") == "bladiebla"
+        assert data.get("form", "") is None
 
     @pytest.mark.asyncio
     async def test_update_classification_that_does_not_exist(
@@ -348,6 +378,20 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         assert (
             data.get("detail") == "The requested operation could not be completed due to a conflict with existing data."
         )
+
+    @pytest.mark.asyncio
+    async def test_update_classification_with_form(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
+    ) -> None:
+        response = await client.patch(app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "new_name"})
+
+        assert response.status_code == HTTP_200_OK
+
+        form = await classification_with_form.awaitable_attrs.form
+
+        body = response.json()
+        assert body.get("name") == "new_name"
+        assert body.get("form") == form.id
 
 
 class TestClassificationDelete(BaseUnauthorizedTest):

@@ -14,6 +14,7 @@ class ClassificationInput(BaseModel, Classification):
 
 class ClassificationOutput(BaseModel, Classification):
     id: int
+    form: int | None = None
 
 
 class MeldingInput(BaseModel):
