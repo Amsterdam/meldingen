@@ -165,6 +165,17 @@ async def classifications(classification_repository: ClassificationRepository) -
 
 
 @pytest_asyncio.fixture
+async def classification_with_form(
+    classification_repository: ClassificationRepository, form_repository: FormIoFormRepository) -> Classification:
+    classification = Classification("test_classification")
+    await classification_repository.save(classification)
+    form = FormIoForm(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
+    await form_repository.save(form)
+
+    return classification
+
+
+@pytest_asyncio.fixture
 async def form_repository(container: Container) -> FormIoFormRepository:
     return await container.form_repository()
 

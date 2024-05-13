@@ -46,6 +46,16 @@ async def _add_content_range_header(
     await ContentRangeHeaderAdder(repo, "classification")(response, pagination)
 
 
+async def _hydrate_output(classification: Classification) -> ClassificationOutput:
+    form_id = None
+
+    form = await classification.awaitable_attrs.form
+    if form is not None:
+        form_id = form.id
+
+    return ClassificationOutput(id=classification.id, form=form_id, name=classification.name)
+
+
 @router.get(
     "/",
     name="classification:list",
@@ -68,11 +78,7 @@ async def list_classifications(
 
     output = []
     for classification in classifications:
-        form = await classification.awaitable_attrs.form
-        form_id = None
-        if form is not None:
-            form_id = form.id
-        output.append(ClassificationOutput(id=classification.id, form=form_id, name=classification.name))
+        output.append(await _hydrate_output(classification))
 
     return output
 
@@ -90,7 +96,7 @@ async def retrieve_classification(
     if classification is None:
         raise HTTPException(HTTP_404_NOT_FOUND)
 
-    return ClassificationOutput(id=classification.id, name=classification.name)
+    return await _hydrate_output(classification)
 
 
 @router.patch(
