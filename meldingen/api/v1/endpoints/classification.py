@@ -68,7 +68,11 @@ async def list_classifications(
 
     output = []
     for classification in classifications:
-        output.append(ClassificationOutput(id=classification.id, name=classification.name))
+        form = await classification.awaitable_attrs.form
+        form_id = None
+        if form is not None:
+            form_id = form.id
+        output.append(ClassificationOutput(id=classification.id, form=form_id, name=classification.name))
 
     return output
 

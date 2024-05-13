@@ -28,8 +28,9 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
         return to_snake(cls.__name__)
 
 
-class Classification(BaseDBModel, BaseClassification):
+class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
     name: Mapped[str] = mapped_column(String, unique=True)
+    form: Mapped[Optional["FormIoForm"]] = relationship(default=None)
 
 
 class Melding(BaseDBModel, BaseMelding, StateAware):
@@ -104,7 +105,7 @@ class FormIoForm(AsyncAttrs, BaseDBModel):
     )
 
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None, unique=True)
-    classification: Mapped[Classification | None] = relationship(default=None)
+    classification: Mapped[Classification | None] = relationship(default=None, back_populates="form")
 
 
 class FormIoPrimaryForm(FormIoForm):
