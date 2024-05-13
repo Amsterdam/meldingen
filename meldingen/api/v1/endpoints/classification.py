@@ -118,7 +118,7 @@ async def update_classification(
     except NotFoundException:
         raise HTTPException(HTTP_404_NOT_FOUND)
 
-    return ClassificationOutput(id=classification.id, name=classification.name)
+    return await _hydrate_output(classification)
 
 
 @router.delete(
