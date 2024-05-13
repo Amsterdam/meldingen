@@ -36,6 +36,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         data = response.json()
         assert data.get("id") == 1
         assert data.get("name") == "bla"
+        assert data.get("form", "") is None
 
     @pytest.mark.asyncio
     async def test_create_classification_name_min_length_violation(
@@ -310,11 +311,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
 
     @pytest.mark.asyncio
     async def test_retrieve_classification_with_form(
-            self,
-            app: FastAPI,
-            client: AsyncClient,
-            auth_user: None,
-            classification_with_form: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification_with_form.id))
 
