@@ -203,6 +203,7 @@ async def complete_melding(
     status_code=HTTP_201_CREATED,
     responses={
         **not_found_response,
+        **unauthorized_response,
         **default_response,
     },
 )
