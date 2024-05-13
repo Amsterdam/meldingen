@@ -11,11 +11,18 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create the .env file
         run: cp .env.example .env
 
-      - name: Build and start containers
-        run: docker-compose build
+      - name: Build containers
+        run: docker buildx bake --file docker-compose.yml --file docker-compose.cache.json
 
       - name: Run tests
         run: docker-compose run --rm meldingen pytest --test-alembic  --cov --cov-fail-under=99 -v
