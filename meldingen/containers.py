@@ -20,6 +20,7 @@ from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.actions import (
+    AnswerCreateAction,
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
@@ -40,6 +41,7 @@ from meldingen.actions import (
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.models import Melding
 from meldingen.repositories import (
+    AnswerRepository,
     ClassificationRepository,
     FormIoFormRepository,
     GroupRepository,
@@ -127,6 +129,7 @@ class Container(DeclarativeContainer):
     )
     form_repository: Factory[FormIoFormRepository] = Factory(FormIoFormRepository, session=database_session)
     question_repository: Factory[QuestionRepository] = Factory(QuestionRepository, session=database_session)
+    answer_repository: Factory[AnswerRepository] = Factory(AnswerRepository, session=database_session)
 
     # state machine
     melding_process_transition: Singleton[Process] = Singleton(Process)
@@ -238,6 +241,15 @@ class Container(DeclarativeContainer):
     form_delete_action: Factory[FormIoFormDeleteAction] = Factory(FormIoFormDeleteAction, repository=form_repository)
     form_classification_action: Factory[FormIoFormRetrieveByClassificationAction] = Factory(
         FormIoFormRetrieveByClassificationAction, repository=form_repository
+    )
+
+    # Answer actions
+    answer_create_action: Factory[AnswerCreateAction] = Factory(
+        AnswerCreateAction,
+        repository=answer_repository,
+        token_verifier=token_verifier,
+        melding_repository=melding_repository,
+        question_repository=question_repository,
     )
 
     # authentication
