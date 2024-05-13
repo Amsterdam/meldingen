@@ -1,0 +1,37 @@
+{
+  "target": {
+    "meldingen": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    },
+    "keycloak": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-keycloak:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-keycloak:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    },
+    "docs": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-docs:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-docs:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    }
+  }
+}

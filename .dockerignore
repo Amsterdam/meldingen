@@ -8,6 +8,7 @@ README.md
 Dockerfile
 docker
 docker-compose.yml
+docker-compose.cache.json
 mkdocs.yml
 mypy-baseline.txt
 .pre-commit-config.yaml
