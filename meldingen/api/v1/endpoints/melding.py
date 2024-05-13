@@ -1,4 +1,4 @@
-from typing import Annotated, Any
+from typing import Annotated
 
 import structlog
 from dependency_injector.wiring import Provide, inject
@@ -205,6 +205,21 @@ async def complete_melding(
         **not_found_response,
         **unauthorized_response,
         **default_response,
+        **{
+            HTTP_400_BAD_REQUEST: {
+                "description": "",
+                "content": {
+                    "application/json": {
+                        "examples": {
+                            "The melding is not classified.": {"value": {"detail": "Melding not classified"}},
+                            "The melding and form classifications are not the same ": {
+                                "value": {"detail": "Classification mismatch"}
+                            },
+                        }
+                    }
+                },
+            }
+        },
     },
 )
 @inject
