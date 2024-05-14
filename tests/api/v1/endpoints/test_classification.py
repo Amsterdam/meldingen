@@ -269,6 +269,23 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         assert len(body) == 1
         assert body[0].get("form") == form_with_classification.id
 
+    @pytest.mark.asyncio
+    async def test_list_classifications_sort_on_relationship(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: FormIoForm
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"sort": '["form", "ASC"]'})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "attribute_not_found"
+        assert violation.get("loc") == ["query", "sort"]
+        assert violation.get("msg") == "Cannot sort on relationship form"
+
 
 class TestClassificationRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:retrieve"

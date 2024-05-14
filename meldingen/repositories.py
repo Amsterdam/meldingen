@@ -15,6 +15,7 @@ from meldingen_core.repositories import (
 from sqlalchemy import Select, desc, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Relationship
 from sqlalchemy.sql import func
 
 from meldingen.models import Answer, BaseDBModel, Classification, FormIoForm, Group, Melding, Question, User
@@ -106,8 +107,12 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
     ) -> Select[Any]:
         if sort_attribute_name is not None:
             sort_attribute = _type.__mapper__.attrs.get(sort_attribute_name)
+
             if sort_attribute is None:
                 raise AttributeNotFoundException(f"Attribute {sort_attribute_name} not found")
+
+            if type(sort_attribute) == Relationship:
+                raise AttributeNotFoundException(f"Cannot sort on relationship {sort_attribute_name}")
 
             if sort_direction is None or sort_direction == SortingDirection.ASC:
                 statement = statement.order_by(sort_attribute)
