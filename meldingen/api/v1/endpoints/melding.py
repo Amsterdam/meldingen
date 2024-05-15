@@ -25,7 +25,13 @@ from starlette.status import (
 
 from meldingen.actions import AnswerCreateAction, MeldingListAction, MeldingRetrieveAction
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
-from meldingen.api.v1 import default_response, list_response, not_found_response, unauthorized_response
+from meldingen.api.v1 import (
+    default_response,
+    list_response,
+    not_found_response,
+    transition_not_allowed,
+    unauthorized_response,
+)
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.exceptions import ClassificationMismatchException, MeldingNotClassifiedException
@@ -144,10 +150,7 @@ async def update_melding(
     "/{melding_id}/answer_questions",
     name="melding:answer_questions",
     responses={
-        HTTP_400_BAD_REQUEST: {
-            "description": "Transition not allowed from current state",
-            "content": {"application/json": {"example": {"detail": "Transition not allowed from current state"}}},
-        },
+        **transition_not_allowed,
         **unauthorized_response,
         **not_found_response,
         **default_response,
@@ -177,10 +180,7 @@ async def answer_questions(
     "/{melding_id}/process",
     name="melding:process",
     responses={
-        HTTP_400_BAD_REQUEST: {
-            "description": "Transition not allowed from current state",
-            "content": {"application/json": {"example": {"detail": "Transition not allowed from current state"}}},
-        },
+        **transition_not_allowed,
         **unauthorized_response,
         **not_found_response,
         **default_response,
@@ -206,10 +206,7 @@ async def process_melding(
     "/{melding_id}/complete",
     name="melding:complete",
     responses={
-        HTTP_400_BAD_REQUEST: {
-            "description": "Transition not allowed from current state",
-            "content": {"application/json": {"example": {"detail": "Transition not allowed from current state"}}},
-        },
+        **transition_not_allowed,
         **unauthorized_response,
         **not_found_response,
         **default_response,

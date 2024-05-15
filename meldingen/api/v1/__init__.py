@@ -1,6 +1,12 @@
 from typing import Any, Final
 
-from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
+)
 
 not_found_response: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_404_NOT_FOUND: {
@@ -35,5 +41,11 @@ list_response: Final[dict[str | int, dict[str, Any]]] = {
                 "description": "Range and total number of results for pagination.",
             }
         }
+    }
+}
+transition_not_allowed: Final[dict[str | int, dict[str, Any]]] = {
+    HTTP_400_BAD_REQUEST: {
+        "description": "Transition not allowed from current state",
+        "content": {"application/json": {"example": {"detail": "Transition not allowed from current state"}}},
     }
 }
