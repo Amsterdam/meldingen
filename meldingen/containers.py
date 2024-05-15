@@ -6,6 +6,7 @@ from dependency_injector.providers import Configuration, Factory, Resource, Sing
 from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
 from meldingen_core.actions.melding import (
+    MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
     MeldingCreateAction,
     MeldingProcessAction,
@@ -187,6 +188,9 @@ class Container(DeclarativeContainer):
         token_verifier=token_verifier,
         classifier=classifier,
         state_machine=melding_state_machine,
+    )
+    melding_answer_questions_action: Factory[MeldingAnswerQuestionsAction[Melding, Melding]] = Factory(
+        MeldingAnswerQuestionsAction, state_machine=melding_state_machine, repository=melding_repository
     )
     melding_process_action: Factory[MeldingProcessAction[Melding, Melding]] = Factory(
         MeldingProcessAction, state_machine=melding_state_machine, repository=melding_repository
