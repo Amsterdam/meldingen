@@ -190,7 +190,10 @@ class Container(DeclarativeContainer):
         state_machine=melding_state_machine,
     )
     melding_answer_questions_action: Factory[MeldingAnswerQuestionsAction[Melding, Melding]] = Factory(
-        MeldingAnswerQuestionsAction, state_machine=melding_state_machine, repository=melding_repository
+        MeldingAnswerQuestionsAction,
+        state_machine=melding_state_machine,
+        repository=melding_repository,
+        token_verifier=token_verifier,
     )
     melding_process_action: Factory[MeldingProcessAction[Melding, Melding]] = Factory(
         MeldingProcessAction, state_machine=melding_state_machine, repository=melding_repository
