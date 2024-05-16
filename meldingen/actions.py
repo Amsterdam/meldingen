@@ -237,6 +237,13 @@ class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):
             if classification is None:
                 raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Classification not found")
 
+        try:
+            other_form = await self._repository.find_by_classification_id(form_input.classification)
+            other_form.classification = None
+            await self._repository.save(other_form)
+        except NotFoundException:
+            ...
+
         form_data = form_input.model_dump(exclude_unset=True, by_alias=True)
         form_data["classification"] = classification
         form_data.pop("components")
