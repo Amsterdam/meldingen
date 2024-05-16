@@ -111,7 +111,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
             if sort_attribute is None:
                 raise AttributeNotFoundException(f"Attribute {sort_attribute_name} not found")
 
-            if type(sort_attribute) == Relationship:
+            if isinstance(sort_attribute, Relationship):
                 raise AttributeNotFoundException(f"Cannot sort on relationship {sort_attribute_name}")
 
             if sort_direction is None or sort_direction == SortingDirection.ASC:
