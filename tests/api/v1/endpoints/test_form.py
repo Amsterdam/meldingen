@@ -596,9 +596,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             ],
         }
 
-        response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data
-        )
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
 
         assert response.status_code == HTTP_200_OK
 
