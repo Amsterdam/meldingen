@@ -571,6 +571,41 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert body.get("classification", "") is None
 
     @pytest.mark.asyncio
+    async def test_update_form_assign_classification_that_is_already_assigned_to_another_form(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: FormIoForm,
+        form_with_classification: FormIoForm,
+    ) -> None:
+        new_data = {
+            "title": "Form",
+            "display": "form",
+            "classification": 1,
+            "components": [
+                {
+                    "label": "Wat is uw klacht?",
+                    "description": "",
+                    "key": "wat-is-uw_klacht",
+                    "type": "textarea",
+                    "input": True,
+                    "autoExpand": True,
+                    "showCharCount": True,
+                }
+            ],
+        }
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("classification") == 1
+
+    @pytest.mark.asyncio
     async def test_update_form_classification_id_validation(
         self,
         app: FastAPI,
