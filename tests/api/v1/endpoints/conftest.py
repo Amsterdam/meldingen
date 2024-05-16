@@ -2,10 +2,10 @@ from datetime import datetime, timedelta
 
 import pytest
 import pytest_asyncio
-from _pytest.fixtures import SubRequest
 from fastapi import FastAPI
 from meldingen_core.exceptions import NotFoundException
 from pydantic import TypeAdapter
+from pytest import FixtureRequest
 
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -29,7 +29,7 @@ async def melding_repository(container: Container) -> MeldingRepository:
 
 
 @pytest.fixture
-def melding_text(request: SubRequest) -> str:
+def melding_text(request: FixtureRequest) -> str:
     """Fixture providing a test melding text."""
 
     if hasattr(request, "param"):
@@ -39,7 +39,7 @@ def melding_text(request: SubRequest) -> str:
 
 
 @pytest.fixture
-def melding_state(request: SubRequest) -> str | None:
+def melding_state(request: FixtureRequest) -> str | None:
     if hasattr(request, "param"):
         return str(request.param)
     else:
@@ -47,7 +47,7 @@ def melding_state(request: SubRequest) -> str | None:
 
 
 @pytest.fixture
-def melding_token(request: SubRequest) -> str | None:
+def melding_token(request: FixtureRequest) -> str | None:
     if hasattr(request, "param"):
         return str(request.param)
 
@@ -55,7 +55,7 @@ def melding_token(request: SubRequest) -> str | None:
 
 
 @pytest.fixture
-def melding_token_expires(request: SubRequest) -> datetime | None:
+def melding_token_expires(request: FixtureRequest) -> datetime | None:
     if hasattr(request, "param"):
         timedelta_adapter = TypeAdapter(timedelta)
         return datetime.now() - timedelta_adapter.validate_python(request.param)
@@ -133,7 +133,7 @@ async def classification_repository(container: Container) -> ClassificationRepos
 
 
 @pytest.fixture
-def classification_name(request: SubRequest) -> str:
+def classification_name(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)
     else:
@@ -209,7 +209,7 @@ async def primary_form(form_repository: FormIoFormRepository) -> FormIoPrimaryFo
 
 
 @pytest.fixture
-def form_title(request: SubRequest) -> str:
+def form_title(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)
     else:

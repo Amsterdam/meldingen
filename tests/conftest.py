@@ -9,8 +9,8 @@ from dependency_injector.providers import Object, Resource
 from fastapi import FastAPI
 from httpx import AsyncClient
 from jwt import PyJWKClient, PyJWT
+from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
-from pytest_asyncio.plugin import SubRequest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.containers import Container
@@ -57,7 +57,7 @@ async def user_repository(container: Container) -> UserRepository:
 
 
 @pytest.fixture
-def user_username(request: SubRequest) -> str:
+def user_username(request: FixtureRequest) -> str:
     """Fixture providing a username."""
 
     if hasattr(request, "param"):
@@ -67,7 +67,7 @@ def user_username(request: SubRequest) -> str:
 
 
 @pytest.fixture
-def user_email(request: SubRequest) -> str:
+def user_email(request: FixtureRequest) -> str:
     """Fixture providing a email."""
 
     if hasattr(request, "param"):
