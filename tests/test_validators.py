@@ -5,7 +5,6 @@ import pytest
 from meldingen.validators import create_match_validator, create_non_match_validator
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "value, match_value",
     [
@@ -22,7 +21,6 @@ def test_match_validator(value: Any, match_value: Any) -> None:
     assert test_validator(value) == value
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "value, match_value, error_msg",
     [
@@ -41,7 +39,6 @@ def test_invalid_match_validator(value: Any, match_value: Any, error_msg: str) -
         test_validator(value)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "value, match_value",
     [
@@ -59,7 +56,6 @@ def test_non_match_validator(value: Any, match_value: Any) -> None:
     assert test_validator(value) == value
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "value, match_value, error_msg",
     [
