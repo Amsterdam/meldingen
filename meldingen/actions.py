@@ -122,7 +122,7 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
         )
         if not question:
             question = Question(text=component.label, form=component.form)
-            await self._question_repository.save(question)
+            await self._question_repository.save(question, commit=False)
 
         component.question = question
 
@@ -240,7 +240,7 @@ class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):
         try:
             other_form = await self._repository.find_by_classification_id(form_input.classification)
             other_form.classification = None
-            await self._repository.save(other_form)
+            await self._repository.save(other_form, commit=False)
         except NotFoundException:
             ...
 
