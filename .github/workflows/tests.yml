@@ -1,5 +1,7 @@
 name: Tests
 on: [pull_request]
+permissions:
+  packages: write
 
 jobs:
   run_tests:
