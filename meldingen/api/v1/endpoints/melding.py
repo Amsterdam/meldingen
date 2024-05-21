@@ -4,6 +4,7 @@ import structlog
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from meldingen_core.actions.melding import (
+    MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
     MeldingCreateAction,
     MeldingProcessAction,
@@ -24,7 +25,13 @@ from starlette.status import (
 
 from meldingen.actions import AnswerCreateAction, MeldingListAction, MeldingRetrieveAction
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
-from meldingen.api.v1 import default_response, list_response, not_found_response, unauthorized_response
+from meldingen.api.v1 import (
+    default_response,
+    list_response,
+    not_found_response,
+    transition_not_allowed,
+    unauthorized_response,
+)
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.exceptions import ClassificationMismatchException, MeldingNotClassifiedException
@@ -140,13 +147,40 @@ async def update_melding(
 
 
 @router.put(
+    "/{melding_id}/answer_questions",
+    name="melding:answer_questions",
+    responses={
+        **transition_not_allowed,
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+)
+@inject
+async def answer_questions(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: MeldingAnswerQuestionsAction[Melding, Melding] = Depends(
+        Provide(Container.melding_answer_questions_action)
+    ),
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return _hydrate_output(melding)
+
+
+@router.put(
     "/{melding_id}/process",
     name="melding:process",
     responses={
-        HTTP_400_BAD_REQUEST: {
-            "description": "Transition not allowed from current state",
-            "content": {"application/json": {"example": {"detail": "Transition not allowed from current state"}}},
-        },
+        **transition_not_allowed,
         **unauthorized_response,
         **not_found_response,
         **default_response,
@@ -172,10 +206,7 @@ async def process_melding(
     "/{melding_id}/complete",
     name="melding:complete",
     responses={
-        HTTP_400_BAD_REQUEST: {
-            "description": "Transition not allowed from current state",
-            "content": {"application/json": {"example": {"detail": "Transition not allowed from current state"}}},
-        },
+        **transition_not_allowed,
         **unauthorized_response,
         **not_found_response,
         **default_response,

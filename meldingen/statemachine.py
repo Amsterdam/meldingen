@@ -40,6 +40,16 @@ class Classify(BaseTransition[Melding]):
         return self._guards
 
 
+class AnswerQuestions(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.CLASSIFIED]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.QUESTIONS_ANSWERED
+
+
 class Complete(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:

@@ -6,6 +6,7 @@ from dependency_injector.providers import Configuration, Factory, Resource, Sing
 from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
 from meldingen_core.actions.melding import (
+    MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
     MeldingCreateAction,
     MeldingProcessAction,
@@ -50,6 +51,7 @@ from meldingen.repositories import (
     UserRepository,
 )
 from meldingen.statemachine import (
+    AnswerQuestions,
     Classify,
     Complete,
     HasClassification,
@@ -88,10 +90,13 @@ async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSessi
         yield session
 
 
-def get_transitions(process: Process, classify: Classify, complete: Complete) -> dict[str, BaseTransition[Melding]]:
+def get_transitions(
+    classify: Classify, answer_questions: AnswerQuestions, process: Process, complete: Complete
+) -> dict[str, BaseTransition[Melding]]:
     return {
-        MeldingTransitions.PROCESS: process,
         MeldingTransitions.CLASSIFY: classify,
+        MeldingTransitions.ANSWER_QUESTIONS: answer_questions,
+        MeldingTransitions.PROCESS: process,
         MeldingTransitions.COMPLETE: complete,
     }
 
@@ -132,17 +137,19 @@ class Container(DeclarativeContainer):
     answer_repository: Factory[AnswerRepository] = Factory(AnswerRepository, session=database_session)
 
     # state machine
-    melding_process_transition: Singleton[Process] = Singleton(Process)
     melding_has_classification_guard: Singleton[HasClassification] = Singleton(HasClassification)
     melding_classify_transition_guards: Singleton[list[BaseGuard[Melding]]] = Singleton(
         get_classify_guards, has_classification=melding_has_classification_guard
     )
     melding_classify_transition: Singleton[Classify] = Singleton(Classify, guards=melding_classify_transition_guards)
+    answer_questions_transition: Singleton[AnswerQuestions] = Singleton(AnswerQuestions)
+    melding_process_transition: Singleton[Process] = Singleton(Process)
     melding_complete_transition: Singleton[Complete] = Singleton(Complete)
     melding_transitions: Singleton[dict[str, BaseTransition[Melding]]] = Singleton(
         get_transitions,
-        process=melding_process_transition,
         classify=melding_classify_transition,
+        answer_questions=answer_questions_transition,
+        process=melding_process_transition,
         complete=melding_complete_transition,
     )
     mp_fsm_melding_state_machine: Singleton[MpFsmMeldingStateMachine] = Singleton(
@@ -181,6 +188,12 @@ class Container(DeclarativeContainer):
         token_verifier=token_verifier,
         classifier=classifier,
         state_machine=melding_state_machine,
+    )
+    melding_answer_questions_action: Factory[MeldingAnswerQuestionsAction[Melding, Melding]] = Factory(
+        MeldingAnswerQuestionsAction,
+        state_machine=melding_state_machine,
+        repository=melding_repository,
+        token_verifier=token_verifier,
     )
     melding_process_action: Factory[MeldingProcessAction[Melding, Melding]] = Factory(
         MeldingProcessAction, state_machine=melding_state_machine, repository=melding_repository

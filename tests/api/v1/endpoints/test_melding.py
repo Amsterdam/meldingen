@@ -381,6 +381,77 @@ class TestMeldingUpdate:
         assert body.get("classification") == classification.id
 
 
+class TestMeldingAnswerQuestions:
+    ROUTE_NAME: Final[str] = "melding:answer_questions"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken")],
+        indirect=True,
+    )
+    async def test_answer_questions(self, app: FastAPI, client: AsyncClient, test_melding: Melding) -> None:
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
+
+    @pytest.mark.asyncio
+    async def test_answer_questions_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.asyncio
+    async def test_answer_questions_token_invalid(
+        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+    ) -> None:
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
+        [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken", "PT1H")],
+        indirect=True,
+    )
+    async def test_answer_questions_token_expired(
+        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+    ) -> None:
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("De restafvalcontainer is vol.", MeldingStates.PROCESSING, "supersecrettoken")],
+        indirect=True,
+    )
+    async def test_answer_questions_wrong_state(self, app: FastAPI, client: AsyncClient, test_melding: Melding) -> None:
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+
+        assert body.get("detail") == "Transition not allowed from current state"
+
+
 class TestMeldingProcess(BaseUnauthorizedTest):
     def get_route_name(self) -> str:
         return "melding:process"
