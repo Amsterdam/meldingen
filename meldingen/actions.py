@@ -242,7 +242,7 @@ class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):
                 other_form.classification = None
                 await self._repository.save(other_form, commit=False)
             except NotFoundException:
-                ...
+                """If the classification is not assigned to another form we do not need to take any action."""
 
         form_data = form_input.model_dump(exclude_unset=True, by_alias=True)
         form_data["classification"] = classification
