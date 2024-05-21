@@ -43,16 +43,17 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
     @abstractmethod
     def get_model_type(self) -> type[Any]: ...
 
-    async def save(self, model: T) -> None:
+    async def save(self, model: T, *, commit: bool = True) -> None:
         self._session.add(model)
 
-        try:
-            await self._session.commit()
-        except IntegrityError as integrity_error:
-            await self._session.rollback()
-            raise integrity_error
-        else:
-            await self._session.refresh(model)
+        if commit:
+            try:
+                await self._session.commit()
+            except IntegrityError as integrity_error:
+                await self._session.rollback()
+                raise integrity_error
+            else:
+                await self._session.refresh(model)
 
     async def list(
         self,

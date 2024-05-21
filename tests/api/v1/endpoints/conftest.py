@@ -250,8 +250,34 @@ async def form(
 
 @pytest_asyncio.fixture
 async def form_with_classification(
-    classification_repository: ClassificationRepository, form_repository: FormIoFormRepository, form: FormIoForm
+    classification_repository: ClassificationRepository,
+    form_repository: FormIoFormRepository,
+    question_repository: QuestionRepository,
+    form_title: str,
 ) -> FormIoForm:
+    form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form)
+
+    component = FormIoComponent(
+        label="Wat is uw klacht?",
+        description="",
+        key="wat-is-uw_klacht",
+        type=FormIoComponentTypeEnum.text_area,
+        input=True,
+        auto_expand=True,
+        show_char_count=True,
+    )
+
+    components = await form.awaitable_attrs.components
+    components.append(component)
+
+    await form_repository.save(form)
+
+    question = Question(text=component.description, form=form)
+
+    await question_repository.save(question)
+
+    component.question = question
+
     try:
         classification = await classification_repository.find_by_name("test_classification")
     except NotFoundException:

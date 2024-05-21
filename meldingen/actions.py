@@ -122,7 +122,7 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
         )
         if not question:
             question = Question(text=component.label, form=component.form)
-            await self._question_repository.save(question)
+            await self._question_repository.save(question, commit=False)
 
         component.question = question
 
@@ -236,6 +236,13 @@ class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):
             classification = await self._classification_repository.retrieve(form_input.classification)
             if classification is None:
                 raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Classification not found")
+
+            try:
+                other_form = await self._repository.find_by_classification_id(form_input.classification)
+                other_form.classification = None
+                await self._repository.save(other_form, commit=False)
+            except NotFoundException:
+                """If the classification is not assigned to another form we do not need to take any action."""
 
         form_data = form_input.model_dump(exclude_unset=True, by_alias=True)
         form_data["classification"] = classification
