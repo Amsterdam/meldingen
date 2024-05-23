@@ -301,7 +301,6 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         3. The melding must be classified.
         4. The question must exist.
         5. The question must belong to an existing and active form.
-        6. The form's classification must match the melding's classification.
 
         TODO: Validate the answer against the rules stored in the component (using JSONLogic?).
         """
@@ -326,10 +325,6 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         form = await question.awaitable_attrs.form
         if form is None:
             raise NotFoundException()
-
-        # Melding classification must match the form classification
-        if melding.classification_id != form.classification_id:
-            raise ClassificationMismatchException()
 
         # Store the answer
         # TODO: Add validation (using JSONLogic?)
