@@ -17,7 +17,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
-from meldingen.exceptions import ClassificationMismatchException, MeldingNotClassifiedException
+from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import (
     Answer,
     Classification,
