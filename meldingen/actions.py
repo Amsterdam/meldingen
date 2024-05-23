@@ -17,7 +17,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
-from meldingen.exceptions import ClassificationMismatchException, MeldingNotClassifiedException
+from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import (
     Answer,
     Classification,
@@ -301,7 +301,6 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         3. The melding must be classified.
         4. The question must exist.
         5. The question must belong to an existing and active form.
-        6. The form's classification must match the melding's classification.
 
         TODO: Validate the answer against the rules stored in the component (using JSONLogic?).
         """
@@ -326,10 +325,6 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         form = await question.awaitable_attrs.form
         if form is None:
             raise NotFoundException()
-
-        # Melding classification must match the form classification
-        if melding.classification_id != form.classification_id:
-            raise ClassificationMismatchException()
 
         # Store the answer
         # TODO: Add validation (using JSONLogic?)

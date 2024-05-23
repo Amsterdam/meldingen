@@ -34,7 +34,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.exceptions import ClassificationMismatchException, MeldingNotClassifiedException
+from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas import AnswerInput, AnswerOutput, MeldingCreateOutput, MeldingInput, MeldingOutput
@@ -269,7 +269,5 @@ async def answer_additional_question(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
     except MeldingNotClassifiedException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
-    except ClassificationMismatchException:
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Classification mismatch")
 
     return AnswerOutput(id=answer.id)
