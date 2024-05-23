@@ -15,7 +15,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from meldingen.models import Classification, FormIoForm, Melding, Question
+from meldingen.models import Classification, Form, Melding, Question
 from meldingen.repositories import QuestionRepository
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -582,7 +582,7 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         test_melding_with_classification: Melding,
-        form_with_classification: FormIoForm,
+        form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
         assert len(components) > 0
@@ -612,7 +612,7 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        form_with_classification: FormIoForm,
+        form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
         assert len(components) > 0
@@ -639,7 +639,7 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         test_melding: Melding,
-        form_with_classification: FormIoForm,
+        form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
         assert len(components) > 0
@@ -663,7 +663,7 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         test_melding: Melding,
-        form_with_classification: FormIoForm,
+        form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
         assert len(components) > 0
@@ -698,7 +698,7 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         test_melding: Melding,
-        form_with_classification: FormIoForm,
+        form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
         assert len(components) > 0

@@ -63,10 +63,6 @@ class BaseFormOutput(BaseModel):
     updated_at: datetime
 
 
-class PrimaryFormOutput(BaseFormOutput):
-    components: list[Union["FormComponentOutput", "FormPanelComponentOutput"]]
-
-
 class FormOnlyOutput(BaseFormOutput):
     id: int
     classification: int | None = None
@@ -132,8 +128,10 @@ def component_discriminator(value: Any) -> str | None:
     return None
 
 
-class PrimaryFormInput(BaseModel):
+class FormInput(BaseModel):
     title: Annotated[str, Field(min_length=3)]
+    display: FormIoFormDisplayEnum
+    classification: Annotated[int | None, Field(default=None, gt=0, serialization_alias="classification_id")]
     components: list[
         Annotated[
             Union[
@@ -143,11 +141,6 @@ class PrimaryFormInput(BaseModel):
             Discriminator(component_discriminator),
         ]
     ]
-
-
-class FormInput(PrimaryFormInput):
-    display: FormIoFormDisplayEnum
-    classification: Annotated[int | None, Field(default=None, gt=0, serialization_alias="classification_id")]
 
 
 class FormPanelComponentInput(BaseModel):

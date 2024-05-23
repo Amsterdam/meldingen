@@ -4,6 +4,7 @@ from typing import Any, Final, Optional, Union
 
 from meldingen_core.models import Answer as BaseAnswer
 from meldingen_core.models import Classification as BaseClassification
+from meldingen_core.models import Form as BaseForm
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import Question as BaseQuestion
 from meldingen_core.models import User as BaseUser
@@ -30,7 +31,7 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
 
 class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
     name: Mapped[str] = mapped_column(String, unique=True)
-    form: Mapped[Optional["FormIoForm"]] = relationship(default=None)
+    form: Mapped[Optional["Form"]] = relationship(default=None)
 
 
 class Melding(BaseDBModel, BaseMelding, StateAware):
@@ -63,57 +64,7 @@ class Group(BaseDBModel):
     users: Mapped[list[User]] = relationship(secondary=user_group, back_populates="groups", default_factory=list)
 
 
-class FormIoFormDisplayEnum(enum.StrEnum):
-    """The value of the display field on the form can be one of the following:
-    - form
-    - wizard
-    - pdf
-    """
-
-    form: Final[str] = "form"
-    wizard: Final[str] = "wizard"
-    pdf: Final[str] = "pdf"
-
-
-class FormIoForm(AsyncAttrs, BaseDBModel):
-    @declared_attr.directive
-    def __tablename__(cls) -> str:
-        return "form_io_form"
-
-    @declared_attr.directive
-    def __mapper_args__(self) -> dict[str, Any]:
-        return {
-            "polymorphic_on": "is_primary",
-            "polymorphic_identity": False,
-        }
-
-    # Form.io attr's
-    title: Mapped[str] = mapped_column(String())
-    display: Mapped[str] = mapped_column(
-        Enum(FormIoFormDisplayEnum, name="form_io_form_display", default=FormIoFormDisplayEnum.form)
-    )
-
-    # Internal attr's
-    is_primary: Mapped[bool] = mapped_column(Boolean(), default=False, nullable=False)
-
-    components: Mapped[OrderingList["FormIoComponent"]] = relationship(
-        cascade="save-update, merge, delete, delete-orphan",
-        back_populates="form",
-        default_factory=list,
-        order_by="FormIoComponent.position",
-        collection_class=ordering_list(attr="position", count_from=1),
-    )
-
-    classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None, unique=True)
-    classification: Mapped[Classification | None] = relationship(default=None, back_populates="form")
-
-
-class FormIoPrimaryForm(FormIoForm):
-    @declared_attr.directive
-    def __mapper_args__(self) -> dict[str, Any]:
-        return {
-            "polymorphic_identity": True,
-        }
+# Form
 
 
 class FormIoComponentTypeEnum(enum.StrEnum):
@@ -148,8 +99,8 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
     show_char_count: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
 
     # Internal attr's
-    form_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_form.id"), default=None, nullable=True)
-    form: Mapped[FormIoForm | None] = relationship(
+    form_id: Mapped[int | None] = mapped_column(ForeignKey("form.id"), default=None, nullable=True)
+    form: Mapped[Union["Form", None]] = relationship(
         cascade="save-update, merge, delete",
         back_populates="components",
         default=None,
@@ -194,11 +145,47 @@ class FormIoTextAreaComponent(FormIoComponent):
         }
 
 
+class FormIoFormDisplayEnum(enum.StrEnum):
+    """The value of the display field on the form can be one of the following:
+    - form
+    - wizard
+    - pdf
+    """
+
+    form: Final[str] = "form"
+    wizard: Final[str] = "wizard"
+    pdf: Final[str] = "pdf"
+
+
+class Form(AsyncAttrs, BaseDBModel, BaseForm):
+    title: Mapped[str] = mapped_column(String())
+
+    classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None, unique=True)
+    classification: Mapped[Classification | None] = relationship(default=None)
+
+    questions: Mapped[list["Question"]] = relationship(
+        cascade="save-update, merge, delete, delete-orphan", back_populates="form", default_factory=list, init=False
+    )
+
+    # FormIo implementation
+    display: Mapped[str] = mapped_column(
+        Enum(FormIoFormDisplayEnum, name="form_io_form_display"), default=FormIoFormDisplayEnum.form
+    )
+
+    components: Mapped[OrderingList["FormIoComponent"]] = relationship(
+        cascade="save-update, merge, delete, delete-orphan",
+        back_populates="form",
+        default_factory=list,
+        order_by="FormIoComponent.position",
+        collection_class=ordering_list(attr="position", count_from=1),
+    )
+
+
 class Question(AsyncAttrs, BaseDBModel, BaseQuestion):
     text: Mapped[str] = mapped_column(String())
 
-    form_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_form.id", ondelete="SET NULL"), default=None)
-    form: Mapped[FormIoForm | None] = relationship(default=None)
+    form_id: Mapped[int | None] = mapped_column(ForeignKey("form.id", ondelete="SET NULL"), default=None)
+    form: Mapped[Form | None] = relationship(default=None)
 
 
 class Answer(BaseDBModel, BaseAnswer):

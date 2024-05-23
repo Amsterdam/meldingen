@@ -6,6 +6,5 @@ alembic upgrade head
 
 # Run Python commands (ignoring errors)
 python main.py users add user@example.com || true
-python main.py forms add-primary --title "Primary form" || true
 
 exec "$@"

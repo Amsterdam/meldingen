@@ -11,16 +11,15 @@ from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import (
     Classification,
+    Form,
     FormIoComponent,
     FormIoComponentTypeEnum,
-    FormIoForm,
     FormIoFormDisplayEnum,
-    FormIoPrimaryForm,
     Melding,
     Question,
     User,
 )
-from meldingen.repositories import ClassificationRepository, FormIoFormRepository, MeldingRepository, QuestionRepository
+from meldingen.repositories import ClassificationRepository, FormRepository, MeldingRepository, QuestionRepository
 
 
 @pytest_asyncio.fixture
@@ -166,46 +165,24 @@ async def classifications(classification_repository: ClassificationRepository) -
 
 @pytest_asyncio.fixture
 async def classification_with_form(
-    classification_repository: ClassificationRepository, form_repository: FormIoFormRepository
+    classification_repository: ClassificationRepository, form_repository: FormRepository
 ) -> Classification:
     classification = Classification("test_classification")
     await classification_repository.save(classification)
-    form = FormIoForm(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
+    form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
     await form_repository.save(form)
 
     return classification
 
 
 @pytest_asyncio.fixture
-async def form_repository(container: Container) -> FormIoFormRepository:
+async def form_repository(container: Container) -> FormRepository:
     return await container.form_repository()
 
 
 @pytest_asyncio.fixture
 async def question_repository(container: Container) -> QuestionRepository:
     return await container.question_repository()
-
-
-@pytest_asyncio.fixture
-async def primary_form(form_repository: FormIoFormRepository) -> FormIoPrimaryForm:
-    primary_form = FormIoPrimaryForm(title="Primary Form", display=FormIoFormDisplayEnum.form, is_primary=True)
-
-    component = FormIoComponent(
-        label="Wat is uw klacht?",
-        description="",
-        key="wat-is-uw_klacht",
-        type=FormIoComponentTypeEnum.text_area,
-        input=True,
-        auto_expand=True,
-        show_char_count=True,
-    )
-
-    components = await primary_form.awaitable_attrs.components
-    components.append(component)
-
-    await form_repository.save(primary_form)
-
-    return primary_form
 
 
 @pytest.fixture
@@ -217,10 +194,8 @@ def form_title(request: FixtureRequest) -> str:
 
 
 @pytest_asyncio.fixture
-async def form(
-    form_repository: FormIoFormRepository, question_repository: QuestionRepository, form_title: str
-) -> FormIoForm:
-    form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form)
+async def form(form_repository: FormRepository, question_repository: QuestionRepository, form_title: str) -> Form:
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
     component = FormIoComponent(
         label="Wat is uw klacht?",
@@ -251,11 +226,11 @@ async def form(
 @pytest_asyncio.fixture
 async def form_with_classification(
     classification_repository: ClassificationRepository,
-    form_repository: FormIoFormRepository,
+    form_repository: FormRepository,
     question_repository: QuestionRepository,
     form_title: str,
-) -> FormIoForm:
-    form = FormIoForm(title=form_title, display=FormIoFormDisplayEnum.form)
+) -> Form:
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
     component = FormIoComponent(
         label="Wat is uw klacht?",
@@ -291,10 +266,10 @@ async def form_with_classification(
 
 
 @pytest_asyncio.fixture
-async def test_forms(form_repository: FormIoFormRepository) -> list[FormIoForm]:
+async def test_forms(form_repository: FormRepository) -> list[Form]:
     forms = []
     for n in range(1, 11):
-        form = FormIoForm(title=f"Form #{n}", display=FormIoFormDisplayEnum.form)
+        form = Form(title=f"Form #{n}", display=FormIoFormDisplayEnum.form)
 
         await form_repository.save(form)
 
