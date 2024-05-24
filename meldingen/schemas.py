@@ -60,6 +60,8 @@ class UserUpdateInput(BaseModel):
 class BaseFormOutput(BaseModel):
     title: str
     display: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class PrimaryFormOutput(BaseFormOutput):

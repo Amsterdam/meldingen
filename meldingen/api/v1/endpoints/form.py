@@ -61,7 +61,12 @@ async def list_form(
     for db_form in forms:
         output.append(
             FormOnlyOutput(
-                id=db_form.id, title=db_form.title, display=db_form.display, classification=db_form.classification_id
+                id=db_form.id,
+                title=db_form.title,
+                display=db_form.display,
+                classification=db_form.classification_id,
+                created_at=db_form.created_at,
+                updated_at=db_form.updated_at,
             )
         )
 

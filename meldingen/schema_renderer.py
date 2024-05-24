@@ -55,6 +55,8 @@ class FormOutPutRenderer(BaseFormOutPutRenderer):
             display=form.display,
             components=components_output,
             classification=form.classification_id,
+            created_at=form.created_at,
+            updated_at=form.updated_at,
         )
 
 
@@ -63,4 +65,10 @@ class PrimaryFormOutPutRenderer(BaseFormOutPutRenderer):
         components = await form.awaitable_attrs.components
         components_output = await self._render_components(components)
 
-        return PrimaryFormOutput(title=form.title, display=form.display, components=components_output)
+        return PrimaryFormOutput(
+            title=form.title,
+            display=form.display,
+            components=components_output,
+            created_at=form.created_at,
+            updated_at=form.updated_at,
+        )
