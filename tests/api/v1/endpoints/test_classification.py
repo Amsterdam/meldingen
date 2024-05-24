@@ -37,6 +37,8 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert data.get("id") == 1
         assert data.get("name") == "bla"
         assert data.get("form", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
 
     @pytest.mark.asyncio
     async def test_create_classification_name_min_length_violation(
@@ -206,7 +208,13 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
 
-        assert data == expected
+        for i in range(0, len(data)):
+            assert data[i]["id"] == expected[i]["id"]
+            assert data[i]["name"] == expected[i]["name"]
+            assert data[i]["form"] == expected[i]["form"]
+            assert data[i]["created_at"] is not None
+            assert data[i]["updated_at"] is not None
+
         assert response.headers.get("content-range") == "classification 0-49/10"
 
     @pytest.mark.asyncio
@@ -254,7 +262,13 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
 
-        assert data == expected
+        for i in range(0, len(data)):
+            assert data[i]["id"] == expected[i]["id"]
+            assert data[i]["name"] == expected[i]["name"]
+            assert data[i]["form"] == expected[i]["form"]
+            assert data[i]["created_at"] is not None
+            assert data[i]["updated_at"] is not None
+
         assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
 
     @pytest.mark.asyncio
@@ -314,6 +328,8 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         assert data.get("id") == 1
         assert data.get("name") == "bla"
         assert data.get("form", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
 
     @pytest.mark.asyncio
     async def test_retrieve_classification_that_does_not_exist(
@@ -366,6 +382,8 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         data = response.json()
         assert data.get("name") == "bladiebla"
         assert data.get("form", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
 
     @pytest.mark.asyncio
     async def test_update_classification_that_does_not_exist(

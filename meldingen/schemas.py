@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Annotated, Any, Union
 
-from meldingen_core.models import Answer, Classification, User
+from meldingen_core.models import Classification, User
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
 
@@ -8,12 +9,17 @@ from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
 from meldingen.validators import create_non_match_validator
 
 
+class BaseOutputModel(BaseModel):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
 class ClassificationInput(BaseModel, Classification):
     name: str = Field(min_length=1)
 
 
-class ClassificationOutput(BaseModel, Classification):
-    id: int
+class ClassificationOutput(BaseOutputModel, Classification):
     form: int | None = None
 
 
