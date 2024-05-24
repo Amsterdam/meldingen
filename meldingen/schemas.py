@@ -27,8 +27,7 @@ class MeldingInput(BaseModel):
     text: str = Field(min_length=1)
 
 
-class MeldingOutput(BaseModel):
-    id: int
+class MeldingOutput(BaseOutputModel):
     text: str
     state: str
     classification: int | None = Field(default=None)

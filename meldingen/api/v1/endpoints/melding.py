@@ -45,7 +45,12 @@ logger = structlog.get_logger()
 
 def _hydrate_output(melding: Melding) -> MeldingOutput:
     return MeldingOutput(
-        id=melding.id, text=melding.text, state=melding.state, classification=melding.classification_id
+        id=melding.id,
+        text=melding.text,
+        state=melding.state,
+        classification=melding.classification_id,
+        created_at=melding.created_at,
+        updated_at=melding.updated_at,
     )
 
 
@@ -67,6 +72,8 @@ async def create_melding(
         state=melding.state,
         classification=melding.classification_id,
         token=melding.token,
+        created_at=melding.created_at,
+        updated_at=melding.updated_at,
     )
 
 
