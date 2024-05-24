@@ -270,4 +270,4 @@ async def answer_additional_question(
     except MeldingNotClassifiedException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
 
-    return AnswerOutput(id=answer.id)
+    return AnswerOutput(id=answer.id, created_at=answer.created_at, updated_at=answer.updated_at)
