@@ -34,7 +34,9 @@ async def create_classification(
 
     await action(db_model)
 
-    return ClassificationOutput(id=db_model.id, name=db_model.name)
+    return ClassificationOutput(
+        id=db_model.id, name=db_model.name, created_at=db_model.created_at, updated_at=db_model.updated_at
+    )
 
 
 @inject
@@ -53,7 +55,13 @@ async def _hydrate_output(classification: Classification) -> ClassificationOutpu
     if form is not None:
         form_id = form.id
 
-    return ClassificationOutput(id=classification.id, form=form_id, name=classification.name)
+    return ClassificationOutput(
+        id=classification.id,
+        form=form_id,
+        name=classification.name,
+        created_at=classification.created_at,
+        updated_at=classification.updated_at,
+    )
 
 
 @router.get(

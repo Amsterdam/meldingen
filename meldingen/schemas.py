@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated, Any, Union
 
 from meldingen_core.models import Classification, User
@@ -8,16 +9,22 @@ from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
 from meldingen.validators import create_non_match_validator
 
 
+class BaseOutputModel(BaseModel):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
 class ClassificationInput(BaseModel, Classification):
     name: str = Field(min_length=1)
 
 
-class ClassificationOutput(BaseModel, Classification):
-    id: int
+class ClassificationOutput(BaseOutputModel, Classification):
     form: int | None = None
 
 
 class MeldingInput(BaseModel):
+    id: int
     text: str = Field(min_length=1)
 
 
