@@ -210,7 +210,14 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
 
         data = response.json()
 
-        assert data == expected
+        for i in range(len(expected)):
+            assert data[i]["id"] == expected[i]["id"]
+            assert data[i]["classification"] == expected[i]["classification"]
+            assert data[i]["title"] == expected[i]["title"]
+            assert data[i]["display"] == expected[i]["display"]
+            assert data[i]["created_at"] is not None
+            assert data[i]["updated_at"] is not None
+
         assert response.headers.get("content-range") == "form 0-49/10"
 
     @pytest.mark.asyncio
@@ -261,7 +268,14 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
 
         data = response.json()
 
-        assert data == expected
+        for i in range(len(expected)):
+            assert data[i]["id"] == expected[i]["id"]
+            assert data[i]["classification"] == expected[i]["classification"]
+            assert data[i]["title"] == expected[i]["title"]
+            assert data[i]["display"] == expected[i]["display"]
+            assert data[i]["created_at"] is not None
+            assert data[i]["updated_at"] is not None
+
         assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/10"
 
 
@@ -279,6 +293,8 @@ class TestFormRetrieve(BaseFormTest):
         assert data.get("id") == form.id
         assert data.get("title") == form.title
         assert data.get("display") == form.display
+        assert data.get("created_at") == form.created_at.isoformat()
+        assert data.get("updated_at") == form.updated_at.isoformat()
 
         await self._assert_components(data.get("components"), await form.awaitable_attrs.components)
 
@@ -420,6 +436,8 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert data["title"] == new_data["title"]
         assert data["display"] == new_data["display"]
         assert data.get("classification", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
 
         components = await form.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
@@ -771,6 +789,8 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert data.get("title") == "Formulier #1"
         assert data.get("display") == "form"
         assert data.get("classification", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
 
         components = data.get("components")
         assert isinstance(components, list)
@@ -1069,3 +1089,5 @@ class TestFormClassification:
         assert body.get("display") == form_with_classification.display
         assert len(body.get("components")) == 1
         assert body.get("id") == form_with_classification.id
+        assert body.get("created_at") == form_with_classification.created_at.isoformat()
+        assert body.get("updated_at") == form_with_classification.updated_at.isoformat()
