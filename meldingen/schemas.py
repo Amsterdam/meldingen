@@ -24,7 +24,6 @@ class ClassificationOutput(BaseOutputModel, Classification):
 
 
 class MeldingInput(BaseModel):
-    id: int
     text: str = Field(min_length=1)
 
 
