@@ -35,6 +35,8 @@ class TestMeldingCreate:
         assert data.get("state") == MeldingStates.NEW
         assert data.get("classification", "") is None
         assert data.get("token") is not None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("classification_name,", ["classification_name"], indirect=True)
@@ -188,7 +190,14 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
 
         data = response.json()
 
-        assert data == expected
+        for i in range(len(expected)):
+            assert data[i]["id"] == expected[i]["id"]
+            assert data[i]["text"] == expected[i]["text"]
+            assert data[i]["state"] == expected[i]["state"]
+            assert data[i]["classification"] == expected[i]["classification"]
+            assert data[i]["created_at"] is not None
+            assert data[i]["updated_at"] is not None
+
         assert response.headers.get("content-range") == "melding 0-49/10"
 
     @pytest.mark.asyncio
@@ -239,7 +248,14 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
 
         data = response.json()
 
-        assert data == expected
+        for i in range(len(expected)):
+            assert data[i]["id"] == expected[i]["id"]
+            assert data[i]["text"] == expected[i]["text"]
+            assert data[i]["state"] == expected[i]["state"]
+            assert data[i]["classification"] == expected[i]["classification"]
+            assert data[i]["created_at"] is not None
+            assert data[i]["updated_at"] is not None
+
         assert response.headers.get("content-range") == f"melding {offset}-{limit - 1 + offset}/10"
 
 
@@ -273,6 +289,8 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert data.get("text") == test_melding.text
         assert data.get("state") == MeldingStates.NEW
         assert data.get("classification", "") is None
+        assert data.get("created_at") == test_melding.created_at.isoformat()
+        assert data.get("updated_at") == test_melding.updated_at.isoformat()
 
     @pytest.mark.asyncio
     async def test_retrieve_melding_that_does_not_exist(
@@ -379,6 +397,8 @@ class TestMeldingUpdate:
         assert body.get("text") == "classification_name"
         assert body.get("state") == MeldingStates.CLASSIFIED
         assert body.get("classification") == classification.id
+        assert body.get("created_at") == test_melding.created_at.isoformat()
+        assert body.get("updated_at") == test_melding.updated_at.isoformat()
 
 
 class TestMeldingAnswerQuestions:
@@ -400,6 +420,8 @@ class TestMeldingAnswerQuestions:
         body = response.json()
 
         assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
+        assert body.get("created_at") == test_melding.created_at.isoformat()
+        assert body.get("updated_at") == test_melding.updated_at.isoformat()
 
     @pytest.mark.asyncio
     async def test_answer_questions_not_found(self, app: FastAPI, client: AsyncClient) -> None:
@@ -476,6 +498,8 @@ class TestMeldingProcess(BaseUnauthorizedTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.PROCESSING
+        assert body.get("created_at") == test_melding.created_at.isoformat()
+        assert body.get("updated_at") == test_melding.updated_at.isoformat()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
@@ -534,6 +558,8 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.COMPLETED
+        assert body.get("created_at") == test_melding.created_at.isoformat()
+        assert body.get("updated_at") == test_melding.updated_at.isoformat()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)

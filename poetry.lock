@@ -1083,11 +1083,14 @@ python-versions = "^3.12"
 files = []
 develop = false
 
+[package.dependencies]
+structlog = "^24.1.0"
+
 [package.source]
 type = "git"
 url = "https://github.com/amsterdam/meldingen-core.git"
 reference = "HEAD"
-resolved_reference = "aaea18f904e53c879c4c417c474d029ae7650fa3"
+resolved_reference = "9547055c5d10687bbc9a24dfbd8a3d3c51bb6e72"
 
 [[package]]
 name = "mergedeep"

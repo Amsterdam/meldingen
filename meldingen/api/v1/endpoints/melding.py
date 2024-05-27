@@ -45,7 +45,12 @@ logger = structlog.get_logger()
 
 def _hydrate_output(melding: Melding) -> MeldingOutput:
     return MeldingOutput(
-        id=melding.id, text=melding.text, state=melding.state, classification=melding.classification_id
+        id=melding.id,
+        text=melding.text,
+        state=melding.state,
+        classification=melding.classification_id,
+        created_at=melding.created_at,
+        updated_at=melding.updated_at,
     )
 
 
@@ -56,10 +61,8 @@ async def create_melding(
     action: MeldingCreateAction[Melding, Melding] = Depends(Provide(Container.melding_create_action)),
 ) -> MeldingCreateOutput:
     melding = Melding(**melding_input.model_dump())
-    try:
-        await action(melding)
-    except NotFoundException:
-        logger.error("Classifier failed to find classification!")
+
+    await action(melding)
 
     return MeldingCreateOutput(
         id=melding.id,
@@ -67,6 +70,8 @@ async def create_melding(
         state=melding.state,
         classification=melding.classification_id,
         token=melding.token,
+        created_at=melding.created_at,
+        updated_at=melding.updated_at,
     )
 
 
