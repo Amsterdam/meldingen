@@ -18,6 +18,12 @@ from meldingen.schemas import UserCreateInput, UserOutput, UserUpdateInput
 router = APIRouter()
 
 
+def _hydrate_output(user: User) -> UserOutput:
+    return UserOutput(
+        id=user.id, email=user.email, username=user.username, created_at=user.created_at, updated_at=user.updated_at
+    )
+
+
 @router.post(
     "/", name="user:create", status_code=HTTP_201_CREATED, responses={**unauthorized_response, **conflict_response}
 )
@@ -30,9 +36,7 @@ async def create_user(
     db_user = User(**user_input.model_dump())
     await action(db_user)
 
-    output = UserOutput(id=db_user.id, email=db_user.email, username=db_user.username)
-
-    return output
+    return _hydrate_output(db_user)
 
 
 @inject
@@ -66,7 +70,7 @@ async def list_users(
 
     output = []
     for db_user in users:
-        output.append(UserOutput(id=db_user.id, email=db_user.email, username=db_user.username))
+        output.append(_hydrate_output(db_user))
 
     return output
 
@@ -82,7 +86,7 @@ async def retrieve_user(
     if not db_user:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return UserOutput(id=db_user.id, username=db_user.username, email=db_user.email)
+    return _hydrate_output(db_user)
 
 
 @router.delete(
@@ -130,4 +134,4 @@ async def update_user(
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return UserOutput(id=db_user.id, username=db_user.username, email=db_user.email)
+    return _hydrate_output(db_user)

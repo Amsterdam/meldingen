@@ -40,6 +40,8 @@ class TestUserCreate(BaseUnauthorizedTest):
         assert data.get("id") == 1
         assert data.get("username") == "meldingen_user"
         assert data.get("email") == "user@example.com"
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
 
     @pytest.mark.asyncio
     async def test_create_user_username_minimum_length_violation(
@@ -226,7 +228,13 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
 
         data = response.json()
 
-        assert data == expected
+        for i in range(len(expected)):
+            assert data[i]["id"] == expected[i]["id"]
+            assert data[i]["email"] == expected[i]["email"]
+            assert data[i]["username"] == expected[i]["username"]
+            assert data[i]["created_at"] is not None
+            assert data[i]["updated_at"] is not None
+
         assert response.headers.get("content-range") == "user 0-49/10"
 
     @pytest.mark.asyncio
@@ -277,7 +285,13 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
 
         data = response.json()
 
-        assert data == expected
+        for i in range(len(expected)):
+            assert data[i]["id"] == expected[i]["id"]
+            assert data[i]["email"] == expected[i]["email"]
+            assert data[i]["username"] == expected[i]["username"]
+            assert data[i]["created_at"] is not None
+            assert data[i]["updated_at"] is not None
+
         assert response.headers.get("content-range") == f"user {offset}-{limit - 1 + offset}/10"
 
 
@@ -310,6 +324,8 @@ class TestUserRetrieve(BaseUnauthorizedTest):
         assert data.get("id") == test_user.id
         assert data.get("username") == test_user.username
         assert data.get("email") == test_user.email
+        assert data.get("created_at") == test_user.created_at.isoformat()
+        assert data.get("updated_at") == test_user.updated_at.isoformat()
 
     @pytest.mark.asyncio
     async def test_retrieve_user_that_does_not_exist(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
@@ -416,6 +432,9 @@ class TestUserUpdate(BaseUnauthorizedTest):
 
         for key, value in new_data.items():
             assert data.get(key) == value
+
+        assert data.get("created_at") == test_user.created_at.isoformat()
+        assert data.get("updated_at") == test_user.updated_at.isoformat()
 
     @pytest.mark.asyncio
     async def test_update_user_username_minimum_length_violation(

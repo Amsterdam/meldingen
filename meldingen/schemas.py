@@ -43,8 +43,7 @@ class UserCreateInput(BaseModel, User):
     email: EmailStr
 
 
-class UserOutput(BaseModel):
-    id: int
+class UserOutput(BaseOutputModel):
     email: str
     username: str
 
