@@ -53,8 +53,8 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
             except IntegrityError as integrity_error:
                 await self._session.rollback()
                 raise integrity_error
-            else:
-                await self._session.refresh(model)
+
+            await self._session.refresh(model)
 
     async def list(
         self,
