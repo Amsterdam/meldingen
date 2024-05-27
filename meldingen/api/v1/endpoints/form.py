@@ -6,19 +6,19 @@ from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from meldingen.actions import (
-    FormIoFormCreateAction,
-    FormIoFormDeleteAction,
-    FormIoFormListAction,
-    FormIoFormRetrieveAction,
-    FormIoFormRetrieveByClassificationAction,
-    FormIoFormUpdateAction,
+    FormCreateAction,
+    FormDeleteAction,
+    FormListAction,
+    FormRetrieveAction,
+    FormRetrieveByClassificationAction,
+    FormUpdateAction,
 )
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import User
-from meldingen.repositories import FormIoFormRepository
+from meldingen.repositories import FormRepository
 from meldingen.schema_renderer import FormOutPutRenderer
 from meldingen.schemas import FormInput, FormOnlyOutput, FormOutput
 
@@ -32,7 +32,7 @@ _hydrate_output = FormOutPutRenderer()
 async def _add_content_range_header(
     response: Response,
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
-    repo: FormIoFormRepository = Depends(Provide[Container.form_repository]),
+    repo: FormRepository = Depends(Provide[Container.form_repository]),
 ) -> None:
     await ContentRangeHeaderAdder(repo, "form")(response, pagination)
 
@@ -48,7 +48,7 @@ async def list_form(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     user: Annotated[User, Depends(authenticate_user)],
-    action: FormIoFormListAction = Depends(Provide(Container.form_list_action)),
+    action: FormListAction = Depends(Provide(Container.form_list_action)),
 ) -> list[FormOnlyOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -77,7 +77,7 @@ async def list_form(
 @inject
 async def retrieve_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
-    action: FormIoFormRetrieveAction = Depends(Provide(Container.form_retrieve_action)),
+    action: FormRetrieveAction = Depends(Provide(Container.form_retrieve_action)),
 ) -> FormOutput:
     db_form = await action(pk=form_id)
     if not db_form:
@@ -90,7 +90,7 @@ async def retrieve_form(
 @inject
 async def retrieve_form_by_classification(
     classification_id: Annotated[int, Path(description="The id of the classification that the form belongs to.", ge=1)],
-    action: FormIoFormRetrieveByClassificationAction = Depends(Provide(Container.form_classification_action)),
+    action: FormRetrieveByClassificationAction = Depends(Provide(Container.form_classification_action)),
 ) -> FormOutput:
     form = await action(classification_id)
 
@@ -113,7 +113,7 @@ async def retrieve_form_by_classification(
 async def create_form(
     form_input: FormInput,
     user: Annotated[User, Depends(authenticate_user)],
-    action: FormIoFormCreateAction = Depends(Provide(Container.form_create_action)),
+    action: FormCreateAction = Depends(Provide(Container.form_create_action)),
 ) -> FormOutput:
     form = await action(form_input)
 
@@ -137,7 +137,7 @@ async def update_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
     form_input: FormInput,
     user: Annotated[User, Depends(authenticate_user)],
-    action: FormIoFormUpdateAction = Depends(Provide(Container.form_update_action)),
+    action: FormUpdateAction = Depends(Provide(Container.form_update_action)),
 ) -> FormOutput:
     db_form = await action(form_id, form_input)
 
@@ -157,7 +157,7 @@ async def update_form(
 async def delete_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
     user: Annotated[User, Depends(authenticate_user)],
-    action: FormIoFormDeleteAction = Depends(Provide(Container.form_delete_action)),
+    action: FormDeleteAction = Depends(Provide(Container.form_delete_action)),
 ) -> None:
     try:
         await action(pk=form_id)

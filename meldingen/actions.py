@@ -21,11 +21,10 @@ from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import (
     Answer,
     Classification,
+    Form,
     FormIoComponent,
     FormIoComponentTypeEnum,
-    FormIoForm,
     FormIoPanelComponent,
-    FormIoPrimaryForm,
     Melding,
     Question,
     User,
@@ -34,7 +33,7 @@ from meldingen.repositories import (
     AnswerRepository,
     AttributeNotFoundException,
     ClassificationRepository,
-    FormIoFormRepository,
+    FormRepository,
     MeldingRepository,
     QuestionRepository,
 )
@@ -90,13 +89,13 @@ class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classificati
 class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, Classification]): ...
 
 
-class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
-    _repository: FormIoFormRepository
+class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
+    _repository: FormRepository
     _question_repository: QuestionRepository
 
     def __init__(
         self,
-        repository: FormIoFormRepository,
+        repository: FormRepository,
         question_repository: QuestionRepository,
     ) -> None:
         super().__init__(repository)
@@ -107,13 +106,8 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
         A question will only be created if:
             - A panel component is NOT a decorative component
             - A component must be part of a form
-            - A component form is NOT the primary form
         """
-        if (
-            component.type == FormIoComponentTypeEnum.panel
-            or not component.form
-            or isinstance(component.form, FormIoPrimaryForm)
-        ):
+        if component.type == FormIoComponentTypeEnum.panel or not component.form:
             return
 
         # If the question already exists use the one from the database
@@ -127,7 +121,7 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
         component.question = question
 
     async def _create_components(
-        self, parent: FormIoForm | FormIoPanelComponent, components_values: list[dict[str, Any]]
+        self, parent: Form | FormIoPanelComponent, components_values: list[dict[str, Any]]
     ) -> None:
         parent_components = await parent.awaitable_attrs.components
         parent_components.clear()
@@ -149,19 +143,19 @@ class BaseFormIoFormCreateUpdateAction(BaseCRUDAction[FormIoForm, FormIoForm]):
         parent_components.reorder()
 
 
-class FormIoFormCreateAction(BaseFormIoFormCreateUpdateAction):
+class FormCreateAction(BaseFormCreateUpdateAction):
     _classification_repository: ClassificationRepository
 
     def __init__(
         self,
-        repository: FormIoFormRepository,
+        repository: FormRepository,
         classification_repository: ClassificationRepository,
         question_repository: QuestionRepository,
     ):
         super().__init__(repository, question_repository)
         self._classification_repository = classification_repository
 
-    async def __call__(self, form_input: FormInput) -> FormIoForm:
+    async def __call__(self, form_input: FormInput) -> Form:
         classification = None
         if form_input.classification is not None:
             classification = await self._classification_repository.retrieve(form_input.classification)
@@ -175,7 +169,7 @@ class FormIoFormCreateAction(BaseFormIoFormCreateUpdateAction):
         for component in form_input.components:
             dumped_components_input.append(component.model_dump())
 
-        form = FormIoForm(**dumped_form_input)
+        form = Form(**dumped_form_input)
         form.classification = classification
 
         await self._create_components(form, dumped_components_input)
@@ -184,24 +178,17 @@ class FormIoFormCreateAction(BaseFormIoFormCreateUpdateAction):
         return form
 
 
-class FormIoFormListAction(BaseListAction[FormIoForm, FormIoForm]): ...
+class FormListAction(BaseListAction[Form, Form]): ...
 
 
-class FormIoFormRetrieveAction(BaseRetrieveAction[FormIoForm, FormIoForm]): ...
+class FormRetrieveAction(BaseRetrieveAction[Form, Form]): ...
 
 
-class FormIoFormDeleteAction(BaseDeleteAction[FormIoForm, FormIoForm]): ...
+class FormDeleteAction(BaseDeleteAction[Form, Form]): ...
 
 
-class FormIoPrimaryFormRetrieveAction(BaseCRUDAction[FormIoForm, FormIoForm]):
-    _repository: FormIoFormRepository
-
-    async def __call__(self) -> FormIoForm | None:
-        return await self._repository.retrieve_primary_form()
-
-
-class BaseFormIoFormUpdateAction(BaseFormIoFormCreateUpdateAction):
-    async def _update(self, obj: FormIoForm, values: dict[str, Any]) -> FormIoForm:
+class BaseFormUpdateAction(BaseFormCreateUpdateAction):
+    async def _update(self, obj: Form, values: dict[str, Any]) -> Form:
         component_values = values.pop("components", [])
         if component_values:
             await self._create_components(obj, component_values)
@@ -214,19 +201,19 @@ class BaseFormIoFormUpdateAction(BaseFormIoFormCreateUpdateAction):
         return obj
 
 
-class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):
+class FormUpdateAction(BaseFormUpdateAction):
     _classification_repository: ClassificationRepository
 
     def __init__(
         self,
-        repository: FormIoFormRepository,
+        repository: FormRepository,
         classification_repository: ClassificationRepository,
         question_repository: QuestionRepository,
     ):
         super().__init__(repository, question_repository)
         self._classification_repository = classification_repository
 
-    async def __call__(self, pk: int, form_input: FormInput) -> FormIoForm:
+    async def __call__(self, pk: int, form_input: FormInput) -> Form:
         obj = await self._repository.retrieve(pk=pk)
         if obj is None:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND)
@@ -255,19 +242,10 @@ class FormIoFormUpdateAction(BaseFormIoFormUpdateAction):
         return await self._update(obj, form_data)
 
 
-class FormIoPrimaryFormUpdateAction(BaseFormIoFormUpdateAction):
-    async def __call__(self, values: dict[str, Any]) -> FormIoForm:
-        obj = await self._repository.retrieve_primary_form()
-        if obj is None:
-            raise NotFoundException()
+class FormRetrieveByClassificationAction(BaseCRUDAction[Form, Form]):
+    _repository: FormRepository
 
-        return await self._update(obj, values)
-
-
-class FormIoFormRetrieveByClassificationAction(BaseCRUDAction[FormIoForm, FormIoForm]):
-    _repository: FormIoFormRepository
-
-    async def __call__(self, classification_id: int) -> FormIoForm:
+    async def __call__(self, classification_id: int) -> Form:
         try:
             return await self._repository.find_by_classification_id(classification_id)
         except NotFoundException:

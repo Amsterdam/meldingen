@@ -1,24 +1,25 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
-from typing import Any, TypeVar, override
+from typing import Any, TypeVar
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseClassificationRepository,
+    BaseFormRepository,
     BaseMeldingRepository,
     BaseQuestionRepository,
     BaseRepository,
     BaseUserRepository,
 )
 from sqlalchemy import Select, desc, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Relationship
 from sqlalchemy.sql import func
 
-from meldingen.models import Answer, BaseDBModel, Classification, FormIoForm, Group, Melding, Question, User
+from meldingen.models import Answer, BaseDBModel, Classification, Form, Group, Melding, Question, User
 
 
 class AttributeNotFoundException(Exception):
@@ -168,66 +169,19 @@ class ClassificationRepository(BaseSQLAlchemyRepository[Classification, Classifi
         return classification
 
 
-class FormIoFormRepository(BaseSQLAlchemyRepository[FormIoForm, FormIoForm]):
-    def get_model_type(self) -> type[FormIoForm]:
-        return FormIoForm
+class FormRepository(BaseSQLAlchemyRepository[Form, Form], BaseFormRepository):
+    def get_model_type(self) -> type[Form]:
+        return Form
 
-    @override
-    async def list(
-        self,
-        *,
-        limit: int | None = None,
-        offset: int | None = None,
-        sort_attribute_name: str | None = None,
-        sort_direction: SortingDirection | None = None,
-    ) -> Collection[FormIoForm]:
-        _type = self.get_model_type()
-        statement = select(self.get_model_type()).where(_type.is_primary == False)
-
-        statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
-
-        if limit:
-            statement = statement.limit(limit)
-
-        if offset:
-            statement = statement.offset(offset)
-
-        results = await self._session.execute(statement)
-
-        return results.scalars().unique().all()
-
-    @override
-    async def retrieve(self, pk: int) -> FormIoForm | None:
-        _type = self.get_model_type()
-        statement = select(_type).where(_type.is_primary == False).where(_type.id == pk)
-        results = await self._session.execute(statement)
-        return results.scalars().unique().one_or_none()
-
-    async def retrieve_primary_form(self) -> FormIoForm | None:
-        _type = self.get_model_type()
-        statement = select(_type).where(_type.is_primary == True)
-        results = await self._session.execute(statement)
-        return results.scalars().one_or_none()
-
-    @override
-    async def count(self) -> int:
-        _type = self.get_model_type()
-        statement = select(func.count(_type.id)).where(_type.is_primary == False)
-        result = await self._session.execute(statement)
-
-        return result.scalars().one()
-
-    async def find_by_classification_id(self, classification_id: int) -> FormIoForm:
+    async def find_by_classification_id(self, classification_id: int) -> Form:
         _type = self.get_model_type()
         statement = select(_type).where(_type.classification_id == classification_id)
 
         result = await self._session.execute(statement)
-        form = result.scalars().one_or_none()
-
-        if form is None:
+        try:
+            return result.scalars().one()
+        except NoResultFound:
             raise NotFoundException()
-
-        return form
 
 
 class QuestionRepository(BaseSQLAlchemyRepository[Question, Question], BaseQuestionRepository):

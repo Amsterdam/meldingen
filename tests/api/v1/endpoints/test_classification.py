@@ -13,7 +13,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.models import Classification, FormIoForm
+from meldingen.models import Classification, Form
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -273,7 +273,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.asyncio
     async def test_list_classification_with_form(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: FormIoForm
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
@@ -285,7 +285,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.asyncio
     async def test_list_classifications_sort_on_relationship(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: FormIoForm
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"sort": '["form", "ASC"]'})
 

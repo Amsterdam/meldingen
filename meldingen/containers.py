@@ -25,14 +25,12 @@ from meldingen.actions import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
-    FormIoFormCreateAction,
-    FormIoFormDeleteAction,
-    FormIoFormListAction,
-    FormIoFormRetrieveAction,
-    FormIoFormRetrieveByClassificationAction,
-    FormIoFormUpdateAction,
-    FormIoPrimaryFormRetrieveAction,
-    FormIoPrimaryFormUpdateAction,
+    FormCreateAction,
+    FormDeleteAction,
+    FormListAction,
+    FormRetrieveAction,
+    FormRetrieveByClassificationAction,
+    FormUpdateAction,
     MeldingListAction,
     MeldingRetrieveAction,
     UserListAction,
@@ -44,7 +42,7 @@ from meldingen.models import Melding
 from meldingen.repositories import (
     AnswerRepository,
     ClassificationRepository,
-    FormIoFormRepository,
+    FormRepository,
     GroupRepository,
     MeldingRepository,
     QuestionRepository,
@@ -114,7 +112,6 @@ class Container(DeclarativeContainer):
             "meldingen.api.v1.endpoints.user",
             "meldingen.authentication",
             "meldingen.api.v1.endpoints.classification",
-            "meldingen.api.v1.endpoints.primary_form",
             "meldingen.api.v1.endpoints.form",
         ]
     )
@@ -132,7 +129,7 @@ class Container(DeclarativeContainer):
     classification_repository: Factory[ClassificationRepository] = Factory(
         ClassificationRepository, session=database_session
     )
-    form_repository: Factory[FormIoFormRepository] = Factory(FormIoFormRepository, session=database_session)
+    form_repository: Factory[FormRepository] = Factory(FormRepository, session=database_session)
     question_repository: Factory[QuestionRepository] = Factory(QuestionRepository, session=database_session)
     answer_repository: Factory[AnswerRepository] = Factory(AnswerRepository, session=database_session)
 
@@ -226,34 +223,24 @@ class Container(DeclarativeContainer):
         ClassificationDeleteAction, repository=classification_repository
     )
 
-    # Primary form actions
-    primary_form_retrieve_action: Factory[FormIoPrimaryFormRetrieveAction] = Factory(
-        FormIoPrimaryFormRetrieveAction, repository=form_repository
-    )
-    primary_form_update_action: Factory[FormIoPrimaryFormUpdateAction] = Factory(
-        FormIoPrimaryFormUpdateAction, repository=form_repository, question_repository=question_repository
-    )
-
     # Form actions
-    form_list_action: Factory[FormIoFormListAction] = Factory(FormIoFormListAction, repository=form_repository)
-    form_retrieve_action: Factory[FormIoFormRetrieveAction] = Factory(
-        FormIoFormRetrieveAction, repository=form_repository
-    )
-    form_create_action: Factory[FormIoFormCreateAction] = Factory(
-        FormIoFormCreateAction,
+    form_list_action: Factory[FormListAction] = Factory(FormListAction, repository=form_repository)
+    form_retrieve_action: Factory[FormRetrieveAction] = Factory(FormRetrieveAction, repository=form_repository)
+    form_create_action: Factory[FormCreateAction] = Factory(
+        FormCreateAction,
         repository=form_repository,
         classification_repository=classification_repository,
         question_repository=question_repository,
     )
-    form_update_action: Factory[FormIoFormUpdateAction] = Factory(
-        FormIoFormUpdateAction,
+    form_update_action: Factory[FormUpdateAction] = Factory(
+        FormUpdateAction,
         repository=form_repository,
         classification_repository=classification_repository,
         question_repository=question_repository,
     )
-    form_delete_action: Factory[FormIoFormDeleteAction] = Factory(FormIoFormDeleteAction, repository=form_repository)
-    form_classification_action: Factory[FormIoFormRetrieveByClassificationAction] = Factory(
-        FormIoFormRetrieveByClassificationAction, repository=form_repository
+    form_delete_action: Factory[FormDeleteAction] = Factory(FormDeleteAction, repository=form_repository)
+    form_classification_action: Factory[FormRetrieveByClassificationAction] = Factory(
+        FormRetrieveByClassificationAction, repository=form_repository
     )
 
     # Answer actions

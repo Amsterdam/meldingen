@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "458776297082"
-down_revision: str | None = "5911ae2a50cb"
+down_revision: str | None = "0bdbf9571b2a"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -30,16 +30,6 @@ def upgrade() -> None:
         "classification",
         sa.Column("updated_at", sa.DateTime(), nullable=False),
     )
-    op.add_column(
-        "form_io_component",
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-    )
-    op.add_column(
-        "form_io_component",
-        sa.Column("updated_at", sa.DateTime(), nullable=False),
-    )
-    op.add_column("form_io_form", sa.Column("created_at", sa.DateTime(), nullable=False))
-    op.add_column("form_io_form", sa.Column("updated_at", sa.DateTime(), nullable=False))
     op.add_column("group", sa.Column("created_at", sa.DateTime(), nullable=False))
     op.add_column("group", sa.Column("updated_at", sa.DateTime(), nullable=False))
     op.add_column("melding", sa.Column("created_at", sa.DateTime(), nullable=False))
@@ -61,10 +51,6 @@ def downgrade() -> None:
     op.drop_column("melding", "created_at")
     op.drop_column("group", "updated_at")
     op.drop_column("group", "created_at")
-    op.drop_column("form_io_form", "updated_at")
-    op.drop_column("form_io_form", "created_at")
-    op.drop_column("form_io_component", "updated_at")
-    op.drop_column("form_io_component", "created_at")
     op.drop_column("classification", "updated_at")
     op.drop_column("classification", "created_at")
     op.drop_column("answer", "updated_at")

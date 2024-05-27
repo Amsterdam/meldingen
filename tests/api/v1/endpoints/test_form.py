@@ -13,7 +13,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.models import Classification, FormIoComponent, FormIoComponentTypeEnum, FormIoForm, FormIoPanelComponent
+from meldingen.models import Classification, Form, FormIoComponent, FormIoComponentTypeEnum, FormIoPanelComponent
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -81,7 +81,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         limit: int,
         offset: int,
         expected_result: int,
-        test_forms: list[FormIoForm],
+        test_forms: list[Form],
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
@@ -104,11 +104,11 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        form_with_classification: FormIoForm,
+        form_with_classification: Form,
         limit: int,
         offset: int,
         expected_result: int,
-        test_forms: list[FormIoForm],
+        test_forms: list[Form],
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
@@ -200,7 +200,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
-        test_forms: list[FormIoForm],
+        test_forms: list[Form],
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
@@ -257,7 +257,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
-        test_forms: list[FormIoForm],
+        test_forms: list[Form],
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME),
@@ -284,7 +284,7 @@ class TestFormRetrieve(BaseFormTest):
     METHOD: Final[str] = "GET"
 
     @pytest.mark.asyncio
-    async def test_retrieve_form(self, app: FastAPI, client: AsyncClient, form: FormIoForm) -> None:
+    async def test_retrieve_form(self, app: FastAPI, client: AsyncClient, form: Form) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=form.id))
 
         assert response.status_code == HTTP_200_OK
@@ -300,7 +300,7 @@ class TestFormRetrieve(BaseFormTest):
 
     @pytest.mark.asyncio
     async def test_retrieve_form_with_classification(
-        self, app: FastAPI, client: AsyncClient, form_with_classification: FormIoForm
+        self, app: FastAPI, client: AsyncClient, form_with_classification: Form
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=form_with_classification.id))
 
@@ -343,7 +343,7 @@ class TestFormDelete(BaseUnauthorizedTest):
         [("Form #1",), ("Form #2",)],
         indirect=True,
     )
-    async def test_delete_form(self, app: FastAPI, client: AsyncClient, auth_user: None, form: FormIoForm) -> None:
+    async def test_delete_form(self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form) -> None:
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, form_id=form.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
@@ -356,14 +356,6 @@ class TestFormDelete(BaseUnauthorizedTest):
 
         body = response.json()
         assert body.get("detail") == "Not Found"
-
-    @pytest.mark.asyncio
-    async def test_unable_to_delete_primary_form(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, primary_form: FormIoForm
-    ) -> None:
-        response = await client.delete(app.url_path_for(self.ROUTE_NAME, form_id=primary_form.id))
-
-        assert response.status_code == HTTP_404_NOT_FOUND
 
 
 class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
@@ -386,7 +378,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        form: FormIoForm,
+        form: Form,
     ) -> None:
         new_data = {
             "title": "Formulier #1",
@@ -448,7 +440,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        form: FormIoForm,
+        form: Form,
         classification: Classification,
     ) -> None:
         new_data = {
@@ -497,7 +489,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        form_with_classification: FormIoForm,
+        form_with_classification: Form,
         classification: Classification,
     ) -> None:
         new_data = {
@@ -548,7 +540,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        form: FormIoForm,
+        form: Form,
     ) -> None:
         new_data = {
             "title": "Formulier #1",
@@ -570,7 +562,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        form_with_classification: FormIoForm,
+        form_with_classification: Form,
     ) -> None:
         new_data = {
             "title": "Formulier #1",
@@ -594,8 +586,8 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        form: FormIoForm,
-        form_with_classification: FormIoForm,
+        form: Form,
+        form_with_classification: Form,
     ) -> None:
         new_data = {
             "title": "Form",
@@ -627,7 +619,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        form: FormIoForm,
+        form: Form,
     ) -> None:
         new_data = {
             "title": "Formulier #1",
@@ -650,22 +642,8 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert violation.get("msg") == "Input should be greater than 0"
 
     @pytest.mark.asyncio
-    async def test_unable_to_update_primary_form(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, primary_form: FormIoForm
-    ) -> None:
-        new_data = {
-            "title": "Formulier #1",
-            "display": "pdf",
-            "components": [],
-        }
-
-        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=primary_form.id), json=new_data)
-
-        assert response.status_code == HTTP_404_NOT_FOUND
-
-    @pytest.mark.asyncio
     async def test_update_form_invalid_nesting_panel_with_panel(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, form: FormIoForm
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form
     ) -> None:
         new_data = {
             "title": "Formulier #1",
@@ -1076,9 +1054,7 @@ class TestFormClassification:
         assert detail[0].get("msg") == "Input should be greater than or equal to 1"
 
     @pytest.mark.asyncio
-    async def test_form_classification(
-        self, app: FastAPI, client: AsyncClient, form_with_classification: FormIoForm
-    ) -> None:
+    async def test_form_classification(self, app: FastAPI, client: AsyncClient, form_with_classification: Form) -> None:
         classification = await form_with_classification.awaitable_attrs.classification
         response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
 
