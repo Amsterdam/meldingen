@@ -186,5 +186,4 @@ class AnswerInput(BaseModel):
     text: str = Field(min_length=1)
 
 
-class AnswerOutput(BaseModel):
-    id: int
+class AnswerOutput(BaseOutputModel): ...

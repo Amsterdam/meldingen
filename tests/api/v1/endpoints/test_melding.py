@@ -604,6 +604,8 @@ class TestMeldingQuestionAnswer:
 
         data = response.json()
         assert data.get("id") is not None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
 
     @pytest.mark.asyncio
     async def test_answer_question_melding_does_not_exists(
