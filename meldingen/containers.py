@@ -34,6 +34,7 @@ from meldingen.actions import (
     MeldingListAction,
     MeldingRetrieveAction,
     StaticFormRetrieveByTypeAction,
+    StaticFormUpdateAction,
     UserListAction,
     UserRetrieveAction,
     UserUpdateAction,
@@ -250,6 +251,9 @@ class Container(DeclarativeContainer):
     # StaticForm actions
     static_form_retrieve_by_type_action: Factory[StaticFormRetrieveByTypeAction] = Factory(
         StaticFormRetrieveByTypeAction, repository=static_form_repository
+    )
+    static_form_update_action: Factory[StaticFormUpdateAction] = Factory(
+        StaticFormUpdateAction, repository=static_form_repository
     )
 
     # Answer actions
