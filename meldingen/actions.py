@@ -27,6 +27,8 @@ from meldingen.models import (
     FormIoPanelComponent,
     Melding,
     Question,
+    StaticForm,
+    StaticFormTypeEnum,
     User,
 )
 from meldingen.repositories import (
@@ -36,6 +38,7 @@ from meldingen.repositories import (
     FormRepository,
     MeldingRepository,
     QuestionRepository,
+    StaticFormRepository,
 )
 from meldingen.schemas import AnswerInput, FormInput
 
@@ -313,3 +316,13 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         await self._repository.save(answer)
 
         return answer
+
+
+class StaticFormRetrieveByTypeAction(BaseCRUDAction[StaticForm, StaticForm]):
+    _repository: StaticFormRepository
+
+    def __init__(self, repository: StaticFormRepository):
+        super().__init__(repository)
+
+    async def __call__(self, form_type: StaticFormTypeEnum) -> StaticForm:
+        return await self._repository.retrieve_by_type(form_type)

@@ -17,9 +17,17 @@ from meldingen.models import (
     FormIoFormDisplayEnum,
     Melding,
     Question,
+    StaticForm,
+    StaticFormTypeEnum,
     User,
 )
-from meldingen.repositories import ClassificationRepository, FormRepository, MeldingRepository, QuestionRepository
+from meldingen.repositories import (
+    ClassificationRepository,
+    FormRepository,
+    MeldingRepository,
+    QuestionRepository,
+    StaticFormRepository,
+)
 
 
 @pytest_asyncio.fixture
@@ -181,6 +189,11 @@ async def form_repository(container: Container) -> FormRepository:
 
 
 @pytest_asyncio.fixture
+async def static_form_repository(container: Container) -> StaticFormRepository:
+    return await container.static_form_repository()
+
+
+@pytest_asyncio.fixture
 async def question_repository(container: Container) -> QuestionRepository:
     return await container.question_repository()
 
@@ -276,3 +289,25 @@ async def test_forms(form_repository: FormRepository) -> list[Form]:
         forms.append(form)
 
     return forms
+
+
+@pytest_asyncio.fixture
+async def primary_form(static_form_repository: StaticFormRepository) -> StaticForm:
+    primary_form = StaticForm(type=StaticFormTypeEnum.primary, title="Primary form", display=FormIoFormDisplayEnum.form)
+
+    component = FormIoComponent(
+        label="Waar gaat het om?",
+        description="",
+        key="waar-gaat-het-om",
+        type=FormIoComponentTypeEnum.text_area,
+        input=True,
+        auto_expand=False,
+        show_char_count=True,
+    )
+
+    components = await primary_form.awaitable_attrs.components
+    components.append(component)
+
+    await static_form_repository.save(primary_form)
+
+    return primary_form

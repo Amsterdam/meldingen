@@ -33,6 +33,7 @@ from meldingen.actions import (
     FormUpdateAction,
     MeldingListAction,
     MeldingRetrieveAction,
+    StaticFormRetrieveByTypeAction,
     UserListAction,
     UserRetrieveAction,
     UserUpdateAction,
@@ -114,6 +115,7 @@ class Container(DeclarativeContainer):
             "meldingen.authentication",
             "meldingen.api.v1.endpoints.classification",
             "meldingen.api.v1.endpoints.form",
+            "meldingen.api.v1.endpoints.static_form",
         ]
     )
 
@@ -243,6 +245,11 @@ class Container(DeclarativeContainer):
     form_delete_action: Factory[FormDeleteAction] = Factory(FormDeleteAction, repository=form_repository)
     form_classification_action: Factory[FormRetrieveByClassificationAction] = Factory(
         FormRetrieveByClassificationAction, repository=form_repository
+    )
+
+    # StaticForm actions
+    static_form_retrieve_by_type_action: Factory[StaticFormRetrieveByTypeAction] = Factory(
+        StaticFormRetrieveByTypeAction, repository=static_form_repository
     )
 
     # Answer actions

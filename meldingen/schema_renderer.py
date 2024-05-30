@@ -1,5 +1,5 @@
-from meldingen.models import Form, FormIoComponent, FormIoPanelComponent
-from meldingen.schemas import FormComponentOutput, FormOutput, FormPanelComponentOutput
+from meldingen.models import Form, FormIoComponent, FormIoPanelComponent, StaticForm
+from meldingen.schemas import FormComponentOutput, FormOutput, FormPanelComponentOutput, StaticFormOutput
 
 
 class BaseFormOutPutRenderer:
@@ -55,6 +55,21 @@ class FormOutPutRenderer(BaseFormOutPutRenderer):
             display=form.display,
             components=components_output,
             classification=form.classification_id,
+            created_at=form.created_at,
+            updated_at=form.updated_at,
+        )
+
+
+class StaticFormOutPutRenderer(BaseFormOutPutRenderer):
+    async def __call__(self, form: StaticForm) -> StaticFormOutput:
+        components = await form.awaitable_attrs.components
+        components_output = await self._render_components(components)
+
+        return StaticFormOutput(
+            type=form.type,
+            title=form.title,
+            display=form.display,
+            components=components_output,
             created_at=form.created_at,
             updated_at=form.updated_at,
         )

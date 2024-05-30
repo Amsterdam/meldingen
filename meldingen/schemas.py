@@ -5,7 +5,7 @@ from meldingen_core.models import Classification, User
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
 
-from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
+from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum, StaticFormTypeEnum
 from meldingen.validators import create_non_match_validator
 
 
@@ -68,6 +68,11 @@ class FormOnlyOutput(BaseFormOutput):
 
 
 class FormOutput(FormOnlyOutput):
+    components: list[Union["FormComponentOutput", "FormPanelComponentOutput"]]
+
+
+class StaticFormOutput(BaseFormOutput):
+    type: str
     components: list[Union["FormComponentOutput", "FormPanelComponentOutput"]]
 
 
