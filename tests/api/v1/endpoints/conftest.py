@@ -293,21 +293,26 @@ async def test_forms(form_repository: FormRepository) -> list[Form]:
 
 @pytest_asyncio.fixture
 async def primary_form(static_form_repository: StaticFormRepository) -> StaticForm:
-    primary_form = StaticForm(type=StaticFormTypeEnum.primary, title="Primary form", display=FormIoFormDisplayEnum.form)
+    try:
+        primary_form = await static_form_repository.retrieve_by_type(StaticFormTypeEnum.primary)
+    except NotFoundException:
+        primary_form = StaticForm(
+            type=StaticFormTypeEnum.primary, title="Primary form", display=FormIoFormDisplayEnum.form
+        )
 
-    component = FormIoComponent(
-        label="Waar gaat het om?",
-        description="",
-        key="waar-gaat-het-om",
-        type=FormIoComponentTypeEnum.text_area,
-        input=True,
-        auto_expand=False,
-        show_char_count=True,
-    )
+        component = FormIoComponent(
+            label="Waar gaat het om?",
+            description="",
+            key="waar-gaat-het-om",
+            type=FormIoComponentTypeEnum.text_area,
+            input=True,
+            auto_expand=False,
+            show_char_count=True,
+        )
 
-    components = await primary_form.awaitable_attrs.components
-    components.append(component)
+        components = await primary_form.awaitable_attrs.components
+        components.append(component)
 
-    await static_form_repository.save(primary_form)
+        await static_form_repository.save(primary_form)
 
     return primary_form
