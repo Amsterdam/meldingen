@@ -11,7 +11,7 @@ from meldingen_core.models import User as BaseUser
 from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
 from pydantic.alias_generators import to_snake
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Table, func
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, String, Table, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
@@ -85,6 +85,10 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
             "polymorphic_on": "type",
         }
 
+    __table_args__ = (
+        CheckConstraint("form_id IS NULL OR static_form_id IS NULL", name="only_form_or_static_form_constraint"),
+    )
+
     # Form.io attr's
     label: Mapped[str] = mapped_column(String(), nullable=True)
     key: Mapped[str] = mapped_column(String())
@@ -101,6 +105,13 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
     # Internal attr's
     form_id: Mapped[int | None] = mapped_column(ForeignKey("form.id"), default=None, nullable=True)
     form: Mapped[Union["Form", None]] = relationship(
+        cascade="save-update, merge, delete",
+        back_populates="components",
+        default=None,
+    )
+
+    static_form_id: Mapped[int | None] = mapped_column(ForeignKey("static_form.id"), default=None, nullable=True)
+    static_form: Mapped[Union["StaticForm", None]] = relationship(
         cascade="save-update, merge, delete",
         back_populates="components",
         default=None,
@@ -175,6 +186,29 @@ class Form(AsyncAttrs, BaseDBModel, BaseForm):
     components: Mapped[OrderingList["FormIoComponent"]] = relationship(
         cascade="save-update, merge, delete, delete-orphan",
         back_populates="form",
+        default_factory=list,
+        order_by="FormIoComponent.position",
+        collection_class=ordering_list(attr="position", count_from=1),
+    )
+
+
+class StaticFormTypeEnum(enum.StrEnum):
+    primary: Final[str] = "primary"
+
+
+class StaticForm(AsyncAttrs, BaseDBModel):
+
+    type: Mapped[str] = mapped_column(Enum(StaticFormTypeEnum, name="static_form_type"), unique=True, nullable=False)
+    title: Mapped[str] = mapped_column(String())
+
+    # FormIo implementation
+    display: Mapped[str] = mapped_column(
+        Enum(FormIoFormDisplayEnum, name="form_io_form_display"), default=FormIoFormDisplayEnum.form
+    )
+
+    components: Mapped[OrderingList["FormIoComponent"]] = relationship(
+        cascade="save-update, merge, delete, delete-orphan",
+        back_populates="static_form",
         default_factory=list,
         order_by="FormIoComponent.position",
         collection_class=ordering_list(attr="position", count_from=1),
