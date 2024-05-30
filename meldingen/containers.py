@@ -46,6 +46,7 @@ from meldingen.repositories import (
     GroupRepository,
     MeldingRepository,
     QuestionRepository,
+    StaticFormRepository,
     UserRepository,
 )
 from meldingen.statemachine import (
@@ -130,6 +131,7 @@ class Container(DeclarativeContainer):
         ClassificationRepository, session=database_session
     )
     form_repository: Factory[FormRepository] = Factory(FormRepository, session=database_session)
+    static_form_repository: Factory[StaticFormRepository] = Factory(StaticFormRepository, session=database_session)
     question_repository: Factory[QuestionRepository] = Factory(QuestionRepository, session=database_session)
     answer_repository: Factory[AnswerRepository] = Factory(AnswerRepository, session=database_session)
 
