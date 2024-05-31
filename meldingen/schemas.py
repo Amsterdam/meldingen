@@ -5,7 +5,7 @@ from meldingen_core.models import Classification, User
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
 
-from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
+from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum, StaticFormTypeEnum
 from meldingen.validators import create_non_match_validator
 
 
@@ -71,6 +71,11 @@ class FormOutput(FormOnlyOutput):
     components: list[Union["FormComponentOutput", "FormPanelComponentOutput"]]
 
 
+class StaticFormOutput(BaseFormOutput):
+    type: str
+    components: list[Union["FormComponentOutput", "FormPanelComponentOutput"]]
+
+
 class FormComponentOutput(BaseModel):
     model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))
 
@@ -127,10 +132,9 @@ def component_discriminator(value: Any) -> str | None:
     return None
 
 
-class FormInput(BaseModel):
+class BaseFormInput(BaseModel):
     title: Annotated[str, Field(min_length=3)]
     display: FormIoFormDisplayEnum
-    classification: Annotated[int | None, Field(default=None, gt=0, serialization_alias="classification_id")]
     components: list[
         Annotated[
             Union[
@@ -140,6 +144,13 @@ class FormInput(BaseModel):
             Discriminator(component_discriminator),
         ]
     ]
+
+
+class FormInput(BaseFormInput):
+    classification: Annotated[int | None, Field(default=None, gt=0, serialization_alias="classification_id")]
+
+
+class StaticFormInput(BaseFormInput): ...
 
 
 class FormPanelComponentInput(BaseModel):

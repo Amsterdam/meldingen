@@ -27,6 +27,8 @@ from meldingen.models import (
     FormIoPanelComponent,
     Melding,
     Question,
+    StaticForm,
+    StaticFormTypeEnum,
     User,
 )
 from meldingen.repositories import (
@@ -36,8 +38,9 @@ from meldingen.repositories import (
     FormRepository,
     MeldingRepository,
     QuestionRepository,
+    StaticFormRepository,
 )
-from meldingen.schemas import AnswerInput, FormInput
+from meldingen.schemas import AnswerInput, FormInput, StaticFormInput
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
@@ -313,3 +316,60 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         await self._repository.save(answer)
 
         return answer
+
+
+class StaticFormRetrieveByTypeAction(BaseCRUDAction[StaticForm, StaticForm]):
+    _repository: StaticFormRepository
+
+    def __init__(self, repository: StaticFormRepository):
+        super().__init__(repository)
+
+    async def __call__(self, form_type: StaticFormTypeEnum) -> StaticForm:
+        return await self._repository.retrieve_by_type(form_type)
+
+
+class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
+    _repository: StaticFormRepository
+
+    async def _create_components(
+        self, parent: StaticForm | FormIoPanelComponent, components_values: list[dict[str, Any]]
+    ) -> None:
+        parent_components = await parent.awaitable_attrs.components
+        parent_components.clear()
+
+        for component_values in components_values:
+            if component_values.get("type") == FormIoComponentTypeEnum.panel:
+                child_components_values = component_values.pop("components", [])
+                panel_component = FormIoPanelComponent(**component_values)
+
+                await self._create_components(parent=panel_component, components_values=child_components_values)
+
+                parent_components.append(panel_component)
+            else:
+                component = FormIoComponent(**component_values)
+                parent_components.append(component)
+
+        parent_components.reorder()
+
+    async def __call__(self, form_type: StaticFormTypeEnum, form_input: StaticFormInput) -> StaticForm:
+        try:
+            obj = await self._repository.retrieve_by_type(form_type=form_type)
+        except NotFoundException:
+            raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+        form_data = form_input.model_dump(exclude_unset=True, by_alias=True)
+        form_data.pop("components", [])
+
+        for key, value in form_data.items():
+            setattr(obj, key, value)
+
+        form_component_data = []
+        for component in form_input.components:
+            form_component_data.append(component.model_dump())
+
+        if form_component_data:
+            await self._create_components(obj, form_component_data)
+
+        await self._repository.save(obj)
+
+        return obj

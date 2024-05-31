@@ -74,14 +74,14 @@ Example:
 $ python main.py users add-to-group user@example.com test-group
 ```
 
-### Forms
+### Static forms
 
-#### 1. "forms add-primary"
+#### 1. "static-forms add-primary"
 **Description:** Adds the primary form to the system, only one primary form can exist.
 
 **Syntax:**
 ```bash
-$ python main.py forms add-primary [OPTIONS]
+$ python main.py static-forms add-primary [OPTIONS]
 
 Options:
 
@@ -92,11 +92,11 @@ Options:
 Example:
 
 ```bash
-$ python main.py forms add-primary
+$ python main.py static-forms add-primary
 ```
 
 or
 
 ```bash
-$ python main.py forms add-primary --title "The primary form."
+$ python main.py static-forms add-primary --title "The primary form."
 ```

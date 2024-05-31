@@ -19,7 +19,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Relationship
 from sqlalchemy.sql import func
 
-from meldingen.models import Answer, BaseDBModel, Classification, Form, Group, Melding, Question, User
+from meldingen.models import (
+    Answer,
+    BaseDBModel,
+    Classification,
+    Form,
+    Group,
+    Melding,
+    Question,
+    StaticForm,
+    StaticFormTypeEnum,
+    User,
+)
 
 
 class AttributeNotFoundException(Exception):
@@ -176,6 +187,21 @@ class FormRepository(BaseSQLAlchemyRepository[Form, Form], BaseFormRepository):
     async def find_by_classification_id(self, classification_id: int) -> Form:
         _type = self.get_model_type()
         statement = select(_type).where(_type.classification_id == classification_id)
+
+        result = await self._session.execute(statement)
+        try:
+            return result.scalars().one()
+        except NoResultFound:
+            raise NotFoundException()
+
+
+class StaticFormRepository(BaseSQLAlchemyRepository[StaticForm, StaticForm]):
+    def get_model_type(self) -> type[StaticForm]:
+        return StaticForm
+
+    async def retrieve_by_type(self, form_type: StaticFormTypeEnum) -> StaticForm:
+        _type = self.get_model_type()
+        statement = select(_type).where(_type.type == form_type)
 
         result = await self._session.execute(statement)
         try:
