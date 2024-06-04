@@ -17,6 +17,8 @@ meldingen/models.py:0: error: Incompatible types in assignment (expression has t
 migrations/versions/781aa6a913a6_form_models.py:0: error: Call to untyped function "drop" in typed context  [no-untyped-call]
 migrations/versions/781aa6a913a6_form_models.py:0: error: Call to untyped function "drop" in typed context  [no-untyped-call]
 migrations/versions/781aa6a913a6_form_models.py:0: error: Call to untyped function "drop" in typed context  [no-untyped-call]
+meldingen/validators.py:0: error: Skipping analyzing "shapely": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+meldingen/validators.py:0: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
 tests/api/v1/endpoints/conftest.py:0: error: Returning Any from function declared to return "MeldingRepository"  [no-any-return]
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in "await" (actual type "MeldingRepository", expected type "Awaitable[Any]")  [misc]
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (expression has type "datetime", variable has type "SQLCoreOperations[DateTime | None] | DateTime | None")  [assignment]
