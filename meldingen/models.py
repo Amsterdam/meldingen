@@ -31,7 +31,7 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
 
 class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
     name: Mapped[str] = mapped_column(String, unique=True)
-    form: Mapped[Optional["Form"]] = relationship(default=None)
+    form: Mapped[Optional["Form"]] = relationship(default=None, back_populates="classification")
 
 
 class Melding(BaseDBModel, BaseMelding, StateAware):
@@ -172,7 +172,7 @@ class Form(AsyncAttrs, BaseDBModel, BaseForm):
     title: Mapped[str] = mapped_column(String())
 
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None, unique=True)
-    classification: Mapped[Classification | None] = relationship(default=None)
+    classification: Mapped[Classification | None] = relationship(default=None, back_populates="form")
 
     questions: Mapped[list["Question"]] = relationship(
         cascade="save-update, merge, delete, delete-orphan", back_populates="form", default_factory=list, init=False
