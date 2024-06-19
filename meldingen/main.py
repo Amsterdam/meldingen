@@ -11,27 +11,18 @@ from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_409_CONFLICT
 
 from meldingen.api.v1.api import api_router
-from meldingen.config import Settings
-from meldingen.containers import Container
+
+from meldingen.config import settings
+
 from meldingen.logging import setup_logging
 from meldingen.utils import get_version
 
 
-def get_container() -> Container:
-    container = Container()
-    # TODO: We are currently unable to use `from_pydantic()`, because the `dependency-injector`
-    # lacks support for pydantic v2.
-    # https://python-dependency-injector.ets-labs.org/providers/configuration.html#loading-from-a-pydantic-settings
-    container.settings.from_dict(Settings().model_dump())
-
-    return container
-
-
-def get_application(cont: Container) -> FastAPI:
+def get_application(settings: dict) -> FastAPI:
     application = FastAPI(
-        debug=cont.settings.get("debug"),
-        title=cont.settings.get("project_name"),
-        prefix=cont.settings.get("url_prefix"),
+        debug=settings.get("debug"),
+        title=settings.get("project_name"),
+        prefix=settings.get("url_prefix"),
     )
     application.include_router(api_router)
 
@@ -67,21 +58,6 @@ def get_application(cont: Container) -> FastAPI:
 
         return response
 
-    @application.middleware("http")
-    async def handle_resources(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        """Initialize dependency injection container resources before handling request
-        and close them after handling the request. We also reset Singletons.
-        We need to do this in order for the resource dependencies to get "refreshed" every request."""
-
-        container.reset_singletons()
-        await container.init_resources()
-
-        response = await call_next(request)
-
-        await container.shutdown_resources()
-
-        return response
-
     @application.exception_handler(IntegrityError)
     async def sql_alchemy_integrity_error_handler(request: Request, exc: IntegrityError) -> JSONResponse:
         return JSONResponse(
@@ -90,21 +66,19 @@ def get_application(cont: Container) -> FastAPI:
         )
 
     application.add_middleware(CorrelationIdMiddleware)
-
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=cont.settings.get("cors_allow_origins"),
-        allow_credentials=cont.settings.get("cors_allow_credentials"),
-        allow_methods=cont.settings.get("cors_allow_methods"),
-        allow_headers=cont.settings.get("cors_allow_headers"),
+        allow_origins=settings.get("cors_allow_origins"),
+        allow_credentials=settings.get("cors_allow_credentials"),
+        allow_methods=settings.get("cors_allow_methods"),
+        allow_headers=settings.get("cors_allow_headers"),
         expose_headers=["Content-Range"],
     )
 
     return application
 
 
-container = get_container()
-app = get_application(container)
+app = get_application(settings.model_dump())
 
 setup_logging()
 logger = structlog.get_logger()
