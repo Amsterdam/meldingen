@@ -9,6 +9,7 @@ from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import AsyncClient
 from jwt import PyJWKClient, PyJWT
+from pydantic import PostgresDsn
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
@@ -40,15 +41,6 @@ def alembic_engine() -> AsyncEngine:
 #     async with alembic_engine.begin() as conn:
 #         await conn.run_sync(BaseDBModel.metadata.create_all)
 #
-
-@pytest.fixture
-def jwks_client_mock() -> PyJWKClient:
-    return Mock(PyJWKClient)
-
-
-@pytest.fixture
-def py_jwt_mock() -> PyJWT:
-    return Mock(PyJWT)
 
 
 # @pytest_asyncio.fixture
@@ -121,7 +113,7 @@ def py_jwt_mock() -> PyJWT:
 @pytest.fixture
 def settings() -> Settings:
     settings = Settings()
-    settings.database_dsn = TEST_DATABASE_URL
+    settings.database_dsn = PostgresDsn(TEST_DATABASE_URL)
 
     return settings
 
