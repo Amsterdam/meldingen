@@ -14,7 +14,7 @@ from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.config import Settings
-from meldingen.containers import get_settings
+from meldingen.containers import get_settings, get_database_engine
 from meldingen.main import get_application
 from meldingen.models import BaseDBModel, User
 from meldingen.repositories import UserRepository
@@ -114,12 +114,17 @@ def settings_override() -> Settings:
     return Settings(database_dsn=TEST_DATABASE_URL)
 
 
-@pytest.fixture
-# async def app(test_database: None, container: Container) -> FastAPI:
-def app() -> FastAPI:
+@pytest_asyncio.fixture(scope="session")
+async def app() -> FastAPI:
     settings = settings_override()
     app = get_application(settings.model_dump())
     app.dependency_overrides[get_settings] = settings_override
+
+    engine = get_database_engine(settings)
+    async with engine.begin() as conn:
+        await conn.run_sync(BaseDBModel.metadata.drop_all)
+    async with engine.begin() as conn:
+        await conn.run_sync(BaseDBModel.metadata.create_all)
 
     return app
 
