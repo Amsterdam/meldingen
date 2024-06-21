@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 from typing import Annotated, AsyncGenerator
 
 from fastapi import Depends
@@ -6,7 +7,6 @@ from fastapi import Depends
 from jwt import PyJWKClient
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
 
-from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.actions import (
@@ -14,11 +14,16 @@ from meldingen.actions import (
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
 )
-from meldingen.config import settings
+from meldingen.config import Settings
 from meldingen.repositories import ClassificationRepository, UserRepository
 
 
-def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+def get_database_engine(settings: Annotated[Settings, Depends(get_settings)], log_level: int = logging.NOTSET) -> AsyncEngine:
     """Returns an async database engine.
 
     echo can be configured via the environment variable for log_level.
@@ -37,7 +42,7 @@ def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> A
         case logging.DEBUG:
             echo = "debug"
 
-    return create_async_engine(str(dsn), echo=echo)
+    return create_async_engine(str(settings.database_dsn), echo=echo)
 
 
 async def get_database_session(
@@ -83,7 +88,7 @@ def classification_delete_action(
     return ClassificationDeleteAction(repository)
 
 
-def jwks_client() -> PyJWKClient:
+def jwks_client(settings: Annotated[Settings, Depends(get_settings)]) -> PyJWKClient:
     return PyJWKClient(uri=settings.jwks_url)
 
 
