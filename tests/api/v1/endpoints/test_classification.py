@@ -1,31 +1,31 @@
-# from typing import Any, Final
-#
-# import pytest
-# from fastapi import FastAPI
-# from httpx import AsyncClient
-# from meldingen_core import SortingDirection
-# from starlette.status import (
-#     HTTP_200_OK,
-#     HTTP_201_CREATED,
-#     HTTP_204_NO_CONTENT,
-#     HTTP_404_NOT_FOUND,
-#     HTTP_409_CONFLICT,
-#     HTTP_422_UNPROCESSABLE_ENTITY,
-# )
-#
-# from meldingen.models import Classification, Form
-# from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
-#
-#
-# class TestClassificationCreate(BaseUnauthorizedTest):
-#     ROUTE_NAME: Final[str] = "classification:create"
-#     METHOD: Final[str] = "POST"
-#
-#     def get_route_name(self) -> str:
-#         return self.ROUTE_NAME
-#
-#     def get_method(self) -> str:
-#         return self.METHOD
+from typing import Any, Final
+
+import pytest
+from fastapi import FastAPI
+from httpx import AsyncClient
+from meldingen_core import SortingDirection
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
+    HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+)
+
+from meldingen.models import Classification, Form
+from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
+
+
+class TestClassificationCreate(BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "classification:create"
+    METHOD: Final[str] = "POST"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
 #
 #     @pytest.mark.asyncio
 #     async def test_create_classification(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
