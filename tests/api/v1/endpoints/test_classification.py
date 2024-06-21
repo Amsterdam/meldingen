@@ -41,23 +41,23 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
-#     @pytest.mark.asyncio
-#     async def test_create_classification_name_min_length_violation(
-#         self, app: FastAPI, client: AsyncClient, auth_user: None
-#     ) -> None:
-#         response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": ""})
-#
-#         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
-#
-#         data = response.json()
-#         detail = data.get("detail")
-#         assert len(detail) == 1
-#
-#         violation = detail[0]
-#         assert violation.get("type") == "string_too_short"
-#         assert violation.get("loc") == ["body", "name"]
-#         assert violation.get("msg") == "String should have at least 1 character"
-#
+    @pytest.mark.asyncio
+    async def test_create_classification_name_min_length_violation(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": ""})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        data = response.json()
+        detail = data.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "string_too_short"
+        assert violation.get("loc") == ["body", "name"]
+        assert violation.get("msg") == "String should have at least 1 character"
+
 #     @pytest.mark.asyncio
 #     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
 #     async def test_create_classification_duplicate_name(
