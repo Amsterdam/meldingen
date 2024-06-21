@@ -9,12 +9,12 @@ from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import AsyncClient
 from jwt import PyJWKClient, PyJWT
-from pydantic import PostgresDsn
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.config import Settings
+from meldingen.containers import get_settings
 from meldingen.main import get_application
 from meldingen.models import BaseDBModel, User
 from meldingen.repositories import UserRepository
@@ -31,7 +31,7 @@ def alembic_config() -> PytestAlembicConfig:
 @pytest.fixture
 def alembic_engine() -> AsyncEngine:
     """Override this fixture to provide pytest-alembic powered tests with a database handle."""
-    return create_async_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
+    return create_async_engine(TEST_DATABASE_URL)
 
 
 # @pytest_asyncio.fixture
@@ -110,18 +110,18 @@ def alembic_engine() -> AsyncEngine:
 #
 #     return get_container()
 
-@pytest.fixture
-def settings() -> Settings:
-    settings = Settings()
-    settings.database_dsn = PostgresDsn(TEST_DATABASE_URL)
-
-    return settings
+def settings_override() -> Settings:
+    return Settings(database_dsn=TEST_DATABASE_URL)
 
 
 @pytest.fixture
 # async def app(test_database: None, container: Container) -> FastAPI:
-def app(settings: Settings) -> FastAPI:
-    return get_application(settings.model_dump())
+def app() -> FastAPI:
+    settings = settings_override()
+    app = get_application(settings.model_dump())
+    app.dependency_overrides[get_settings] = settings_override
+
+    return app
 
 
 @pytest_asyncio.fixture
