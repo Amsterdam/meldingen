@@ -26,20 +26,21 @@ class TestClassificationCreate(BaseUnauthorizedTest):
 
     def get_method(self) -> str:
         return self.METHOD
-#
-#     @pytest.mark.asyncio
-#     async def test_create_classification(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
-#         response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
-#
-#         assert response.status_code == HTTP_201_CREATED
-#
-#         data = response.json()
-#         assert data.get("id") == 1
-#         assert data.get("name") == "bla"
-#         assert data.get("form", "") is None
-#         assert data.get("created_at") is not None
-#         assert data.get("updated_at") is not None
-#
+
+    @pytest.mark.asyncio
+    async def test_create_classification(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
+
+        print(response.json())
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("id") == 1
+        assert data.get("name") == "bla"
+        assert data.get("form", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+
 #     @pytest.mark.asyncio
 #     async def test_create_classification_name_min_length_violation(
 #         self, app: FastAPI, client: AsyncClient, auth_user: None
