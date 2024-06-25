@@ -444,15 +444,15 @@ class TestClassificationDelete(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-#     @pytest.mark.asyncio
-#     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
-#     async def test_delete_classification(
-#         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
-#     ) -> None:
-#         response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
-#
-#         assert response.status_code == HTTP_204_NO_CONTENT
-#
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
+    async def test_delete_classification(
+        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
+    ) -> None:
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
+
+        assert response.status_code == HTTP_204_NO_CONTENT
+
 #     @pytest.mark.asyncio
 #     async def test_delete_classification_that_does_not_exist(
 #         self, app: FastAPI, client: AsyncClient, auth_user: None
