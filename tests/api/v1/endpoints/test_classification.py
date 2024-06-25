@@ -400,21 +400,21 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
 
         assert body.get("detail") == "Not Found"
 
-#     @pytest.mark.asyncio
-#     async def test_update_classification_duplicate_name(
-#         self, app: FastAPI, client: AsyncClient, classifications: list[Classification], auth_user: None
-#     ) -> None:
-#         response = await client.patch(
-#             app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "category: 2"}
-#         )
-#
-#         assert response.status_code == HTTP_409_CONFLICT
-#
-#         data = response.json()
-#         assert (
-#             data.get("detail") == "The requested operation could not be completed due to a conflict with existing data."
-#         )
-#
+    @pytest.mark.asyncio
+    async def test_update_classification_duplicate_name(
+        self, app: FastAPI, client: AsyncClient, classifications: list[Classification], auth_user: None
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "category: 2"}
+        )
+
+        assert response.status_code == HTTP_409_CONFLICT
+
+        data = response.json()
+        assert (
+            data.get("detail") == "The requested operation could not be completed due to a conflict with existing data."
+        )
+
 #     @pytest.mark.asyncio
 #     async def test_update_classification_with_form(
 #         self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
