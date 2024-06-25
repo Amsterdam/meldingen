@@ -369,23 +369,23 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-#     @pytest.mark.asyncio
-#     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
-#     async def test_update_classification(
-#         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
-#     ) -> None:
-#         response = await client.patch(
-#             app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"name": "bladiebla"}
-#         )
-#
-#         assert response.status_code == HTTP_200_OK
-#
-#         data = response.json()
-#         assert data.get("name") == "bladiebla"
-#         assert data.get("form", "") is None
-#         assert data.get("created_at") is not None
-#         assert data.get("updated_at") is not None
-#
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
+    async def test_update_classification(
+        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"name": "bladiebla"}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert data.get("name") == "bladiebla"
+        assert data.get("form", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+
 #     @pytest.mark.asyncio
 #     async def test_update_classification_that_does_not_exist(
 #         self, app: FastAPI, client: AsyncClient, auth_user: None
