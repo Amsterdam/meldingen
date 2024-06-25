@@ -115,16 +115,26 @@ def settings_override() -> Settings:
 
 
 @pytest_asyncio.fixture(scope="session")
-async def app() -> FastAPI:
-    settings = settings_override()
-    app = get_application(settings.model_dump())
-    app.dependency_overrides[get_settings] = settings_override
+def settings() -> Settings:
+    return settings_override()
 
+
+@pytest_asyncio.fixture(scope="session")
+async def database_engine(settings: Settings) -> AsyncEngine:
     engine = get_database_engine(settings)
     async with engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
     async with engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.create_all)
+
+    return engine
+
+
+@pytest_asyncio.fixture(scope="session")
+async def app(database_engine: AsyncEngine) -> FastAPI:
+    settings = settings_override()
+    app = get_application(settings.model_dump())
+    app.dependency_overrides[get_settings] = settings_override
 
     return app
 

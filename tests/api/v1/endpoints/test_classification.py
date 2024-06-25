@@ -58,21 +58,21 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert violation.get("loc") == ["body", "name"]
         assert violation.get("msg") == "String should have at least 1 character"
 
-#     @pytest.mark.asyncio
-#     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
-#     async def test_create_classification_duplicate_name(
-#         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
-#     ) -> None:
-#         response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
-#
-#         assert response.status_code == HTTP_409_CONFLICT
-#
-#         data = response.json()
-#         assert (
-#             data.get("detail") == "The requested operation could not be completed due to a conflict with existing data."
-#         )
-#
-#
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
+    async def test_create_classification_duplicate_name(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
+    ) -> None:
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
+
+        assert response.status_code == HTTP_409_CONFLICT
+
+        data = response.json()
+        assert (
+            data.get("detail") == "The requested operation could not be completed due to a conflict with existing data."
+        )
+
+
 # class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
 #     ROUTE_NAME: Final[str] = "classification:list"
 #     METHOD: Final[str] = "GET"

@@ -1,13 +1,16 @@
 # from datetime import datetime, timedelta
+from typing import Annotated
 
 import pytest
 import pytest_asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from meldingen_core.exceptions import NotFoundException
 # from pydantic import TypeAdapter
 from pytest import FixtureRequest
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from meldingen.authentication import authenticate_user
+from meldingen.containers import classification_repository, get_database_session
 # from meldingen.containers import Container
 from meldingen.models import (
     Classification,
@@ -129,37 +132,42 @@ async def authenticate_user_override(token: str | None = None) -> User:
     return user
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def auth_user(app: FastAPI) -> None:
     app.dependency_overrides[authenticate_user] = authenticate_user_override
 
 
-# @pytest_asyncio.fixture
-# async def classification_repository(container: Container) -> ClassificationRepository:
-#     return await container.classification_repository()
+@pytest_asyncio.fixture(scope="session")
+async def database_session(database_engine: AsyncEngine) -> AsyncSession:
+    async_session = async_sessionmaker(database_engine, class_=AsyncSession, expire_on_commit=False)
+    async with async_session() as session:
+        yield session
 
-#
-# @pytest.fixture
-# def classification_name(request: FixtureRequest) -> str:
-#     if hasattr(request, "param"):
-#         return str(request.param)
-#     else:
-#         return "classification name"
-#
-#
-# @pytest_asyncio.fixture
-# async def classification(
-#     classification_repository: ClassificationRepository, classification_name: str
-# ) -> Classification:
-#     try:
-#         classification = await classification_repository.find_by_name(classification_name)
-#     except NotFoundException:
-#         classification = Classification(name=classification_name)
-#         await classification_repository.save(classification)
-#
-#     return classification
-#
-#
+
+@pytest.fixture(scope="session")
+def classification_repo(database_session: AsyncSession) -> ClassificationRepository:
+    return ClassificationRepository(database_session)
+
+
+@pytest.fixture(scope="session")
+def classification_name(request: FixtureRequest) -> str:
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return "classification name"
+
+
+@pytest_asyncio.fixture(scope="session")
+async def classification(classification_name: str, classification_repo: ClassificationRepository) -> Classification:
+    try:
+        classification = await classification_repo.find_by_name(classification_name)
+    except NotFoundException:
+        classification = Classification(name=classification_name)
+        await classification_repo.save(classification)
+
+    return classification
+
+
 # @pytest_asyncio.fixture
 # async def classifications(classification_repository: ClassificationRepository) -> list[Classification]:
 #     classifications = []
