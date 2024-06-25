@@ -3,17 +3,11 @@ from functools import lru_cache
 from typing import Annotated, AsyncGenerator
 
 from fastapi import Depends
-
 from jwt import PyJWKClient
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
-
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from meldingen.actions import (
-    ClassificationListAction,
-    ClassificationRetrieveAction,
-    ClassificationUpdateAction,
-)
+from meldingen.actions import ClassificationListAction, ClassificationRetrieveAction, ClassificationUpdateAction
 from meldingen.config import Settings
 from meldingen.repositories import ClassificationRepository, UserRepository
 
@@ -23,7 +17,9 @@ def get_settings() -> Settings:
     return Settings()
 
 
-def get_database_engine(settings: Annotated[Settings, Depends(get_settings)], log_level: int = logging.NOTSET) -> AsyncEngine:
+def get_database_engine(
+    settings: Annotated[Settings, Depends(get_settings)], log_level: int = logging.NOTSET
+) -> AsyncEngine:
     """Returns an async database engine.
 
     echo can be configured via the environment variable for log_level.

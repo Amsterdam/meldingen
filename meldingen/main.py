@@ -11,9 +11,7 @@ from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_409_CONFLICT
 
 from meldingen.api.v1.api import api_router
-
 from meldingen.config import settings
-
 from meldingen.logging import setup_logging
 from meldingen.utils import get_version
 

@@ -17,7 +17,6 @@ from meldingen.containers import (
     classification_retrieve_action,
     classification_update_action,
 )
-
 from meldingen.models import Classification, User
 from meldingen.repositories import ClassificationRepository
 from meldingen.schemas import ClassificationInput, ClassificationOutput

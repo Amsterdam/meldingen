@@ -4,6 +4,7 @@ from unittest.mock import Mock
 import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
+
 # from dependency_injector import containers
 # from dependency_injector.providers import Object, Resource
 from fastapi import FastAPI
@@ -14,7 +15,7 @@ from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.config import Settings
-from meldingen.containers import get_settings, get_database_engine
+from meldingen.containers import get_database_engine, get_settings
 from meldingen.main import get_application
 from meldingen.models import BaseDBModel, User
 from meldingen.repositories import UserRepository
@@ -109,6 +110,7 @@ def alembic_engine() -> AsyncEngine:
 #         py_jwt: Object[PyJWT] = Object(py_jwt_mock)
 #
 #     return get_container()
+
 
 def settings_override() -> Settings:
     return Settings(database_dsn=TEST_DATABASE_URL)

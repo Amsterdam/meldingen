@@ -13,13 +13,10 @@ from meldingen.models import (
     FormIoComponent,
     FormIoComponentTypeEnum,
     FormIoFormDisplayEnum,
-    User, FormIoFormDisplayEnum, Form, Question,
+    Question,
+    User,
 )
-from meldingen.repositories import (
-    ClassificationRepository,
-    FormRepository,
-    QuestionRepository,
-)
+from meldingen.repositories import ClassificationRepository, FormRepository, QuestionRepository
 
 
 # @pytest_asyncio.fixture
