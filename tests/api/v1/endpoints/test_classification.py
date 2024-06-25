@@ -464,20 +464,20 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("detail") == "Not Found"
 
-#     @pytest.mark.asyncio
-#     @pytest.mark.parametrize("classification_id", [0, -1])
-#     async def test_delete_invalid_id(
-#         self, app: FastAPI, client: AsyncClient, auth_user: None, classification_id: int
-#     ) -> None:
-#         response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification_id))
-#
-#         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
-#
-#         body = response.json()
-#         detail = body.get("detail")
-#         assert len(detail) == 1
-#
-#         violation = detail[0]
-#         assert violation.get("type") == "greater_than_equal"
-#         assert violation.get("loc") == ["path", "classification_id"]
-#         assert violation.get("msg") == "Input should be greater than or equal to 1"
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("classification_id", [0, -1])
+    async def test_delete_invalid_id(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification_id: int
+    ) -> None:
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification_id))
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "greater_than_equal"
+        assert violation.get("loc") == ["path", "classification_id"]
+        assert violation.get("msg") == "Input should be greater than or equal to 1"
