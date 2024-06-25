@@ -453,17 +453,17 @@ class TestClassificationDelete(BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_204_NO_CONTENT
 
-#     @pytest.mark.asyncio
-#     async def test_delete_classification_that_does_not_exist(
-#         self, app: FastAPI, client: AsyncClient, auth_user: None
-#     ) -> None:
-#         response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=1))
-#
-#         assert response.status_code == HTTP_404_NOT_FOUND
-#
-#         body = response.json()
-#         assert body.get("detail") == "Not Found"
-#
+    @pytest.mark.asyncio
+    async def test_delete_classification_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=1))
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        body = response.json()
+        assert body.get("detail") == "Not Found"
+
 #     @pytest.mark.asyncio
 #     @pytest.mark.parametrize("classification_id", [0, -1])
 #     async def test_delete_invalid_id(
