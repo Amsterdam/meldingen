@@ -218,60 +218,60 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         assert response.headers.get("content-range") == "classification 0-49/10"
 
-#     @pytest.mark.asyncio
-#     @pytest.mark.parametrize(
-#         "limit, offset, attribute, direction, expected",
-#         [
-#             (
-#                 2,
-#                 2,
-#                 "name",
-#                 SortingDirection.DESC,
-#                 [{"name": "category: 7", "id": 8, "form": None}, {"name": "category: 6", "id": 7, "form": None}],
-#             ),
-#             (
-#                 3,
-#                 1,
-#                 "name",
-#                 SortingDirection.ASC,
-#                 [
-#                     {"name": "category: 1", "id": 2, "form": None},
-#                     {"name": "category: 2", "id": 3, "form": None},
-#                     {"name": "category: 3", "id": 4, "form": None},
-#                 ],
-#             ),
-#         ],
-#     )
-#     async def test_list_classifications_paginated_and_sorted(
-#         self,
-#         app: FastAPI,
-#         client: AsyncClient,
-#         auth_user: None,
-#         limit: int,
-#         offset: int,
-#         attribute: str,
-#         direction: SortingDirection,
-#         expected: list[dict[str, Any]],
-#         classifications: list[Classification],
-#     ) -> None:
-#         response = await client.get(
-#             app.url_path_for(self.ROUTE_NAME),
-#             params={"limit": limit, "offset": offset, "sort": f'["{attribute}", "{direction}"]'},
-#         )
-#
-#         assert response.status_code == HTTP_200_OK
-#
-#         data = response.json()
-#
-#         for i in range(0, len(data)):
-#             assert data[i]["id"] == expected[i]["id"]
-#             assert data[i]["name"] == expected[i]["name"]
-#             assert data[i]["form"] == expected[i]["form"]
-#             assert data[i]["created_at"] is not None
-#             assert data[i]["updated_at"] is not None
-#
-#         assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
-#
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "limit, offset, attribute, direction, expected",
+        [
+            (
+                2,
+                2,
+                "name",
+                SortingDirection.DESC,
+                [{"name": "category: 7", "id": 8, "form": None}, {"name": "category: 6", "id": 7, "form": None}],
+            ),
+            (
+                3,
+                1,
+                "name",
+                SortingDirection.ASC,
+                [
+                    {"name": "category: 1", "id": 2, "form": None},
+                    {"name": "category: 2", "id": 3, "form": None},
+                    {"name": "category: 3", "id": 4, "form": None},
+                ],
+            ),
+        ],
+    )
+    async def test_list_classifications_paginated_and_sorted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        limit: int,
+        offset: int,
+        attribute: str,
+        direction: SortingDirection,
+        expected: list[dict[str, Any]],
+        classifications: list[Classification],
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME),
+            params={"limit": limit, "offset": offset, "sort": f'["{attribute}", "{direction}"]'},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        for i in range(0, len(data)):
+            assert data[i]["id"] == expected[i]["id"]
+            assert data[i]["name"] == expected[i]["name"]
+            assert data[i]["form"] == expected[i]["form"]
+            assert data[i]["created_at"] is not None
+            assert data[i]["updated_at"] is not None
+
+        assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
+
 #     @pytest.mark.asyncio
 #     async def test_list_classification_with_form(
 #         self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
