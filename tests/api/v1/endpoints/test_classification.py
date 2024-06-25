@@ -343,18 +343,18 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("detail") == "Not Found"
 
-#     @pytest.mark.asyncio
-#     async def test_retrieve_classification_with_form(
-#         self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
-#     ) -> None:
-#         response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification_with_form.id))
-#
-#         assert response.status_code == HTTP_200_OK
-#
-#         body = response.json()
-#         assert body.get("form") == classification_with_form.id
-#
-#
+    @pytest.mark.asyncio
+    async def test_retrieve_classification_with_form(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification_with_form.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("form") == classification_with_form.id
+
+
 # class TestClassificationUpdate(BaseUnauthorizedTest):
 #     ROUTE_NAME: Final[str] = "classification:update"
 #     METHOD: Final[str] = "PATCH"
