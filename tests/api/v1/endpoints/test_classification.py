@@ -386,20 +386,20 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
-#     @pytest.mark.asyncio
-#     async def test_update_classification_that_does_not_exist(
-#         self, app: FastAPI, client: AsyncClient, auth_user: None
-#     ) -> None:
-#         response = await client.patch(
-#             app.url_path_for(self.ROUTE_NAME, classification_id=404), json={"name": "bladiebla"}
-#         )
-#
-#         assert response.status_code == HTTP_404_NOT_FOUND
-#
-#         body = response.json()
-#
-#         assert body.get("detail") == "Not Found"
-#
+    @pytest.mark.asyncio
+    async def test_update_classification_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=404), json={"name": "bladiebla"}
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        body = response.json()
+
+        assert body.get("detail") == "Not Found"
+
 #     @pytest.mark.asyncio
 #     async def test_update_classification_duplicate_name(
 #         self, app: FastAPI, client: AsyncClient, classifications: list[Classification], auth_user: None
