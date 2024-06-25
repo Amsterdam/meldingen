@@ -430,20 +430,20 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         assert body.get("form") == form.id
 
 
-# class TestClassificationDelete(BaseUnauthorizedTest):
-#     ROUTE_NAME: Final[str] = "classification:delete"
-#     METHOD: Final[str] = "DELETE"
-#     PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
-#
-#     def get_route_name(self) -> str:
-#         return self.ROUTE_NAME
-#
-#     def get_method(self) -> str:
-#         return self.METHOD
-#
-#     def get_path_params(self) -> dict[str, Any]:
-#         return self.PATH_PARAMS
-#
+class TestClassificationDelete(BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "classification:delete"
+    METHOD: Final[str] = "DELETE"
+    PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
+
 #     @pytest.mark.asyncio
 #     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
 #     async def test_delete_classification(
