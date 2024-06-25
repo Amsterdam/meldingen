@@ -119,7 +119,7 @@ def settings() -> Settings:
     return settings_override()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def database_engine(settings: Settings) -> AsyncEngine:
     engine = get_database_engine(settings)
     async with engine.begin() as conn:
@@ -130,7 +130,7 @@ async def database_engine(settings: Settings) -> AsyncEngine:
     return engine
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def app(database_engine: AsyncEngine) -> FastAPI:
     settings = settings_override()
     app = get_application(settings.model_dump())
@@ -139,7 +139,7 @@ async def app(database_engine: AsyncEngine) -> FastAPI:
     return app
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="function")
 async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(

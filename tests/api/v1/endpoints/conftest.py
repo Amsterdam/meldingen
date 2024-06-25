@@ -132,24 +132,24 @@ async def authenticate_user_override(token: str | None = None) -> User:
     return user
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def auth_user(app: FastAPI) -> None:
     app.dependency_overrides[authenticate_user] = authenticate_user_override
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def database_session(database_engine: AsyncEngine) -> AsyncSession:
     async_session = async_sessionmaker(database_engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
         yield session
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def classification_repo(database_session: AsyncSession) -> ClassificationRepository:
     return ClassificationRepository(database_session)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def classification_name(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)
@@ -157,7 +157,7 @@ def classification_name(request: FixtureRequest) -> str:
         return "classification name"
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def classification(classification_name: str, classification_repo: ClassificationRepository) -> Classification:
     try:
         classification = await classification_repo.find_by_name(classification_name)
@@ -168,12 +168,12 @@ async def classification(classification_name: str, classification_repo: Classifi
     return classification
 
 
-# @pytest_asyncio.fixture
-# async def classifications(classification_repository: ClassificationRepository) -> list[Classification]:
+# @pytest_asyncio.fixture(scope="session")
+# async def classifications(classification_repo: ClassificationRepository) -> list[Classification]:
 #     classifications = []
 #     for n in range(10):
 #         classification = Classification(f"category: {n}")
-#         await classification_repository.save(classification)
+#         await classification_repo.save(classification)
 #         classifications.append(classification)
 #
 #     return classifications
