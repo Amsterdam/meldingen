@@ -1,35 +1,24 @@
-# from datetime import datetime, timedelta
-from typing import Annotated
-
 import pytest
 import pytest_asyncio
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from meldingen_core.exceptions import NotFoundException
-# from pydantic import TypeAdapter
 from pytest import FixtureRequest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from meldingen.authentication import authenticate_user
-from meldingen.containers import classification_repository, get_database_session
-# from meldingen.containers import Container
+from meldingen.containers import classification_repository
 from meldingen.models import (
     Classification,
-    # Form,
-    # FormIoComponent,
-    # FormIoComponentTypeEnum,
-    # FormIoFormDisplayEnum,
-    # Melding,
-    # Question,
-    # StaticForm,
-    # StaticFormTypeEnum,
-    User,
+    Form,
+    FormIoComponent,
+    FormIoComponentTypeEnum,
+    FormIoFormDisplayEnum,
+    User, FormIoFormDisplayEnum, Form, Question,
 )
 from meldingen.repositories import (
     ClassificationRepository,
-    # FormRepository,
-    # MeldingRepository,
-    # QuestionRepository,
-    # StaticFormRepository,
+    FormRepository,
+    QuestionRepository,
 )
 
 
@@ -179,41 +168,41 @@ async def classifications(classification_repo: ClassificationRepository) -> list
     return classifications
 
 
-# @pytest_asyncio.fixture
-# async def classification_with_form(
-#     classification_repository: ClassificationRepository, form_repository: FormRepository
-# ) -> Classification:
-#     classification = Classification("test_classification")
-#     await classification_repository.save(classification)
-#     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
-#     await form_repository.save(form)
-#
-#     return classification
-#
-#
-# @pytest_asyncio.fixture
-# async def form_repository(container: Container) -> FormRepository:
-#     return await container.form_repository()
-#
-#
+@pytest_asyncio.fixture(scope="function")
+async def classification_with_form(
+    classification_repo: ClassificationRepository, form_repo: FormRepository
+) -> Classification:
+    classification = Classification("test_classification")
+    await classification_repo.save(classification)
+    form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
+    await form_repo.save(form)
+
+    return classification
+
+
+@pytest.fixture(scope="function")
+def form_repo(database_session: AsyncSession) -> FormRepository:
+    return FormRepository(database_session)
+
+
 # @pytest_asyncio.fixture
 # async def static_form_repository(container: Container) -> StaticFormRepository:
 #     return await container.static_form_repository()
 #
 #
-# @pytest_asyncio.fixture
-# async def question_repository(container: Container) -> QuestionRepository:
-#     return await container.question_repository()
-#
-#
-# @pytest.fixture
-# def form_title(request: FixtureRequest) -> str:
-#     if hasattr(request, "param"):
-#         return str(request.param)
-#     else:
-#         return "Form"
-#
-#
+@pytest.fixture(scope="function")
+def question_repo(database_session: AsyncSession) -> QuestionRepository:
+    return QuestionRepository(database_session)
+
+
+@pytest.fixture(scope="function")
+def form_title(request: FixtureRequest) -> str:
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return "Form"
+
+
 # @pytest_asyncio.fixture
 # async def form(form_repository: FormRepository, question_repository: QuestionRepository, form_title: str) -> Form:
 #     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
@@ -244,48 +233,48 @@ async def classifications(classification_repo: ClassificationRepository) -> list
 #     return form
 #
 #
-# @pytest_asyncio.fixture
-# async def form_with_classification(
-#     classification_repository: ClassificationRepository,
-#     form_repository: FormRepository,
-#     question_repository: QuestionRepository,
-#     form_title: str,
-# ) -> Form:
-#     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
-#
-#     component = FormIoComponent(
-#         label="Wat is uw klacht?",
-#         description="",
-#         key="wat-is-uw_klacht",
-#         type=FormIoComponentTypeEnum.text_area,
-#         input=True,
-#         auto_expand=True,
-#         show_char_count=True,
-#     )
-#
-#     components = await form.awaitable_attrs.components
-#     components.append(component)
-#
-#     await form_repository.save(form)
-#
-#     question = Question(text=component.description, form=form)
-#
-#     await question_repository.save(question)
-#
-#     component.question = question
-#
-#     try:
-#         classification = await classification_repository.find_by_name("test_classification")
-#     except NotFoundException:
-#         classification = Classification("test_classification")
-#         await classification_repository.save(classification)
-#
-#     form.classification = classification
-#     await form_repository.save(form)
-#
-#     return form
-#
-#
+@pytest_asyncio.fixture
+async def form_with_classification(
+    classification_repo: ClassificationRepository,
+    form_repo: FormRepository,
+    question_repo: QuestionRepository,
+    form_title: str,
+) -> Form:
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
+
+    component = FormIoComponent(
+        label="Wat is uw klacht?",
+        description="",
+        key="wat-is-uw_klacht",
+        type=FormIoComponentTypeEnum.text_area,
+        input=True,
+        auto_expand=True,
+        show_char_count=True,
+    )
+
+    components = await form.awaitable_attrs.components
+    components.append(component)
+
+    await form_repo.save(form)
+
+    question = Question(text=component.description, form=form)
+
+    await question_repo.save(question)
+
+    component.question = question
+
+    try:
+        classification = await classification_repo.find_by_name("test_classification")
+    except NotFoundException:
+        classification = Classification("test_classification")
+        await classification_repo.save(classification)
+
+    form.classification = classification
+    await form_repo.save(form)
+
+    return form
+
+
 # @pytest_asyncio.fixture
 # async def test_forms(form_repository: FormRepository) -> list[Form]:
 #     forms = []

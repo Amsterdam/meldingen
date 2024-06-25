@@ -272,18 +272,18 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
 
-#     @pytest.mark.asyncio
-#     async def test_list_classification_with_form(
-#         self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
-#     ) -> None:
-#         response = await client.get(app.url_path_for(self.ROUTE_NAME))
-#
-#         assert response.status_code == HTTP_200_OK
-#
-#         body = response.json()
-#         assert len(body) == 1
-#         assert body[0].get("form") == form_with_classification.id
-#
+    @pytest.mark.asyncio
+    async def test_list_classification_with_form(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert len(body) == 1
+        assert body[0].get("form") == form_with_classification.id
+
 #     @pytest.mark.asyncio
 #     async def test_list_classifications_sort_on_relationship(
 #         self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
