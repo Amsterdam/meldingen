@@ -302,20 +302,20 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         assert violation.get("msg") == "Cannot sort on relationship form"
 
 
-# class TestClassificationRetrieve(BaseUnauthorizedTest):
-#     ROUTE_NAME: Final[str] = "classification:retrieve"
-#     METHOD: Final[str] = "GET"
-#     PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
-#
-#     def get_route_name(self) -> str:
-#         return self.ROUTE_NAME
-#
-#     def get_method(self) -> str:
-#         return self.METHOD
-#
-#     def get_path_params(self) -> dict[str, Any]:
-#         return self.PATH_PARAMS
-#
+class TestClassificationRetrieve(BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "classification:retrieve"
+    METHOD: Final[str] = "GET"
+    PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
+
 #     @pytest.mark.asyncio
 #     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
 #     async def test_retrieve_classification(
