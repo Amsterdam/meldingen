@@ -168,17 +168,17 @@ async def classification(classification_name: str, classification_repo: Classifi
     return classification
 
 
-# @pytest_asyncio.fixture(scope="session")
-# async def classifications(classification_repo: ClassificationRepository) -> list[Classification]:
-#     classifications = []
-#     for n in range(10):
-#         classification = Classification(f"category: {n}")
-#         await classification_repo.save(classification)
-#         classifications.append(classification)
-#
-#     return classifications
-#
-#
+@pytest_asyncio.fixture(scope="function")
+async def classifications(classification_repo: ClassificationRepository) -> list[Classification]:
+    classifications = []
+    for n in range(10):
+        classification = Classification(f"category: {n}")
+        await classification_repo.save(classification)
+        classifications.append(classification)
+
+    return classifications
+
+
 # @pytest_asyncio.fixture
 # async def classification_with_form(
 #     classification_repository: ClassificationRepository, form_repository: FormRepository

@@ -73,30 +73,30 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         )
 
 
-# class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
-#     ROUTE_NAME: Final[str] = "classification:list"
-#     METHOD: Final[str] = "GET"
-#
-#     def get_route_name(self) -> str:
-#         return self.ROUTE_NAME
-#
-#     def get_method(self) -> str:
-#         return self.METHOD
-#
-#     @pytest.mark.asyncio
-#     async def test_list_all_classifications(
-#         self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
-#     ) -> None:
-#         response = await client.get(app.url_path_for(self.ROUTE_NAME))
-#
-#         assert response.status_code == HTTP_200_OK
-#
-#         data = response.json()
-#
-#         assert len(data) == len(classifications)
-#
-#         assert response.headers.get("content-range") == "classification 0-49/10"
-#
+class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
+    ROUTE_NAME: Final[str] = "classification:list"
+    METHOD: Final[str] = "GET"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    @pytest.mark.asyncio
+    async def test_list_all_classifications(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert len(data) == len(classifications)
+
+        assert response.headers.get("content-range") == "classification 0-49/10"
+
 #     @pytest.mark.asyncio
 #     @pytest.mark.parametrize(
 #         "limit, offset, expected",
