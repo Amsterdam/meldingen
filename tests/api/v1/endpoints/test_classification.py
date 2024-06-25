@@ -97,30 +97,30 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         assert response.headers.get("content-range") == "classification 0-49/10"
 
-#     @pytest.mark.asyncio
-#     @pytest.mark.parametrize(
-#         "limit, offset, expected",
-#         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
-#     )
-#     async def test_list_classifications_paginated(
-#         self,
-#         app: FastAPI,
-#         client: AsyncClient,
-#         auth_user: None,
-#         limit: int,
-#         offset: int,
-#         expected: int,
-#         classifications: list[Classification],
-#     ) -> None:
-#         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
-#
-#         assert response.status_code == HTTP_200_OK
-#
-#         data = response.json()
-#         assert len(data) == expected
-#
-#         assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
-#
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "limit, offset, expected",
+        [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
+    )
+    async def test_list_classifications_paginated(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        limit: int,
+        offset: int,
+        expected: int,
+        classifications: list[Classification],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == expected
+
+        assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
+
 #     @pytest.mark.asyncio
 #     @pytest.mark.parametrize(
 #         "attribute, direction, expected",
