@@ -415,21 +415,21 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
             data.get("detail") == "The requested operation could not be completed due to a conflict with existing data."
         )
 
-#     @pytest.mark.asyncio
-#     async def test_update_classification_with_form(
-#         self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
-#     ) -> None:
-#         response = await client.patch(app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "new_name"})
-#
-#         assert response.status_code == HTTP_200_OK
-#
-#         form = await classification_with_form.awaitable_attrs.form
-#
-#         body = response.json()
-#         assert body.get("name") == "new_name"
-#         assert body.get("form") == form.id
-#
-#
+    @pytest.mark.asyncio
+    async def test_update_classification_with_form(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
+    ) -> None:
+        response = await client.patch(app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "new_name"})
+
+        assert response.status_code == HTTP_200_OK
+
+        form = await classification_with_form.awaitable_attrs.form
+
+        body = response.json()
+        assert body.get("name") == "new_name"
+        assert body.get("form") == form.id
+
+
 # class TestClassificationDelete(BaseUnauthorizedTest):
 #     ROUTE_NAME: Final[str] = "classification:delete"
 #     METHOD: Final[str] = "DELETE"
