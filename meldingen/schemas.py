@@ -188,7 +188,7 @@ panel_not_allowed = create_non_match_validator(FormIoComponentTypeEnum.panel, "{
 
 
 class FormComponentInput(BaseModel):
-    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel))
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
 
     label: Annotated[str, Field(min_length=3)]
     description: str | None
