@@ -14,7 +14,15 @@ from pydantic.alias_generators import to_snake
 from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, String, Table, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
-from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    MappedAsDataclass,
+    Relationship,
+    declared_attr,
+    mapped_column,
+    relationship,
+)
 
 
 class BaseDBModel(MappedAsDataclass, DeclarativeBase):
@@ -73,6 +81,8 @@ class FormIoComponentTypeEnum(enum.StrEnum):
     panel: Final[str] = "panel"
     text_area: Final[str] = "textarea"
     text_field: Final[str] = "textfield"
+    checkbox: Final[str] = "selectboxes"
+    radio: Final[str] = "radio"
 
 
 class FormIoComponent(AsyncAttrs, BaseDBModel):
@@ -163,6 +173,51 @@ class FormIoTextFieldComponent(FormIoComponent):
         return {
             "polymorphic_identity": FormIoComponentTypeEnum.text_field,
         }
+
+
+class BaseFormIoValuesComponent(FormIoComponent):
+    """
+    Base class for all form.io components that can have "values"
+    """
+
+    values: Mapped[OrderingList["FormIoComponentValue"]] = relationship(
+        cascade="save-update, merge, delete, delete-orphan",
+        back_populates="component",
+        default_factory=list,
+        order_by="FormIoComponentValue.position",
+        collection_class=ordering_list(attr="position", count_from=1),
+    )
+
+
+class FormIoCheckBoxComponent(BaseFormIoValuesComponent):
+    @declared_attr.directive
+    def __mapper_args__(self) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": FormIoComponentTypeEnum.checkbox,
+        }
+
+
+class FormIoRadioComponent(BaseFormIoValuesComponent):
+    @declared_attr.directive
+    def __mapper_args__(self) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": FormIoComponentTypeEnum.radio,
+        }
+
+
+class FormIoComponentValue(BaseDBModel):
+    label: Mapped[str] = mapped_column(String())
+    value: Mapped[str] = mapped_column(String())
+
+    # Used to keep the order of the values correct
+    position: Mapped[int] = mapped_column(Integer(), nullable=False, default=1)
+
+    component_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_component.id"), default=None, nullable=True)
+    component: Mapped[Optional[BaseFormIoValuesComponent]] = relationship(
+        cascade="save-update, merge, delete",
+        back_populates="values",
+        default=None,
+    )
 
 
 class FormIoFormDisplayEnum(enum.StrEnum):

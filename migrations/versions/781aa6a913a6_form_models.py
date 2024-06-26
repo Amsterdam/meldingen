@@ -61,7 +61,7 @@ def upgrade() -> None:
         sa.Column("description", sa.String(), nullable=True),
         sa.Column(
             "type",
-            sa.Enum("panel", "text_area", "textfield", name="form_io_component_type"),
+            sa.Enum("panel", "text_area", "textfield", "selectboxes", "radio", name="form_io_component_type"),
             nullable=False,
         ),
         sa.Column("input", sa.Boolean(), nullable=False),
@@ -108,5 +108,7 @@ def downgrade() -> None:
     # ### end Alembic commands ###
 
     sa.Enum("form", "wizard", "pdf", name="form_io_form_display").drop(op.get_bind())
-    sa.Enum("panel", "text_area", "textfield", name="form_io_component_type").drop(op.get_bind())
+    sa.Enum("panel", "text_area", "textfield", "selectboxes", "radio", name="form_io_component_type").drop(
+        op.get_bind()
+    )
     sa.Enum("primary", name="static_form_type").drop(op.get_bind())
