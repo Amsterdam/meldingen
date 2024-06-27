@@ -180,6 +180,10 @@ class BaseFormIoValuesComponent(FormIoComponent):
     Base class for all form.io components that can have "values"
     """
 
+    @declared_attr.directive
+    def __mapper_args__(self) -> dict[str, Any]:
+        return {"polymorphic_abstract": True}
+
     values: Mapped[OrderingList["FormIoComponentValue"]] = relationship(
         cascade="save-update, merge, delete, delete-orphan",
         back_populates="component",

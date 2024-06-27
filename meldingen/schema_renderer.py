@@ -19,6 +19,7 @@ class BaseFormOutPutRenderer:
     async def _render_panel_component(self, component: FormIoPanelComponent) -> FormPanelComponentOutput:
         components = await component.awaitable_attrs.components
         panel_components = await self._render_components(components)
+        print(panel_components)
 
         return FormPanelComponentOutput(
             label=component.label,
@@ -32,7 +33,9 @@ class BaseFormOutPutRenderer:
             components=panel_components,
         )
 
-    async def _render_non_panel_component(self, component: FormIoComponent) -> FormComponentOutput:
+    async def _render_non_panel_component(
+        self, component: FormIoComponent | FormIoRadioComponent | FormIoCheckBoxComponent
+    ) -> FormComponentOutput:
         output = FormComponentOutput(
             label=component.label,
             description=component.description,

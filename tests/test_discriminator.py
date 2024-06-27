@@ -16,8 +16,6 @@ from meldingen.schemas import component_discriminator
         (True, None),
         (1000, None),
         (["type", "panel"], None),
-        ({"type": "radio"}, "values"),
-        ({"type": "selectboxes"}, "values"),
     ],
 )
 async def test_component_discriminator(value: Any, match_value: Any) -> None:

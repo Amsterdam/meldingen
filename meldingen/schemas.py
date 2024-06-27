@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Any, Union
+from typing import Annotated, Any, Optional, Union
 
 from meldingen_core.models import Classification, User
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
@@ -135,18 +135,12 @@ def component_discriminator(value: Any) -> str | None:
     if isinstance(value, dict):
         if value.get("type") == FormIoComponentTypeEnum.panel:
             return "panel"
-        elif value.get("type") == FormIoComponentTypeEnum.radio:
-            return "values"
-        elif value.get("type") == FormIoComponentTypeEnum.checkbox:
-            return "values"
         else:
             return "component"
     elif isinstance(value, FormPanelComponentInput):
         return "panel"
-    elif isinstance(value, FormValuesComponentInput):
-        return "values"
     elif isinstance(value, FormComponentInput):
-        return "values"
+        return "component"
 
 
 class BaseFormInput(BaseModel):
@@ -156,7 +150,6 @@ class BaseFormInput(BaseModel):
         Annotated[
             Union[
                 Annotated["FormPanelComponentInput", Tag("panel")],
-                Annotated["FormValuesComponentInput", Tag("values")],
                 Annotated["FormComponentInput", Tag("component")],
             ],
             Discriminator(component_discriminator),
@@ -194,18 +187,13 @@ class FormComponentInput(BaseModel):
     description: str | None
 
     key: Annotated[str, Field(min_length=3)]
-    type: Annotated[
-        FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.text_area), AfterValidator(panel_not_allowed)
-    ]
+    type: Annotated[FormIoComponentTypeEnum, Field(), AfterValidator(panel_not_allowed)]
     input: bool
 
     auto_expand: bool
     show_char_count: bool
 
-
-class FormValuesComponentInput(FormComponentInput):
-    type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.radio)]
-    values: list["FormComponentValueInput"]
+    values: Optional[list["FormComponentValueInput"]] = None
 
 
 class FormComponentValueInput(BaseModel):

@@ -13,13 +13,24 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.models import Classification, Form, FormIoComponent, FormIoComponentTypeEnum, FormIoPanelComponent
+from meldingen.models import (
+    Classification,
+    Form,
+    FormIoCheckBoxComponent,
+    FormIoComponent,
+    FormIoComponentTypeEnum,
+    FormIoComponentValue,
+    FormIoPanelComponent,
+    FormIoRadioComponent,
+)
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
 class BaseFormTest:
     async def _assert_components(
-        self, data: list[dict[str, Any]], components: list[FormIoPanelComponent | FormIoComponent]
+        self,
+        data: list[dict[str, Any]],
+        components: list[FormIoPanelComponent | FormIoComponent | FormIoCheckBoxComponent | FormIoRadioComponent],
     ) -> None:
         assert len(data) == len(components)
 
@@ -28,6 +39,9 @@ class BaseFormTest:
             if component.type == FormIoComponentTypeEnum.panel:
                 assert isinstance(component, FormIoPanelComponent)
                 await self._assert_panel_component(component_data, component)
+            elif component.type in [FormIoComponentTypeEnum.checkbox, FormIoComponentTypeEnum.radio]:
+                assert isinstance(component, (FormIoCheckBoxComponent, FormIoRadioComponent))
+                await self._assert_value_component(component_data, component)
             else:
                 assert isinstance(component, FormIoComponent)
                 await self._assert_component(component_data, component)
@@ -44,6 +58,29 @@ class BaseFormTest:
         components = await component.awaitable_attrs.components
         if components:
             await self._assert_components(component_data, components)
+
+    async def _assert_component_values(self, data: list[dict[str, Any]], values: list[FormIoComponentValue]) -> None:
+        assert len(data) == len(values)
+
+        for value in values:
+            value_data = data[value.position - 1]
+            assert value_data.get("label") == value.label
+            assert value_data.get("value") == value.value
+
+    async def _assert_value_component(
+        self, data: dict[str, Any], component: FormIoCheckBoxComponent | FormIoRadioComponent
+    ) -> None:
+        assert data.get("label") == component.label
+        assert data.get("key") == component.key
+        assert data.get("type") == component.type
+        assert data.get("input") == component.input
+
+        values_data = data.get("values", [])
+        assert isinstance(values_data, list)  # This is here for mypy
+
+        values = await component.awaitable_attrs.values
+        if values:
+            await self._assert_component_values(values_data, values)
 
     async def _assert_component(self, data: dict[str, Any], component: FormIoComponent) -> None:
         assert data.get("label") == component.label
@@ -685,7 +722,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         detail = body.get("detail")
         assert len(detail) == 5
 
-        # The import error
+        # The important error
         violation = detail[1]
         assert violation.get("type") == "assertion_error"
         assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "type"]
@@ -711,6 +748,80 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert violation.get("type") == "extra_forbidden"
         assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "components"]
         assert violation.get("msg") == "Extra inputs are not permitted"
+
+    @pytest.mark.asyncio
+    async def test_update_form_values(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: Form,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "components": [
+                {
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": "radio",
+                    "input": True,
+                    "autoExpand": False,
+                    "showCharCount": False,
+                    "values": [
+                        {
+                            "label": "Ja",
+                            "value": "yes",
+                        },
+                        {
+                            "label": "Nee",
+                            "value": "no",
+                        },
+                    ],
+                },
+                {
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "Selecteer een optie?",
+                            "description": "",
+                            "key": "selecteer-een-optie",
+                            "type": "selectboxes",
+                            "input": True,
+                            "autoExpand": False,
+                            "showCharCount": False,
+                            "values": [
+                                {
+                                    "label": "Optie #1",
+                                    "value": "option-1",
+                                },
+                                {
+                                    "label": "Optie #2",
+                                    "value": "option-2",
+                                },
+                                {
+                                    "label": "Optie #3",
+                                    "value": "option-3",
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        components = await form.awaitable_attrs.components
+        await self._assert_components(data.get("components"), components)
 
 
 class TestFormCreate(BaseUnauthorizedTest):
