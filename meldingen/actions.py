@@ -1,4 +1,4 @@
-from typing import Any, Collection, TypeVar
+from typing import Any, Collection, TypeVar, cast
 
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
@@ -156,15 +156,19 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
                 value_data = component_values.pop("values", [])
 
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
-                    r_component = FormIoCheckBoxComponent(**component_values)
-                    r_component = await self._create_component_values(component=r_component, values=value_data)
-                    parent_components.append(r_component)
-                    await self._create_question(component=r_component)
-                elif component_values.get("type") == FormIoComponentTypeEnum.radio:
-                    c_component = FormIoRadioComponent(**component_values)
-                    c_component = await self._create_component_values(component=c_component, values=value_data)
+                    c_component = FormIoCheckBoxComponent(**component_values)
+                    _c_component = await self._create_component_values(component=c_component, values=value_data)
+                    c_component = cast(FormIoCheckBoxComponent, _c_component)  # Needed for mypy
+
                     parent_components.append(c_component)
                     await self._create_question(component=c_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.radio:
+                    r_component = FormIoRadioComponent(**component_values)
+                    _r_component = await self._create_component_values(component=r_component, values=value_data)
+                    r_component = cast(FormIoRadioComponent, _r_component)  # Needed for mypy
+
+                    parent_components.append(r_component)
+                    await self._create_question(component=r_component)
                 else:
                     component = FormIoComponent(**component_values)
                     parent_components.append(component)
@@ -388,13 +392,17 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
                 value_data = component_values.pop("values", [])
 
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
-                    r_component = FormIoCheckBoxComponent(**component_values)
-                    r_component = await self._create_component_values(component=r_component, values=value_data)
-                    parent_components.append(r_component)
-                elif component_values.get("type") == FormIoComponentTypeEnum.radio:
-                    c_component = FormIoRadioComponent(**component_values)
-                    c_component = await self._create_component_values(component=c_component, values=value_data)
+                    c_component = FormIoCheckBoxComponent(**component_values)
+                    _c_component = await self._create_component_values(component=c_component, values=value_data)
+                    c_component = cast(FormIoCheckBoxComponent, _c_component)  # Needed for mypy
+
                     parent_components.append(c_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.radio:
+                    r_component = FormIoRadioComponent(**component_values)
+                    _r_component = await self._create_component_values(component=r_component, values=value_data)
+                    r_component = cast(FormIoRadioComponent, _r_component)  # Needed for mypy
+
+                    parent_components.append(r_component)
                 else:
                     component = FormIoComponent(**component_values)
                     parent_components.append(component)
