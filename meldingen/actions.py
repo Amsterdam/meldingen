@@ -129,15 +129,13 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
     async def _create_component_values(
         self, component: FormIoRadioComponent | FormIoCheckBoxComponent, values: list[dict[str, Any]]
     ) -> FormIoRadioComponent | FormIoCheckBoxComponent:
-        if len(values):
-            component_values = await component.awaitable_attrs.values
+        component_values = await component.awaitable_attrs.values
 
-            for value in values:
-                component_value = FormIoComponentValue(**value)
-                component_values.append(component_value)
+        for value in values:
+            component_value = FormIoComponentValue(**value)
+            component_values.append(component_value)
 
-            component_values.reorder()
-
+        component_values.reorder()
         return component
 
     async def _create_components(
@@ -158,16 +156,19 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
                 value_data = component_values.pop("values", [])
 
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
-                    component = FormIoCheckBoxComponent(**component_values)
-                    component = await self._create_component_values(component=component, values=value_data)
+                    r_component = FormIoCheckBoxComponent(**component_values)
+                    r_component = await self._create_component_values(component=r_component, values=value_data)
+                    parent_components.append(r_component)
+                    await self._create_question(component=r_component)
                 elif component_values.get("type") == FormIoComponentTypeEnum.radio:
-                    component = FormIoRadioComponent(**component_values)
-                    component = await self._create_component_values(component=component, values=value_data)
+                    c_component = FormIoRadioComponent(**component_values)
+                    c_component = await self._create_component_values(component=c_component, values=value_data)
+                    parent_components.append(c_component)
+                    await self._create_question(component=c_component)
                 else:
                     component = FormIoComponent(**component_values)
-
-                parent_components.append(component)
-                await self._create_question(component=component)
+                    parent_components.append(component)
+                    await self._create_question(component=component)
 
         parent_components.reorder()
 
@@ -367,7 +368,6 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
             component_values.append(component_value)
 
         component_values.reorder()
-
         return component
 
     async def _create_components(
@@ -388,15 +388,16 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
                 value_data = component_values.pop("values", [])
 
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
-                    component = FormIoCheckBoxComponent(**component_values)
-                    component = await self._create_component_values(component=component, values=value_data)
+                    r_component = FormIoCheckBoxComponent(**component_values)
+                    r_component = await self._create_component_values(component=r_component, values=value_data)
+                    parent_components.append(r_component)
                 elif component_values.get("type") == FormIoComponentTypeEnum.radio:
-                    component = FormIoRadioComponent(**component_values)
-                    component = await self._create_component_values(component=component, values=value_data)
+                    c_component = FormIoRadioComponent(**component_values)
+                    c_component = await self._create_component_values(component=c_component, values=value_data)
+                    parent_components.append(c_component)
                 else:
                     component = FormIoComponent(**component_values)
-
-                parent_components.append(component)
+                    parent_components.append(component)
 
         parent_components.reorder()
 

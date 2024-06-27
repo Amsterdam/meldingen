@@ -141,6 +141,7 @@ def component_discriminator(value: Any) -> str | None:
         return "panel"
     elif isinstance(value, FormComponentInput):
         return "component"
+    return None
 
 
 class BaseFormInput(BaseModel):
