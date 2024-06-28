@@ -77,10 +77,7 @@ class TestUserCreate(BaseUnauthorizedTest):
         violation = detail[0]
         assert violation.get("type") == "value_error"
         assert violation.get("loc") == ["body", "email"]
-        assert (
-            violation.get("msg")
-            == "value is not a valid email address: The email address is not valid. It must have exactly one @-sign."
-        )
+        assert violation.get("msg") == "value is not a valid email address: An email address must have an @-sign."
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
