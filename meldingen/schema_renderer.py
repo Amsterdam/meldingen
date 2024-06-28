@@ -19,7 +19,6 @@ class BaseFormOutPutRenderer:
     async def _render_panel_component(self, component: FormIoPanelComponent) -> FormPanelComponentOutput:
         components = await component.awaitable_attrs.components
         panel_components = await self._render_components(components)
-        print(panel_components)
 
         return FormPanelComponentOutput(
             label=component.label,
