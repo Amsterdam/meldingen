@@ -72,6 +72,7 @@ class FormIoComponentTypeEnum(enum.StrEnum):
 
     panel: Final[str] = "panel"
     text_area: Final[str] = "textarea"
+    text_field: Final[str] = "textfield"
 
 
 class FormIoComponent(AsyncAttrs, BaseDBModel):
@@ -153,6 +154,14 @@ class FormIoTextAreaComponent(FormIoComponent):
     def __mapper_args__(self) -> dict[str, Any]:
         return {
             "polymorphic_identity": FormIoComponentTypeEnum.text_area,
+        }
+
+
+class FormIoTextFieldComponent(FormIoComponent):
+    @declared_attr.directive
+    def __mapper_args__(self) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": FormIoComponentTypeEnum.text_field,
         }
 
 
