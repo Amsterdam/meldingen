@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   meldingen:
     image: amsterdam/meldingen
