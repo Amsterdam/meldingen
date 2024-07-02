@@ -1,4 +1,4 @@
-from typing import Any, Collection, TypeVar
+from typing import Any, Collection, TypeVar, cast
 
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
@@ -22,9 +22,12 @@ from meldingen.models import (
     Answer,
     Classification,
     Form,
+    FormIoCheckBoxComponent,
     FormIoComponent,
     FormIoComponentTypeEnum,
+    FormIoComponentValue,
     FormIoPanelComponent,
+    FormIoRadioComponent,
     Melding,
     Question,
     StaticForm,
@@ -123,6 +126,18 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
 
         component.question = question
 
+    async def _create_component_values(
+        self, component: FormIoRadioComponent | FormIoCheckBoxComponent, values: list[dict[str, Any]]
+    ) -> FormIoRadioComponent | FormIoCheckBoxComponent:
+        component_values = await component.awaitable_attrs.values
+
+        for value in values:
+            component_value = FormIoComponentValue(**value)
+            component_values.append(component_value)
+
+        component_values.reorder()
+        return component
+
     async def _create_components(
         self, parent: Form | FormIoPanelComponent, components_values: list[dict[str, Any]]
     ) -> None:
@@ -138,10 +153,26 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
 
                 parent_components.append(panel_component)
             else:
-                component = FormIoComponent(**component_values)
-                parent_components.append(component)
+                value_data = component_values.pop("values", [])
 
-                await self._create_question(component=component)
+                if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
+                    c_component = FormIoCheckBoxComponent(**component_values)
+                    _c_component = await self._create_component_values(component=c_component, values=value_data)
+                    c_component = cast(FormIoCheckBoxComponent, _c_component)  # Needed for mypy
+
+                    parent_components.append(c_component)
+                    await self._create_question(component=c_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.radio:
+                    r_component = FormIoRadioComponent(**component_values)
+                    _r_component = await self._create_component_values(component=r_component, values=value_data)
+                    r_component = cast(FormIoRadioComponent, _r_component)  # Needed for mypy
+
+                    parent_components.append(r_component)
+                    await self._create_question(component=r_component)
+                else:
+                    component = FormIoComponent(**component_values)
+                    parent_components.append(component)
+                    await self._create_question(component=component)
 
         parent_components.reorder()
 
@@ -331,6 +362,18 @@ class StaticFormRetrieveByTypeAction(BaseCRUDAction[StaticForm, StaticForm]):
 class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
     _repository: StaticFormRepository
 
+    async def _create_component_values(
+        self, component: FormIoRadioComponent | FormIoCheckBoxComponent, values: list[dict[str, Any]]
+    ) -> FormIoRadioComponent | FormIoCheckBoxComponent:
+        component_values = await component.awaitable_attrs.values
+
+        for value in values:
+            component_value = FormIoComponentValue(**value)
+            component_values.append(component_value)
+
+        component_values.reorder()
+        return component
+
     async def _create_components(
         self, parent: StaticForm | FormIoPanelComponent, components_values: list[dict[str, Any]]
     ) -> None:
@@ -346,8 +389,23 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
 
                 parent_components.append(panel_component)
             else:
-                component = FormIoComponent(**component_values)
-                parent_components.append(component)
+                value_data = component_values.pop("values", [])
+
+                if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
+                    c_component = FormIoCheckBoxComponent(**component_values)
+                    _c_component = await self._create_component_values(component=c_component, values=value_data)
+                    c_component = cast(FormIoCheckBoxComponent, _c_component)  # Needed for mypy
+
+                    parent_components.append(c_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.radio:
+                    r_component = FormIoRadioComponent(**component_values)
+                    _r_component = await self._create_component_values(component=r_component, values=value_data)
+                    r_component = cast(FormIoRadioComponent, _r_component)  # Needed for mypy
+
+                    parent_components.append(r_component)
+                else:
+                    component = FormIoComponent(**component_values)
+                    parent_components.append(component)
 
         parent_components.reorder()
 

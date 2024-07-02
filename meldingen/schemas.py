@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import Annotated, Any, Union
+from typing import Annotated, Any, Optional, Union
 
 from meldingen_core.models import Classification, User
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
 
-from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum, StaticFormTypeEnum
+from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
 from meldingen.validators import create_non_match_validator
 
 
@@ -76,6 +76,12 @@ class StaticFormOutput(BaseFormOutput):
     components: list[Union["FormComponentOutput", "FormPanelComponentOutput"]]
 
 
+class FormComponentValueOutput(BaseModel):
+    label: str
+    value: str
+    position: int
+
+
 class FormComponentOutput(BaseModel):
     model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))
 
@@ -92,6 +98,8 @@ class FormComponentOutput(BaseModel):
     position: int
 
     question: int | None = None
+
+    values: list[FormComponentValueOutput] | None = None
 
 
 class FormPanelComponentOutput(BaseModel):
@@ -129,6 +137,10 @@ def component_discriminator(value: Any) -> str | None:
             return "panel"
         else:
             return "component"
+    elif isinstance(value, FormPanelComponentInput):
+        return "panel"
+    elif isinstance(value, FormComponentInput):
+        return "component"
     return None
 
 
@@ -176,13 +188,18 @@ class FormComponentInput(BaseModel):
     description: str | None
 
     key: Annotated[str, Field(min_length=3)]
-    type: Annotated[
-        FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.text_area), AfterValidator(panel_not_allowed)
-    ]
+    type: Annotated[FormIoComponentTypeEnum, Field(), AfterValidator(panel_not_allowed)]
     input: bool
 
     auto_expand: bool
     show_char_count: bool
+
+    values: Optional[list["FormComponentValueInput"]] = None
+
+
+class FormComponentValueInput(BaseModel):
+    label: Annotated[str, Field(min_length=1)]
+    value: Annotated[str, Field(min_length=1)]
 
 
 class AnswerInput(BaseModel):

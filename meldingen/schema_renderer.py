@@ -1,5 +1,18 @@
-from meldingen.models import Form, FormIoComponent, FormIoPanelComponent, StaticForm
-from meldingen.schemas import FormComponentOutput, FormOutput, FormPanelComponentOutput, StaticFormOutput
+from meldingen.models import (
+    Form,
+    FormIoCheckBoxComponent,
+    FormIoComponent,
+    FormIoPanelComponent,
+    FormIoRadioComponent,
+    StaticForm,
+)
+from meldingen.schemas import (
+    FormComponentOutput,
+    FormComponentValueOutput,
+    FormOutput,
+    FormPanelComponentOutput,
+    StaticFormOutput,
+)
 
 
 class BaseFormOutPutRenderer:
@@ -19,8 +32,10 @@ class BaseFormOutPutRenderer:
             components=panel_components,
         )
 
-    async def _render_non_panel_component(self, component: FormIoComponent) -> FormComponentOutput:
-        return FormComponentOutput(
+    async def _render_non_panel_component(
+        self, component: FormIoComponent | FormIoRadioComponent | FormIoCheckBoxComponent
+    ) -> FormComponentOutput:
+        output = FormComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -31,6 +46,16 @@ class BaseFormOutPutRenderer:
             position=component.position,
             question=component.question_id,
         )
+
+        if isinstance(component, (FormIoRadioComponent, FormIoCheckBoxComponent)):
+            c_values = await component.awaitable_attrs.values
+            if len(c_values):
+                values: list[FormComponentValueOutput] = [
+                    FormComponentValueOutput(label=v.label, value=v.value, position=v.position) for v in c_values
+                ]
+                output.values = values
+
+        return output
 
     async def _render_components(
         self, components: list[FormIoPanelComponent | FormIoComponent]

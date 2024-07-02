@@ -146,3 +146,77 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.asyncio
+    async def test_update_form_values(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        primary_form: StaticForm,
+    ) -> None:
+        new_data = {
+            "title": "1. Beschrijf uw melding",
+            "display": "wizard",
+            "components": [
+                {
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": "radio",
+                    "input": True,
+                    "autoExpand": False,
+                    "showCharCount": False,
+                    "values": [
+                        {
+                            "label": "Ja",
+                            "value": "yes",
+                        },
+                        {
+                            "label": "Nee",
+                            "value": "no",
+                        },
+                    ],
+                },
+                {
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "Selecteer een optie?",
+                            "description": "",
+                            "key": "selecteer-een-optie",
+                            "type": "selectboxes",
+                            "input": True,
+                            "autoExpand": False,
+                            "showCharCount": False,
+                            "values": [
+                                {
+                                    "label": "Optie #1",
+                                    "value": "option-1",
+                                },
+                                {
+                                    "label": "Optie #2",
+                                    "value": "option-2",
+                                },
+                                {
+                                    "label": "Optie #3",
+                                    "value": "option-3",
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_type=primary_form.type), json=new_data)
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        components = await primary_form.awaitable_attrs.components
+        await self._assert_components(data.get("components"), components)
