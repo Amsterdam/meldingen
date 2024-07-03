@@ -17,6 +17,7 @@ from meldingen.models import (
     User,
 )
 from meldingen.repositories import ClassificationRepository, FormRepository, QuestionRepository
+from tests.conftest import get_database_engine_override, get_database_session_override
 
 
 # @pytest_asyncio.fixture
@@ -118,24 +119,17 @@ async def authenticate_user_override(token: str | None = None) -> User:
     return user
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def auth_user(app: FastAPI) -> None:
     app.dependency_overrides[authenticate_user] = authenticate_user_override
 
 
-@pytest_asyncio.fixture(scope="function")
-async def database_session(database_engine: AsyncEngine) -> AsyncSession:
-    async_session = async_sessionmaker(database_engine, class_=AsyncSession, expire_on_commit=False)
-    async with async_session() as session:
-        yield session
-
-
-@pytest.fixture(scope="function")
+@pytest.fixture
 def classification_repo(database_session: AsyncSession) -> ClassificationRepository:
     return ClassificationRepository(database_session)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def classification_name(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)
@@ -143,18 +137,20 @@ def classification_name(request: FixtureRequest) -> str:
         return "classification name"
 
 
-@pytest_asyncio.fixture(scope="function")
-async def classification(classification_name: str, classification_repo: ClassificationRepository) -> Classification:
-    try:
-        classification = await classification_repo.find_by_name(classification_name)
-    except NotFoundException:
-        classification = Classification(name=classification_name)
-        await classification_repo.save(classification)
+@pytest_asyncio.fixture
+async def classification(classification_name: str) -> Classification:
+    print("CLASSIFICATION FIXTURE")
+    classification = Classification(name=classification_name)
+    async for session in get_database_session_override():
+        print('SESSION!')
+        session.add(classification)
+        await session.commit()
+        print('SESSION COMMIT DONE!')
 
     return classification
 
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture
 async def classifications(classification_repo: ClassificationRepository) -> list[Classification]:
     classifications = []
     for n in range(10):
@@ -165,7 +161,7 @@ async def classifications(classification_repo: ClassificationRepository) -> list
     return classifications
 
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture
 async def classification_with_form(
     classification_repo: ClassificationRepository, form_repo: FormRepository
 ) -> Classification:
@@ -177,8 +173,8 @@ async def classification_with_form(
     return classification
 
 
-@pytest.fixture(scope="function")
-def form_repo(database_session: AsyncSession) -> FormRepository:
+@pytest.fixture
+def form_repo() -> FormRepository:
     return FormRepository(database_session)
 
 
@@ -187,12 +183,12 @@ def form_repo(database_session: AsyncSession) -> FormRepository:
 #     return await container.static_form_repository()
 #
 #
-@pytest.fixture(scope="function")
+@pytest.fixture
 def question_repo(database_session: AsyncSession) -> QuestionRepository:
     return QuestionRepository(database_session)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def form_title(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)
