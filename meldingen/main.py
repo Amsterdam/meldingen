@@ -70,9 +70,10 @@ def get_application(cont: Container) -> FastAPI:
     @application.middleware("http")
     async def handle_resources(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         """Initialize dependency injection container resources before handling request
-        and close them after handling the request.
+        and close them after handling the request. We also reset Singletons.
         We need to do this in order for the resource dependencies to get "refreshed" every request."""
 
+        container.reset_singletons()
         await container.init_resources()
 
         response = await call_next(request)
