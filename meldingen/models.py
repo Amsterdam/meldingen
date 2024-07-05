@@ -1,8 +1,10 @@
 import enum
+import uuid
 from datetime import datetime
 from typing import Any, Final, Optional, Union
 
 from meldingen_core.models import Answer as BaseAnswer
+from meldingen_core.models import Attachment as BaseAttachment
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Form as BaseForm
 from meldingen_core.models import Melding as BaseMelding
@@ -11,7 +13,7 @@ from meldingen_core.models import User as BaseUser
 from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
 from pydantic.alias_generators import to_snake
-from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, String, Table, func
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, String, Table, Uuid, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import (
@@ -49,6 +51,11 @@ class Melding(BaseDBModel, BaseMelding, StateAware):
     classification: Mapped[Classification | None] = relationship(default=None)
     token: Mapped[str | None] = mapped_column(String, default=None)
     token_expires: Mapped[DateTime | None] = mapped_column(DateTime, default=None)
+    attachments: Mapped[list["Attachment"]] = relationship(
+        cascade="save-update, merge, delete, delete-orphan",
+        back_populates="melding",
+        default_factory=list,
+    )
 
 
 user_group = Table(
@@ -295,6 +302,18 @@ class Answer(BaseDBModel, BaseAnswer):
 
     question_id: Mapped[int] = mapped_column(ForeignKey("question.id"), init=False)
     question: Mapped[Question] = relationship()
+
+    melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
+    melding: Mapped[Melding] = relationship()
+
+
+class Attachment(BaseDBModel, BaseAttachment):
+    unique_identifier: Mapped[uuid.UUID] = mapped_column(
+        Uuid(), unique=True, index=True, nullable=False, default_factory=uuid.uuid4, init=False
+    )
+
+    file_path: Mapped[str] = mapped_column(String())
+    original_filename: Mapped[str] = mapped_column(String())
 
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
     melding: Mapped[Melding] = relationship()
