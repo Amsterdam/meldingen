@@ -4,6 +4,7 @@ from typing import AsyncGenerator
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient, PyJWT
+from meldingen_core.actions.attachment import UploadAttachmentAction
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
@@ -17,6 +18,8 @@ from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import TokenVerifier
 from mp_fsm.statemachine import BaseGuard, BaseTransition
+from plugfs.filesystem import Filesystem
+from plugfs.local import LocalAdapter
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -49,7 +52,7 @@ from meldingen.repositories import (
     MeldingRepository,
     QuestionRepository,
     StaticFormRepository,
-    UserRepository,
+    UserRepository, AttachmentRepository,
 )
 from meldingen.statemachine import (
     AnswerQuestions,
@@ -137,6 +140,7 @@ class Container(DeclarativeContainer):
     static_form_repository: Factory[StaticFormRepository] = Factory(StaticFormRepository, session=database_session)
     question_repository: Factory[QuestionRepository] = Factory(QuestionRepository, session=database_session)
     answer_repository: Factory[AnswerRepository] = Factory(AnswerRepository, session=database_session)
+    attachment_repository: Factory[AttachmentRepository] = Factory(AttachmentRepository, session=database_session)
 
     # state machine
     melding_has_classification_guard: Singleton[HasClassification] = Singleton(HasClassification)
@@ -170,6 +174,10 @@ class Container(DeclarativeContainer):
     # token
     token_generator: Singleton[UrlSafeTokenGenerator] = Singleton(UrlSafeTokenGenerator)
     token_verifier: Singleton[TokenVerifier[Melding]] = Singleton(TokenVerifier)
+
+    # filesystem
+    filesystem_adapter: Factory[LocalAdapter] = Factory(LocalAdapter)
+    filesystem: Factory[Filesystem] = Factory(Filesystem, adapter=filesystem_adapter)
 
     # Meldingen actions
     melding_create_action: Factory[MeldingCreateAction[Melding, Melding]] = Factory(
@@ -263,6 +271,14 @@ class Container(DeclarativeContainer):
         token_verifier=token_verifier,
         melding_repository=melding_repository,
         question_repository=question_repository,
+    )
+
+    # Attachment actions
+    upload_attachment_action: Factory[UploadAttachmentAction] = Factory(
+        UploadAttachmentAction,
+        attachment_repository=attachment_repository,
+        melding_repository=melding_repository,
+        filesystem=filesystem,
     )
 
     # authentication
