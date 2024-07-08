@@ -207,3 +207,8 @@ class AnswerInput(BaseModel):
 
 
 class AnswerOutput(BaseOutputModel): ...
+
+
+class AttachmentOutput(BaseOutputModel):
+    original_filename: str
+    melding: int
