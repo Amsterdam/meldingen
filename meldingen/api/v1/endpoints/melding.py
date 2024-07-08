@@ -3,7 +3,6 @@ from typing import Annotated
 import structlog
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
-from meldingen_core.actions.attachment import UploadAttachmentAction
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
@@ -24,7 +23,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from meldingen.actions import AnswerCreateAction, MeldingListAction, MeldingRetrieveAction
+from meldingen.actions import AnswerCreateAction, MeldingListAction, MeldingRetrieveAction, UploadAttachmentAction
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (
     default_response,

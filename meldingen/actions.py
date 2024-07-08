@@ -2,6 +2,7 @@ from typing import Any, Collection, TypeVar, cast
 
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
+from meldingen_core.actions.attachment import UploadAttachmentAction as BaseUploadAttachmentAction
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction
 from meldingen_core.actions.base import BaseListAction as BaseCoreListAction
 from meldingen_core.actions.base import BaseRetrieveAction
@@ -431,3 +432,6 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
         await self._repository.save(obj)
 
         return obj
+
+
+class UploadAttachmentAction(BaseUploadAttachmentAction[Melding, Melding]): ...

@@ -4,7 +4,6 @@ from typing import AsyncGenerator
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient, PyJWT
-from meldingen_core.actions.attachment import UploadAttachmentAction
 from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
@@ -38,6 +37,7 @@ from meldingen.actions import (
     MeldingRetrieveAction,
     StaticFormRetrieveByTypeAction,
     StaticFormUpdateAction,
+    UploadAttachmentAction,
     UserListAction,
     UserRetrieveAction,
     UserUpdateAction,
