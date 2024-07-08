@@ -1952,7 +1952,7 @@ azure-storage-blob = "^12.20.0"
 type = "git"
 url = "https://github.com/amsterdam/plugfs.git"
 reference = "HEAD"
-resolved_reference = "87df4ed44681c62d6029579be8179a660b1f0d44"
+resolved_reference = "ecd62cb2eb5c20dbb7871dd8bf208170cb8d078b"
 
 [[package]]
 name = "pluggy"
