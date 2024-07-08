@@ -2,7 +2,8 @@ from typing import Annotated
 
 import structlog
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
+from meldingen_core.actions.attachment import UploadAttachmentAction
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
@@ -37,7 +38,8 @@ from meldingen.containers import Container
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
-from meldingen.schemas import AnswerInput, AnswerOutput, MeldingCreateOutput, MeldingInput, MeldingOutput
+from meldingen.schemas import AnswerInput, AnswerOutput, MeldingCreateOutput, MeldingInput, MeldingOutput, \
+    AttachmentOutput
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -276,3 +278,21 @@ async def answer_additional_question(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
 
     return AnswerOutput(id=answer.id, created_at=answer.created_at, updated_at=answer.updated_at)
+
+
+@router.post("/{melding_id}/attachment", name="melding:attachment")
+async def upload_attachment(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    file: UploadFile,
+    action: UploadAttachmentAction = Depends(Provide(Container.upload_attachment_action)),
+) -> AttachmentOutput:
+    attachment = await action(melding_id, file.filename, await file.read())
+
+    return AttachmentOutput(
+        id=attachment.id,
+        original_filename=attachment.original_filename,
+        melding=melding_id,
+        created_at=attachment.created_at,
+        updated_at=attachment.updated_at,
+    )
