@@ -46,13 +46,14 @@ from meldingen.classification import DummyClassifierAdapter
 from meldingen.models import Melding
 from meldingen.repositories import (
     AnswerRepository,
+    AttachmentRepository,
     ClassificationRepository,
     FormRepository,
     GroupRepository,
     MeldingRepository,
     QuestionRepository,
     StaticFormRepository,
-    UserRepository, AttachmentRepository,
+    UserRepository,
 )
 from meldingen.statemachine import (
     AnswerQuestions,

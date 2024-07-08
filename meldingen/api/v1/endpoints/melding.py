@@ -38,8 +38,14 @@ from meldingen.containers import Container
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
-from meldingen.schemas import AnswerInput, AnswerOutput, MeldingCreateOutput, MeldingInput, MeldingOutput, \
-    AttachmentOutput
+from meldingen.schemas import (
+    AnswerInput,
+    AnswerOutput,
+    AttachmentOutput,
+    MeldingCreateOutput,
+    MeldingInput,
+    MeldingOutput,
+)
 
 router = APIRouter()
 logger = structlog.get_logger()
