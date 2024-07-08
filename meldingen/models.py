@@ -20,7 +20,6 @@ from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
     MappedAsDataclass,
-    Relationship,
     declared_attr,
     mapped_column,
     relationship,
