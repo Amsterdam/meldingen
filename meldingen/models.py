@@ -300,11 +300,7 @@ class Answer(BaseDBModel, BaseAnswer):
 
 
 class Attachment(BaseDBModel, BaseAttachment):
-    unique_identifier: Mapped[uuid.UUID] = mapped_column(
-        Uuid(), unique=True, index=True, nullable=False, default_factory=uuid.uuid4, init=False
-    )
-
-    file_path: Mapped[str] = mapped_column(String())
+    file_path: Mapped[str] = mapped_column(String(), init=False)
     original_filename: Mapped[str] = mapped_column(String())
 
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
