@@ -286,6 +286,7 @@ async def answer_additional_question(
 
 
 @router.post("/{melding_id}/attachment", name="melding:attachment")
+@inject
 async def upload_attachment(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
