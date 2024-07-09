@@ -21,6 +21,7 @@ from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import (
     Answer,
+    Attachment,
     Classification,
     Form,
     FormIoCheckBoxComponent,
@@ -434,4 +435,4 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
         return obj
 
 
-class UploadAttachmentAction(BaseUploadAttachmentAction[Melding, Melding]): ...
+class UploadAttachmentAction(BaseUploadAttachmentAction[Attachment, Melding, Melding]): ...
