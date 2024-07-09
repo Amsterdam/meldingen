@@ -285,6 +285,7 @@ class Container(DeclarativeContainer):
         attachment_repository=attachment_repository,
         melding_repository=melding_repository,
         filesystem=filesystem,
+        token_verifier=token_verifier,
         base_directory="/tmp",
     )
 
