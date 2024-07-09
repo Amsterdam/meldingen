@@ -286,7 +286,14 @@ async def answer_additional_question(
     return AnswerOutput(id=answer.id, created_at=answer.created_at, updated_at=answer.updated_at)
 
 
-@router.post("/{melding_id}/attachment", name="melding:attachment")
+@router.post(
+    "/{melding_id}/attachment",
+    name="melding:attachment",
+    responses={
+        **not_found_response,
+        **unauthorized_response,
+    },
+)
 @inject
 async def upload_attachment(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
@@ -300,7 +307,12 @@ async def upload_attachment(
             detail=[{"loc": ("form", "filename"), "type": "missing", "msg": "The filename is missing"}],
         )
 
-    attachment = await action(melding_id, token, file.filename, await file.read())
+    try:
+        attachment = await action(melding_id, token, file.filename, await file.read())
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return AttachmentOutput(
         id=attachment.id,
