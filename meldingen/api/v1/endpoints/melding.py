@@ -20,6 +20,7 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_ENTITY,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
@@ -293,6 +294,12 @@ async def upload_attachment(
     file: UploadFile,
     action: UploadAttachmentAction = Depends(Provide(Container.upload_attachment_action)),
 ) -> AttachmentOutput:
+    if file.filename is None:
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=[{"loc": ("form", "filename"), "type": "missing", "msg": "The filename is missing"}],
+        )
+
     attachment = await action(melding_id, file.filename, await file.read())
 
     return AttachmentOutput(
