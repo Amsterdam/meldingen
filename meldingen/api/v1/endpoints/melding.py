@@ -300,12 +300,11 @@ async def upload_attachment(
             detail=[{"loc": ("form", "filename"), "type": "missing", "msg": "The filename is missing"}],
         )
 
-    attachment = await action(melding_id, file.filename, await file.read())
+    attachment = await action(melding_id, token, file.filename, await file.read())
 
     return AttachmentOutput(
         id=attachment.id,
         original_filename=attachment.original_filename,
-        melding=melding_id,
         created_at=attachment.created_at,
         updated_at=attachment.updated_at,
     )
