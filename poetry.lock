@@ -1517,7 +1517,7 @@ structlog = "^24.1.0"
 type = "git"
 url = "https://github.com/amsterdam/meldingen-core.git"
 reference = "feat/attachment-uploads"
-resolved_reference = "58f0bc25d81b1b651589a74461143552161419ca"
+resolved_reference = "92430f6e1866531f79db935ff2208a9b8a169e34"
 
 [[package]]
 name = "mergedeep"
