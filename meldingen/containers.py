@@ -43,6 +43,7 @@ from meldingen.actions import (
     UserUpdateAction,
 )
 from meldingen.classification import DummyClassifierAdapter
+from meldingen.factories import AttachmentFactory
 from meldingen.models import Melding
 from meldingen.repositories import (
     AnswerRepository,
@@ -180,6 +181,9 @@ class Container(DeclarativeContainer):
     filesystem_adapter: Factory[LocalAdapter] = Factory(LocalAdapter)
     filesystem: Factory[Filesystem] = Factory(Filesystem, adapter=filesystem_adapter)
 
+    # Factories
+    attachment_factory: Factory[AttachmentFactory] = Factory(AttachmentFactory)
+
     # Meldingen actions
     melding_create_action: Factory[MeldingCreateAction[Melding, Melding]] = Factory(
         MeldingCreateAction,
@@ -277,9 +281,11 @@ class Container(DeclarativeContainer):
     # Attachment actions
     upload_attachment_action: Factory[UploadAttachmentAction] = Factory(
         UploadAttachmentAction,
+        attachment_factory=attachment_factory,
         attachment_repository=attachment_repository,
         melding_repository=melding_repository,
         filesystem=filesystem,
+        base_directory="/tmp",
     )
 
     # authentication
