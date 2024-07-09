@@ -286,7 +286,7 @@ class Container(DeclarativeContainer):
         melding_repository=melding_repository,
         filesystem=filesystem,
         token_verifier=token_verifier,
-        base_directory="/tmp",
+        base_directory=settings.attachment_storage_base_directory,
     )
 
     # authentication
