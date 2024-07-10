@@ -1,3 +1,4 @@
+from os import path
 from typing import Any, Callable, Final
 
 import pytest
@@ -798,3 +799,33 @@ class TestMeldingQuestionAnswer:
 
         data = response.json()
         assert data.get("detail") == "Not Found"
+
+
+class TestMeldingUploadAttachment:
+    ROUTE_NAME_CREATE: Final[str] = "melding:attachment"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+    )
+    async def test_upload_attachment(self, app: FastAPI, client: AsyncClient, test_melding: Melding) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id),
+            params={"token": test_melding.token},
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        "test_file.txt",
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_200_OK
