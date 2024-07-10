@@ -1,5 +1,5 @@
 from meldingen.factories import AttachmentFactory
-from meldingen.models import Melding, Attachment
+from meldingen.models import Attachment, Melding
 
 
 def test_attachment_factory() -> None:
