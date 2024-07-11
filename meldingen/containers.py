@@ -17,6 +17,8 @@ from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import TokenVerifier
 from mp_fsm.statemachine import BaseGuard, BaseTransition
+from plugfs.filesystem import Filesystem
+from plugfs.local import LocalAdapter
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -35,14 +37,17 @@ from meldingen.actions import (
     MeldingRetrieveAction,
     StaticFormRetrieveByTypeAction,
     StaticFormUpdateAction,
+    UploadAttachmentAction,
     UserListAction,
     UserRetrieveAction,
     UserUpdateAction,
 )
 from meldingen.classification import DummyClassifierAdapter
+from meldingen.factories import AttachmentFactory
 from meldingen.models import Melding
 from meldingen.repositories import (
     AnswerRepository,
+    AttachmentRepository,
     ClassificationRepository,
     FormRepository,
     GroupRepository,
@@ -137,6 +142,7 @@ class Container(DeclarativeContainer):
     static_form_repository: Factory[StaticFormRepository] = Factory(StaticFormRepository, session=database_session)
     question_repository: Factory[QuestionRepository] = Factory(QuestionRepository, session=database_session)
     answer_repository: Factory[AnswerRepository] = Factory(AnswerRepository, session=database_session)
+    attachment_repository: Factory[AttachmentRepository] = Factory(AttachmentRepository, session=database_session)
 
     # state machine
     melding_has_classification_guard: Singleton[HasClassification] = Singleton(HasClassification)
@@ -170,6 +176,13 @@ class Container(DeclarativeContainer):
     # token
     token_generator: Singleton[UrlSafeTokenGenerator] = Singleton(UrlSafeTokenGenerator)
     token_verifier: Singleton[TokenVerifier[Melding]] = Singleton(TokenVerifier)
+
+    # filesystem
+    filesystem_adapter: Factory[LocalAdapter] = Factory(LocalAdapter)
+    filesystem: Factory[Filesystem] = Factory(Filesystem, adapter=filesystem_adapter)
+
+    # Factories
+    attachment_factory: Factory[AttachmentFactory] = Factory(AttachmentFactory)
 
     # Meldingen actions
     melding_create_action: Factory[MeldingCreateAction[Melding, Melding]] = Factory(
@@ -263,6 +276,17 @@ class Container(DeclarativeContainer):
         token_verifier=token_verifier,
         melding_repository=melding_repository,
         question_repository=question_repository,
+    )
+
+    # Attachment actions
+    upload_attachment_action: Factory[UploadAttachmentAction] = Factory(
+        UploadAttachmentAction,
+        attachment_factory=attachment_factory,
+        attachment_repository=attachment_repository,
+        melding_repository=melding_repository,
+        filesystem=filesystem,
+        token_verifier=token_verifier,
+        base_directory=settings.attachment_storage_base_directory,
     )
 
     # authentication

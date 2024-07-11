@@ -2,7 +2,7 @@ from typing import Annotated
 
 import structlog
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
@@ -23,7 +23,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from meldingen.actions import AnswerCreateAction, MeldingListAction, MeldingRetrieveAction
+from meldingen.actions import AnswerCreateAction, MeldingListAction, MeldingRetrieveAction, UploadAttachmentAction
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (
     default_response,
@@ -37,7 +37,14 @@ from meldingen.containers import Container
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
-from meldingen.schemas import AnswerInput, AnswerOutput, MeldingCreateOutput, MeldingInput, MeldingOutput
+from meldingen.schemas import (
+    AnswerInput,
+    AnswerOutput,
+    AttachmentOutput,
+    MeldingCreateOutput,
+    MeldingInput,
+    MeldingOutput,
+)
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -276,3 +283,37 @@ async def answer_additional_question(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
 
     return AnswerOutput(id=answer.id, created_at=answer.created_at, updated_at=answer.updated_at)
+
+
+@router.post(
+    "/{melding_id}/attachment",
+    name="melding:attachment",
+    responses={
+        **not_found_response,
+        **unauthorized_response,
+    },
+)
+@inject
+async def upload_attachment(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    file: UploadFile,
+    action: UploadAttachmentAction = Depends(Provide(Container.upload_attachment_action)),
+) -> AttachmentOutput:
+    # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
+    # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
+    assert file.filename is not None
+
+    try:
+        attachment = await action(melding_id, token, file.filename, await file.read())
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return AttachmentOutput(
+        id=attachment.id,
+        original_filename=attachment.original_filename,
+        created_at=attachment.created_at,
+        updated_at=attachment.updated_at,
+    )

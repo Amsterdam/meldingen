@@ -16,15 +16,7 @@ from pydantic.alias_generators import to_snake
 from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, String, Table, Uuid, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    MappedAsDataclass,
-    Relationship,
-    declared_attr,
-    mapped_column,
-    relationship,
-)
+from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
 
 
 class BaseDBModel(MappedAsDataclass, DeclarativeBase):
@@ -44,7 +36,7 @@ class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
     form: Mapped[Optional["Form"]] = relationship(default=None, back_populates="classification")
 
 
-class Melding(BaseDBModel, BaseMelding, StateAware):
+class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     text: Mapped[str] = mapped_column(String)
     state: Mapped[str] = mapped_column(String, default=MeldingStates.NEW)
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
@@ -308,11 +300,7 @@ class Answer(BaseDBModel, BaseAnswer):
 
 
 class Attachment(BaseDBModel, BaseAttachment):
-    unique_identifier: Mapped[uuid.UUID] = mapped_column(
-        Uuid(), unique=True, index=True, nullable=False, default_factory=uuid.uuid4, init=False
-    )
-
-    file_path: Mapped[str] = mapped_column(String())
+    file_path: Mapped[str] = mapped_column(String(), init=False)
     original_filename: Mapped[str] = mapped_column(String())
 
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)

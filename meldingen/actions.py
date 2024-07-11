@@ -2,6 +2,7 @@ from typing import Any, Collection, TypeVar, cast
 
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
+from meldingen_core.actions.attachment import UploadAttachmentAction as BaseUploadAttachmentAction
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction
 from meldingen_core.actions.base import BaseListAction as BaseCoreListAction
 from meldingen_core.actions.base import BaseRetrieveAction
@@ -20,6 +21,7 @@ from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import (
     Answer,
+    Attachment,
     Classification,
     Form,
     FormIoCheckBoxComponent,
@@ -431,3 +433,6 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
         await self._repository.save(obj)
 
         return obj
+
+
+class UploadAttachmentAction(BaseUploadAttachmentAction[Attachment, Melding, Melding]): ...

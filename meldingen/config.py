@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta
+from pathlib import Path
 
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -31,8 +32,11 @@ class Settings(BaseSettings):
     cors_allow_methods: list[str]
     cors_allow_headers: list[str]
 
-    # token
+    # Token
     token_duration: timedelta  # Uses ISO 8601 standard for durations (https://en.wikipedia.org/wiki/ISO_8601)
+
+    # Storage
+    attachment_storage_base_directory: Path
 
 
 # Create an instance of the Settings model
