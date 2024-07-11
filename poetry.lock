@@ -1516,8 +1516,8 @@ structlog = "^24.1.0"
 [package.source]
 type = "git"
 url = "https://github.com/amsterdam/meldingen-core.git"
-reference = "feat/attachment-uploads"
-resolved_reference = "3404d40273b0a172139cb889850687df468732b1"
+reference = "HEAD"
+resolved_reference = "fc755bf208d460454992f6c3bb59d8dde609368e"
 
 [[package]]
 name = "mergedeep"
@@ -3187,4 +3187,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "e3d413dc130db8129c951def9503df9f49eb1c50776ab7d43a4ec192a385c8e2"
+content-hash = "b409a10e34e9b8156ad7ac4c70e8287cebf41c7deae3b75ae1c53aafe5cd0eb9"
