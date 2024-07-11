@@ -36,7 +36,7 @@ class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
     form: Mapped[Optional["Form"]] = relationship(default=None, back_populates="classification")
 
 
-class Melding(BaseDBModel, BaseMelding, StateAware):
+class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     text: Mapped[str] = mapped_column(String)
     state: Mapped[str] = mapped_column(String, default=MeldingStates.NEW)
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
