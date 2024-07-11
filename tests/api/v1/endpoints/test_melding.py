@@ -1,3 +1,4 @@
+import os
 from os import path
 from typing import Any, Callable, Final
 
@@ -829,3 +830,118 @@ class TestMeldingUploadAttachment:
         )
 
         assert response.status_code == HTTP_200_OK
+
+        attachments = await test_melding.awaitable_attrs.attachments
+        assert len(attachments) == 1
+
+        assert path.exists(attachments[0].file_path)
+
+        os.remove(attachments[0].file_path)
+
+    @pytest.mark.asyncio
+    async def test_upload_attachment_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=123),
+            params={"token": "supersecuretoken"},
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        "test_file.txt",
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+    )
+    async def test_upload_attachment_token_missing(self, app: FastAPI, client: AsyncClient, test_melding: Melding) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id),
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        "test_file.txt",
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["query", "token"]
+        assert detail[0].get("msg") == "Field required"
+
+    @pytest.mark.asyncio
+    async def test_upload_attachment_unauthorized_token_invalid(
+        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id),
+            params={"token": "supersecuretoken"},
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        "test_file.txt",
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
+        indirect=True,
+    )
+    async def test_upload_attachment_unauthorized_token_expired(
+        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id),
+            params={"token": "supersecuretoken"},
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        "test_file.txt",
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
