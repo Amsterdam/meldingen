@@ -865,7 +865,9 @@ class TestMeldingUploadAttachment:
         ["melding_text", "melding_state", "melding_token"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
     )
-    async def test_upload_attachment_token_missing(self, app: FastAPI, client: AsyncClient, test_melding: Melding) -> None:
+    async def test_upload_attachment_token_missing(
+        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+    ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id),
             files={
