@@ -20,7 +20,6 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
-    HTTP_422_UNPROCESSABLE_ENTITY,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
@@ -301,11 +300,9 @@ async def upload_attachment(
     file: UploadFile,
     action: UploadAttachmentAction = Depends(Provide(Container.upload_attachment_action)),
 ) -> AttachmentOutput:
-    if file.filename is None:
-        raise HTTPException(
-            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=[{"loc": ("form", "filename"), "type": "missing", "msg": "The filename is missing"}],
-        )
+    # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
+    # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
+    assert file.filename is not None
 
     try:
         attachment = await action(melding_id, token, file.filename, await file.read())
