@@ -1,6 +1,6 @@
 import os
 from os import path
-from typing import Any, Callable, Final
+from typing import Any, Final
 
 import pytest
 from fastapi import FastAPI
