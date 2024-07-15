@@ -908,6 +908,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert first_component.get("input")
         assert not first_component.get("autoExpand")
         assert not first_component.get("showCharCount")
+        assert first_component.get("question") is not None
 
         second_component: dict[str, Any] = components[1]
         assert second_component.get("label") == "panel-1"
@@ -925,6 +926,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert second_child_component.get("input")
         assert second_child_component.get("autoExpand")
         assert second_child_component.get("showCharCount")
+        assert second_child_component.get("question") is not None
 
     @pytest.mark.asyncio
     async def test_create_form_with_classification(

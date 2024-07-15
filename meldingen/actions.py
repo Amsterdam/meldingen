@@ -110,21 +110,11 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
         self._question_repository = question_repository
 
     async def _create_question(self, component: FormIoComponent) -> None:
-        """
-        A question will only be created if:
-            - A panel component is NOT a decorative component
-            - A component must be part of a form
-        """
-        if component.type == FormIoComponentTypeEnum.panel or not component.form:
+        if component.type == FormIoComponentTypeEnum.panel:
             return
 
-        # If the question already exists use the one from the database
-        question = await self._question_repository.retrieve_by_text_and_form_id(
-            text=component.label, form_id=component.form.id
-        )
-        if not question:
-            question = Question(text=component.label, form=component.form)
-            await self._question_repository.save(question, commit=False)
+        question = Question(text=component.label, form=component.form)
+        await self._question_repository.save(question, commit=False)
 
         component.question = question
 
