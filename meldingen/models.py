@@ -1,5 +1,4 @@
 import enum
-import uuid
 from datetime import datetime
 from typing import Any, Final, Optional, Union
 
@@ -90,7 +89,7 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
         return "form_io_component"
 
     @declared_attr.directive
-    def __mapper_args__(self) -> dict[str, Any]:
+    def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_on": "type",
         }
@@ -138,13 +137,10 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
         remote_side="FormIoPanelComponent.id",
     )
 
-    question_id: Mapped[int | None] = mapped_column(ForeignKey("question.id", ondelete="SET NULL"), default=None)
-    question: Mapped[Union["Question", None]] = relationship(default=None)
-
 
 class FormIoPanelComponent(FormIoComponent):
     @declared_attr.directive
-    def __mapper_args__(self) -> dict[str, Any]:
+    def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_identity": FormIoComponentTypeEnum.panel,
         }
@@ -158,29 +154,42 @@ class FormIoPanelComponent(FormIoComponent):
     )
 
 
-class FormIoTextAreaComponent(FormIoComponent):
+class FormIoQuestionComponent(FormIoComponent):
+    __table_args__ = {"extend_existing": True}
+    question_id: Mapped[int | None] = mapped_column(ForeignKey("question.id", ondelete="SET NULL"), default=None)
+
+    @declared_attr
+    def question(self) -> Mapped[Union["Question", None]]:
+        return relationship("Question", default=None)
+
     @declared_attr.directive
-    def __mapper_args__(self) -> dict[str, Any]:
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {"polymorphic_abstract": True}
+
+
+class FormIoTextAreaComponent(FormIoQuestionComponent):
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_identity": FormIoComponentTypeEnum.text_area,
         }
 
 
-class FormIoTextFieldComponent(FormIoComponent):
+class FormIoTextFieldComponent(FormIoQuestionComponent):
     @declared_attr.directive
-    def __mapper_args__(self) -> dict[str, Any]:
+    def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_identity": FormIoComponentTypeEnum.text_field,
         }
 
 
-class BaseFormIoValuesComponent(FormIoComponent):
+class BaseFormIoValuesComponent(FormIoQuestionComponent):
     """
     Base class for all form.io components that can have "values"
     """
 
     @declared_attr.directive
-    def __mapper_args__(self) -> dict[str, Any]:
+    def __mapper_args__(cls) -> dict[str, Any]:
         return {"polymorphic_abstract": True}
 
     values: Mapped[OrderingList["FormIoComponentValue"]] = relationship(
@@ -194,7 +203,7 @@ class BaseFormIoValuesComponent(FormIoComponent):
 
 class FormIoCheckBoxComponent(BaseFormIoValuesComponent):
     @declared_attr.directive
-    def __mapper_args__(self) -> dict[str, Any]:
+    def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_identity": FormIoComponentTypeEnum.checkbox,
         }
@@ -202,7 +211,7 @@ class FormIoCheckBoxComponent(BaseFormIoValuesComponent):
 
 class FormIoRadioComponent(BaseFormIoValuesComponent):
     @declared_attr.directive
-    def __mapper_args__(self) -> dict[str, Any]:
+    def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_identity": FormIoComponentTypeEnum.radio,
         }
@@ -264,7 +273,6 @@ class StaticFormTypeEnum(enum.StrEnum):
 
 
 class StaticForm(AsyncAttrs, BaseDBModel):
-
     type: Mapped[str] = mapped_column(Enum(StaticFormTypeEnum, name="static_form_type"), unique=True, nullable=False)
     title: Mapped[str] = mapped_column(String())
 

@@ -21,6 +21,7 @@ from meldingen.models import (
     FormIoComponentTypeEnum,
     FormIoComponentValue,
     FormIoPanelComponent,
+    FormIoQuestionComponent,
     FormIoRadioComponent,
 )
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
@@ -30,7 +31,9 @@ class BaseFormTest:
     async def _assert_components(
         self,
         data: list[dict[str, Any]],
-        components: list[FormIoPanelComponent | FormIoComponent | FormIoCheckBoxComponent | FormIoRadioComponent],
+        components: list[
+            FormIoPanelComponent | FormIoQuestionComponent | FormIoCheckBoxComponent | FormIoRadioComponent
+        ],
     ) -> None:
         assert len(data) == len(components)
 
@@ -43,7 +46,7 @@ class BaseFormTest:
                 assert isinstance(component, (FormIoCheckBoxComponent, FormIoRadioComponent))
                 await self._assert_value_component(component_data, component)
             else:
-                assert isinstance(component, FormIoComponent)
+                assert isinstance(component, FormIoQuestionComponent)
                 await self._assert_component(component_data, component)
 
     async def _assert_panel_component(self, data: dict[str, Any], component: FormIoPanelComponent) -> None:
@@ -82,7 +85,7 @@ class BaseFormTest:
         if values:
             await self._assert_component_values(values_data, values)
 
-    async def _assert_component(self, data: dict[str, Any], component: FormIoComponent) -> None:
+    async def _assert_component(self, data: dict[str, Any], component: FormIoQuestionComponent) -> None:
         assert data.get("label") == component.label
         assert data.get("description") == component.description
         assert data.get("key") == component.key

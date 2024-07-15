@@ -29,7 +29,10 @@ from meldingen.models import (
     FormIoComponentTypeEnum,
     FormIoComponentValue,
     FormIoPanelComponent,
+    FormIoQuestionComponent,
     FormIoRadioComponent,
+    FormIoTextAreaComponent,
+    FormIoTextFieldComponent,
     Melding,
     Question,
     StaticForm,
@@ -109,10 +112,7 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
         super().__init__(repository)
         self._question_repository = question_repository
 
-    async def _create_question(self, component: FormIoComponent) -> None:
-        if component.type == FormIoComponentTypeEnum.panel:
-            return
-
+    async def _create_question(self, component: FormIoQuestionComponent) -> None:
         question = Question(text=component.label, form=component.form)
         await self._question_repository.save(question, commit=False)
 
@@ -161,10 +161,16 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
 
                     parent_components.append(r_component)
                     await self._create_question(component=r_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.text_area:
+                    text_area_component = FormIoTextAreaComponent(**component_values)
+                    parent_components.append(text_area_component)
+                    await self._create_question(text_area_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.text_field:
+                    text_field_component = FormIoTextFieldComponent(**component_values)
+                    parent_components.append(text_field_component)
+                    await self._create_question(text_field_component)
                 else:
-                    component = FormIoComponent(**component_values)
-                    parent_components.append(component)
-                    await self._create_question(component=component)
+                    raise Exception(f"Unsupported component type: {component_values.get('type')}")
 
         parent_components.reorder()
 
@@ -395,9 +401,12 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
                     r_component = cast(FormIoRadioComponent, _r_component)  # Needed for mypy
 
                     parent_components.append(r_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.text_area:
+                    parent_components.append(FormIoTextAreaComponent(**component_values))
+                elif component_values.get("type") == FormIoComponentTypeEnum.text_field:
+                    parent_components.append(FormIoTextFieldComponent(**component_values))
                 else:
-                    component = FormIoComponent(**component_values)
-                    parent_components.append(component)
+                    raise Exception(f"Unsupported component type: {component_values.get('type')}")
 
         parent_components.reorder()
 

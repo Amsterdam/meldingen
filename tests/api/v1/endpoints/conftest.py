@@ -15,6 +15,7 @@ from meldingen.models import (
     FormIoComponent,
     FormIoComponentTypeEnum,
     FormIoFormDisplayEnum,
+    FormIoTextAreaComponent,
     Melding,
     Question,
     StaticForm,
@@ -210,7 +211,7 @@ def form_title(request: FixtureRequest) -> str:
 async def form(form_repository: FormRepository, question_repository: QuestionRepository, form_title: str) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
-    component = FormIoComponent(
+    component = FormIoTextAreaComponent(
         label="Wat is uw klacht?",
         description="",
         key="wat-is-uw_klacht",
@@ -245,7 +246,7 @@ async def form_with_classification(
 ) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
-    component = FormIoComponent(
+    component = FormIoTextAreaComponent(
         label="Wat is uw klacht?",
         description="",
         key="wat-is-uw_klacht",

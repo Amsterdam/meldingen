@@ -5,13 +5,13 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from meldingen.models import FormIoComponent, StaticForm, StaticFormTypeEnum
+from meldingen.models import FormIoComponent, FormIoQuestionComponent, StaticForm, StaticFormTypeEnum
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 from tests.api.v1.endpoints.test_form import BaseFormTest
 
 
 class BaseStaticFormTest(BaseFormTest):
-    async def _assert_component(self, data: dict[str, Any], component: FormIoComponent) -> None:
+    async def _assert_component(self, data: dict[str, Any], component: FormIoQuestionComponent) -> None:
         await super()._assert_component(data, component)
 
         # Additional check, a component of a static form should have no question related to it
