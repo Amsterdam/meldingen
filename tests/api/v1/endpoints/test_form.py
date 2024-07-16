@@ -823,6 +823,20 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         components = await form.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
 
+    @pytest.mark.asyncio
+    async def test_update_form_that_does_not_exist(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, form_id=123),
+            json={
+                "title": "Formulier #1",
+                "display": "wizard",
+                "classification": 1,
+                "components": [],
+            },
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
 
 class TestFormCreate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "form:create"
