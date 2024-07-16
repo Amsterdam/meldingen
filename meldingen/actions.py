@@ -113,7 +113,16 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
         self._question_repository = question_repository
 
     async def _create_question(self, component: FormIoQuestionComponent) -> None:
-        question = Question(text=component.label, form=component.form)
+        form = await component.awaitable_attrs.form
+        if form is None:
+            parent = await component.awaitable_attrs.parent
+            if parent is not None:
+                form = await parent.awaitable_attrs.form
+
+        if form is None:
+            raise Exception("Failed to get form from component or parent!")
+
+        question = Question(text=component.label, form=form)
         await self._question_repository.save(question, commit=False)
 
         component.question = question
