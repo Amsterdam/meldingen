@@ -20,7 +20,7 @@ from meldingen.models import (
     Question,
     StaticForm,
     StaticFormTypeEnum,
-    User,
+    User, FormIoPanelComponent,
 )
 from meldingen.repositories import (
     ClassificationRepository,
@@ -246,6 +246,13 @@ async def form_with_classification(
 ) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
+    panel = FormIoPanelComponent(
+        label="Page 1",
+        key="page1",
+        input=False,
+        type=FormIoComponentTypeEnum.panel,
+    )
+
     component = FormIoTextAreaComponent(
         label="Wat is uw klacht?",
         description="",
@@ -256,8 +263,10 @@ async def form_with_classification(
         show_char_count=True,
     )
 
+    panel.components.append(component)
+
     components = await form.awaitable_attrs.components
-    components.append(component)
+    components.append(panel)
 
     await form_repository.save(form)
 
