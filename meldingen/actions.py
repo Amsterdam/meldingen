@@ -328,7 +328,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         self._token_verifier(melding, token)
 
         # Melding must be classified
-        if not melding.classification:
+        if not await melding.awaitable_attrs.classification:
             raise MeldingNotClassifiedException()
 
         # Question must belong to a form
