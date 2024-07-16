@@ -15,12 +15,13 @@ from meldingen.models import (
     FormIoComponent,
     FormIoComponentTypeEnum,
     FormIoFormDisplayEnum,
+    FormIoPanelComponent,
     FormIoTextAreaComponent,
     Melding,
     Question,
     StaticForm,
     StaticFormTypeEnum,
-    User, FormIoPanelComponent,
+    User,
 )
 from meldingen.repositories import (
     ClassificationRepository,
@@ -263,7 +264,8 @@ async def form_with_classification(
         show_char_count=True,
     )
 
-    panel.components.append(component)
+    panel_components = await panel.awaitable_attrs.components
+    panel_components.append(component)
 
     components = await form.awaitable_attrs.components
     components.append(panel)
