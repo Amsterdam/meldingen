@@ -319,6 +319,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         2. The provided token must be valid.
         3. The melding must be classified.
         4. The question must exist.
+        5. The question must belong to an existing and active form.
 
         TODO: Validate the answer against the rules stored in the component (using JSONLogic?).
         """
@@ -338,6 +339,11 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         # Melding must be classified
         if not await melding.awaitable_attrs.classification:
             raise MeldingNotClassifiedException()
+
+        # Question must belong to a form
+        form = await question.awaitable_attrs.form
+        if form is None:
+            raise NotFoundException()
 
         # Store the answer
         # TODO: Add validation (using JSONLogic?)
