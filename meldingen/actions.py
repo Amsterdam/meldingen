@@ -149,10 +149,9 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
             if component_values.get("type") == FormIoComponentTypeEnum.panel:
                 child_components_values = component_values.pop("components", [])
                 panel_component = FormIoPanelComponent(**component_values)
+                parent_components.append(panel_component)
 
                 await self._create_components(parent=panel_component, components_values=child_components_values)
-
-                parent_components.append(panel_component)
             else:
                 value_data = component_values.pop("values", [])
 
