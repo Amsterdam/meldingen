@@ -3,6 +3,7 @@ from meldingen.models import (
     FormIoCheckBoxComponent,
     FormIoComponent,
     FormIoPanelComponent,
+    FormIoQuestionComponent,
     FormIoRadioComponent,
     StaticForm,
 )
@@ -33,7 +34,7 @@ class BaseFormOutPutRenderer:
         )
 
     async def _render_non_panel_component(
-        self, component: FormIoComponent | FormIoRadioComponent | FormIoCheckBoxComponent
+        self, component: FormIoQuestionComponent | FormIoRadioComponent | FormIoCheckBoxComponent
     ) -> FormComponentOutput:
         output = FormComponentOutput(
             label=component.label,
@@ -44,7 +45,7 @@ class BaseFormOutPutRenderer:
             auto_expand=component.auto_expand,
             show_char_count=component.show_char_count,
             position=component.position,
-            question=component.question_id,
+            question=await component.awaitable_attrs.question_id,
         )
 
         if isinstance(component, (FormIoRadioComponent, FormIoCheckBoxComponent)):
@@ -64,7 +65,7 @@ class BaseFormOutPutRenderer:
         for component in components:
             if isinstance(component, FormIoPanelComponent):
                 output.append(await self._render_panel_component(component))
-            else:
+            elif isinstance(component, FormIoQuestionComponent):
                 output.append(await self._render_non_panel_component(component))
         return output
 

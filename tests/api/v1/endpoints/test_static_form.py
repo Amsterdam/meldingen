@@ -5,13 +5,19 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from meldingen.models import FormIoComponent, StaticForm, StaticFormTypeEnum
+from meldingen.models import (
+    FormIoComponent,
+    FormIoComponentTypeEnum,
+    FormIoQuestionComponent,
+    StaticForm,
+    StaticFormTypeEnum,
+)
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 from tests.api.v1.endpoints.test_form import BaseFormTest
 
 
 class BaseStaticFormTest(BaseFormTest):
-    async def _assert_component(self, data: dict[str, Any], component: FormIoComponent) -> None:
+    async def _assert_component(self, data: dict[str, Any], component: FormIoQuestionComponent) -> None:
         await super()._assert_component(data, component)
 
         # Additional check, a component of a static form should have no question related to it
@@ -89,6 +95,48 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "showCharCount": False,
                         }
                     ],
+                }
+            ],
+        }
+
+        assert primary_form.title != new_data["title"]
+        assert primary_form.display != new_data["display"]
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_type=primary_form.type), json=new_data)
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data.get("type") == primary_form.type
+        assert data["title"] == new_data["title"]
+        assert data["display"] == new_data["display"]
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+
+        components = await primary_form.awaitable_attrs.components
+        await self._assert_components(data.get("components"), components)
+
+    @pytest.mark.asyncio
+    async def test_update_form_with_text_field(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        primary_form: StaticForm,
+    ) -> None:
+        new_data = {
+            "title": "1. Beschrijf uw melding",
+            "display": "wizard",
+            "components": [
+                {
+                    "label": "Waar gaat het over?",
+                    "description": "Typ geen persoonsgegevens in deze omschrijving. We vragen dit later in dit formulier aan u.",
+                    "key": "waar-gaat-het-over",
+                    "type": FormIoComponentTypeEnum.text_field,
+                    "input": True,
+                    "autoExpand": False,
+                    "showCharCount": False,
                 }
             ],
         }

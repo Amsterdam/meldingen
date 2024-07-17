@@ -613,9 +613,13 @@ class TestMeldingQuestionAnswer:
         form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
-        assert len(components) > 0
+        assert len(components) == 1
 
-        question = await components[0].awaitable_attrs.question
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
         data = {"text": "dit is het antwoord op de vraag"}
@@ -643,9 +647,13 @@ class TestMeldingQuestionAnswer:
         form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
-        assert len(components) > 0
+        assert len(components) == 1
 
-        question = await components[0].awaitable_attrs.question
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
         data = {"text": "dit is het antwoord op de vraag"}
@@ -670,9 +678,13 @@ class TestMeldingQuestionAnswer:
         form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
-        assert len(components) > 0
+        assert len(components) == 1
 
-        question = await components[0].awaitable_attrs.question
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
         data = {"text": "dit is het antwoord op de vraag"}
@@ -694,9 +706,13 @@ class TestMeldingQuestionAnswer:
         form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
-        assert len(components) > 0
+        assert len(components) == 1
 
-        question = await components[0].awaitable_attrs.question
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
         data = {"text": "dit is het antwoord op de vraag"}
@@ -729,9 +745,13 @@ class TestMeldingQuestionAnswer:
         form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
-        assert len(components) > 0
+        assert len(components) == 1
 
-        question = await components[0].awaitable_attrs.question
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
         data = {"text": "dit is het antwoord op de vraag"}

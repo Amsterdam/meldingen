@@ -21,6 +21,7 @@ from meldingen.models import (
     FormIoComponentTypeEnum,
     FormIoComponentValue,
     FormIoPanelComponent,
+    FormIoQuestionComponent,
     FormIoRadioComponent,
 )
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
@@ -30,7 +31,9 @@ class BaseFormTest:
     async def _assert_components(
         self,
         data: list[dict[str, Any]],
-        components: list[FormIoPanelComponent | FormIoComponent | FormIoCheckBoxComponent | FormIoRadioComponent],
+        components: list[
+            FormIoPanelComponent | FormIoQuestionComponent | FormIoCheckBoxComponent | FormIoRadioComponent
+        ],
     ) -> None:
         assert len(data) == len(components)
 
@@ -43,7 +46,7 @@ class BaseFormTest:
                 assert isinstance(component, (FormIoCheckBoxComponent, FormIoRadioComponent))
                 await self._assert_value_component(component_data, component)
             else:
-                assert isinstance(component, FormIoComponent)
+                assert isinstance(component, FormIoQuestionComponent)
                 await self._assert_component(component_data, component)
 
     async def _assert_panel_component(self, data: dict[str, Any], component: FormIoPanelComponent) -> None:
@@ -82,7 +85,7 @@ class BaseFormTest:
         if values:
             await self._assert_component_values(values_data, values)
 
-    async def _assert_component(self, data: dict[str, Any], component: FormIoComponent) -> None:
+    async def _assert_component(self, data: dict[str, Any], component: FormIoQuestionComponent) -> None:
         assert data.get("label") == component.label
         assert data.get("description") == component.description
         assert data.get("key") == component.key
@@ -908,6 +911,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert first_component.get("input")
         assert not first_component.get("autoExpand")
         assert not first_component.get("showCharCount")
+        assert first_component.get("question") is not None
 
         second_component: dict[str, Any] = components[1]
         assert second_component.get("label") == "panel-1"
@@ -925,6 +929,68 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert second_child_component.get("input")
         assert second_child_component.get("autoExpand")
         assert second_child_component.get("showCharCount")
+        assert second_child_component.get("question") is not None
+
+    @pytest.mark.asyncio
+    async def test_create_form_with_text_field(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": FormIoComponentTypeEnum.text_field,
+                            "input": True,
+                            "autoExpand": True,
+                            "showCharCount": True,
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("id", 0) == 1
+        assert data.get("title") == "Formulier #1"
+        assert data.get("display") == "form"
+        assert data.get("classification", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+
+        components = data.get("components")
+        assert isinstance(components, list)
+        assert components is not None
+        assert len(components) == 1
+
+        panel: dict[str, Any] = components[0]
+        assert panel.get("label") == "panel-1"
+        assert panel.get("key") == "panel"
+        assert panel.get("type") == "panel"
+        assert not panel.get("input")
+
+        panel_components: list[dict[str, Any]] = components[0].get("components")
+
+        text_field: dict[str, Any] = panel_components[0]
+        assert text_field.get("label") == "Waarom meld u dit bij ons?"
+        assert text_field.get("description") == ""
+        assert text_field.get("key") == "waarom-meld-u-dit-bij-ons"
+        assert text_field.get("type") == FormIoComponentTypeEnum.text_field
+        assert text_field.get("input")
+        assert text_field.get("autoExpand")
+        assert text_field.get("showCharCount")
+        assert text_field.get("question") is not None
 
     @pytest.mark.asyncio
     async def test_create_form_with_classification(

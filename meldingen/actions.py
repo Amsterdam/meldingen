@@ -29,7 +29,10 @@ from meldingen.models import (
     FormIoComponentTypeEnum,
     FormIoComponentValue,
     FormIoPanelComponent,
+    FormIoQuestionComponent,
     FormIoRadioComponent,
+    FormIoTextAreaComponent,
+    FormIoTextFieldComponent,
     Melding,
     Question,
     StaticForm,
@@ -109,22 +112,18 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
         super().__init__(repository)
         self._question_repository = question_repository
 
-    async def _create_question(self, component: FormIoComponent) -> None:
-        """
-        A question will only be created if:
-            - A panel component is NOT a decorative component
-            - A component must be part of a form
-        """
-        if component.type == FormIoComponentTypeEnum.panel or not component.form:
-            return
+    async def _create_question(self, component: FormIoQuestionComponent) -> None:
+        form = await component.awaitable_attrs.form
+        if form is None:
+            parent = await component.awaitable_attrs.parent
+            if parent is not None:
+                form = await parent.awaitable_attrs.form
 
-        # If the question already exists use the one from the database
-        question = await self._question_repository.retrieve_by_text_and_form_id(
-            text=component.label, form_id=component.form.id
-        )
-        if not question:
-            question = Question(text=component.label, form=component.form)
-            await self._question_repository.save(question, commit=False)
+        if form is None:
+            raise Exception("Failed to get form from component or parent!")
+
+        question = Question(text=component.label, form=form)
+        await self._question_repository.save(question, commit=False)
 
         component.question = question
 
@@ -150,10 +149,9 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
             if component_values.get("type") == FormIoComponentTypeEnum.panel:
                 child_components_values = component_values.pop("components", [])
                 panel_component = FormIoPanelComponent(**component_values)
+                parent_components.append(panel_component)
 
                 await self._create_components(parent=panel_component, components_values=child_components_values)
-
-                parent_components.append(panel_component)
             else:
                 value_data = component_values.pop("values", [])
 
@@ -171,10 +169,16 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
 
                     parent_components.append(r_component)
                     await self._create_question(component=r_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.text_area:
+                    text_area_component = FormIoTextAreaComponent(**component_values)
+                    parent_components.append(text_area_component)
+                    await self._create_question(text_area_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.text_field:
+                    text_field_component = FormIoTextFieldComponent(**component_values)
+                    parent_components.append(text_field_component)
+                    await self._create_question(text_field_component)
                 else:
-                    component = FormIoComponent(**component_values)
-                    parent_components.append(component)
-                    await self._create_question(component=component)
+                    raise Exception(f"Unsupported component type: {component_values.get('type')}")
 
         parent_components.reorder()
 
@@ -332,7 +336,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         self._token_verifier(melding, token)
 
         # Melding must be classified
-        if not melding.classification:
+        if not await melding.awaitable_attrs.classification:
             raise MeldingNotClassifiedException()
 
         # Question must belong to a form
@@ -405,9 +409,12 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
                     r_component = cast(FormIoRadioComponent, _r_component)  # Needed for mypy
 
                     parent_components.append(r_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.text_area:
+                    parent_components.append(FormIoTextAreaComponent(**component_values))
+                elif component_values.get("type") == FormIoComponentTypeEnum.text_field:
+                    parent_components.append(FormIoTextFieldComponent(**component_values))
                 else:
-                    component = FormIoComponent(**component_values)
-                    parent_components.append(component)
+                    raise Exception(f"Unsupported component type: {component_values.get('type')}")
 
         parent_components.reorder()
 
