@@ -1,0 +1,271 @@
+from typing import Union
+
+from meldingen.models import (
+    Form,
+    FormIoCheckBoxComponent,
+    FormIoComponent,
+    FormIoPanelComponent,
+    FormIoRadioComponent,
+    FormIoTextAreaComponent,
+    FormIoTextFieldComponent,
+    StaticForm,
+)
+from meldingen.output_schemas import (
+    FormCheckboxComponentOutput,
+    FormComponentValueOutput,
+    FormOutput,
+    FormPanelComponentOutput,
+    FormRadioComponentOutput,
+    FormTextAreaComponentOutput,
+    FormTextFieldInputComponentOutput,
+    StaticFormCheckboxComponentOutput,
+    StaticFormOutput,
+    StaticFormPanelComponentOutput,
+    StaticFormRadioComponentOutput,
+    StaticFormTextAreaComponentOutput,
+    StaticFormTextFieldInputComponentOutput,
+)
+
+
+class StaticFormOutputFactory:
+    async def _text_area_component(self, component: FormIoTextAreaComponent) -> StaticFormTextAreaComponentOutput:
+        return StaticFormTextAreaComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            auto_expand=component.auto_expand,
+            show_char_count=component.show_char_count,
+            position=component.position,
+        )
+
+    async def _text_field_component(
+        self, component: FormIoTextFieldComponent
+    ) -> StaticFormTextFieldInputComponentOutput:
+        return StaticFormTextFieldInputComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            position=component.position,
+        )
+
+    async def _values(
+        self, component: FormIoCheckBoxComponent | FormIoRadioComponent
+    ) -> list[FormComponentValueOutput]:
+        return [
+            FormComponentValueOutput(label=value.label, value=value.value, position=value.position)
+            for value in await component.awaitable_attrs.values
+        ]
+
+    async def _checkbox_component(self, component: FormIoCheckBoxComponent) -> StaticFormCheckboxComponentOutput:
+        return StaticFormCheckboxComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            position=component.position,
+            values=await self._values(component),
+        )
+
+    async def _radio_component(self, component: FormIoRadioComponent) -> StaticFormRadioComponentOutput:
+        return StaticFormRadioComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            position=component.position,
+            values=await self._values(component),
+        )
+
+    async def _panel_component(self, component: FormIoPanelComponent) -> StaticFormPanelComponentOutput:
+        children = await component.awaitable_attrs.components
+        children_output = await self._components(children)
+
+        return StaticFormPanelComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            auto_expand=component.auto_expand,
+            show_char_count=component.show_char_count,
+            position=component.position,
+            components=children_output,
+        )
+
+    async def _components(self, components: list[FormIoComponent]) -> list[
+        Union[
+            StaticFormPanelComponentOutput,
+            StaticFormTextAreaComponentOutput,
+            StaticFormTextFieldInputComponentOutput,
+            StaticFormCheckboxComponentOutput,
+            StaticFormRadioComponentOutput,
+            None,
+        ]
+    ]:
+        output_components: list[
+            Union[
+                StaticFormPanelComponentOutput,
+                StaticFormTextAreaComponentOutput,
+                StaticFormTextFieldInputComponentOutput,
+                StaticFormCheckboxComponentOutput,
+                StaticFormRadioComponentOutput,
+                None,
+            ]
+        ] = []
+        for component in components:
+            if isinstance(component, FormIoPanelComponent):
+                output_components.append(await self._panel_component(component))
+            elif isinstance(component, FormIoTextAreaComponent):
+                output_components.append(await self._text_area_component(component))
+            elif isinstance(component, FormIoTextFieldComponent):
+                output_components.append(await self._text_field_component(component))
+            elif isinstance(component, FormIoCheckBoxComponent):
+                output_components.append(await self._checkbox_component(component))
+            elif isinstance(component, FormIoRadioComponent):
+                output_components.append(await self._radio_component(component))
+
+        return output_components
+
+    async def __call__(self, static_form: StaticForm) -> StaticFormOutput:
+        components = await static_form.awaitable_attrs.components
+
+        return StaticFormOutput(
+            type=str(static_form.type),
+            title=static_form.title,
+            display=static_form.display,
+            components=await self._components(components),
+            created_at=static_form.created_at,
+            updated_at=static_form.updated_at,
+        )
+
+
+class FormOutputFactory:
+    async def _text_area_component(self, component: FormIoTextAreaComponent) -> FormTextAreaComponentOutput:
+        question = await component.awaitable_attrs.question
+        return FormTextAreaComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            auto_expand=component.auto_expand,
+            show_char_count=component.show_char_count,
+            position=component.position,
+            question=question.id,
+        )
+
+    async def _text_field_component(self, component: FormIoTextFieldComponent) -> FormTextFieldInputComponentOutput:
+        question = await component.awaitable_attrs.question
+        return FormTextFieldInputComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            position=component.position,
+            question=question.id,
+        )
+
+    async def _values(
+        self, component: FormIoCheckBoxComponent | FormIoRadioComponent
+    ) -> list[FormComponentValueOutput]:
+        return [
+            FormComponentValueOutput(label=value.label, value=value.value, position=value.position)
+            for value in await component.awaitable_attrs.values
+        ]
+
+    async def _checkbox_component(self, component: FormIoCheckBoxComponent) -> FormCheckboxComponentOutput:
+        question = await component.awaitable_attrs.question
+        return FormCheckboxComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            position=component.position,
+            values=await self._values(component),
+            question=question.id,
+        )
+
+    async def _radio_component(self, component: FormIoRadioComponent) -> FormRadioComponentOutput:
+        question = await component.awaitable_attrs.question
+        return FormRadioComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            position=component.position,
+            values=await self._values(component),
+            question=question.id,
+        )
+
+    async def _panel_component(self, component: FormIoPanelComponent) -> FormPanelComponentOutput:
+        children = await component.awaitable_attrs.components
+        children_output = await self._components(children)
+
+        return FormPanelComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            auto_expand=component.auto_expand,
+            show_char_count=component.show_char_count,
+            position=component.position,
+            components=children_output,
+        )
+
+    async def _components(self, components: list[FormIoComponent]) -> list[
+        Union[
+            FormPanelComponentOutput,
+            FormTextAreaComponentOutput,
+            FormTextFieldInputComponentOutput,
+            FormCheckboxComponentOutput,
+            FormRadioComponentOutput,
+            None,
+        ]
+    ]:
+        output_components: list[
+            Union[
+                FormPanelComponentOutput,
+                FormTextAreaComponentOutput,
+                FormTextFieldInputComponentOutput,
+                FormCheckboxComponentOutput,
+                FormRadioComponentOutput,
+                None,
+            ]
+        ] = []
+        for component in components:
+            if isinstance(component, FormIoPanelComponent):
+                output_components.append(await self._panel_component(component))
+            elif isinstance(component, FormIoTextAreaComponent):
+                output_components.append(await self._text_area_component(component))
+            elif isinstance(component, FormIoTextFieldComponent):
+                output_components.append(await self._text_field_component(component))
+            elif isinstance(component, FormIoCheckBoxComponent):
+                output_components.append(await self._checkbox_component(component))
+            elif isinstance(component, FormIoRadioComponent):
+                output_components.append(await self._radio_component(component))
+
+        return output_components
+
+    async def __call__(self, form: Form) -> FormOutput:
+        components = await form.awaitable_attrs.components
+        classification = await form.awaitable_attrs.classification
+
+        return FormOutput(
+            id=form.id,
+            title=form.title,
+            display=form.display,
+            classification=classification.id if classification else None,
+            components=await self._components(components),
+            created_at=form.created_at,
+            updated_at=form.updated_at,
+        )

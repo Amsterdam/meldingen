@@ -18,14 +18,15 @@ from meldingen.api.v1 import list_response, not_found_response, unauthorized_res
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import User
+from meldingen.output_schemas import FormOutput, SimpleFormOutput
 from meldingen.repositories import FormRepository
-from meldingen.schema_renderer import FormOutPutRenderer
-from meldingen.schemas import FormInput, FormOnlyOutput, FormOutput
+from meldingen.schema_factories import FormOutputFactory
+from meldingen.schemas import FormInput
 
 router = APIRouter()
 
 
-_hydrate_output = FormOutPutRenderer()
+_output_factory = FormOutputFactory()
 
 
 @inject
@@ -49,7 +50,7 @@ async def list_form(
     sort: Annotated[SortParams, Depends(sort_param)],
     user: Annotated[User, Depends(authenticate_user)],
     action: FormListAction = Depends(Provide(Container.form_list_action)),
-) -> list[FormOnlyOutput]:
+) -> list[SimpleFormOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
@@ -60,7 +61,7 @@ async def list_form(
     output = []
     for db_form in forms:
         output.append(
-            FormOnlyOutput(
+            SimpleFormOutput(
                 id=db_form.id,
                 title=db_form.title,
                 display=db_form.display,
@@ -83,7 +84,7 @@ async def retrieve_form(
     if not db_form:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await _hydrate_output(db_form)
+    return await _output_factory(db_form)
 
 
 @router.get("/classification/{classification_id}", name="form:classification", responses={**not_found_response})
@@ -94,7 +95,7 @@ async def retrieve_form_by_classification(
 ) -> FormOutput:
     form = await action(classification_id)
 
-    return await _hydrate_output(form)
+    return await _output_factory(form)
 
 
 @router.post(
@@ -117,7 +118,7 @@ async def create_form(
 ) -> FormOutput:
     form = await action(form_input)
 
-    return await _hydrate_output(form)
+    return await _output_factory(form)
 
 
 @router.put(
@@ -141,7 +142,7 @@ async def update_form(
 ) -> FormOutput:
     db_form = await action(form_id, form_input)
 
-    return await _hydrate_output(form=db_form)
+    return await _output_factory(form=db_form)
 
 
 @router.delete(

@@ -55,67 +55,6 @@ class UserUpdateInput(BaseModel):
 ### Form.io ###
 
 
-class BaseFormOutput(BaseModel):
-    title: str
-    display: str
-    created_at: datetime
-    updated_at: datetime
-
-
-class FormOnlyOutput(BaseFormOutput):
-    id: int
-    classification: int | None = None
-
-
-class FormOutput(FormOnlyOutput):
-    components: list[Union["FormComponentOutput", "FormPanelComponentOutput"]]
-
-
-class StaticFormOutput(BaseFormOutput):
-    type: str
-    components: list[Union["FormComponentOutput", "FormPanelComponentOutput"]]
-
-
-class FormComponentValueOutput(BaseModel):
-    label: str
-    value: str
-    position: int
-
-
-class FormComponentOutput(BaseModel):
-    model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))
-
-    label: str
-    description: str
-
-    key: str
-    type: str
-    input: bool
-
-    auto_expand: bool
-    show_char_count: bool
-
-    position: int
-
-    question: int | None = None
-
-    values: list[FormComponentValueOutput] | None = None
-
-
-class FormPanelComponentOutput(BaseModel):
-    model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))
-
-    label: str
-
-    key: str
-    type: str
-    input: bool
-
-    position: int
-
-    components: list[FormComponentOutput]
-
-
 def component_discriminator(value: Any) -> str | None:
     """
     The component discriminator knows the difference between a "panel" and a "normal" component.

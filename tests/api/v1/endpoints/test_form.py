@@ -988,8 +988,6 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert text_field.get("key") == "waarom-meld-u-dit-bij-ons"
         assert text_field.get("type") == FormIoComponentTypeEnum.text_field
         assert text_field.get("input")
-        assert text_field.get("autoExpand")
-        assert text_field.get("showCharCount")
         assert text_field.get("question") is not None
 
     @pytest.mark.asyncio

@@ -10,13 +10,14 @@ from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.models import StaticFormTypeEnum, User
-from meldingen.schema_renderer import StaticFormOutPutRenderer
-from meldingen.schemas import StaticFormInput, StaticFormOutput
+from meldingen.output_schemas import StaticFormOutput
+from meldingen.schema_factories import StaticFormOutputFactory
+from meldingen.schemas import StaticFormInput
 
 router = APIRouter()
 
 
-_hydrate_output = StaticFormOutPutRenderer()
+_output_factory = StaticFormOutputFactory()
 
 
 @router.get("/{form_type}", name="static-form:retrieve-by-type", responses={**not_found_response})
@@ -30,7 +31,7 @@ async def retrieve_static_form(
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await _hydrate_output(db_form)
+    return await _output_factory(db_form)
 
 
 @router.put(
@@ -50,4 +51,4 @@ async def update_static_form(
 ) -> StaticFormOutput:
     db_form = await action(form_type, form_input)
 
-    return await _hydrate_output(db_form)
+    return await _output_factory(db_form)
