@@ -34,7 +34,7 @@ httpx = "^0.27.0"
 isort = "^5.13.2"
 mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.5.6"
-mkdocstrings = {version = "^0.24.0", extras = ["python"]}
+mkdocstrings = {version = "^0.25.2", extras = ["python"]}
 mypy = "^1.8.0"
 mypy-baseline = "^0.7.1"
 pre-commit = "^3.8.0"
