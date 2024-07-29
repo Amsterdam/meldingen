@@ -1845,13 +1845,13 @@ reports = ["lxml"]
 
 [[package]]
 name = "mypy-baseline"
-version = "0.6.1"
+version = "0.7.1"
 description = "Integrate mypy with existing codebase."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "mypy_baseline-0.6.1-py3-none-any.whl", hash = "sha256:3a2c3646bdb57fc6753599b7a67b58836924c9132208ab41f14260ab510a60c6"},
-    {file = "mypy_baseline-0.6.1.tar.gz", hash = "sha256:2f594edf1489aa6bd5403d5183127f3fc045a591b9d6aa91530f0d7cfe61de01"},
+    {file = "mypy_baseline-0.7.1-py3-none-any.whl", hash = "sha256:08c0781451c67a8e36986da71418bd7131b66861c941c5b23fed7e7d6817ca80"},
+    {file = "mypy_baseline-0.7.1.tar.gz", hash = "sha256:b018e5238f650717b82ae774596e240ff957f32b34f068f22695f56e4a337a15"},
 ]
 
 [package.extras]
@@ -3182,4 +3182,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "4400e600303ceacd9d609d34dcf0a1cabb5a0509228d84724d4ba0ecce1183af"
+content-hash = "603bfe191d5eb9743ca26ba78e5e8bc8f4dc0d7a73e7c3db181d3c4876ef84d6"
