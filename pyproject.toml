@@ -38,7 +38,7 @@ mkdocstrings = {version = "^0.24.0", extras = ["python"]}
 mypy = "^1.8.0"
 mypy-baseline = "^0.7.1"
 pre-commit = "^3.8.0"
-pytest = "^7.0.0"
+pytest = "^8.3.2"
 pytest-alembic = "^0.10.7"
 pytest-asyncio = "^0.23.4"
 pytest-cov = "^5.0.0"
