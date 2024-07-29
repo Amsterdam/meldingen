@@ -14,7 +14,7 @@ alembic = "^1.13.1"
 asgi-correlation-id = "^4.3.1"
 asyncpg = "^0.29.0"
 dependency-injector = {git = "https://github.com/anton-petrov/python-dependency-injector.git"}
-fastapi = "^0.109.1"
+fastapi = "^0.110.3"
 geoalchemy2 = "^0.14.7"
 geojson-pydantic = "^1.0.2"
 meldingen-core = {git = "https://github.com/amsterdam/meldingen-core.git"}
