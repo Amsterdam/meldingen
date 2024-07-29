@@ -1,6 +1,7 @@
 from typing import Union
 
 from meldingen.models import (
+    BaseFormIoValuesComponent,
     Form,
     FormIoCheckBoxComponent,
     FormIoComponent,
@@ -145,9 +146,10 @@ class StaticFormOutputFactory:
         )
 
 
-class FormOutputFactory:
-    async def _text_area_component(self, component: FormIoTextAreaComponent) -> FormTextAreaComponentOutput:
+class FormTextAreaComponentOutputFactory:
+    async def __call__(self, component: FormIoTextAreaComponent) -> FormTextAreaComponentOutput:
         question = await component.awaitable_attrs.question
+
         return FormTextAreaComponentOutput(
             label=component.label,
             description=component.description,
@@ -160,8 +162,11 @@ class FormOutputFactory:
             question=question.id,
         )
 
-    async def _text_field_component(self, component: FormIoTextFieldComponent) -> FormTextFieldInputComponentOutput:
+
+class FormTextFieldInputComponentOutputFactory:
+    async def __call__(self, component: FormIoTextFieldComponent) -> FormTextFieldInputComponentOutput:
         question = await component.awaitable_attrs.question
+
         return FormTextFieldInputComponentOutput(
             label=component.label,
             description=component.description,
@@ -172,16 +177,24 @@ class FormOutputFactory:
             question=question.id,
         )
 
-    async def _values(
-        self, component: FormIoCheckBoxComponent | FormIoRadioComponent
-    ) -> list[FormComponentValueOutput]:
+
+class FormComponentValueOutputFactory:
+    async def __call__(self, component: BaseFormIoValuesComponent) -> list[FormComponentValueOutput]:
         return [
             FormComponentValueOutput(label=value.label, value=value.value, position=value.position)
             for value in await component.awaitable_attrs.values
         ]
 
-    async def _checkbox_component(self, component: FormIoCheckBoxComponent) -> FormCheckboxComponentOutput:
+
+class FormCheckboxComponentOutputFactory:
+    _values: FormComponentValueOutputFactory
+
+    def __init__(self, values_factory: FormComponentValueOutputFactory):
+        self._values = values_factory
+
+    async def __call__(self, component: FormIoCheckBoxComponent) -> FormCheckboxComponentOutput:
         question = await component.awaitable_attrs.question
+
         return FormCheckboxComponentOutput(
             label=component.label,
             description=component.description,
@@ -193,8 +206,16 @@ class FormOutputFactory:
             question=question.id,
         )
 
-    async def _radio_component(self, component: FormIoRadioComponent) -> FormRadioComponentOutput:
+
+class FormRadioComponentOutputFactory:
+    _values: FormComponentValueOutputFactory
+
+    def __init__(self, values_factory: FormComponentValueOutputFactory):
+        self._values = values_factory
+
+    async def __call__(self, component: FormIoRadioComponent) -> FormRadioComponentOutput:
         question = await component.awaitable_attrs.question
+
         return FormRadioComponentOutput(
             label=component.label,
             description=component.description,
@@ -206,9 +227,60 @@ class FormOutputFactory:
             question=question.id,
         )
 
+
+class FormComponentOutputFactory:
+    _text_area_component: FormTextAreaComponentOutputFactory
+    _text_field_component: FormTextFieldInputComponentOutputFactory
+    _checkbox_component: FormCheckboxComponentOutputFactory
+    _radio_component: FormRadioComponentOutputFactory
+
+    def __init__(
+        self,
+        text_area_factory: FormTextAreaComponentOutputFactory,
+        text_field_factory: FormTextFieldInputComponentOutputFactory,
+        checkbox_factory: FormCheckboxComponentOutputFactory,
+        radio_factory: FormRadioComponentOutputFactory,
+    ):
+        self._text_area_component = text_area_factory
+        self._text_field_component = text_field_factory
+        self._checkbox_component = checkbox_factory
+        self._radio_component = radio_factory
+
+    async def __call__(self, components: list[FormIoComponent]) -> list[
+        Union[
+            FormPanelComponentOutput,
+            FormTextAreaComponentOutput,
+            FormTextFieldInputComponentOutput,
+            FormCheckboxComponentOutput,
+            FormRadioComponentOutput,
+        ]
+    ]:
+        output_components: list[
+            Union[
+                FormPanelComponentOutput,
+                FormTextAreaComponentOutput,
+                FormTextFieldInputComponentOutput,
+                FormCheckboxComponentOutput,
+                FormRadioComponentOutput,
+            ]
+        ] = []
+        for component in components:  # TODO: Deduplicate
+            if isinstance(component, FormIoPanelComponent):
+                output_components.append(await self._panel_component(component))
+            elif isinstance(component, FormIoTextAreaComponent):
+                output_components.append(await self._text_area_component(component))
+            elif isinstance(component, FormIoTextFieldComponent):
+                output_components.append(await self._text_field_component(component))
+            elif isinstance(component, FormIoCheckBoxComponent):
+                output_components.append(await self._checkbox_component(component))
+            elif isinstance(component, FormIoRadioComponent):
+                output_components.append(await self._radio_component(component))
+
+        return output_components
+
     async def _panel_component(self, component: FormIoPanelComponent) -> FormPanelComponentOutput:
         children = await component.awaitable_attrs.components
-        children_output = await self._components(children)
+        children_output = await self.__call__(children)
 
         return FormPanelComponentOutput(
             label=component.label,
@@ -222,39 +294,12 @@ class FormOutputFactory:
             components=children_output,
         )
 
-    async def _components(self, components: list[FormIoComponent]) -> list[
-        Union[
-            FormPanelComponentOutput,
-            FormTextAreaComponentOutput,
-            FormTextFieldInputComponentOutput,
-            FormCheckboxComponentOutput,
-            FormRadioComponentOutput,
-            None,
-        ]
-    ]:
-        output_components: list[
-            Union[
-                FormPanelComponentOutput,
-                FormTextAreaComponentOutput,
-                FormTextFieldInputComponentOutput,
-                FormCheckboxComponentOutput,
-                FormRadioComponentOutput,
-                None,
-            ]
-        ] = []
-        for component in components:
-            if isinstance(component, FormIoPanelComponent):
-                output_components.append(await self._panel_component(component))
-            elif isinstance(component, FormIoTextAreaComponent):
-                output_components.append(await self._text_area_component(component))
-            elif isinstance(component, FormIoTextFieldComponent):
-                output_components.append(await self._text_field_component(component))
-            elif isinstance(component, FormIoCheckBoxComponent):
-                output_components.append(await self._checkbox_component(component))
-            elif isinstance(component, FormIoRadioComponent):
-                output_components.append(await self._radio_component(component))
 
-        return output_components
+class FormOutputFactory:
+    _components: FormComponentOutputFactory
+
+    def __init__(self, components_factory: FormComponentOutputFactory):
+        self._components = components_factory
 
     async def __call__(self, form: Form) -> FormOutput:
         components = await form.awaitable_attrs.components

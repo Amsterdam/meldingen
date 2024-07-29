@@ -26,9 +26,6 @@ from meldingen.schemas import FormInput
 router = APIRouter()
 
 
-_output_factory = FormOutputFactory()
-
-
 @inject
 async def _add_content_range_header(
     response: Response,
@@ -79,12 +76,13 @@ async def list_form(
 async def retrieve_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
     action: FormRetrieveAction = Depends(Provide(Container.form_retrieve_action)),
+    produce_output_model: FormOutputFactory = Depends(Provide[Container.form_output_factory]),
 ) -> FormOutput:
     db_form = await action(pk=form_id)
     if not db_form:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await _output_factory(db_form)
+    return await produce_output_model(db_form)
 
 
 @router.get("/classification/{classification_id}", name="form:classification", responses={**not_found_response})
@@ -92,10 +90,11 @@ async def retrieve_form(
 async def retrieve_form_by_classification(
     classification_id: Annotated[int, Path(description="The id of the classification that the form belongs to.", ge=1)],
     action: FormRetrieveByClassificationAction = Depends(Provide(Container.form_classification_action)),
+    produce_output_model: FormOutputFactory = Depends(Provide[Container.form_output_factory]),
 ) -> FormOutput:
     form = await action(classification_id)
 
-    return await _output_factory(form)
+    return await produce_output_model(form)
 
 
 @router.post(
@@ -115,10 +114,11 @@ async def create_form(
     form_input: FormInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormCreateAction = Depends(Provide(Container.form_create_action)),
+    produce_output_model: FormOutputFactory = Depends(Provide[Container.form_output_factory]),
 ) -> FormOutput:
     form = await action(form_input)
 
-    return await _output_factory(form)
+    return await produce_output_model(form)
 
 
 @router.put(
@@ -139,10 +139,11 @@ async def update_form(
     form_input: FormInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: FormUpdateAction = Depends(Provide(Container.form_update_action)),
+    produce_output_model: FormOutputFactory = Depends(Provide[Container.form_output_factory]),
 ) -> FormOutput:
     db_form = await action(form_id, form_input)
 
-    return await _output_factory(form=db_form)
+    return await produce_output_model(form=db_form)
 
 
 @router.delete(
