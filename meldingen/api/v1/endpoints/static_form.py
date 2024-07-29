@@ -17,21 +17,19 @@ from meldingen.schemas import StaticFormInput
 router = APIRouter()
 
 
-_output_factory = StaticFormOutputFactory()
-
-
 @router.get("/{form_type}", name="static-form:retrieve-by-type", responses={**not_found_response})
 @inject
 async def retrieve_static_form(
     form_type: Annotated[StaticFormTypeEnum, Path(description="The type of the static form.")],
     action: StaticFormRetrieveByTypeAction = Depends(Provide(Container.static_form_retrieve_by_type_action)),
+    produce_output_model: StaticFormOutputFactory = Depends(Provide(Container.static_form_output_factory)),
 ) -> StaticFormOutput:
     try:
         db_form = await action(form_type)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await _output_factory(db_form)
+    return await produce_output_model(db_form)
 
 
 @router.put(
@@ -48,7 +46,8 @@ async def update_static_form(
     form_input: StaticFormInput,
     user: Annotated[User, Depends(authenticate_user)],
     action: StaticFormUpdateAction = Depends(Provide(Container.static_form_update_action)),
+    produce_output_model: StaticFormOutputFactory = Depends(Provide(Container.static_form_output_factory)),
 ) -> StaticFormOutput:
     db_form = await action(form_type, form_input)
 
-    return await _output_factory(db_form)
+    return await produce_output_model(db_form)
