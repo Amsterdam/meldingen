@@ -64,22 +64,23 @@ def component_discriminator(value: Any) -> str | None:
         components: list[
             Annotated[
                 Union[
-                    Annotated["FormPanelComponentInput", Tag("panel")],
+                    Annotated["FormPanelComponentInput", Tag(FormIoComponentTypeEnum.panel)],
+                    Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
                     Annotated["FormComponentInput", Tag("component")],
                 ],
-                Discriminator(_component_discriminator),
+                Discriminator(component_discriminator),
             ]
         ]
     """
     if isinstance(value, dict):
-        if value.get("type") == FormIoComponentTypeEnum.panel:
-            return "panel"
-        else:
-            return "component"
+        return value.get("type")
     elif isinstance(value, FormPanelComponentInput):
-        return "panel"
+        return FormIoComponentTypeEnum.panel
+    elif isinstance(value, FormTextAreaComponentInput):
+        return FormIoComponentTypeEnum.text_area
     elif isinstance(value, FormComponentInput):
         return "component"
+
     return None
 
 
@@ -89,7 +90,8 @@ class BaseFormInput(BaseModel):
     components: list[
         Annotated[
             Union[
-                Annotated["FormPanelComponentInput", Tag("panel")],
+                Annotated["FormPanelComponentInput", Tag(FormIoComponentTypeEnum.panel)],
+                Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
                 Annotated["FormComponentInput", Tag("component")],
             ],
             Discriminator(component_discriminator),
@@ -113,7 +115,15 @@ class FormPanelComponentInput(BaseModel):
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.panel)]
     input: bool = False
 
-    components: list["FormComponentInput"]
+    components: list[
+        Annotated[
+            Union[
+                Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
+                Annotated["FormComponentInput", Tag("component")],
+            ],
+            Discriminator(component_discriminator),
+        ]
+    ]
 
 
 # Panel is not allowed validator
@@ -121,8 +131,6 @@ panel_not_allowed = create_non_match_validator(FormIoComponentTypeEnum.panel, "{
 
 
 class FormComponentInput(BaseModel):
-    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
-
     label: Annotated[str, Field(min_length=3)]
     description: str | None
 
@@ -130,10 +138,15 @@ class FormComponentInput(BaseModel):
     type: Annotated[FormIoComponentTypeEnum, Field(), AfterValidator(panel_not_allowed)]
     input: bool
 
+    values: Optional[list["FormComponentValueInput"]] = None
+
+
+class FormTextAreaComponentInput(FormComponentInput):
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
+
+    type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.text_area)]
     auto_expand: bool
     show_char_count: bool
-
-    values: Optional[list["FormComponentValueInput"]] = None
 
 
 class FormComponentValueInput(BaseModel):
