@@ -56,6 +56,21 @@ from meldingen.repositories import (
     StaticFormRepository,
     UserRepository,
 )
+from meldingen.schema_factories import (
+    FormCheckboxComponentOutputFactory,
+    FormComponentOutputFactory,
+    FormComponentValueOutputFactory,
+    FormOutputFactory,
+    FormRadioComponentOutputFactory,
+    FormTextAreaComponentOutputFactory,
+    FormTextFieldInputComponentOutputFactory,
+    StaticFormCheckboxComponentOutputFactory,
+    StaticFormComponentOutputFactory,
+    StaticFormOutputFactory,
+    StaticFormRadioComponentOutputFactory,
+    StaticFormTextAreaComponentOutputFactory,
+    StaticFormTextFieldInputComponentOutputFactory,
+)
 from meldingen.statemachine import (
     AnswerQuestions,
     Classify,
@@ -183,6 +198,49 @@ class Container(DeclarativeContainer):
 
     # Factories
     attachment_factory: Factory[AttachmentFactory] = Factory(AttachmentFactory)
+    form_text_area_factory: Factory[FormTextAreaComponentOutputFactory] = Factory(FormTextAreaComponentOutputFactory)
+    form_text_field_factory: Factory[FormTextFieldInputComponentOutputFactory] = Factory(
+        FormTextFieldInputComponentOutputFactory
+    )
+    form_values_factory: Factory[FormComponentValueOutputFactory] = Factory(FormComponentValueOutputFactory)
+    form_checkbox_factory: Factory[FormCheckboxComponentOutputFactory] = Factory(
+        FormCheckboxComponentOutputFactory, values_factory=form_values_factory
+    )
+    form_radio_factory: Factory[FormRadioComponentOutputFactory] = Factory(
+        FormRadioComponentOutputFactory, values_factory=form_values_factory
+    )
+    form_components_factory: Factory[FormComponentOutputFactory] = Factory(
+        FormComponentOutputFactory,
+        text_area_factory=form_text_area_factory,
+        text_field_factory=form_text_field_factory,
+        checkbox_factory=form_checkbox_factory,
+        radio_factory=form_radio_factory,
+    )
+    form_output_factory: Factory[FormOutputFactory] = Factory(
+        FormOutputFactory, components_factory=form_components_factory
+    )
+    static_form_text_area_factory: Factory[StaticFormTextAreaComponentOutputFactory] = Factory(
+        StaticFormTextAreaComponentOutputFactory
+    )
+    static_form_text_field_factory: Factory[StaticFormTextFieldInputComponentOutputFactory] = Factory(
+        StaticFormTextFieldInputComponentOutputFactory
+    )
+    static_form_checkbox_factory: Factory[StaticFormCheckboxComponentOutputFactory] = Factory(
+        StaticFormCheckboxComponentOutputFactory, values_factory=form_values_factory
+    )
+    static_form_radio_factory: Factory[StaticFormRadioComponentOutputFactory] = Factory(
+        StaticFormRadioComponentOutputFactory, values_factory=form_values_factory
+    )
+    static_form_components_factory: Factory[StaticFormComponentOutputFactory] = Factory(
+        StaticFormComponentOutputFactory,
+        text_area_factory=static_form_text_area_factory,
+        text_field_factory=static_form_text_field_factory,
+        checkbox_factory=static_form_checkbox_factory,
+        radio_factory=static_form_radio_factory,
+    )
+    static_form_output_factory: Factory[StaticFormOutputFactory] = Factory(
+        StaticFormOutputFactory, components_factory=static_form_components_factory
+    )
 
     # Meldingen actions
     melding_create_action: Factory[MeldingCreateAction[Melding, Melding]] = Factory(

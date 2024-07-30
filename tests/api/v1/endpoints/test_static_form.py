@@ -5,13 +5,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from meldingen.models import (
-    FormIoComponent,
-    FormIoComponentTypeEnum,
-    FormIoQuestionComponent,
-    StaticForm,
-    StaticFormTypeEnum,
-)
+from meldingen.models import FormIoComponentTypeEnum, FormIoQuestionComponent, StaticForm, StaticFormTypeEnum
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 from tests.api.v1.endpoints.test_form import BaseFormTest
 
@@ -41,7 +35,19 @@ class TestStaticFormRetrieveByType(BaseStaticFormTest):
         assert data.get("created_at") == primary_form.created_at.isoformat()
         assert data.get("updated_at") == primary_form.updated_at.isoformat()
 
-        await self._assert_components(data.get("components"), await primary_form.awaitable_attrs.components)
+        components = await primary_form.awaitable_attrs.components
+        assert len(data.get("components")) == len(components)
+
+        component = components[0]
+        data_component = data.get("components")[0]
+
+        assert component.label == data_component.get("label")
+        assert component.description == data_component.get("description")
+        assert component.key == data_component.get("key")
+        assert component.type == data_component.get("type")
+        assert component.input == data_component.get("input")
+        assert component.auto_expand == data_component.get("autoExpand")
+        assert component.show_char_count == data_component.get("showCharCount")
 
     @pytest.mark.asyncio
     async def test_retrieve_primary_form_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
@@ -157,7 +163,16 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert data.get("updated_at") is not None
 
         components = await primary_form.awaitable_attrs.components
-        await self._assert_components(data.get("components"), components)
+        assert len(data.get("components")) == len(components)
+
+        component = components[0]
+        data_component = data.get("components")[0]
+
+        assert component.label == data_component.get("label")
+        assert component.description == data_component.get("description")
+        assert component.key == data_component.get("key")
+        assert component.type == data_component.get("type")
+        assert component.input == data_component.get("input")
 
     @pytest.mark.asyncio
     async def test_update_primary_form_does_not_exists(
