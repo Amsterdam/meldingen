@@ -81,6 +81,7 @@ class FormIoComponentTypeEnum(enum.StrEnum):
     text_field: Final[str] = "textfield"
     checkbox: Final[str] = "selectboxes"
     radio: Final[str] = "radio"
+    select: Final[str] = "select"
 
 
 class FormIoComponent(AsyncAttrs, BaseDBModel):
