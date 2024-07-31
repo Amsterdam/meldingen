@@ -736,7 +736,8 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             violation.get("msg")
             == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
             "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
-            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>"
+            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>, "
+            "<FormIoComponentTypeEnum.select: 'select'>"
         )
 
     @pytest.mark.asyncio
@@ -1181,7 +1182,8 @@ class TestFormCreate(BaseUnauthorizedTest):
             violation.get("msg")
             == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
             "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
-            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>"
+            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>, "
+            "<FormIoComponentTypeEnum.select: 'select'>"
         )
 
 
