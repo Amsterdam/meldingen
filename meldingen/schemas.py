@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Any, Optional, Union
+from typing import Annotated, Any, Union
 
 from meldingen_core.models import Classification, User
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
@@ -80,8 +80,10 @@ def component_discriminator(value: Any) -> str | None:
         return FormIoComponentTypeEnum.text_area
     elif isinstance(value, FormTextFieldComponentInput):
         return FormIoComponentTypeEnum.text_field
-    elif isinstance(value, FormComponentInput):
-        return "component"
+    elif isinstance(value, FormRadioComponentInput):
+        return FormIoComponentTypeEnum.radio
+    elif isinstance(value, FormCheckboxComponentInput):
+        return FormIoComponentTypeEnum.checkbox
 
     return None
 
@@ -96,7 +98,7 @@ class BaseFormInput(BaseModel):
                 Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
                 Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
                 Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
-                Annotated["FormComponentInput", Tag("component")],
+                Annotated["FormCheckboxComponentInput", Tag(FormIoComponentTypeEnum.checkbox)],
             ],
             Discriminator(component_discriminator),
         ]
@@ -125,7 +127,7 @@ class FormPanelComponentInput(BaseModel):
                 Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
                 Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
                 Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
-                Annotated["FormComponentInput", Tag("component")],
+                Annotated["FormCheckboxComponentInput", Tag(FormIoComponentTypeEnum.checkbox)],
             ],
             Discriminator(component_discriminator),
         ]
@@ -168,6 +170,13 @@ class FormRadioComponentInput(FormComponentInput):
     model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
 
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.radio)]
+    values: list[FormComponentValueInput]
+
+
+class FormCheckboxComponentInput(FormComponentInput):
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
+
+    type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.checkbox)]
     values: list[FormComponentValueInput]
 
 

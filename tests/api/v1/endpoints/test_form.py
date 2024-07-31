@@ -23,6 +23,7 @@ from meldingen.models import (
     FormIoPanelComponent,
     FormIoQuestionComponent,
     FormIoRadioComponent,
+    FormIoTextAreaComponent,
 )
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -92,10 +93,12 @@ class BaseFormTest:
         assert data.get("type") == component.type
         assert data.get("input") == component.input
 
-        assert data.get("autoExpand") == component.auto_expand
-        assert data.get("showCharCount") == component.show_char_count
         assert data.get("position") == component.position
         assert data.get("question") == component.question_id
+
+        if isinstance(component, FormIoTextAreaComponent):
+            assert data.get("autoExpand") == component.auto_expand
+            assert data.get("showCharCount") == component.show_char_count
 
 
 class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
@@ -731,7 +734,9 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0]
         assert (
             violation.get("msg")
-            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: <FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, 'component'"
+            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
+            "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
+            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>"
         )
 
     @pytest.mark.asyncio
@@ -1174,7 +1179,9 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0]
         assert (
             violation.get("msg")
-            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: <FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, <FormIoComponentTypeEnum.radio: 'radio'>, 'component'"
+            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
+            "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
+            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>"
         )
 
 
