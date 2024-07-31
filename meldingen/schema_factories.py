@@ -36,7 +36,7 @@ class StaticFormTextAreaComponentOutputFactory:
             key=component.key,
             type=component.type,
             input=component.input,
-            auto_expand=component.auto_expand,
+            auto_expand=await component.awaitable_attrs.auto_expand,
             show_char_count=component.show_char_count,
             position=component.position,
         )
@@ -158,8 +158,6 @@ class StaticFormComponentOutputFactory:
             key=component.key,
             type=component.type,
             input=component.input,
-            auto_expand=component.auto_expand,
-            show_char_count=component.show_char_count,
             position=component.position,
             components=children_output,
         )
@@ -318,8 +316,6 @@ class FormComponentOutputFactory:
             key=component.key,
             type=component.type,
             input=component.input,
-            auto_expand=component.auto_expand,
-            show_char_count=component.show_char_count,
             position=component.position,
             components=children_output,
         )

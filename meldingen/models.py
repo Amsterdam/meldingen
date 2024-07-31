@@ -108,9 +108,6 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
     )
     input: Mapped[bool] = mapped_column(Boolean(), default=True)
 
-    auto_expand: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
-    show_char_count: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
-
     # Internal attr's
     form_id: Mapped[int | None] = mapped_column(ForeignKey("form.id"), default=None, nullable=True)
     form: Mapped[Union["Form", None]] = relationship(
@@ -156,6 +153,7 @@ class FormIoPanelComponent(FormIoComponent):
 
 class FormIoQuestionComponent(FormIoComponent):
     __table_args__ = {"extend_existing": True}
+
     question_id: Mapped[int | None] = mapped_column(ForeignKey("question.id", ondelete="SET NULL"), default=None)
 
     @declared_attr
@@ -168,6 +166,11 @@ class FormIoQuestionComponent(FormIoComponent):
 
 
 class FormIoTextAreaComponent(FormIoQuestionComponent):
+    __table_args__ = {"extend_existing": True}
+
+    auto_expand: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
+    show_char_count: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
+
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:
         return {

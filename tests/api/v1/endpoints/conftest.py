@@ -312,13 +312,13 @@ async def primary_form(static_form_repository: StaticFormRepository) -> StaticFo
             type=StaticFormTypeEnum.primary, title="Primary form", display=FormIoFormDisplayEnum.form
         )
 
-        component = FormIoComponent(
+        component = FormIoTextAreaComponent(
             label="Waar gaat het om?",
             description="",
             key="waar-gaat-het-om",
             type=FormIoComponentTypeEnum.text_area,
             input=True,
-            auto_expand=False,
+            auto_expand=True,
             show_char_count=True,
         )
 

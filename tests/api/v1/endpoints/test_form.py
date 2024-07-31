@@ -23,6 +23,7 @@ from meldingen.models import (
     FormIoPanelComponent,
     FormIoQuestionComponent,
     FormIoRadioComponent,
+    FormIoTextAreaComponent,
 )
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -92,10 +93,12 @@ class BaseFormTest:
         assert data.get("type") == component.type
         assert data.get("input") == component.input
 
-        assert data.get("autoExpand") == component.auto_expand
-        assert data.get("showCharCount") == component.show_char_count
         assert data.get("position") == component.position
         assert data.get("question") == component.question_id
+
+        if isinstance(component, FormIoTextAreaComponent):
+            assert data.get("autoExpand") == component.auto_expand
+            assert data.get("showCharCount") == component.show_char_count
 
 
 class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
@@ -723,34 +726,18 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         body = response.json()
         detail = body.get("detail")
-        assert len(detail) == 5
+        assert len(detail) == 1
 
-        # The important error
-        violation = detail[1]
-        assert violation.get("type") == "assertion_error"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "type"]
-        assert violation.get("msg") == "Assertion failed, panel is not allowed"
-
-        # The additional errors
+        # The import error
         violation = detail[0]
-        assert violation.get("type") == "missing"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "description"]
-        assert violation.get("msg") == "Field required"
-
-        violation = detail[2]
-        assert violation.get("type") == "missing"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "autoExpand"]
-        assert violation.get("msg") == "Field required"
-
-        violation = detail[3]
-        assert violation.get("type") == "missing"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "showCharCount"]
-        assert violation.get("msg") == "Field required"
-
-        violation = detail[4]
-        assert violation.get("type") == "extra_forbidden"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "components"]
-        assert violation.get("msg") == "Extra inputs are not permitted"
+        assert violation.get("type") == "union_tag_invalid"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0]
+        assert (
+            violation.get("msg")
+            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
+            "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
+            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>"
+        )
 
     @pytest.mark.asyncio
     async def test_update_form_values(
@@ -770,8 +757,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "heeft-u-meer-informatie",
                     "type": "radio",
                     "input": True,
-                    "autoExpand": False,
-                    "showCharCount": False,
                     "values": [
                         {
                             "label": "Ja",
@@ -795,8 +780,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "key": "selecteer-een-optie",
                             "type": "selectboxes",
                             "input": True,
-                            "autoExpand": False,
-                            "showCharCount": False,
                             "values": [
                                 {
                                     "label": "Optie #1",
@@ -949,8 +932,6 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "key": "waarom-meld-u-dit-bij-ons",
                             "type": FormIoComponentTypeEnum.text_field,
                             "input": True,
-                            "autoExpand": True,
-                            "showCharCount": True,
                         },
                     ],
                 },
@@ -1134,7 +1115,7 @@ class TestFormCreate(BaseUnauthorizedTest):
 
         violation = detail[0]
         assert violation.get("type") == "extra_forbidden"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "components"]
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "textarea", "components"]
         assert violation.get("msg") == "Extra inputs are not permitted"
         assert violation.get("input") == [
             {
@@ -1190,34 +1171,18 @@ class TestFormCreate(BaseUnauthorizedTest):
 
         body = response.json()
         detail = body.get("detail")
-        assert len(detail) == 5
+        assert len(detail) == 1
 
         # The import error
-        violation = detail[1]
-        assert violation.get("type") == "assertion_error"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "type"]
-        assert violation.get("msg") == "Assertion failed, panel is not allowed"
-
-        # The additional errors
         violation = detail[0]
-        assert violation.get("type") == "missing"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "description"]
-        assert violation.get("msg") == "Field required"
-
-        violation = detail[2]
-        assert violation.get("type") == "missing"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "autoExpand"]
-        assert violation.get("msg") == "Field required"
-
-        violation = detail[3]
-        assert violation.get("type") == "missing"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "showCharCount"]
-        assert violation.get("msg") == "Field required"
-
-        violation = detail[4]
-        assert violation.get("type") == "extra_forbidden"
-        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0, "components"]
-        assert violation.get("msg") == "Extra inputs are not permitted"
+        assert violation.get("type") == "union_tag_invalid"
+        assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0]
+        assert (
+            violation.get("msg")
+            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
+            "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
+            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>"
+        )
 
 
 class TestFormClassification:
