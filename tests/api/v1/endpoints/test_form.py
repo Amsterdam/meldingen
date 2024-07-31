@@ -731,7 +731,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0]
         assert (
             violation.get("msg")
-            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: <FormIoComponentTypeEnum.text_area: 'textarea'>, 'component'"
+            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: <FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, 'component'"
         )
 
     @pytest.mark.asyncio
@@ -931,8 +931,6 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "key": "waarom-meld-u-dit-bij-ons",
                             "type": FormIoComponentTypeEnum.text_field,
                             "input": True,
-                            "autoExpand": True,
-                            "showCharCount": True,
                         },
                     ],
                 },
@@ -1180,7 +1178,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0]
         assert (
             violation.get("msg")
-            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: <FormIoComponentTypeEnum.text_area: 'textarea'>, 'component'"
+            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: <FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, 'component'"
         )
 
 

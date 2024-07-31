@@ -8,9 +8,9 @@ from rich import print
 from meldingen.config import Settings
 from meldingen.containers import Container
 from meldingen.models import (
-    FormIoComponent,
     FormIoComponentTypeEnum,
     FormIoFormDisplayEnum,
+    FormIoTextAreaComponent,
     StaticForm,
     StaticFormTypeEnum,
 )
@@ -33,7 +33,7 @@ async def async_add_primary_form(title: str) -> None:
 
     primary_form = StaticForm(type=StaticFormTypeEnum.primary, title=title, display=FormIoFormDisplayEnum.form)
 
-    component = FormIoComponent(
+    component = FormIoTextAreaComponent(
         label="Waar gaat het om?",
         description="",
         key="waar-gaat-het-om",

@@ -78,6 +78,8 @@ def component_discriminator(value: Any) -> str | None:
         return FormIoComponentTypeEnum.panel
     elif isinstance(value, FormTextAreaComponentInput):
         return FormIoComponentTypeEnum.text_area
+    elif isinstance(value, FormTextFieldComponentInput):
+        return FormIoComponentTypeEnum.text_field
     elif isinstance(value, FormComponentInput):
         return "component"
 
@@ -92,6 +94,7 @@ class BaseFormInput(BaseModel):
             Union[
                 Annotated["FormPanelComponentInput", Tag(FormIoComponentTypeEnum.panel)],
                 Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
+                Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
                 Annotated["FormComponentInput", Tag("component")],
             ],
             Discriminator(component_discriminator),
@@ -119,6 +122,7 @@ class FormPanelComponentInput(BaseModel):
         Annotated[
             Union[
                 Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
+                Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
                 Annotated["FormComponentInput", Tag("component")],
             ],
             Discriminator(component_discriminator),
@@ -147,6 +151,12 @@ class FormTextAreaComponentInput(FormComponentInput):
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.text_area)]
     auto_expand: bool
     show_char_count: bool
+
+
+class FormTextFieldComponentInput(FormComponentInput):
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
+
+    type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.text_field)]
 
 
 class FormComponentValueInput(BaseModel):

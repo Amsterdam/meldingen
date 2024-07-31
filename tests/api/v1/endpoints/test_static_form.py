@@ -141,8 +141,6 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "waar-gaat-het-over",
                     "type": FormIoComponentTypeEnum.text_field,
                     "input": True,
-                    "autoExpand": False,
-                    "showCharCount": False,
                 }
             ],
         }
