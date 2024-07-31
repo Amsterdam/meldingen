@@ -95,6 +95,7 @@ class BaseFormInput(BaseModel):
                 Annotated["FormPanelComponentInput", Tag(FormIoComponentTypeEnum.panel)],
                 Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
                 Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
+                Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
                 Annotated["FormComponentInput", Tag("component")],
             ],
             Discriminator(component_discriminator),
@@ -123,6 +124,7 @@ class FormPanelComponentInput(BaseModel):
             Union[
                 Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
                 Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
+                Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
                 Annotated["FormComponentInput", Tag("component")],
             ],
             Discriminator(component_discriminator),
@@ -142,8 +144,6 @@ class FormComponentInput(BaseModel):
     type: Annotated[FormIoComponentTypeEnum, Field(), AfterValidator(panel_not_allowed)]
     input: bool
 
-    values: Optional[list["FormComponentValueInput"]] = None
-
 
 class FormTextAreaComponentInput(FormComponentInput):
     model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
@@ -162,6 +162,13 @@ class FormTextFieldComponentInput(FormComponentInput):
 class FormComponentValueInput(BaseModel):
     label: Annotated[str, Field(min_length=1)]
     value: Annotated[str, Field(min_length=1)]
+
+
+class FormRadioComponentInput(FormComponentInput):
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
+
+    type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.radio)]
+    values: list[FormComponentValueInput]
 
 
 class AnswerInput(BaseModel):

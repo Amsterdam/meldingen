@@ -226,8 +226,6 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "heeft-u-meer-informatie",
                     "type": "radio",
                     "input": True,
-                    "autoExpand": False,
-                    "showCharCount": False,
                     "values": [
                         {
                             "label": "Ja",
@@ -251,8 +249,6 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "key": "selecteer-een-optie",
                             "type": "selectboxes",
                             "input": True,
-                            "autoExpand": False,
-                            "showCharCount": False,
                             "values": [
                                 {
                                     "label": "Optie #1",

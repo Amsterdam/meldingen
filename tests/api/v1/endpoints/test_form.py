@@ -752,8 +752,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "heeft-u-meer-informatie",
                     "type": "radio",
                     "input": True,
-                    "autoExpand": False,
-                    "showCharCount": False,
                     "values": [
                         {
                             "label": "Ja",
@@ -777,8 +775,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "key": "selecteer-een-optie",
                             "type": "selectboxes",
                             "input": True,
-                            "autoExpand": False,
-                            "showCharCount": False,
                             "values": [
                                 {
                                     "label": "Optie #1",
@@ -1178,7 +1174,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0]
         assert (
             violation.get("msg")
-            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: <FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, 'component'"
+            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: <FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, <FormIoComponentTypeEnum.radio: 'radio'>, 'component'"
         )
 
 
