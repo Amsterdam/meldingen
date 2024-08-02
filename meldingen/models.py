@@ -230,7 +230,12 @@ class BaseFormIoComponentValue:
 
 
 class FormIoSelectComponentData(BaseDBModel):
-    component: Mapped["FormIoSelectComponent"] = relationship(back_populates="data")
+    component_id: Mapped[int] = mapped_column(ForeignKey("form_io_component.id"))
+    component: Mapped[Optional["FormIoSelectComponent"]] = relationship(
+        cascade="save-update, merge, delete",
+        back_populates="data",
+        default=None,
+    )
     values: Mapped[OrderingList["FormIoSelectComponentValue"]] = relationship(
         cascade="save-update, merge, delete, delete-orphan",
         back_populates="data",
@@ -241,17 +246,18 @@ class FormIoSelectComponentData(BaseDBModel):
 
 
 class FormIoSelectComponentValue(BaseDBModel, BaseFormIoComponentValue):
-    data_id: Mapped[int | None] = mapped_column(
-        ForeignKey("form_io_select_component_data.id"), default=None, nullable=True
+    data_id: Mapped[int] = mapped_column(ForeignKey("form_io_select_component_data.id"), init=False)
+    data: Mapped["FormIoSelectComponentData"] = relationship(
+        cascade="save-update, merge, delete", back_populates="values", default=None
     )
-    data: Mapped["FormIoSelectComponentData"] = relationship(back_populates="values", default=None)
 
 
 class FormIoSelectComponent(FormIoQuestionComponent):
     __table_args__ = {"extend_existing": True}
 
-    data_id: Mapped[int] = mapped_column(init=False, default=None, nullable=True)
-    data: Mapped[FormIoSelectComponentData] = relationship(back_populates="component", default=None)
+    data: Mapped[FormIoSelectComponentData] = relationship(
+        cascade="save-update, merge, delete, delete-orphan", back_populates="component", default=None
+    )
 
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:
