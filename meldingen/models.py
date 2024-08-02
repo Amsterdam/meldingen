@@ -12,7 +12,7 @@ from meldingen_core.models import User as BaseUser
 from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
 from pydantic.alias_generators import to_snake
-from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, String, Table, Uuid, func
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, String, Table, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
@@ -221,13 +221,46 @@ class FormIoRadioComponent(BaseFormIoValuesComponent):
         }
 
 
-class FormIoComponentValue(BaseDBModel):
+class BaseFormIoComponentValue:
     label: Mapped[str] = mapped_column(String())
     value: Mapped[str] = mapped_column(String())
 
     # Used to keep the order of the values correct
     position: Mapped[int] = mapped_column(Integer(), nullable=False, default=1)
 
+
+class FormIoSelectComponentData(BaseDBModel):
+    component: Mapped["FormIoSelectComponent"] = relationship(back_populates="data")
+    values: Mapped[OrderingList["FormIoSelectComponentValue"]] = relationship(
+        cascade="save-update, merge, delete, delete-orphan",
+        back_populates="data",
+        default_factory=list,
+        order_by="FormIoSelectComponentValue.position",
+        collection_class=ordering_list(attr="position", count_from=1),
+    )
+
+
+class FormIoSelectComponentValue(BaseDBModel, BaseFormIoComponentValue):
+    data_id: Mapped[int | None] = mapped_column(
+        ForeignKey("form_io_select_component_data.id"), default=None, nullable=True
+    )
+    data: Mapped["FormIoSelectComponentData"] = relationship(back_populates="values", default=None)
+
+
+class FormIoSelectComponent(FormIoQuestionComponent):
+    __table_args__ = {"extend_existing": True}
+
+    data_id: Mapped[int] = mapped_column(init=False, default=None, nullable=True)
+    data: Mapped[FormIoSelectComponentData] = relationship(back_populates="component", default=None)
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": FormIoComponentTypeEnum.select,
+        }
+
+
+class FormIoComponentValue(BaseDBModel, BaseFormIoComponentValue):
     component_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_component.id"), default=None, nullable=True)
     component: Mapped[Optional[BaseFormIoValuesComponent]] = relationship(
         cascade="save-update, merge, delete",
