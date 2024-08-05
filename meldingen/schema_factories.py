@@ -27,6 +27,7 @@ from meldingen.output_schemas import (
     StaticFormOutput,
     StaticFormPanelComponentOutput,
     StaticFormRadioComponentOutput,
+    StaticFormSelectComponentOutput,
     StaticFormTextAreaComponentOutput,
     StaticFormTextFieldInputComponentOutput,
 )
@@ -68,6 +69,16 @@ class FormComponentValueOutputFactory:
         ]
 
 
+class FormSelectComponentDataOutputFactory:
+    _values: FormComponentValueOutputFactory
+
+    def __init__(self, values_factory: FormComponentValueOutputFactory):
+        self._values = values_factory
+
+    async def __call__(self, component: FormIoSelectComponent) -> FormSelectComponentDataOutput:
+        return FormSelectComponentDataOutput(values=await self._values(await component.awaitable_attrs.data))
+
+
 class StaticFormCheckboxComponentOutputFactory:
     _values: FormComponentValueOutputFactory
 
@@ -104,11 +115,30 @@ class StaticFormRadioComponentOutputFactory:
         )
 
 
+class StaticFormSelectComponentOutputFactory:
+    _data: FormSelectComponentDataOutputFactory
+
+    def __init__(self, data_factory: FormSelectComponentDataOutputFactory):
+        self._data = data_factory
+
+    async def __call__(self, component: FormIoSelectComponent) -> StaticFormSelectComponentOutput:
+        return StaticFormSelectComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            position=component.position,
+            data=await self._data(component),
+        )
+
+
 class StaticFormComponentOutputFactory:
     _text_area_component: StaticFormTextAreaComponentOutputFactory
     _text_field_component: StaticFormTextFieldInputComponentOutputFactory
     _checkbox_component: StaticFormCheckboxComponentOutputFactory
     _radio_component: StaticFormRadioComponentOutputFactory
+    _select_component: StaticFormSelectComponentOutputFactory
 
     def __init__(
         self,
@@ -116,11 +146,13 @@ class StaticFormComponentOutputFactory:
         text_field_factory: StaticFormTextFieldInputComponentOutputFactory,
         checkbox_factory: StaticFormCheckboxComponentOutputFactory,
         radio_factory: StaticFormRadioComponentOutputFactory,
+        select_factory: StaticFormSelectComponentOutputFactory,
     ):
         self._text_area_component = text_area_factory
         self._text_field_component = text_field_factory
         self._checkbox_component = checkbox_factory
         self._radio_component = radio_factory
+        self._select_component = select_factory
 
     async def __call__(self, components: list[FormIoComponent]) -> list[
         Union[
@@ -129,6 +161,7 @@ class StaticFormComponentOutputFactory:
             StaticFormTextFieldInputComponentOutput,
             StaticFormCheckboxComponentOutput,
             StaticFormRadioComponentOutput,
+            StaticFormSelectComponentOutput,
         ]
     ]:
         output_components: list[
@@ -138,6 +171,7 @@ class StaticFormComponentOutputFactory:
                 StaticFormTextFieldInputComponentOutput,
                 StaticFormCheckboxComponentOutput,
                 StaticFormRadioComponentOutput,
+                StaticFormSelectComponentOutput,
             ]
         ] = []
         for component in components:
@@ -151,6 +185,8 @@ class StaticFormComponentOutputFactory:
                 output_components.append(await self._checkbox_component(component))
             elif isinstance(component, FormIoRadioComponent):
                 output_components.append(await self._radio_component(component))
+            elif isinstance(component, FormIoSelectComponent):
+                output_components.append(await self._select_component(component))
 
         return output_components
 
@@ -260,16 +296,6 @@ class FormRadioComponentOutputFactory:
             values=await self._values(component),
             question=question.id,
         )
-
-
-class FormSelectComponentDataOutputFactory:
-    _values: FormComponentValueOutputFactory
-
-    def __init__(self, values_factory: FormComponentValueOutputFactory):
-        self._values = values_factory
-
-    async def __call__(self, component: FormIoSelectComponent) -> FormSelectComponentDataOutput:
-        return FormSelectComponentDataOutput(values=await self._values(await component.awaitable_attrs.data))
 
 
 class FormSelectComponentOutputFactory:

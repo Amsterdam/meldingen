@@ -277,3 +277,62 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         components = await primary_form.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
+
+    @pytest.mark.asyncio
+    async def test_update_form_with_select(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        primary_form: StaticForm,
+    ) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "label": "Waarom meld u dit bij ons?",
+                    "description": "",
+                    "key": "waarom-meld-u-dit-bij-ons",
+                    "type": FormIoComponentTypeEnum.select,
+                    "input": True,
+                    "data": {
+                        "values": [
+                            {"label": "label1", "value": "value1"},
+                            {"label": "label2", "value": "value2"},
+                        ]
+                    },
+                },
+            ],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_type=primary_form.type), json=data)
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body.get("type") == primary_form.type
+        assert body.get("title") == "Formulier #1"
+        assert body.get("display") == "form"
+
+        components = body.get("components")
+        assert len(components) == 1
+
+        select = components[0]
+        assert select.get("label") == "Waarom meld u dit bij ons?"
+        assert select.get("description") == ""
+        assert select.get("key") == "waarom-meld-u-dit-bij-ons"
+        assert select.get("type") == FormIoComponentTypeEnum.select
+        assert select.get("input") is True
+
+        select_data = select.get("data")
+        assert select_data is not None
+
+        values: list[dict[str, str]] = select_data.get("values", [])
+        assert len(values) == 2
+        i = 1
+        for value in values:
+            assert value.get("label") == f"label{i}"
+            assert value.get("value") == f"value{i}"
+            i = i + 1
