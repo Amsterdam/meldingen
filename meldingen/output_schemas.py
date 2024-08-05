@@ -48,6 +48,7 @@ class FormOutput(SimpleFormOutput):
             "FormTextFieldInputComponentOutput",
             "FormCheckboxComponentOutput",
             "FormRadioComponentOutput",
+            "FormSelectComponentOutput",
         ]
     ]
 
@@ -82,6 +83,7 @@ class FormPanelComponentOutput(BaseFormPanelComponentOutput):
             "FormTextFieldInputComponentOutput",
             "FormCheckboxComponentOutput",
             "FormRadioComponentOutput",
+            "FormSelectComponentOutput",
         ]
     ]
 
@@ -135,3 +137,11 @@ class FormComponentValueOutput(BaseModel):
     label: str
     value: str
     position: int
+
+
+class FormSelectComponentDataOutput(BaseModel):
+    values: list[FormComponentValueOutput]
+
+
+class FormSelectComponentOutput(BaseFormComponentOutput):
+    data: FormSelectComponentDataOutput

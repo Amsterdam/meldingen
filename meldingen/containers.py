@@ -62,6 +62,8 @@ from meldingen.schema_factories import (
     FormComponentValueOutputFactory,
     FormOutputFactory,
     FormRadioComponentOutputFactory,
+    FormSelectComponentDataOutputFactory,
+    FormSelectComponentOutputFactory,
     FormTextAreaComponentOutputFactory,
     FormTextFieldInputComponentOutputFactory,
     StaticFormCheckboxComponentOutputFactory,
@@ -209,12 +211,19 @@ class Container(DeclarativeContainer):
     form_radio_factory: Factory[FormRadioComponentOutputFactory] = Factory(
         FormRadioComponentOutputFactory, values_factory=form_values_factory
     )
+    form_select_data_factory: Factory[FormSelectComponentDataOutputFactory] = Factory(
+        FormSelectComponentDataOutputFactory, values_factory=form_values_factory
+    )
+    form_select_factory: Factory[FormSelectComponentOutputFactory] = Factory(
+        FormSelectComponentOutputFactory, data_factory=form_select_data_factory
+    )
     form_components_factory: Factory[FormComponentOutputFactory] = Factory(
         FormComponentOutputFactory,
         text_area_factory=form_text_area_factory,
         text_field_factory=form_text_field_factory,
         checkbox_factory=form_checkbox_factory,
         radio_factory=form_radio_factory,
+        select_factory=form_select_factory,
     )
     form_output_factory: Factory[FormOutputFactory] = Factory(
         FormOutputFactory, components_factory=form_components_factory
