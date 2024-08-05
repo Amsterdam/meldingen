@@ -28,4 +28,4 @@ jobs:
         run: docker buildx bake --file docker-compose.yml --file docker-compose.cache.json
 
       - name: Run tests
-        run: docker-compose run --rm meldingen pytest --test-alembic  --cov --cov-fail-under=99 -v
+        run: docker compose run --rm meldingen pytest --test-alembic  --cov --cov-fail-under=99 -v
