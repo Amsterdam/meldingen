@@ -22,6 +22,7 @@ from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import (
     Answer,
     Attachment,
+    BaseFormIoValuesComponent,
     Classification,
     Form,
     FormIoCheckBoxComponent,
@@ -31,6 +32,9 @@ from meldingen.models import (
     FormIoPanelComponent,
     FormIoQuestionComponent,
     FormIoRadioComponent,
+    FormIoSelectComponent,
+    FormIoSelectComponentData,
+    FormIoSelectComponentValue,
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
     Melding,
@@ -128,8 +132,8 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
         component.question = question
 
     async def _create_component_values(
-        self, component: FormIoRadioComponent | FormIoCheckBoxComponent, values: list[dict[str, Any]]
-    ) -> FormIoRadioComponent | FormIoCheckBoxComponent:
+        self, component: BaseFormIoValuesComponent, values: list[dict[str, Any]]
+    ) -> BaseFormIoValuesComponent:
         component_values = await component.awaitable_attrs.values
 
         for value in values:
@@ -169,6 +173,25 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
 
                     parent_components.append(r_component)
                     await self._create_question(component=r_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.select:
+                    data = component_values.pop("data")
+                    assert data is not None
+
+                    select_component = FormIoSelectComponent(**component_values)
+
+                    select_component_data = FormIoSelectComponentData()
+                    select_component_data_values = await select_component_data.awaitable_attrs.values
+
+                    for value in data.get("values"):
+                        component_value = FormIoSelectComponentValue(**value)
+                        select_component_data_values.append(component_value)
+
+                    select_component_data_values.reorder()
+
+                    select_component.data = select_component_data
+
+                    parent_components.append(select_component)
+                    await self._create_question(select_component)
                 elif component_values.get("type") == FormIoComponentTypeEnum.text_area:
                     text_area_component = FormIoTextAreaComponent(**component_values)
                     parent_components.append(text_area_component)
@@ -369,8 +392,8 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
     _repository: StaticFormRepository
 
     async def _create_component_values(
-        self, component: FormIoRadioComponent | FormIoCheckBoxComponent, values: list[dict[str, Any]]
-    ) -> FormIoRadioComponent | FormIoCheckBoxComponent:
+        self, component: BaseFormIoValuesComponent, values: list[dict[str, Any]]
+    ) -> BaseFormIoValuesComponent:
         component_values = await component.awaitable_attrs.values
 
         for value in values:
@@ -400,6 +423,7 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                     c_component = FormIoCheckBoxComponent(**component_values)
                     _c_component = await self._create_component_values(component=c_component, values=value_data)
+                    _c_component = await self._create_component_values(component=c_component, values=value_data)
                     c_component = cast(FormIoCheckBoxComponent, _c_component)  # Needed for mypy
 
                     parent_components.append(c_component)
@@ -409,6 +433,24 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
                     r_component = cast(FormIoRadioComponent, _r_component)  # Needed for mypy
 
                     parent_components.append(r_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.select:
+                    data = component_values.pop("data")
+                    assert data is not None
+
+                    select_component = FormIoSelectComponent(**component_values)
+
+                    select_component_data = FormIoSelectComponentData()
+                    select_component_data_values = await select_component_data.awaitable_attrs.values
+
+                    for value in data.get("values"):
+                        component_value = FormIoSelectComponentValue(**value)
+                        select_component_data_values.append(component_value)
+
+                    select_component_data_values.reorder()
+
+                    select_component.data = select_component_data
+
+                    parent_components.append(select_component)
                 elif component_values.get("type") == FormIoComponentTypeEnum.text_area:
                     parent_components.append(FormIoTextAreaComponent(**component_values))
                 elif component_values.get("type") == FormIoComponentTypeEnum.text_field:

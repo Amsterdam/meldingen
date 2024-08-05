@@ -736,7 +736,8 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             violation.get("msg")
             == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
             "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
-            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>"
+            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>, "
+            "<FormIoComponentTypeEnum.select: 'select'>"
         )
 
     @pytest.mark.asyncio
@@ -822,6 +823,83 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.asyncio
+    async def test_update_form_with_select(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: Form,
+    ) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": FormIoComponentTypeEnum.panel,
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": FormIoComponentTypeEnum.select,
+                            "input": True,
+                            "data": {
+                                "values": [
+                                    {"label": "label1", "value": "value1"},
+                                    {"label": "label2", "value": "value2"},
+                                ]
+                            },
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=data)
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body.get("id", 0) == 1
+        assert body.get("title") == "Formulier #1"
+        assert body.get("display") == "form"
+
+        components = body.get("components")
+        assert len(components) == 1
+
+        panel = components[0]
+        assert panel.get("label") == "panel-1"
+        assert panel.get("key") == "panel"
+        assert panel.get("type") == FormIoComponentTypeEnum.panel
+        assert panel.get("input") is False
+
+        panel_components = panel.get("components")
+        assert len(panel_components) == 1
+
+        select = panel_components[0]
+        assert select.get("label") == "Waarom meld u dit bij ons?"
+        assert select.get("description") == ""
+        assert select.get("key") == "waarom-meld-u-dit-bij-ons"
+        assert select.get("type") == FormIoComponentTypeEnum.select
+        assert select.get("input") is True
+        assert select.get("question") is not None
+
+        select_data = select.get("data")
+        assert select_data is not None
+
+        values: list[dict[str, str]] = select_data.get("values", [])
+        assert len(values) == 2
+        i = 1
+        for value in values:
+            assert value.get("label") == f"label{i}"
+            assert value.get("value") == f"value{i}"
+            i = i + 1
 
 
 class TestFormCreate(BaseUnauthorizedTest):
@@ -970,6 +1048,77 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert text_field.get("type") == FormIoComponentTypeEnum.text_field
         assert text_field.get("input")
         assert text_field.get("question") is not None
+
+    @pytest.mark.asyncio
+    async def test_create_form_with_select(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": FormIoComponentTypeEnum.panel,
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": FormIoComponentTypeEnum.select,
+                            "input": True,
+                            "data": {
+                                "values": [
+                                    {"label": "label1", "value": "value1"},
+                                    {"label": "label2", "value": "value2"},
+                                ]
+                            },
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_201_CREATED
+
+        body = response.json()
+
+        assert body.get("id", 0) == 1
+        assert body.get("title") == "Formulier #1"
+        assert body.get("display") == "form"
+
+        components = body.get("components")
+        assert len(components) == 1
+
+        panel = components[0]
+        assert panel.get("label") == "panel-1"
+        assert panel.get("key") == "panel"
+        assert panel.get("type") == FormIoComponentTypeEnum.panel
+        assert panel.get("input") is False
+
+        panel_components = panel.get("components")
+        assert len(panel_components) == 1
+
+        select = panel_components[0]
+        assert select.get("label") == "Waarom meld u dit bij ons?"
+        assert select.get("description") == ""
+        assert select.get("key") == "waarom-meld-u-dit-bij-ons"
+        assert select.get("type") == FormIoComponentTypeEnum.select
+        assert select.get("input") is True
+        assert select.get("question") is not None
+
+        select_data = select.get("data")
+        assert select_data is not None
+
+        values: list[dict[str, str]] = select_data.get("values", [])
+        assert len(values) == 2
+        i = 1
+        for value in values:
+            assert value.get("label") == f"label{i}"
+            assert value.get("value") == f"value{i}"
+            i = i + 1
 
     @pytest.mark.asyncio
     async def test_create_form_with_classification(
@@ -1181,7 +1330,8 @@ class TestFormCreate(BaseUnauthorizedTest):
             violation.get("msg")
             == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
             "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
-            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>"
+            "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>, "
+            "<FormIoComponentTypeEnum.select: 'select'>"
         )
 
 

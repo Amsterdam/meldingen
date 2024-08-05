@@ -31,6 +31,7 @@ class StaticFormOutput(SimpleStaticFormOutput):
             "StaticFormTextFieldInputComponentOutput",
             "StaticFormCheckboxComponentOutput",
             "StaticFormRadioComponentOutput",
+            "StaticFormSelectComponentOutput",
         ]
     ]
 
@@ -48,6 +49,7 @@ class FormOutput(SimpleFormOutput):
             "FormTextFieldInputComponentOutput",
             "FormCheckboxComponentOutput",
             "FormRadioComponentOutput",
+            "FormSelectComponentOutput",
         ]
     ]
 
@@ -82,6 +84,7 @@ class FormPanelComponentOutput(BaseFormPanelComponentOutput):
             "FormTextFieldInputComponentOutput",
             "FormCheckboxComponentOutput",
             "FormRadioComponentOutput",
+            "FormSelectComponentOutput",
         ]
     ]
 
@@ -115,6 +118,20 @@ class StaticFormRadioComponentOutput(BaseFormComponentOutput):
     values: list["FormComponentValueOutput"]
 
 
+class FormComponentValueOutput(BaseModel):
+    label: str
+    value: str
+    position: int
+
+
+class FormSelectComponentDataOutput(BaseModel):
+    values: list[FormComponentValueOutput]
+
+
+class StaticFormSelectComponentOutput(BaseFormComponentOutput):
+    data: FormSelectComponentDataOutput
+
+
 class FormTextAreaComponentOutput(StaticFormTextAreaComponentOutput):
     question: int
 
@@ -131,7 +148,5 @@ class FormRadioComponentOutput(StaticFormRadioComponentOutput):
     question: int
 
 
-class FormComponentValueOutput(BaseModel):
-    label: str
-    value: str
-    position: int
+class FormSelectComponentOutput(StaticFormSelectComponentOutput):
+    question: int

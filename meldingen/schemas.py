@@ -84,6 +84,8 @@ def component_discriminator(value: Any) -> str | None:
         return FormIoComponentTypeEnum.radio
     elif isinstance(value, FormCheckboxComponentInput):
         return FormIoComponentTypeEnum.checkbox
+    elif isinstance(value, FormSelectComponentInput):
+        return FormIoComponentTypeEnum.select
 
     return None
 
@@ -99,6 +101,7 @@ class BaseFormInput(BaseModel):
                 Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
                 Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
                 Annotated["FormCheckboxComponentInput", Tag(FormIoComponentTypeEnum.checkbox)],
+                Annotated["FormSelectComponentInput", Tag(FormIoComponentTypeEnum.select)],
             ],
             Discriminator(component_discriminator),
         ]
@@ -128,6 +131,7 @@ class FormPanelComponentInput(BaseModel):
                 Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
                 Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
                 Annotated["FormCheckboxComponentInput", Tag(FormIoComponentTypeEnum.checkbox)],
+                Annotated["FormSelectComponentInput", Tag(FormIoComponentTypeEnum.select)],
             ],
             Discriminator(component_discriminator),
         ]
@@ -178,6 +182,17 @@ class FormCheckboxComponentInput(FormComponentInput):
 
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.checkbox)]
     values: list[FormComponentValueInput]
+
+
+class FormSelectComponentDataInput(BaseModel):
+    values: list[FormComponentValueInput]
+
+
+class FormSelectComponentInput(FormComponentInput):
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
+
+    type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.select)]
+    data: FormSelectComponentDataInput
 
 
 class AnswerInput(BaseModel):

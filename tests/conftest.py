@@ -12,6 +12,9 @@ from jwt import PyJWKClient, PyJWT
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.compiler import DDLCompiler
+from sqlalchemy.sql.ddl import DropTable
 
 from meldingen.containers import Container
 from meldingen.main import get_application, get_container
@@ -31,6 +34,11 @@ def alembic_config() -> PytestAlembicConfig:
 def alembic_engine() -> AsyncEngine:
     """Override this fixture to provide pytest-alembic powered tests with a database handle."""
     return create_async_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
+
+
+@compiles(DropTable, "postgresql")
+def _compile_drop_table(element: DropTable, compiler: DDLCompiler) -> str:
+    return compiler.visit_drop_table(element) + " CASCADE"
 
 
 @pytest_asyncio.fixture
