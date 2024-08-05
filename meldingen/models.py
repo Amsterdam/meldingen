@@ -221,7 +221,7 @@ class FormIoRadioComponent(BaseFormIoValuesComponent):
         }
 
 
-class BaseFormIoComponentValue:
+class BaseFormIoComponentValue(MappedAsDataclass):
     label: Mapped[str] = mapped_column(String())
     value: Mapped[str] = mapped_column(String())
 
