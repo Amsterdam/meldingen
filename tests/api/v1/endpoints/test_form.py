@@ -973,6 +973,76 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert text_field.get("question") is not None
 
     @pytest.mark.asyncio
+    async def test_create_form_with_select(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": FormIoComponentTypeEnum.panel,
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": FormIoComponentTypeEnum.select,
+                            "input": True,
+                            "data": {
+                                "values": [
+                                    {"label": "label1", "value": "value1"},
+                                    {"label": "label2", "value": "value2"},
+                                ]
+                            },
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_201_CREATED
+
+        body = response.json()
+
+        assert body.get("id", 0) == 1
+        assert body.get("title") == "Formulier #1"
+        assert body.get("display") == "form"
+
+        components = body.get("components")
+        assert len(components) == 1
+
+        panel = components[0]
+        assert panel.get("label") == "panel-1"
+        assert panel.get("key") == "panel"
+        assert panel.get("type") == FormIoComponentTypeEnum.panel
+        assert panel.get("input") is False
+
+        panel_components = panel.get("components")
+        assert len(panel_components) == 1
+
+        select = panel_components[0]
+        assert select.get("label") == "Waarom meld u dit bij ons?"
+        assert select.get("description") == ""
+        assert select.get("key") == "waarom-meld-u-dit-bij-ons"
+        assert select.get("type") == FormIoComponentTypeEnum.select
+        assert select.get("input") is True
+
+        select_data = select.get("data")
+        assert select_data is not None
+
+        values: list[dict[str, str]] = select_data.get("values", [])
+        assert len(values) == 2
+        i = 1
+        for value in values:
+            assert value.get("label") == f"label{i}"
+            assert value.get("value") == f"value{i}"
+            i = i + 1
+
+    @pytest.mark.asyncio
     async def test_create_form_with_classification(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
