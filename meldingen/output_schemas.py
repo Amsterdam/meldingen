@@ -145,3 +145,4 @@ class FormSelectComponentDataOutput(BaseModel):
 
 class FormSelectComponentOutput(BaseFormComponentOutput):
     data: FormSelectComponentDataOutput
+    question: int

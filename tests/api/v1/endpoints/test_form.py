@@ -888,6 +888,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert select.get("key") == "waarom-meld-u-dit-bij-ons"
         assert select.get("type") == FormIoComponentTypeEnum.select
         assert select.get("input") is True
+        assert select.get("question") is not None
 
         select_data = select.get("data")
         assert select_data is not None
@@ -1106,6 +1107,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert select.get("key") == "waarom-meld-u-dit-bij-ons"
         assert select.get("type") == FormIoComponentTypeEnum.select
         assert select.get("input") is True
+        assert select.get("question") is not None
 
         select_data = select.get("data")
         assert select_data is not None
