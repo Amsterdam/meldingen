@@ -11,7 +11,7 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.models import Classification, User
+from meldingen.models import Classification
 from meldingen.repositories import ClassificationRepository
 from meldingen.schemas import ClassificationInput, ClassificationOutput
 
@@ -23,11 +23,11 @@ router = APIRouter()
     name="classification:create",
     status_code=HTTP_201_CREATED,
     responses={**unauthorized_response, **conflict_response},
+    dependencies=[Depends(authenticate_user)],
 )
 @inject
 async def create_classification(
     classification_input: ClassificationInput,
-    user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationCreateAction = Depends(Provide[Container.classification_create_action]),
 ) -> ClassificationOutput:
     db_model = Classification(**classification_input.model_dump())
@@ -68,13 +68,12 @@ async def _hydrate_output(classification: Classification) -> ClassificationOutpu
     "/",
     name="classification:list",
     responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(_add_content_range_header)],
+    dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
 )
 @inject
 async def list_classifications(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
-    user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationListAction = Depends(Provide[Container.classification_list_action]),
 ) -> list[ClassificationOutput]:
     limit = pagination["limit"] or 0
@@ -92,12 +91,14 @@ async def list_classifications(
 
 
 @router.get(
-    "/{classification_id}", name="classification:retrieve", responses={**unauthorized_response, **not_found_response}
+    "/{classification_id}",
+    name="classification:retrieve",
+    responses={**unauthorized_response, **not_found_response},
+    dependencies=[Depends(authenticate_user)],
 )
 @inject
 async def retrieve_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
-    user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationRetrieveAction = Depends(Provide[Container.classification_retrieve_action]),
 ) -> ClassificationOutput:
     classification = await action(classification_id)
@@ -111,12 +112,12 @@ async def retrieve_classification(
     "/{classification_id}",
     name="classification:update",
     responses={**unauthorized_response, **not_found_response, **conflict_response},
+    dependencies=[Depends(authenticate_user)],
 )
 @inject
 async def update_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
     classification_input: ClassificationInput,
-    user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationUpdateAction = Depends(Provide[Container.classification_update_action]),
 ) -> ClassificationOutput:
     classification_data = classification_input.model_dump(exclude_unset=True)
@@ -137,11 +138,11 @@ async def update_classification(
         **unauthorized_response,
         **not_found_response,
     },
+    dependencies=[Depends(authenticate_user)],
 )
 @inject
 async def delete_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
-    user: Annotated[User, Depends(authenticate_user)],
     action: ClassificationDeleteAction = Depends(Provide[Container.classification_delete_action]),
 ) -> None:
     try:
