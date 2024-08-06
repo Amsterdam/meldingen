@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 import pytest
-import pytest_asyncio
 from fastapi import FastAPI
 from meldingen_core.exceptions import NotFoundException
 from pydantic import TypeAdapter
@@ -32,7 +31,7 @@ from meldingen.repositories import (
 )
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def melding_repository(container: Container) -> MeldingRepository:
     return await container.melding_repository()
 
@@ -72,7 +71,7 @@ def melding_token_expires(request: FixtureRequest) -> datetime | None:
     return None
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_melding(
     melding_repository: MeldingRepository,
     melding_text: str,
@@ -97,7 +96,7 @@ async def test_melding(
     return melding
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_melding_with_classification(
     melding_repository: MeldingRepository,
     test_melding: Melding,
@@ -110,7 +109,7 @@ async def test_melding_with_classification(
     return test_melding
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_meldingen(melding_repository: MeldingRepository, melding_text: str) -> list[Melding]:
     """Fixture providing a list test melding instances."""
 
@@ -136,7 +135,7 @@ def auth_user(app: FastAPI) -> None:
     app.dependency_overrides[authenticate_user] = authenticate_user_override
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def classification_repository(container: Container) -> ClassificationRepository:
     return await container.classification_repository()
 
@@ -149,7 +148,7 @@ def classification_name(request: FixtureRequest) -> str:
         return "classification name"
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def classification(
     classification_repository: ClassificationRepository, classification_name: str
 ) -> Classification:
@@ -162,7 +161,7 @@ async def classification(
     return classification
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def classifications(classification_repository: ClassificationRepository) -> list[Classification]:
     classifications = []
     for n in range(10):
@@ -173,7 +172,7 @@ async def classifications(classification_repository: ClassificationRepository) -
     return classifications
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def classification_with_form(
     classification_repository: ClassificationRepository, form_repository: FormRepository
 ) -> Classification:
@@ -185,17 +184,17 @@ async def classification_with_form(
     return classification
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def form_repository(container: Container) -> FormRepository:
     return await container.form_repository()
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def static_form_repository(container: Container) -> StaticFormRepository:
     return await container.static_form_repository()
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def question_repository(container: Container) -> QuestionRepository:
     return await container.question_repository()
 
@@ -208,7 +207,7 @@ def form_title(request: FixtureRequest) -> str:
         return "Form"
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def form(form_repository: FormRepository, question_repository: QuestionRepository, form_title: str) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
@@ -238,7 +237,7 @@ async def form(form_repository: FormRepository, question_repository: QuestionRep
     return form
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def form_with_classification(
     classification_repository: ClassificationRepository,
     form_repository: FormRepository,
@@ -290,7 +289,7 @@ async def form_with_classification(
     return form
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_forms(form_repository: FormRepository) -> list[Form]:
     forms = []
     for n in range(1, 11):
@@ -303,7 +302,7 @@ async def test_forms(form_repository: FormRepository) -> list[Form]:
     return forms
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def primary_form(static_form_repository: StaticFormRepository) -> StaticForm:
     try:
         primary_form = await static_form_repository.retrieve_by_type(StaticFormTypeEnum.primary)
