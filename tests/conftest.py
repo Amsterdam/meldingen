@@ -138,3 +138,7 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
             app=app, base_url="http://testserver", headers={"Content-Type": "application/json"}
         ) as client:
             yield client
+
+@pytest.fixture
+def anyio_backend() -> str:
+    return 'asyncio'
