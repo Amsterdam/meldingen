@@ -50,8 +50,3 @@ class DatabaseSessionManager:
 
 
 sessionmanager = DatabaseSessionManager(str(settings.database_dsn))
-
-
-async def get_db_session() -> AsyncIterator[AsyncSession]:
-    async with sessionmanager.session() as session:
-        yield session
