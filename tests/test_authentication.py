@@ -8,7 +8,7 @@ from meldingen.authentication import UnauthenticatedException, get_user
 from meldingen.models import User
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_get_user_token_expired(app: FastAPI, py_jwt_mock: Mock) -> None:
     py_jwt_mock.decode.side_effect = ExpiredSignatureError()
 
@@ -18,7 +18,7 @@ async def test_get_user_token_expired(app: FastAPI, py_jwt_mock: Mock) -> None:
     assert exc_info.value.detail == "Token has expired"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_get_user_token_invalid(app: FastAPI, py_jwt_mock: Mock) -> None:
     py_jwt_mock.decode.return_value = {}
 
@@ -28,7 +28,7 @@ async def test_get_user_token_invalid(app: FastAPI, py_jwt_mock: Mock) -> None:
     assert exc_info.value.detail == "Invalid token"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_get_user_not_found(app: FastAPI, py_jwt_mock: Mock) -> None:
     py_jwt_mock.decode.return_value = {"email": "a@b.c"}
 
@@ -38,7 +38,7 @@ async def test_get_user_not_found(app: FastAPI, py_jwt_mock: Mock) -> None:
     assert exc_info.value.detail == "User not found"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_get_user(app: FastAPI, py_jwt_mock: Mock, test_user: User) -> None:
     py_jwt_mock.decode.return_value = {"email": "user@example.com"}
 

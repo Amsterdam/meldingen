@@ -17,7 +17,7 @@ class BaseUnauthorizedTest(metaclass=ABCMeta):
     def get_path_params(self) -> dict[str, Any]:
         return {}
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_unauthorized(self, app: FastAPI, client: AsyncClient) -> None:
         """Tests that a 401 response is given when no access token is provided through the Authorization header."""
         response = await client.request(
@@ -34,7 +34,7 @@ class BasePaginationParamsTest(metaclass=ABCMeta):
     @abstractmethod
     def get_route_name(self) -> str: ...
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, type, msg",
         [
@@ -58,7 +58,7 @@ class BasePaginationParamsTest(metaclass=ABCMeta):
         assert violation.get("loc") == ["query", "limit"]
         assert violation.get("msg") == msg
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "offset, type, msg",
         [
@@ -87,7 +87,7 @@ class BaseSortParamsTest(metaclass=ABCMeta):
     @abstractmethod
     def get_route_name(self) -> str: ...
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_list_sort_invalid_json(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.get(app.url_path_for(self.get_route_name()), params={"sort": '["id", "ASC", "bla"'})
 
@@ -102,7 +102,7 @@ class BaseSortParamsTest(metaclass=ABCMeta):
         assert violation.get("loc") == ["query", "sort"]
         assert violation.get("msg") == "Invalid JSON: EOF while parsing a list at line 1 column 19"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_list_sort_invalid_json_array(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.get(app.url_path_for(self.get_route_name()), params={"sort": '["id", "ASC", "bla"]'})
 
@@ -117,7 +117,7 @@ class BaseSortParamsTest(metaclass=ABCMeta):
         assert violation.get("loc") == ["query", "sort"]
         assert violation.get("msg") == "Tuple should have at most 2 items after validation, not 3"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_list_sort_invalid_direction(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.get(app.url_path_for(self.get_route_name()), params={"sort": '["id", "ASCC"]'})
 
@@ -132,7 +132,7 @@ class BaseSortParamsTest(metaclass=ABCMeta):
         assert violation.get("loc") == ["query", "sort"]
         assert violation.get("msg") == "Input should be 'ASC' or 'DESC'"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_list_sort_invalid_attribute_name(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.get(
             app.url_path_for(self.get_route_name()), params={"sort": '["very_unlikely_attribute_name", "ASC"]'}

@@ -22,7 +22,7 @@ class TestStaticFormRetrieveByType(BaseStaticFormTest):
     ROUTE_NAME: Final[str] = "static-form:retrieve-by-type"
     METHOD: Final[str] = "GET"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_retrieve_primary_form(self, app: FastAPI, client: AsyncClient, primary_form: StaticForm) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, form_type=StaticFormTypeEnum.primary))
 
@@ -49,7 +49,7 @@ class TestStaticFormRetrieveByType(BaseStaticFormTest):
         assert component.auto_expand == data_component.get("autoExpand")
         assert component.show_char_count == data_component.get("showCharCount")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_retrieve_primary_form_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, form_type=StaticFormTypeEnum.primary))
 
@@ -73,7 +73,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form(
         self,
         app: FastAPI,
@@ -123,7 +123,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         components = await primary_form.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_with_text_field(
         self,
         app: FastAPI,
@@ -172,7 +172,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert component.type == data_component.get("type")
         assert component.input == data_component.get("input")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_primary_form_does_not_exists(
         self,
         app: FastAPI,
@@ -208,7 +208,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_values(
         self,
         app: FastAPI,
@@ -278,7 +278,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         components = await primary_form.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_with_select(
         self,
         app: FastAPI,

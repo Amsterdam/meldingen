@@ -28,7 +28,7 @@ class TestUserCreate(BaseUnauthorizedTest):
     def get_method(self) -> str:
         return self.METHOD
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_user(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME), json={"username": "meldingen_user", "email": "user@example.com"}
@@ -43,7 +43,7 @@ class TestUserCreate(BaseUnauthorizedTest):
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_user_username_minimum_length_violation(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
@@ -62,7 +62,7 @@ class TestUserCreate(BaseUnauthorizedTest):
         assert violation.get("loc") == ["body", "username"]
         assert violation.get("msg") == "String should have at least 3 characters"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_user_email_violation(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME), json={"username": "meldingen_user", "email": "user.example.com"}
@@ -79,7 +79,7 @@ class TestUserCreate(BaseUnauthorizedTest):
         assert violation.get("loc") == ["body", "email"]
         assert violation.get("msg") == "value is not a valid email address: An email address must have an @-sign."
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "user_username, user_email, new_username, new_email",
         [
@@ -114,7 +114,7 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
     def get_method(self) -> str:
         return self.METHOD
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, expected_result",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
@@ -137,7 +137,7 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         assert len(data) == expected_result
         assert response.headers.get("content-range") == f"user {offset}-{limit - 1 + offset}/10"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "attribute, direction, expected",
         [
@@ -234,7 +234,7 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
 
         assert response.headers.get("content-range") == "user 0-49/10"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, attribute, direction, expected",
         [
@@ -306,7 +306,7 @@ class TestUserRetrieve(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "user_username, user_email",
         [("username #1", "user-1@example.com"), ("username #2", "user-2@example.com")],
@@ -324,7 +324,7 @@ class TestUserRetrieve(BaseUnauthorizedTest):
         assert data.get("created_at") == test_user.created_at.isoformat()
         assert data.get("updated_at") == test_user.updated_at.isoformat()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_retrieve_user_that_does_not_exist(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, user_id=1))
 
@@ -348,7 +348,7 @@ class TestUserDelete(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "user_username, user_email",
         [("username #1", "user-1@example.com"), ("username #2", "user-2@example.com")],
@@ -359,7 +359,7 @@ class TestUserDelete(BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_204_NO_CONTENT
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_delete_user_that_does_not_exist(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, user_id=1))
 
@@ -368,7 +368,7 @@ class TestUserDelete(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("detail") == "Not Found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_delete_user_own_user(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, user_id=400))
 
@@ -377,7 +377,7 @@ class TestUserDelete(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("detail") == "You cannot delete your own account"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize("user_id", [0, -1])
     async def test_delete_invalid_id(self, app: FastAPI, client: AsyncClient, auth_user: None, user_id: int) -> None:
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, user_id=user_id))
@@ -408,7 +408,7 @@ class TestUserUpdate(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "user_username, user_email, new_data",
         [
@@ -433,7 +433,7 @@ class TestUserUpdate(BaseUnauthorizedTest):
         assert data.get("created_at") == test_user.created_at.isoformat()
         assert data.get("updated_at") == test_user.updated_at.isoformat()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_user_username_minimum_length_violation(
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User
     ) -> None:
@@ -450,7 +450,7 @@ class TestUserUpdate(BaseUnauthorizedTest):
         assert violation.get("loc") == ["body", "username"]
         assert violation.get("msg") == "String should have at least 3 characters"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "invalid_data",
         [
@@ -466,7 +466,7 @@ class TestUserUpdate(BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_non_existing_user(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, user_id=999), json={"username": "test", "email": "test@example.com"}
@@ -477,7 +477,7 @@ class TestUserUpdate(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("detail") == "Not Found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "new_username, new_email",
         [

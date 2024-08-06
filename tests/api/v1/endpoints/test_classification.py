@@ -27,7 +27,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
     def get_method(self) -> str:
         return self.METHOD
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_classification(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
 
@@ -40,7 +40,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_classification_name_min_length_violation(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
@@ -57,7 +57,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert violation.get("loc") == ["body", "name"]
         assert violation.get("msg") == "String should have at least 1 character"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_create_classification_duplicate_name(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
@@ -82,7 +82,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
     def get_method(self) -> str:
         return self.METHOD
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_list_all_classifications(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
     ) -> None:
@@ -96,7 +96,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         assert response.headers.get("content-range") == "classification 0-49/10"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, expected",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
@@ -120,7 +120,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "attribute, direction, expected",
         [
@@ -217,7 +217,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         assert response.headers.get("content-range") == "classification 0-49/10"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, attribute, direction, expected",
         [
@@ -271,7 +271,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_list_classification_with_form(
         self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
     ) -> None:
@@ -283,7 +283,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         assert len(body) == 1
         assert body[0].get("form") == form_with_classification.id
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_list_classifications_sort_on_relationship(
         self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
     ) -> None:
@@ -315,7 +315,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_retrieve_classification(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
@@ -331,7 +331,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_retrieve_classification_that_does_not_exist(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
@@ -342,7 +342,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("detail") == "Not Found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_retrieve_classification_with_form(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
     ) -> None:
@@ -368,7 +368,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_update_classification(
         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
@@ -385,7 +385,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_classification_that_does_not_exist(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
@@ -399,7 +399,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
 
         assert body.get("detail") == "Not Found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_classification_duplicate_name(
         self, app: FastAPI, client: AsyncClient, classifications: list[Classification], auth_user: None
     ) -> None:
@@ -414,7 +414,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
             data.get("detail") == "The requested operation could not be completed due to a conflict with existing data."
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_classification_with_form(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
     ) -> None:
@@ -443,7 +443,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_delete_classification(
         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
@@ -452,7 +452,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_204_NO_CONTENT
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_delete_classification_that_does_not_exist(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
@@ -463,7 +463,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("detail") == "Not Found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize("classification_id", [0, -1])
     async def test_delete_invalid_id(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification_id: int
