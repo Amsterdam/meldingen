@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from importlib import metadata
 from typing import Awaitable, Callable
 
@@ -13,6 +14,7 @@ from starlette.status import HTTP_409_CONFLICT
 from meldingen.api.v1.api import api_router
 from meldingen.config import Settings
 from meldingen.containers import Container
+from meldingen.database import sessionmanager
 from meldingen.logging import setup_logging
 from meldingen.utils import get_version
 
@@ -101,6 +103,16 @@ def get_application(cont: Container) -> FastAPI:
     )
 
     return application
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> None:
+    """Function that handles startup and shutdown events.
+    See also https://fastapi.tiangolo.com/advanced/events/"""
+    yield
+    if sessionmanager._engine is not None:
+        # Close the DB connection
+        await sessionmanager.close()
 
 
 container = get_container()
