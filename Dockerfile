@@ -33,4 +33,4 @@ RUN set -eux; \
 ENV PYTHONPATH=/opt/meldingen
 
 ENTRYPOINT ["/opt/meldingen/meldingen-entrypoint.sh"]
-CMD ["uvicorn", "meldingen.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80", "--reload"]
+CMD ["fastapi", "run", "/opt/meldingen/meldingen/main.py"]

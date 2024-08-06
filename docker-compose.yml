@@ -5,8 +5,9 @@ services:
       context: .
       args:
         INSTALL_DEV: ${INSTALL_DEV-true}
+    command: ["fastapi", "dev", "--host", "0.0.0.0", "/opt/meldingen/meldingen/main.py"]
     ports:
-      - "8000:80"
+      - "8000:8000"
     env_file:
       - .env
     depends_on:
