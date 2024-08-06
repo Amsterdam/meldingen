@@ -2,7 +2,6 @@ from typing import AsyncGenerator
 from unittest.mock import Mock
 
 import pytest
-import pytest_asyncio
 from asgi_lifespan import LifespanManager
 from dependency_injector import containers
 from dependency_injector.providers import Object, Resource
@@ -41,7 +40,7 @@ def _compile_drop_table(element: DropTable, compiler: DDLCompiler) -> str:
     return compiler.visit_drop_table(element) + " CASCADE"
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_database(alembic_engine: AsyncEngine) -> None:
     async with alembic_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
@@ -59,7 +58,7 @@ def py_jwt_mock() -> PyJWT:
     return Mock(PyJWT)
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def user_repository(container: Container) -> UserRepository:
     return await container.user_repository()
 
@@ -84,7 +83,7 @@ def user_email(request: FixtureRequest) -> str:
         return "user@example.com"
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_user(user_repository: UserRepository, user_username: str, user_email: str) -> User:
     """Fixture providing a single test user instance."""
 
@@ -95,7 +94,7 @@ async def test_user(user_repository: UserRepository, user_username: str, user_em
     return user
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_users(user_repository: UserRepository) -> list[User]:
     """Fixture providing a list test user instances."""
 
@@ -127,12 +126,12 @@ def container(alembic_engine: AsyncEngine, jwks_client_mock: PyJWKClient, py_jwt
     return get_container()
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def app(test_database: None, container: Container) -> FastAPI:
     return get_application(container)
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(
