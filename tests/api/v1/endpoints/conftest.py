@@ -11,7 +11,6 @@ from meldingen.containers import Container
 from meldingen.models import (
     Classification,
     Form,
-    FormIoComponent,
     FormIoComponentTypeEnum,
     FormIoFormDisplayEnum,
     FormIoPanelComponent,
