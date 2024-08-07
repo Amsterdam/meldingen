@@ -16,6 +16,8 @@ from sqlalchemy.sql.compiler import DDLCompiler
 from sqlalchemy.sql.ddl import DropTable
 
 from meldingen.containers import Container
+from meldingen.database import sessionmanager
+from meldingen.dependencies import database_session
 from meldingen.main import get_application, get_container
 from meldingen.models import BaseDBModel, User
 from meldingen.repositories import UserRepository
@@ -148,6 +150,24 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
             transport=ASGITransport(app=app), base_url="http://testserver", headers={"Content-Type": "application/json"}
         ) as client:
             yield client
+
+
+@pytest.fixture
+async def db_session() -> AsyncIterator[AsyncSession]:
+    async with sessionmanager.session() as session:
+        try:
+            await session.begin()
+            yield session
+        finally:
+            await session.rollback()
+
+
+@pytest.fixture(autouse=True)
+async def session_override(app: FastAPI, db_session: AsyncSession) -> None:
+    async def get_db_session_override() -> AsyncIterator[AsyncSession]:
+        yield db_session
+
+    app.dependency_overrides[database_session] = get_db_session_override
 
 
 @pytest.fixture

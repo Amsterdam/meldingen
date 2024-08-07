@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from meldingen_core.exceptions import NotFoundException
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
@@ -156,6 +157,15 @@ async def classification(
     except NotFoundException:
         classification = Classification(name=classification_name)
         await classification_repository.save(classification)
+
+    return classification
+
+
+@pytest.fixture
+async def test_classification(db_session: AsyncSession, classification_name: str) -> Classification:
+    classification = Classification(name=classification_name)
+    db_session.add(classification)
+    await db_session.commit()
 
     return classification
 

@@ -429,7 +429,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         assert body.get("form") == form.id
 
 
-class TestClassificationDelete(BaseUnauthorizedTest):
+class TestClassificationDelete:  # (BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:delete"
     METHOD: Final[str] = "DELETE"
     PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
@@ -446,9 +446,9 @@ class TestClassificationDelete(BaseUnauthorizedTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_delete_classification(
-        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
+        self, app: FastAPI, client: AsyncClient, test_classification: Classification, auth_user: None
     ) -> None:
-        response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=test_classification.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
 
