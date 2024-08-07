@@ -6,7 +6,7 @@ from asgi_lifespan import LifespanManager
 from dependency_injector import containers
 from dependency_injector.providers import Object, Resource
 from fastapi import FastAPI
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from jwt import PyJWKClient, PyJWT
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
@@ -145,7 +145,7 @@ async def app(test_database: None, container: Container) -> FastAPI:
 async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(
-            app=app, base_url="http://testserver", headers={"Content-Type": "application/json"}
+            transport=ASGITransport(app=app), base_url="http://testserver", headers={"Content-Type": "application/json"}
         ) as client:
             yield client
 
