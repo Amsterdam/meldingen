@@ -30,9 +30,13 @@ def alembic_config() -> PytestAlembicConfig:
 
 
 @pytest.fixture
-def alembic_engine() -> AsyncEngine:
+async def alembic_engine() -> AsyncEngine:
     """Override this fixture to provide pytest-alembic powered tests with a database handle."""
-    return create_async_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
+    engine = create_async_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
 
 
 @compiles(DropTable, "postgresql")
@@ -114,7 +118,13 @@ def container(alembic_engine: AsyncEngine, jwks_client_mock: PyJWKClient, py_jwt
     async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
         async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
         async with async_session() as session:
-            yield session
+            try:
+                yield session
+            except:
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
 
     @containers.override(Container)
     class TestContainer(containers.DeclarativeContainer):
@@ -139,6 +149,7 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
         ) as client:
             yield client
 
+
 @pytest.fixture
 def anyio_backend() -> str:
-    return 'asyncio'
+    return "asyncio"
