@@ -1,4 +1,4 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, AsyncIterator
 from unittest.mock import Mock
 
 import pytest
@@ -30,7 +30,7 @@ def alembic_config() -> PytestAlembicConfig:
 
 
 @pytest.fixture
-async def alembic_engine() -> AsyncEngine:
+async def alembic_engine() -> AsyncIterator[AsyncEngine]:
     """Override this fixture to provide pytest-alembic powered tests with a database handle."""
     engine = create_async_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
     try:
