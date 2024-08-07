@@ -111,7 +111,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
     def get_method(self) -> str:
         return self.METHOD
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, expected_result",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
@@ -137,7 +137,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
 
         assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/10"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, expected_result",
         [(11, 0, 11), (5, 0, 5)],
@@ -165,7 +165,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
 
         assert response.headers.get("content-range") == f"form {offset}-{limit - 1 + offset}/11"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "attribute, direction, expected",
         [
@@ -263,7 +263,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
 
         assert response.headers.get("content-range") == "form 0-49/10"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, attribute, direction, expected",
         [
@@ -326,7 +326,7 @@ class TestFormRetrieve(BaseFormTest):
     ROUTE_NAME: Final[str] = "form:retrieve"
     METHOD: Final[str] = "GET"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_retrieve_form(self, app: FastAPI, client: AsyncClient, form: Form) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=form.id))
 
@@ -341,7 +341,7 @@ class TestFormRetrieve(BaseFormTest):
 
         await self._assert_components(data.get("components"), await form.awaitable_attrs.components)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_retrieve_form_with_classification(
         self, app: FastAPI, client: AsyncClient, form_with_classification: Form
     ) -> None:
@@ -356,7 +356,7 @@ class TestFormRetrieve(BaseFormTest):
         assert len(data.get("components")) == len(await form_with_classification.awaitable_attrs.components)
         assert data.get("classification") == form_with_classification.classification_id
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_retrieve_form_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=1))
 
@@ -380,7 +380,7 @@ class TestFormDelete(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "form_title",
         [("Form #1",), ("Form #2",)],
@@ -391,7 +391,7 @@ class TestFormDelete(BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_204_NO_CONTENT
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_delete_form_that_does_not_exist(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, form_id=1))
 
@@ -415,7 +415,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form(
         self,
         app: FastAPI,
@@ -477,7 +477,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         components = await form.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_with_new_classification(
         self,
         app: FastAPI,
@@ -526,7 +526,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         components = await form.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_change_classification(
         self,
         app: FastAPI,
@@ -577,7 +577,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         components = await form_with_classification.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_with_classification_that_does_not_exist(
         self,
         app: FastAPI,
@@ -599,7 +599,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         body = response.json()
         assert body.get("detail") == "Classification not found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_remove_classification(
         self,
         app: FastAPI,
@@ -623,7 +623,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         body = response.json()
         assert body.get("classification", "") is None
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_assign_classification_that_is_already_assigned_to_another_form(
         self,
         app: FastAPI,
@@ -656,7 +656,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         body = response.json()
         assert body.get("classification") == 1
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_classification_id_validation(
         self,
         app: FastAPI,
@@ -684,7 +684,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert violation.get("loc") == ["body", "classification"]
         assert violation.get("msg") == "Input should be greater than 0"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_invalid_nesting_panel_with_panel(
         self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form
     ) -> None:
@@ -740,7 +740,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "<FormIoComponentTypeEnum.select: 'select'>"
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_values(
         self,
         app: FastAPI,
@@ -810,7 +810,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         components = await form.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_that_does_not_exist(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.put(
             app.url_path_for(self.ROUTE_NAME, form_id=123),
@@ -824,7 +824,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_form_with_select(
         self,
         app: FastAPI,
@@ -912,7 +912,7 @@ class TestFormCreate(BaseUnauthorizedTest):
     def get_method(self) -> str:
         return self.METHOD
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_form(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         data = {
             "title": "Formulier #1",
@@ -992,7 +992,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert second_child_component.get("showCharCount")
         assert second_child_component.get("question") is not None
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_form_with_text_field(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         data = {
             "title": "Formulier #1",
@@ -1049,7 +1049,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert text_field.get("input")
         assert text_field.get("question") is not None
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_form_with_select(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         data = {
             "title": "Formulier #1",
@@ -1120,7 +1120,7 @@ class TestFormCreate(BaseUnauthorizedTest):
             assert value.get("value") == f"value{i}"
             i = i + 1
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_form_with_classification(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
@@ -1141,7 +1141,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert data.get("components") == []
         assert data.get("classification") == classification.id
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_form_with_classification_that_does_not_exist(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
@@ -1159,7 +1159,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("detail") == "Classification not found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "title, display, error_type, error_loc, error_msg",
         [
@@ -1199,7 +1199,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert violation.get("loc") == error_loc
         assert violation.get("msg") == error_msg
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_validation_of_classification_id(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME),
@@ -1217,7 +1217,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert violation.get("loc") == ["body", "classification"]
         assert violation.get("msg") == "Input should be greater than 0"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_form_invalid_nesting(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         data = {
             "title": "Formulier #1",
@@ -1278,7 +1278,7 @@ class TestFormCreate(BaseUnauthorizedTest):
             },
         ]
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_form_invalid_nesting_panel_with_panel(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
@@ -1338,13 +1338,13 @@ class TestFormCreate(BaseUnauthorizedTest):
 class TestFormClassification:
     ROUTE_NAME: Final[str] = "form:classification"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_form_classification_not_found(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=1))
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_form_classification_id_validation(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=0))
 
@@ -1357,7 +1357,7 @@ class TestFormClassification:
         assert detail[0].get("loc") == ["path", "classification_id"]
         assert detail[0].get("msg") == "Input should be greater than or equal to 1"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_form_classification(self, app: FastAPI, client: AsyncClient, form_with_classification: Form) -> None:
         classification = await form_with_classification.awaitable_attrs.classification
         response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))

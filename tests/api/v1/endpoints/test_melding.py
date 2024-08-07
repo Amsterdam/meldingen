@@ -25,7 +25,7 @@ from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParams
 class TestMeldingCreate:
     ROUTE_NAME_CREATE: Final[str] = "melding:create"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_melding(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "This is a test melding."})
 
@@ -40,7 +40,7 @@ class TestMeldingCreate:
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["classification_name"], indirect=True)
     async def test_create_melding_with_classification(
         self, app: FastAPI, client: AsyncClient, classification: Classification
@@ -55,7 +55,7 @@ class TestMeldingCreate:
         assert data.get("state") == MeldingStates.CLASSIFIED
         assert data.get("classification") == classification.id
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_create_melding_text_minimum_length_violation(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": ""})
 
@@ -81,7 +81,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
     def get_method(self) -> str:
         return self.METHOD
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, expected_result",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
@@ -104,7 +104,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         assert len(data) == expected_result
         assert response.headers.get("content-range") == f"melding {offset}-{limit - 1 + offset}/10"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "attribute, direction, expected",
         [
@@ -202,7 +202,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
 
         assert response.headers.get("content-range") == "melding 0-49/10"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, attribute, direction, expected",
         [
@@ -275,7 +275,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return self.PATH_PARAMS
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "melding_text", ["Er ligt poep op de stoep.", "Er is een matras naast de prullenbak gedumpt."], indirect=True
     )
@@ -294,7 +294,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert data.get("created_at") == test_melding.created_at.isoformat()
         assert data.get("updated_at") == test_melding.updated_at.isoformat()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_retrieve_melding_that_does_not_exist(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
@@ -309,7 +309,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
 class TestMeldingUpdate:
     ROUTE_NAME: Final[str] = "melding:update"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_token_missing(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=1), json={"text": "classification_name"}
@@ -325,7 +325,7 @@ class TestMeldingUpdate:
         assert detail[0].get("loc") == ["query", "token"]
         assert detail[0].get("msg") == "Field required"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": ""}, json={"text": "classification_name"}
@@ -333,7 +333,7 @@ class TestMeldingUpdate:
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_update_melding_unauthorized_token_invalid(
         self, app: FastAPI, client: AsyncClient, test_melding: Melding
     ) -> None:
@@ -343,7 +343,7 @@ class TestMeldingUpdate:
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
         [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
@@ -360,7 +360,7 @@ class TestMeldingUpdate:
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
         [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken")],
@@ -377,7 +377,7 @@ class TestMeldingUpdate:
 
         assert response.status_code == HTTP_500_INTERNAL_SERVER_ERROR
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "classification_name"],
         [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "classification_name")],
@@ -406,7 +406,7 @@ class TestMeldingUpdate:
 class TestMeldingAnswerQuestions:
     ROUTE_NAME: Final[str] = "melding:answer_questions"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
         [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken")],
@@ -425,7 +425,7 @@ class TestMeldingAnswerQuestions:
         assert body.get("created_at") == test_melding.created_at.isoformat()
         assert body.get("updated_at") == test_melding.updated_at.isoformat()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_answer_questions_not_found(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.put(
             app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
@@ -433,7 +433,7 @@ class TestMeldingAnswerQuestions:
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_answer_questions_token_invalid(
         self, app: FastAPI, client: AsyncClient, test_melding: Melding
     ) -> None:
@@ -443,7 +443,7 @@ class TestMeldingAnswerQuestions:
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
         [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken", "PT1H")],
@@ -458,7 +458,7 @@ class TestMeldingAnswerQuestions:
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
         [("De restafvalcontainer is vol.", MeldingStates.PROCESSING, "supersecrettoken")],
@@ -486,7 +486,7 @@ class TestMeldingProcess(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return {"melding_id": 1}
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
     async def test_process_melding(
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
@@ -503,7 +503,7 @@ class TestMeldingProcess(BaseUnauthorizedTest):
         assert body.get("created_at") == test_melding.created_at.isoformat()
         assert body.get("updated_at") == test_melding.updated_at.isoformat()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
     async def test_process_melding_not_found(
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
@@ -516,7 +516,7 @@ class TestMeldingProcess(BaseUnauthorizedTest):
 
         assert body.get("detail") == "Not Found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.COMPLETED)], indirect=True
     )
@@ -544,7 +544,7 @@ class TestMeldingComplete(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return {"melding_id": 1}
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.PROCESSING)], indirect=True
     )
@@ -563,7 +563,7 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         assert body.get("created_at") == test_melding.created_at.isoformat()
         assert body.get("updated_at") == test_melding.updated_at.isoformat()
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
     async def test_complete_melding_not_found(
         self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
@@ -576,7 +576,7 @@ class TestMeldingComplete(BaseUnauthorizedTest):
 
         assert body.get("detail") == "Not Found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.COMPLETED)], indirect=True
     )
@@ -597,7 +597,7 @@ class TestMeldingComplete(BaseUnauthorizedTest):
 class TestMeldingQuestionAnswer:
     ROUTE_NAME_CREATE: Final[str] = "melding:answer-question"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "classification_name"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "test_classification")],
@@ -639,7 +639,7 @@ class TestMeldingQuestionAnswer:
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_answer_question_melding_does_not_exists(
         self,
         app: FastAPI,
@@ -669,7 +669,7 @@ class TestMeldingQuestionAnswer:
         data = response.json()
         assert data.get("detail") == "Not Found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_answer_question_unauthorized_token_invalid(
         self,
         app: FastAPI,
@@ -697,7 +697,7 @@ class TestMeldingQuestionAnswer:
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_answer_question_token_missing(
         self,
         app: FastAPI,
@@ -732,7 +732,7 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("loc") == ["query", "token"]
         assert detail[0].get("msg") == "Field required"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
@@ -768,7 +768,7 @@ class TestMeldingQuestionAnswer:
 
         assert body.get("detail") == "Melding not classified"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_answer_question_does_not_exists(
         self,
         app: FastAPI,
@@ -788,7 +788,7 @@ class TestMeldingQuestionAnswer:
         data = response.json()
         assert data.get("detail") == "Not Found"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "classification_name"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "test_classification")],
@@ -825,7 +825,7 @@ class TestMeldingQuestionAnswer:
 class TestMeldingUploadAttachment:
     ROUTE_NAME_CREATE: Final[str] = "melding:attachment"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
@@ -858,7 +858,7 @@ class TestMeldingUploadAttachment:
 
         os.remove(attachments[0].file_path)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_upload_attachment_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=123),
@@ -880,7 +880,7 @@ class TestMeldingUploadAttachment:
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
@@ -915,7 +915,7 @@ class TestMeldingUploadAttachment:
         assert detail[0].get("loc") == ["query", "token"]
         assert detail[0].get("msg") == "Field required"
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_upload_attachment_unauthorized_token_invalid(
         self, app: FastAPI, client: AsyncClient, test_melding: Melding
     ) -> None:
@@ -939,7 +939,7 @@ class TestMeldingUploadAttachment:
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
         [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],

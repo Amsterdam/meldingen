@@ -1,8 +1,7 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, AsyncIterator
 from unittest.mock import Mock
 
 import pytest
-import pytest_asyncio
 from asgi_lifespan import LifespanManager
 from dependency_injector import containers
 from dependency_injector.providers import Object, Resource
@@ -31,9 +30,13 @@ def alembic_config() -> PytestAlembicConfig:
 
 
 @pytest.fixture
-def alembic_engine() -> AsyncEngine:
+async def alembic_engine() -> AsyncIterator[AsyncEngine]:
     """Override this fixture to provide pytest-alembic powered tests with a database handle."""
-    return create_async_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
+    engine = create_async_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
 
 
 @compiles(DropTable, "postgresql")
@@ -41,7 +44,7 @@ def _compile_drop_table(element: DropTable, compiler: DDLCompiler) -> str:
     return compiler.visit_drop_table(element) + " CASCADE"
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_database(alembic_engine: AsyncEngine) -> None:
     async with alembic_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
@@ -59,7 +62,7 @@ def py_jwt_mock() -> PyJWT:
     return Mock(PyJWT)
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def user_repository(container: Container) -> UserRepository:
     return await container.user_repository()
 
@@ -84,7 +87,7 @@ def user_email(request: FixtureRequest) -> str:
         return "user@example.com"
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_user(user_repository: UserRepository, user_username: str, user_email: str) -> User:
     """Fixture providing a single test user instance."""
 
@@ -95,7 +98,7 @@ async def test_user(user_repository: UserRepository, user_username: str, user_em
     return user
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def test_users(user_repository: UserRepository) -> list[User]:
     """Fixture providing a list test user instances."""
 
@@ -115,7 +118,13 @@ def container(alembic_engine: AsyncEngine, jwks_client_mock: PyJWKClient, py_jwt
     async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
         async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
         async with async_session() as session:
-            yield session
+            try:
+                yield session
+            except:
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
 
     @containers.override(Container)
     class TestContainer(containers.DeclarativeContainer):
@@ -127,15 +136,20 @@ def container(alembic_engine: AsyncEngine, jwks_client_mock: PyJWKClient, py_jwt
     return get_container()
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def app(test_database: None, container: Container) -> FastAPI:
     return get_application(container)
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(
             app=app, base_url="http://testserver", headers={"Content-Type": "application/json"}
         ) as client:
             yield client
+
+
+@pytest.fixture
+def anyio_backend() -> str:
+    return "asyncio"
