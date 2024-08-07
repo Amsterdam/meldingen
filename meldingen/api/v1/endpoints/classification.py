@@ -11,6 +11,7 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
+from meldingen.dependencies import classification_delete_action
 from meldingen.models import Classification
 from meldingen.repositories import ClassificationRepository
 from meldingen.schemas import ClassificationInput, ClassificationOutput
@@ -140,10 +141,9 @@ async def update_classification(
     },
     dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def delete_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
-    action: ClassificationDeleteAction = Depends(Provide[Container.classification_delete_action]),
+    action: Annotated[ClassificationDeleteAction, Depends(classification_delete_action)],
 ) -> None:
     try:
         await action(classification_id)
