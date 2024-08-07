@@ -429,7 +429,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         assert body.get("form") == form.id
 
 
-class TestClassificationDelete:  # (BaseUnauthorizedTest):
+class TestClassificationDelete(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:delete"
     METHOD: Final[str] = "DELETE"
     PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
