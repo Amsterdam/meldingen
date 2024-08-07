@@ -1,9 +1,9 @@
 from typing import Annotated, AsyncIterator
 
 from fastapi import Depends
-from meldingen_core.actions.classification import ClassificationDeleteAction
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from meldingen.actions import ClassificationDeleteAction
 from meldingen.database import sessionmanager
 from meldingen.repositories import ClassificationRepository
 

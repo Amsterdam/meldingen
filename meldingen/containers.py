@@ -4,7 +4,7 @@ from typing import AsyncGenerator
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient, PyJWT
-from meldingen_core.actions.classification import ClassificationCreateAction, ClassificationDeleteAction
+from meldingen_core.actions.classification import ClassificationCreateAction
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from meldingen.actions import (
     AnswerCreateAction,
+    ClassificationDeleteAction,
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
