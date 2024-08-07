@@ -163,7 +163,9 @@ def database_engine_override(app: FastAPI) -> None:
     def db_engine_override() -> Callable[..., AsyncEngine]:
         return db_engine
 
-    app.dependency_overrides[database_engine] = db_engine_override
+    # In some case a coroutine is passed here instead of an FastAPI object, causing the test to fail
+    if isinstance(app, FastAPI):
+        app.dependency_overrides[database_engine] = db_engine_override
 
 
 @pytest.fixture
@@ -176,7 +178,9 @@ def database_session_manager_override(app: FastAPI) -> None:
     def db_manager_override() -> Callable[..., DatabaseSessionManager]:
         return db_manager
 
-    app.dependency_overrides[database_session_manager] = db_manager_override
+    # In some case a coroutine is passed here instead of an FastAPI object, causing the test to fail
+    if isinstance(app, FastAPI):
+        app.dependency_overrides[database_session_manager] = db_manager_override
 
 
 @pytest.fixture
