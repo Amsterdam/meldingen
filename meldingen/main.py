@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from importlib import metadata
-from typing import Awaitable, Callable
+from typing import AsyncIterator, Awaitable, Callable
 
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -106,7 +106,7 @@ def get_application(cont: Container) -> FastAPI:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> None:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Function that handles startup and shutdown events.
     See also https://fastapi.tiangolo.com/advanced/events/"""
     yield
