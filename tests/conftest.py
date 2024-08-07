@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, AsyncIterator
+from typing import AsyncGenerator, AsyncIterator, Callable
 from unittest.mock import Mock
 
 import pytest
@@ -10,14 +10,15 @@ from httpx import ASGITransport, AsyncClient
 from jwt import PyJWKClient, PyJWT
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
+from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.compiler import DDLCompiler
 from sqlalchemy.sql.ddl import DropTable
 
 from meldingen.containers import Container
-from meldingen.database import sessionmanager
-from meldingen.dependencies import database_session
+from meldingen.database import DatabaseSessionManager
+from meldingen.dependencies import database_engine, database_session, database_session_manager
 from meldingen.main import get_application, get_container
 from meldingen.models import BaseDBModel, User
 from meldingen.repositories import UserRepository
@@ -153,8 +154,34 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest.fixture
-async def db_session() -> AsyncIterator[AsyncSession]:
-    async with sessionmanager.session() as session:
+def db_engine() -> AsyncEngine:
+    return create_async_engine(TEST_DATABASE_URL, echo="debug", poolclass=NullPool)
+
+
+@pytest.fixture(autouse=True)
+def database_engine_override(app: FastAPI) -> None:
+    def db_engine_override() -> Callable[..., AsyncEngine]:
+        return db_engine
+
+    app.dependency_overrides[database_engine] = db_engine_override
+
+
+@pytest.fixture
+def db_manager(db_engine: AsyncEngine) -> DatabaseSessionManager:
+    return DatabaseSessionManager(db_engine)
+
+
+@pytest.fixture(autouse=True)
+def database_session_manager_override(app: FastAPI) -> None:
+    def db_manager_override() -> Callable[..., DatabaseSessionManager]:
+        return db_manager
+
+    app.dependency_overrides[database_session_manager] = db_manager_override
+
+
+@pytest.fixture
+async def db_session(db_manager: DatabaseSessionManager) -> AsyncIterator[AsyncSession]:
+    async with db_manager.session() as session:
         try:
             await session.begin()
             yield session

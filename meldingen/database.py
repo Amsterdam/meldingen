@@ -3,15 +3,13 @@ from typing import AsyncIterator
 
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from meldingen.config import settings
-
 
 class DatabaseSessionManager:
     _engine: AsyncEngine | None = None
     _sessionmaker: async_sessionmaker[AsyncSession] | None = None
 
-    def __init__(self, dsn: str):
-        self._engine = create_async_engine(dsn, echo="debug")
+    def __init__(self, engine: AsyncEngine):
+        self._engine = engine
         self._sessionmaker = async_sessionmaker(autocommit=False, bind=self._engine, expire_on_commit=False)
 
     async def close(self) -> None:
@@ -47,6 +45,3 @@ class DatabaseSessionManager:
             raise
         finally:
             await session.close()
-
-
-sessionmanager = DatabaseSessionManager(str(settings.database_dsn))
