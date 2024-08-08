@@ -16,7 +16,7 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.dependencies import classification_delete_action
+from meldingen.dependencies import classification_delete_action, classification_retrieve_action
 from meldingen.models import Classification
 from meldingen.repositories import ClassificationRepository
 from meldingen.schemas import ClassificationInput, ClassificationOutput
@@ -105,7 +105,7 @@ async def list_classifications(
 @inject
 async def retrieve_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
-    action: ClassificationRetrieveAction = Depends(Provide[Container.classification_retrieve_action]),
+    action: Annotated[ClassificationRetrieveAction, Depends(classification_retrieve_action)],
 ) -> ClassificationOutput:
     classification = await action(classification_id)
     if classification is None:
