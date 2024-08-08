@@ -7,9 +7,10 @@ from meldingen.schemas import (
     FormCheckboxComponentInput,
     FormPanelComponentInput,
     FormRadioComponentInput,
+    FormSelectComponentInput,
     FormTextAreaComponentInput,
     FormTextFieldComponentInput,
-    component_discriminator, FormSelectComponentInput,
+    component_discriminator,
 )
 
 
