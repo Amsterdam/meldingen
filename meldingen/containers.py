@@ -4,7 +4,6 @@ from typing import AsyncGenerator
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from jwt import PyJWKClient, PyJWT
-from meldingen_core.actions.classification import ClassificationCreateAction
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
@@ -292,11 +291,6 @@ class Container(DeclarativeContainer):
     user_retrieve_action: Factory[UserRetrieveAction] = Factory(UserRetrieveAction, repository=user_repository)
     user_delete_action: Factory[UserDeleteAction] = Factory(UserDeleteAction, repository=user_repository)
     user_update_action: Factory[UserUpdateAction] = Factory(UserUpdateAction, repository=user_repository)
-
-    # Classification actions
-    classification_create_action: Factory[ClassificationCreateAction] = Factory(
-        ClassificationCreateAction, repository=classification_repository
-    )
 
     # Form actions
     form_list_action: Factory[FormListAction] = Factory(FormListAction, repository=form_repository)
