@@ -20,6 +20,7 @@ from meldingen.dependencies import (
     classification_delete_action,
     classification_list_action,
     classification_retrieve_action,
+    classification_update_action,
 )
 from meldingen.models import Classification
 from meldingen.repositories import ClassificationRepository
@@ -128,7 +129,7 @@ async def retrieve_classification(
 async def update_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
     classification_input: ClassificationInput,
-    action: ClassificationUpdateAction = Depends(Provide[Container.classification_update_action]),
+    action: Annotated[ClassificationUpdateAction, Depends(classification_update_action)],
 ) -> ClassificationOutput:
     classification_data = classification_input.model_dump(exclude_unset=True)
 
