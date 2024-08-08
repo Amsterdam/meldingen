@@ -318,9 +318,9 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_retrieve_classification(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classification: Classification
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=test_classification.id))
 
         assert response.status_code == HTTP_200_OK
 
