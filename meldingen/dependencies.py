@@ -5,7 +5,7 @@ from typing import Annotated, AsyncIterator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-from meldingen.actions import ClassificationDeleteAction
+from meldingen.actions import ClassificationDeleteAction, ClassificationRetrieveAction
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.repositories import ClassificationRepository
@@ -36,6 +36,12 @@ async def database_session(
 
 def classification_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> ClassificationRepository:
     return ClassificationRepository(session)
+
+
+def classification_retrieve_action(
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)]
+) -> ClassificationRetrieveAction:
+    return ClassificationRetrieveAction(repository)
 
 
 def classification_delete_action(
