@@ -194,6 +194,17 @@ async def classification_with_form(
 
 
 @pytest.fixture
+async def test_classification_with_form(db_session: AsyncSession) -> Classification:
+    classification = Classification("test_classification")
+    form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
+
+    db_session.add(form)
+    await db_session.commit()
+
+    return classification
+
+
+@pytest.fixture
 async def form_repository(container: Container) -> FormRepository:
     return await container.form_repository()
 
