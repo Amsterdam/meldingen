@@ -310,9 +310,6 @@ class Container(DeclarativeContainer):
     classification_update_action: Factory[ClassificationUpdateAction] = Factory(
         ClassificationUpdateAction, repository=classification_repository
     )
-    classification_delete_action: Factory[ClassificationDeleteAction] = Factory(
-        ClassificationDeleteAction, repository=classification_repository
-    )
 
     # Form actions
     form_list_action: Factory[FormListAction] = Factory(FormListAction, repository=form_repository)
