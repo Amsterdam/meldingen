@@ -1,4 +1,5 @@
-from dependency_injector.wiring import Provide, inject
+from typing import Annotated
+
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from jwt import ExpiredSignatureError, PyJWKClient, PyJWT
@@ -6,6 +7,7 @@ from sqlalchemy.exc import NoResultFound
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from meldingen.config import settings
+from meldingen.dependencies import jwks_client, py_jwt, user_repository
 from meldingen.models import User
 from meldingen.repositories import UserRepository
 
@@ -20,12 +22,11 @@ class UnauthenticatedException(HTTPException):
         super().__init__(status_code=HTTP_401_UNAUTHORIZED, detail=detail)
 
 
-@inject
-async def get_user(
-    token: str,
-    jwks_client: PyJWKClient = Provide["jwks_client"],
-    py_jwt: PyJWT = Provide["py_jwt"],
-    user_repository: UserRepository = Provide["user_repository"],
+async def authenticate_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    jwks_client: Annotated[PyJWKClient, Depends(jwks_client)],
+    py_jwt: Annotated[PyJWT, Depends(py_jwt)],
+    user_repository: Annotated[UserRepository, Depends(user_repository)],
 ) -> User:
     signing_key = jwks_client.get_signing_key_from_jwt(token)
 
@@ -42,7 +43,3 @@ async def get_user(
         return await user_repository.find_by_email(email)
     except NoResultFound:
         raise UnauthenticatedException("User not found")
-
-
-async def authenticate_user(token: str = Depends(oauth2_scheme)) -> User:
-    return await get_user(token)  # pragma: no cover
