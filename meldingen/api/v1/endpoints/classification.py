@@ -2,11 +2,11 @@ from typing import Annotated
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
-from meldingen_core.actions.classification import ClassificationCreateAction
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions import (
+    ClassificationCreateAction,
     ClassificationDeleteAction,
     ClassificationListAction,
     ClassificationRetrieveAction,
@@ -17,6 +17,7 @@ from meldingen.api.v1 import conflict_response, list_response, not_found_respons
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.dependencies import (
+    classification_create_action,
     classification_delete_action,
     classification_list_action,
     classification_retrieve_action,
@@ -39,7 +40,7 @@ router = APIRouter()
 @inject
 async def create_classification(
     classification_input: ClassificationInput,
-    action: ClassificationCreateAction = Depends(Provide[Container.classification_create_action]),
+    action: Annotated[ClassificationCreateAction, Depends(classification_create_action)],
 ) -> ClassificationOutput:
     db_model = Classification(**classification_input.model_dump())
 

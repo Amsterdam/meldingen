@@ -6,6 +6,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions import (
+    ClassificationCreateAction,
     ClassificationDeleteAction,
     ClassificationListAction,
     ClassificationRetrieveAction,
@@ -41,6 +42,12 @@ async def database_session(
 
 def classification_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> ClassificationRepository:
     return ClassificationRepository(session)
+
+
+def classification_create_action(
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)]
+) -> ClassificationCreateAction:
+    return ClassificationCreateAction(repository)
 
 
 def classification_retrieve_action(
