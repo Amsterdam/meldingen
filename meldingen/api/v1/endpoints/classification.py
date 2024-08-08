@@ -16,7 +16,11 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.dependencies import classification_delete_action, classification_retrieve_action
+from meldingen.dependencies import (
+    classification_delete_action,
+    classification_list_action,
+    classification_retrieve_action,
+)
 from meldingen.models import Classification
 from meldingen.repositories import ClassificationRepository
 from meldingen.schemas import ClassificationInput, ClassificationOutput
@@ -80,7 +84,7 @@ async def _hydrate_output(classification: Classification) -> ClassificationOutpu
 async def list_classifications(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
-    action: ClassificationListAction = Depends(Provide[Container.classification_list_action]),
+    action: Annotated[ClassificationListAction, Depends(classification_list_action)],
 ) -> list[ClassificationOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
