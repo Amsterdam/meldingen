@@ -373,10 +373,10 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_update_classification(
-        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
+        self, app: FastAPI, client: AsyncClient, test_classification: Classification, auth_user: None
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"name": "bladiebla"}
+            app.url_path_for(self.ROUTE_NAME, classification_id=test_classification.id), json={"name": "bladiebla"}
         )
 
         assert response.status_code == HTTP_200_OK
@@ -403,7 +403,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     async def test_update_classification_duplicate_name(
-        self, app: FastAPI, client: AsyncClient, classifications: list[Classification], auth_user: None
+        self, app: FastAPI, client: AsyncClient, test_classifications: list[Classification], auth_user: None
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "category: 2"}
@@ -418,13 +418,13 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     async def test_update_classification_with_form(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classification_with_form: Classification
     ) -> None:
         response = await client.patch(app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "new_name"})
 
         assert response.status_code == HTTP_200_OK
 
-        form = await classification_with_form.awaitable_attrs.form
+        form = await test_classification_with_form.awaitable_attrs.form
 
         body = response.json()
         assert body.get("name") == "new_name"
