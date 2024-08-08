@@ -172,18 +172,7 @@ async def test_classification(db_session: AsyncSession, classification_name: str
 
 
 @pytest.fixture
-async def classifications(classification_repository: ClassificationRepository) -> list[Classification]:
-    classifications = []
-    for n in range(10):
-        classification = Classification(f"category: {n}")
-        await classification_repository.save(classification)
-        classifications.append(classification)
-
-    return classifications
-
-
-@pytest.fixture
-async def test_classifications(db_session: AsyncSession) -> list[Classification]:
+async def classifications(db_session: AsyncSession) -> list[Classification]:
     classifications = []
     for n in range(10):
         classification = Classification(f"category: {n}")
@@ -196,19 +185,7 @@ async def test_classifications(db_session: AsyncSession) -> list[Classification]
 
 
 @pytest.fixture
-async def classification_with_form(
-    classification_repository: ClassificationRepository, form_repository: FormRepository
-) -> Classification:
-    classification = Classification("test_classification")
-    await classification_repository.save(classification)
-    form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
-    await form_repository.save(form)
-
-    return classification
-
-
-@pytest.fixture
-async def test_classification_with_form(db_session: AsyncSession) -> Classification:
+async def classification_with_form(db_session: AsyncSession) -> Classification:
     classification = Classification("test_classification")
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
 
