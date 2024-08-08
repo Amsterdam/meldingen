@@ -7,6 +7,7 @@ from meldingen.schemas import (
     FormCheckboxComponentInput,
     FormPanelComponentInput,
     FormRadioComponentInput,
+    FormSelectComponentInput,
     FormTextAreaComponentInput,
     FormTextFieldComponentInput,
     component_discriminator,
@@ -65,3 +66,13 @@ def test_component_discriminator_checkbox() -> None:
     result = component_discriminator(
         FormCheckboxComponentInput(label="abc", description="abc", key="abc", input=True, values=[])
     )
+
+    assert result == FormIoComponentTypeEnum.checkbox
+
+
+def test_component_discriminator_select() -> None:
+    result = component_discriminator(
+        FormSelectComponentInput(label="abc", description="abc", key="abc", input=True, data={"values": []})
+    )
+
+    assert result == FormIoComponentTypeEnum.select
