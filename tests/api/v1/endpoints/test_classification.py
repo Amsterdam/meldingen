@@ -60,7 +60,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_create_classification_duplicate_name(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classification: Classification
     ) -> None:
         response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
 
