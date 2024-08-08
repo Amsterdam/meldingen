@@ -172,18 +172,7 @@ async def test_classification(db_session: AsyncSession, classification_name: str
 
 
 @pytest.fixture
-async def classifications(classification_repository: ClassificationRepository) -> list[Classification]:
-    classifications = []
-    for n in range(10):
-        classification = Classification(f"category: {n}")
-        await classification_repository.save(classification)
-        classifications.append(classification)
-
-    return classifications
-
-
-@pytest.fixture
-async def test_classifications(db_session: AsyncSession) -> list[Classification]:
+async def classifications(db_session: AsyncSession) -> list[Classification]:
     classifications = []
     for n in range(10):
         classification = Classification(f"category: {n}")
