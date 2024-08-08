@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from meldingen_core.exceptions import NotFoundException
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from meldingen.authentication import authenticate_user
@@ -182,6 +183,19 @@ async def classifications(classification_repository: ClassificationRepository) -
 
 
 @pytest.fixture
+async def test_classifications(db_session: AsyncSession) -> list[Classification]:
+    classifications = []
+    for n in range(10):
+        classification = Classification(f"category: {n}")
+        db_session.add(classification)
+        classifications.append(classification)
+
+    await db_session.commit()
+
+    return classifications
+
+
+@pytest.fixture
 async def classification_with_form(
     classification_repository: ClassificationRepository, form_repository: FormRepository
 ) -> Classification:
@@ -305,6 +319,53 @@ async def form_with_classification(
 
     form.classification = classification
     await form_repository.save(form)
+
+    return form
+
+
+@pytest.fixture
+async def test_form_with_classification(db_session: AsyncSession, form_title: str) -> Form:
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
+
+    panel = FormIoPanelComponent(
+        label="Page 1",
+        key="page1",
+        input=False,
+        type=FormIoComponentTypeEnum.panel,
+    )
+
+    component = FormIoTextAreaComponent(
+        label="Wat is uw klacht?",
+        description="",
+        key="wat-is-uw_klacht",
+        type=FormIoComponentTypeEnum.text_area,
+        input=True,
+        auto_expand=True,
+        show_char_count=True,
+    )
+
+    panel_components = await panel.awaitable_attrs.components
+    panel_components.append(component)
+
+    components = await form.awaitable_attrs.components
+    components.append(panel)
+
+    question = Question(text=component.description, form=form)
+
+    db_session.add(question)
+
+    component.question = question
+
+    result = await db_session.execute(select(Classification).where(Classification.name == "test_classification"))
+    classification = result.scalars().one_or_none()
+    if classification is None:
+        classification = Classification("test_classification")
+        db_session.add(classification)
+
+    form.classification = classification
+    db_session.add(form)
+
+    await db_session.commit()
 
     return form
 

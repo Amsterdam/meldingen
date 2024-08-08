@@ -84,7 +84,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_all_classifications(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classifications: list[Classification]
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
@@ -92,7 +92,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
 
-        assert len(data) == len(classifications)
+        assert len(data) == len(test_classifications)
 
         assert response.headers.get("content-range") == "classification 0-49/10"
 
@@ -109,7 +109,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         limit: int,
         offset: int,
         expected: int,
-        classifications: list[Classification],
+        test_classifications: list[Classification],
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
@@ -198,7 +198,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
-        classifications: list[Classification],
+        test_classifications: list[Classification],
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
@@ -251,7 +251,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
-        classifications: list[Classification],
+        test_classifications: list[Classification],
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME),
@@ -273,7 +273,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_classification_with_form(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_form_with_classification: Form
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
@@ -281,11 +281,11 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         body = response.json()
         assert len(body) == 1
-        assert body[0].get("form") == form_with_classification.id
+        assert body[0].get("form") == test_form_with_classification.id
 
     @pytest.mark.anyio
     async def test_list_classifications_sort_on_relationship(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_form_with_classification: Form
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"sort": '["form", "ASC"]'})
 
