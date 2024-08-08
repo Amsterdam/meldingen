@@ -84,7 +84,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_all_classifications(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classifications: list[Classification]
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
@@ -92,7 +92,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
 
-        assert len(data) == len(classifications)
+        assert len(data) == len(test_classifications)
 
         assert response.headers.get("content-range") == "classification 0-49/10"
 
@@ -109,7 +109,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         limit: int,
         offset: int,
         expected: int,
-        classifications: list[Classification],
+        test_classifications: list[Classification],
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
@@ -198,7 +198,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
-        classifications: list[Classification],
+        test_classifications: list[Classification],
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
@@ -251,7 +251,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
-        classifications: list[Classification],
+        test_classifications: list[Classification],
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME),

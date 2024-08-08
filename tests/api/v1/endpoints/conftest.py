@@ -182,6 +182,19 @@ async def classifications(classification_repository: ClassificationRepository) -
 
 
 @pytest.fixture
+async def test_classifications(db_session: AsyncSession) -> list[Classification]:
+    classifications = []
+    for n in range(10):
+        classification = Classification(f"category: {n}")
+        db_session.add(classification)
+        classifications.append(classification)
+
+    await db_session.commit()
+
+    return classifications
+
+
+@pytest.fixture
 async def classification_with_form(
     classification_repository: ClassificationRepository, form_repository: FormRepository
 ) -> Classification:
