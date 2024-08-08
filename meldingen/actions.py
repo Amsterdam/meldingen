@@ -6,6 +6,7 @@ from meldingen_core.actions.attachment import UploadAttachmentAction as BaseUplo
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction
 from meldingen_core.actions.base import BaseListAction as BaseCoreListAction
 from meldingen_core.actions.base import BaseRetrieveAction
+from meldingen_core.actions.classification import ClassificationCreateAction as BaseClassificationCreateAction
 from meldingen_core.actions.classification import ClassificationDeleteAction as BaseClassificationDeleteAction
 from meldingen_core.actions.classification import ClassificationListAction as BaseClassificationListAction
 from meldingen_core.actions.classification import ClassificationRetrieveAction as BaseClassificationRetrieveAction
@@ -27,7 +28,6 @@ from meldingen.models import (
     Classification,
     Form,
     FormIoCheckBoxComponent,
-    FormIoComponent,
     FormIoComponentTypeEnum,
     FormIoComponentValue,
     FormIoPanelComponent,
@@ -97,6 +97,9 @@ class MeldingRetrieveAction(BaseMeldingRetrieveAction[Melding, Melding]): ...
 class ClassificationListAction(
     BaseClassificationListAction[Classification, Classification], BaseListAction[Classification, Classification]
 ): ...
+
+
+class ClassificationCreateAction(BaseClassificationCreateAction[Classification, Classification]): ...
 
 
 class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classification, Classification]): ...
