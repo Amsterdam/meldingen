@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from dependency_injector.wiring import Provide, inject
+from dependency_injector.wiring import inject
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
@@ -15,11 +15,11 @@ from meldingen.actions import (
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
-from meldingen.containers import Container
 from meldingen.dependencies import (
     classification_create_action,
     classification_delete_action,
     classification_list_action,
+    classification_repository,
     classification_retrieve_action,
     classification_update_action,
 )
@@ -55,7 +55,7 @@ async def create_classification(
 async def _add_content_range_header(
     response: Response,
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
-    repo: ClassificationRepository = Depends(Provide[Container.classification_repository]),
+    repo: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> None:
     await ContentRangeHeaderAdder(repo, "classification")(response, pagination)
 
