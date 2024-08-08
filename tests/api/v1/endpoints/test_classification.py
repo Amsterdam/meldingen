@@ -344,16 +344,14 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     async def test_retrieve_classification_with_form(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classification_with_form: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
     ) -> None:
-        response = await client.get(
-            app.url_path_for(self.ROUTE_NAME, classification_id=test_classification_with_form.id)
-        )
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification_with_form.id))
 
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("form") == test_classification_with_form.id
+        assert body.get("form") == classification_with_form.id
 
 
 class TestClassificationUpdate(BaseUnauthorizedTest):
@@ -418,13 +416,13 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     async def test_update_classification_with_form(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classification_with_form: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
     ) -> None:
         response = await client.patch(app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "new_name"})
 
         assert response.status_code == HTTP_200_OK
 
-        form = await test_classification_with_form.awaitable_attrs.form
+        form = await classification_with_form.awaitable_attrs.form
 
         body = response.json()
         assert body.get("name") == "new_name"
