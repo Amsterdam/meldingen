@@ -24,7 +24,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from meldingen.actions import (
     AnswerCreateAction,
-    ClassificationUpdateAction,
     FormCreateAction,
     FormDeleteAction,
     FormListAction,
@@ -297,9 +296,6 @@ class Container(DeclarativeContainer):
     # Classification actions
     classification_create_action: Factory[ClassificationCreateAction] = Factory(
         ClassificationCreateAction, repository=classification_repository
-    )
-    classification_update_action: Factory[ClassificationUpdateAction] = Factory(
-        ClassificationUpdateAction, repository=classification_repository
     )
 
     # Form actions
