@@ -6,6 +6,7 @@ from meldingen_core.actions.attachment import UploadAttachmentAction as BaseUplo
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction
 from meldingen_core.actions.base import BaseListAction as BaseCoreListAction
 from meldingen_core.actions.base import BaseRetrieveAction
+from meldingen_core.actions.classification import ClassificationDeleteAction as BaseClassificationDeleteAction
 from meldingen_core.actions.classification import ClassificationListAction as BaseClassificationListAction
 from meldingen_core.actions.classification import ClassificationRetrieveAction as BaseClassificationRetrieveAction
 from meldingen_core.actions.classification import ClassificationUpdateAction as BaseClassificationUpdateAction
@@ -102,6 +103,9 @@ class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classificati
 
 
 class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, Classification]): ...
+
+
+class ClassificationDeleteAction(BaseClassificationDeleteAction[Classification, Classification]): ...
 
 
 class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):

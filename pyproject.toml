@@ -79,5 +79,6 @@ baseline_path = "mypy-baseline.txt"
 concurrency = ["greenlet"]
 omit = [
   "tests/*",
-  "migrations/env.py"
+  "migrations/env.py",
+  "meldingen/dependencies.py"
 ]
