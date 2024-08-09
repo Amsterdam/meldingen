@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import Annotated, AsyncIterator
 
 from fastapi import Depends
+from jwt import PyJWKClient, PyJWT
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions import (
@@ -14,7 +15,7 @@ from meldingen.actions import (
 )
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
-from meldingen.repositories import ClassificationRepository
+from meldingen.repositories import ClassificationRepository, UserRepository
 
 
 @lru_cache
@@ -72,3 +73,15 @@ def classification_update_action(
     repository: Annotated[ClassificationRepository, Depends(classification_repository)]
 ) -> ClassificationUpdateAction:
     return ClassificationUpdateAction(repository)
+
+
+def user_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> UserRepository:
+    return UserRepository(session)
+
+
+def jwks_client() -> PyJWKClient:
+    return PyJWKClient(settings.jwks_url)
+
+
+def py_jwt() -> PyJWT:
+    return PyJWT()

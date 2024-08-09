@@ -7,7 +7,6 @@ from dependency_injector import containers
 from dependency_injector.providers import Object, Resource
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from jwt import PyJWKClient, PyJWT
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy import NullPool
@@ -53,16 +52,6 @@ async def test_database(alembic_engine: AsyncEngine) -> None:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
     async with alembic_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.create_all)
-
-
-@pytest.fixture
-def jwks_client_mock() -> PyJWKClient:
-    return Mock(PyJWKClient)
-
-
-@pytest.fixture
-def py_jwt_mock() -> PyJWT:
-    return Mock(PyJWT)
 
 
 @pytest.fixture
@@ -117,7 +106,7 @@ async def test_users(user_repository: UserRepository) -> list[User]:
 
 
 @pytest.fixture
-def container(alembic_engine: AsyncEngine, jwks_client_mock: PyJWKClient, py_jwt_mock: PyJWT) -> Container:
+def container(alembic_engine: AsyncEngine) -> Container:
     async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
         async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
         async with async_session() as session:
@@ -133,8 +122,6 @@ def container(alembic_engine: AsyncEngine, jwks_client_mock: PyJWKClient, py_jwt
     class TestContainer(containers.DeclarativeContainer):
         database_engine: Object[AsyncEngine] = Object(alembic_engine)
         database_session: Resource[AsyncSession] = Resource(get_database_session, engine=database_engine)
-        jwks_client: Object[PyJWKClient] = Object(jwks_client_mock)
-        py_jwt: Object[PyJWT] = Object(py_jwt_mock)
 
     return get_container()
 

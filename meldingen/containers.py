@@ -3,7 +3,6 @@ from typing import AsyncGenerator
 
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
-from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
@@ -339,7 +338,3 @@ class Container(DeclarativeContainer):
         token_verifier=token_verifier,
         base_directory=settings.attachment_storage_base_directory,
     )
-
-    # authentication
-    py_jwt: Singleton[PyJWT] = Singleton(PyJWT)
-    jwks_client: Singleton[PyJWKClient] = Singleton(PyJWKClient, uri=settings.jwks_url)
