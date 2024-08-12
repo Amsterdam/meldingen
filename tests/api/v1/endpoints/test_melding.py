@@ -410,7 +410,7 @@ class TestMeldingAnswerQuestions:
         [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken")],
         indirect=True,
     )
-    async def test_answer_questions(self, app: FastAPI, client: AsyncClient, test_melding: Melding) -> None:
+    async def test_answer_questions(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
             app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
         )
@@ -420,8 +420,8 @@ class TestMeldingAnswerQuestions:
         body = response.json()
 
         assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
-        assert body.get("created_at") == test_melding.created_at.isoformat()
-        assert body.get("updated_at") == test_melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.isoformat()
+        assert body.get("updated_at") == melding.updated_at.isoformat()
 
     @pytest.mark.anyio
     async def test_answer_questions_not_found(self, app: FastAPI, client: AsyncClient) -> None:
@@ -432,9 +432,7 @@ class TestMeldingAnswerQuestions:
         assert response.status_code == HTTP_404_NOT_FOUND
 
     @pytest.mark.anyio
-    async def test_answer_questions_token_invalid(
-        self, app: FastAPI, client: AsyncClient, test_melding: Melding
-    ) -> None:
+    async def test_answer_questions_token_invalid(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
             app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
         )
@@ -447,9 +445,7 @@ class TestMeldingAnswerQuestions:
         [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken", "PT1H")],
         indirect=True,
     )
-    async def test_answer_questions_token_expired(
-        self, app: FastAPI, client: AsyncClient, test_melding: Melding
-    ) -> None:
+    async def test_answer_questions_token_expired(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
             app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
         )
@@ -462,7 +458,7 @@ class TestMeldingAnswerQuestions:
         [("De restafvalcontainer is vol.", MeldingStates.PROCESSING, "supersecrettoken")],
         indirect=True,
     )
-    async def test_answer_questions_wrong_state(self, app: FastAPI, client: AsyncClient, test_melding: Melding) -> None:
+    async def test_answer_questions_wrong_state(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
             app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
         )
@@ -486,9 +482,7 @@ class TestMeldingProcess(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
-    async def test_process_melding(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
-    ) -> None:
+    async def test_process_melding(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
         response = await client.request(
             self.get_method(), app.url_path_for(self.get_route_name(), **self.get_path_params())
         )
@@ -498,13 +492,13 @@ class TestMeldingProcess(BaseUnauthorizedTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.PROCESSING
-        assert body.get("created_at") == test_melding.created_at.isoformat()
-        assert body.get("updated_at") == test_melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.isoformat()
+        assert body.get("updated_at") == melding.updated_at.isoformat()
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
     async def test_process_melding_not_found(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
     ) -> None:
         response = await client.request(self.get_method(), app.url_path_for(self.get_route_name(), melding_id=404))
 
@@ -519,7 +513,7 @@ class TestMeldingProcess(BaseUnauthorizedTest):
         ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.COMPLETED)], indirect=True
     )
     async def test_process_melding_wrong_state(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
     ) -> None:
         response = await client.request(
             self.get_method(), app.url_path_for(self.get_route_name(), **self.get_path_params())
@@ -546,9 +540,7 @@ class TestMeldingComplete(BaseUnauthorizedTest):
     @pytest.mark.parametrize(
         ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.PROCESSING)], indirect=True
     )
-    async def test_complete_melding(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
-    ) -> None:
+    async def test_complete_melding(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
         response = await client.request(
             self.get_method(), app.url_path_for(self.get_route_name(), **self.get_path_params())
         )
@@ -558,13 +550,13 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.COMPLETED
-        assert body.get("created_at") == test_melding.created_at.isoformat()
-        assert body.get("updated_at") == test_melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.isoformat()
+        assert body.get("updated_at") == melding.updated_at.isoformat()
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
     async def test_complete_melding_not_found(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
     ) -> None:
         response = await client.request(self.get_method(), app.url_path_for(self.get_route_name(), melding_id=404))
 
@@ -579,7 +571,7 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.COMPLETED)], indirect=True
     )
     async def test_complete_melding_wrong_state(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
     ) -> None:
         response = await client.request(
             self.get_method(), app.url_path_for(self.get_route_name(), **self.get_path_params())
