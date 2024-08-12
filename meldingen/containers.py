@@ -11,7 +11,6 @@ from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.actions import (
-    AnswerCreateAction,
     FormCreateAction,
     FormDeleteAction,
     FormListAction,
@@ -28,7 +27,6 @@ from meldingen.actions import (
 from meldingen.factories import AttachmentFactory
 from meldingen.models import Melding
 from meldingen.repositories import (
-    AnswerRepository,
     AttachmentRepository,
     ClassificationRepository,
     FormRepository,
@@ -116,7 +114,6 @@ class Container(DeclarativeContainer):
     form_repository: Factory[FormRepository] = Factory(FormRepository, session=database_session)
     static_form_repository: Factory[StaticFormRepository] = Factory(StaticFormRepository, session=database_session)
     question_repository: Factory[QuestionRepository] = Factory(QuestionRepository, session=database_session)
-    answer_repository: Factory[AnswerRepository] = Factory(AnswerRepository, session=database_session)
     attachment_repository: Factory[AttachmentRepository] = Factory(AttachmentRepository, session=database_session)
 
     # token
@@ -216,15 +213,6 @@ class Container(DeclarativeContainer):
     )
     static_form_update_action: Factory[StaticFormUpdateAction] = Factory(
         StaticFormUpdateAction, repository=static_form_repository
-    )
-
-    # Answer actions
-    answer_create_action: Factory[AnswerCreateAction] = Factory(
-        AnswerCreateAction,
-        repository=answer_repository,
-        token_verifier=token_verifier,
-        melding_repository=melding_repository,
-        question_repository=question_repository,
     )
 
     # Attachment actions
