@@ -14,6 +14,8 @@ from meldingen_core.actions.melding import (
 from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
+from plugfs.filesystem import Adapter, Filesystem
+from plugfs.local import LocalAdapter
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions import (
@@ -25,13 +27,16 @@ from meldingen.actions import (
     ClassificationUpdateAction,
     MeldingListAction,
     MeldingRetrieveAction,
+    UploadAttachmentAction,
 )
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
+from meldingen.factories import AttachmentFactory
 from meldingen.models import Melding
 from meldingen.repositories import (
     AnswerRepository,
+    AttachmentRepository,
     ClassificationRepository,
     MeldingRepository,
     QuestionRepository,
@@ -122,6 +127,10 @@ def question_repository(session: Annotated[AsyncSession, Depends(database_sessio
     return QuestionRepository(session)
 
 
+def attachment_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> AttachmentRepository:
+    return AttachmentRepository(session)
+
+
 def classifier(repository: Annotated[ClassificationRepository, Depends(classification_repository)]) -> Classifier:
     return Classifier(DummyClassifierAdapter(), repository)
 
@@ -132,6 +141,10 @@ def token_generator() -> BaseTokenGenerator:
 
 def token_verifier() -> TokenVerifier[Melding]:
     return TokenVerifier()
+
+
+def attachment_factory() -> AttachmentFactory:
+    return AttachmentFactory()
 
 
 def melding_state_machine() -> MeldingStateMachine:
@@ -204,6 +217,31 @@ def melding_answer_create_action(
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
 ) -> AnswerCreateAction:
     return AnswerCreateAction(answer_repository, token_verifier, melding_repository, question_repository)
+
+
+def filesystem_adapter() -> Adapter:
+    return LocalAdapter()
+
+
+def filesystem(adapter: Annotated[Adapter, Depends(filesystem_adapter)]) -> Filesystem:
+    return Filesystem(adapter)
+
+
+def melding_upload_attachment_action(
+    factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
+    repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+) -> UploadAttachmentAction:
+    return UploadAttachmentAction(
+        factory,
+        repository,
+        melding_repository,
+        filesystem,
+        token_verifier,
+        str(settings.attachment_storage_base_directory),
+    )
 
 
 def jwks_client() -> PyJWKClient:

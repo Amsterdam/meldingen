@@ -1,7 +1,6 @@
 from typing import Annotated
 
 import structlog
-from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
@@ -33,7 +32,6 @@ from meldingen.api.v1 import (
     unauthorized_response,
 )
 from meldingen.authentication import authenticate_user
-from meldingen.containers import Container
 from meldingen.dependencies import (
     melding_answer_create_action,
     melding_answer_questions_action,
@@ -41,8 +39,10 @@ from meldingen.dependencies import (
     melding_create_action,
     melding_list_action,
     melding_process_action,
+    melding_repository,
     melding_retrieve_action,
     melding_update_action,
+    melding_upload_attachment_action,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
@@ -72,7 +72,6 @@ def _hydrate_output(melding: Melding) -> MeldingOutput:
 
 
 @router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
-@inject
 async def create_melding(
     melding_input: MeldingInput,
     action: Annotated[MeldingCreateAction[Melding, Melding], Depends(melding_create_action)],
@@ -92,11 +91,10 @@ async def create_melding(
     )
 
 
-@inject
 async def _add_content_range_header(
     response: Response,
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
-    repo: MeldingRepository = Depends(Provide[Container.melding_repository]),
+    repo: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> None:
     await ContentRangeHeaderAdder(repo, "melding")(response, pagination)
 
@@ -107,7 +105,6 @@ async def _add_content_range_header(
     responses={**list_response, **unauthorized_response},
     dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
 )
-@inject
 async def list_meldingen(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
@@ -132,7 +129,6 @@ async def list_meldingen(
     responses={**unauthorized_response, **not_found_response},
     dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def retrieve_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[MeldingRetrieveAction, Depends(melding_retrieve_action)],
@@ -151,7 +147,6 @@ async def retrieve_melding(
     status_code=HTTP_200_OK,
     responses={**unauthorized_response, **not_found_response},
 )
-@inject
 async def update_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
@@ -181,7 +176,6 @@ async def update_melding(
         **default_response,
     },
 )
-@inject
 async def answer_questions(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
@@ -301,12 +295,11 @@ async def answer_additional_question(
         **unauthorized_response,
     },
 )
-@inject
 async def upload_attachment(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     file: UploadFile,
-    action: UploadAttachmentAction = Depends(Provide(Container.upload_attachment_action)),
+    action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action)],
 ) -> AttachmentOutput:
     # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
     # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
