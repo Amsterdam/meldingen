@@ -34,6 +34,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
+from meldingen.dependencies import melding_retrieve_action
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
@@ -126,7 +127,7 @@ async def list_meldingen(
 @inject
 async def retrieve_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    action: MeldingRetrieveAction = Depends(Provide(Container.melding_retrieve_action)),
+    action: Annotated[MeldingRetrieveAction, Depends(melding_retrieve_action)],
 ) -> MeldingOutput:
     melding = await action(pk=melding_id)
 

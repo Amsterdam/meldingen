@@ -12,6 +12,7 @@ from meldingen.actions import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    MeldingRetrieveAction,
 )
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
@@ -81,6 +82,12 @@ def user_repository(session: Annotated[AsyncSession, Depends(database_session)])
 
 def melding_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> MeldingRepository:
     return MeldingRepository(session)
+
+
+def melding_retrieve_action(
+    repository: Annotated[MeldingRepository, Depends(melding_repository)]
+) -> MeldingRetrieveAction:
+    return MeldingRetrieveAction(repository)
 
 
 def jwks_client() -> PyJWKClient:
