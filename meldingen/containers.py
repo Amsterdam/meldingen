@@ -28,7 +28,6 @@ from meldingen.actions import (
     FormRetrieveAction,
     FormRetrieveByClassificationAction,
     FormUpdateAction,
-    MeldingListAction,
     StaticFormRetrieveByTypeAction,
     StaticFormUpdateAction,
     UploadAttachmentAction,
@@ -259,7 +258,6 @@ class Container(DeclarativeContainer):
         token_generator=token_generator,
         token_duration=settings.token_duration,
     )
-    melding_list_action: Factory[MeldingListAction] = Factory(MeldingListAction, repository=melding_repository)
     melding_update_action: Factory[MeldingUpdateAction[Melding, Melding]] = Factory(
         MeldingUpdateAction,
         repository=melding_repository,
