@@ -235,7 +235,12 @@ def melding_upload_attachment_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> UploadAttachmentAction:
     return UploadAttachmentAction(
-        factory, repository, melding_repository, filesystem, token_verifier, settings.attachment_storage_base_directory
+        factory,
+        repository,
+        melding_repository,
+        filesystem,
+        token_verifier,
+        str(settings.attachment_storage_base_directory),
     )
 
 
