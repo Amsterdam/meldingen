@@ -821,10 +821,10 @@ class TestMeldingUploadAttachment:
         ["melding_text", "melding_state", "melding_token"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
     )
-    async def test_upload_attachment(self, app: FastAPI, client: AsyncClient, test_melding: Melding) -> None:
+    async def test_upload_attachment(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id),
-            params={"token": test_melding.token},
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
+            params={"token": melding.token},
             files={
                 "file": open(
                     path.join(
@@ -842,7 +842,7 @@ class TestMeldingUploadAttachment:
 
         assert response.status_code == HTTP_200_OK
 
-        attachments = await test_melding.awaitable_attrs.attachments
+        attachments = await melding.awaitable_attrs.attachments
         assert len(attachments) == 1
 
         assert path.exists(attachments[0].file_path)
@@ -876,11 +876,9 @@ class TestMeldingUploadAttachment:
         ["melding_text", "melding_state", "melding_token"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
     )
-    async def test_upload_attachment_token_missing(
-        self, app: FastAPI, client: AsyncClient, test_melding: Melding
-    ) -> None:
+    async def test_upload_attachment_token_missing(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             files={
                 "file": open(
                     path.join(
@@ -908,10 +906,10 @@ class TestMeldingUploadAttachment:
 
     @pytest.mark.anyio
     async def test_upload_attachment_unauthorized_token_invalid(
-        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+        self, app: FastAPI, client: AsyncClient, melding: Melding
     ) -> None:
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             files={
                 "file": open(
@@ -937,10 +935,10 @@ class TestMeldingUploadAttachment:
         indirect=True,
     )
     async def test_upload_attachment_unauthorized_token_expired(
-        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+        self, app: FastAPI, client: AsyncClient, melding: Melding
     ) -> None:
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             files={
                 "file": open(

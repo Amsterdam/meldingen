@@ -23,18 +23,7 @@ from meldingen.models import (
     StaticFormTypeEnum,
     User,
 )
-from meldingen.repositories import (
-    ClassificationRepository,
-    FormRepository,
-    MeldingRepository,
-    QuestionRepository,
-    StaticFormRepository,
-)
-
-
-@pytest.fixture
-async def melding_repository(container: Container) -> MeldingRepository:
-    return await container.melding_repository()
+from meldingen.repositories import ClassificationRepository, FormRepository, QuestionRepository, StaticFormRepository
 
 
 @pytest.fixture
@@ -70,31 +59,6 @@ def melding_token_expires(request: FixtureRequest) -> datetime | None:
         return datetime.now() - timedelta_adapter.validate_python(request.param)
 
     return None
-
-
-@pytest.fixture
-async def test_melding(
-    melding_repository: MeldingRepository,
-    melding_text: str,
-    melding_state: str | None,
-    melding_token: str | None,
-    melding_token_expires: datetime | None,
-) -> Melding:
-    """Fixture providing a single test melding instance."""
-
-    melding = Melding(text=melding_text)
-    if melding_state is not None:
-        melding.state = melding_state
-
-    if melding_token is not None:
-        melding.token = melding_token
-
-    if melding_token_expires is not None:
-        melding.token_expires = melding_token_expires
-
-    await melding_repository.save(melding)
-
-    return melding
 
 
 @pytest.fixture
