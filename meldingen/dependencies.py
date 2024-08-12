@@ -17,6 +17,7 @@ from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions import (
+    AnswerCreateAction,
     ClassificationCreateAction,
     ClassificationDeleteAction,
     ClassificationListAction,
@@ -29,7 +30,13 @@ from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.models import Melding
-from meldingen.repositories import ClassificationRepository, MeldingRepository, UserRepository
+from meldingen.repositories import (
+    AnswerRepository,
+    ClassificationRepository,
+    MeldingRepository,
+    QuestionRepository,
+    UserRepository,
+)
 from meldingen.statemachine import (
     AnswerQuestions,
     Classify,
@@ -107,6 +114,14 @@ def melding_repository(session: Annotated[AsyncSession, Depends(database_session
     return MeldingRepository(session)
 
 
+def answer_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> AnswerRepository:
+    return AnswerRepository(session)
+
+
+def question_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> QuestionRepository:
+    return QuestionRepository(session)
+
+
 def classifier(repository: Annotated[ClassificationRepository, Depends(classification_repository)]) -> Classifier:
     return Classifier(DummyClassifierAdapter(), repository)
 
@@ -180,6 +195,15 @@ def melding_complete_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingCompleteAction[Melding, Melding]:
     return MeldingCompleteAction(state_machine, repository)
+
+
+def melding_answer_create_action(
+    answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    question_repository: Annotated[QuestionRepository, Depends(question_repository)],
+) -> AnswerCreateAction:
+    return AnswerCreateAction(answer_repository, token_verifier, melding_repository, question_repository)
 
 
 def jwks_client() -> PyJWKClient:

@@ -35,6 +35,7 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.dependencies import (
+    melding_answer_create_action,
     melding_answer_questions_action,
     melding_complete_action,
     melding_create_action,
@@ -273,13 +274,12 @@ async def complete_melding(
         },
     },
 )
-@inject
 async def answer_additional_question(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     question_id: Annotated[int, Path(description="The id of the question.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     answer_input: AnswerInput,
-    action: AnswerCreateAction = Depends(Provide(Container.answer_create_action)),
+    action: Annotated[AnswerCreateAction, Depends(melding_answer_create_action)],
 ) -> AnswerOutput:
     try:
         answer = await action(melding_id, token, question_id, answer_input)
