@@ -38,6 +38,7 @@ from meldingen.dependencies import (
     melding_answer_questions_action,
     melding_create_action,
     melding_list_action,
+    melding_process_action,
     melding_retrieve_action,
     melding_update_action,
 )
@@ -205,12 +206,11 @@ async def answer_questions(
         **not_found_response,
         **default_response,
     },
+    dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def process_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    user: Annotated[User, Depends(authenticate_user)],
-    action: MeldingProcessAction[Melding, Melding] = Depends(Provide(Container.melding_process_action)),
+    action: Annotated[MeldingProcessAction[Melding, Melding], Depends(melding_process_action)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id)
