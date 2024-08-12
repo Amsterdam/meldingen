@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from meldingen_core import SortingDirection
 from meldingen_core.statemachine import MeldingStates
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -18,7 +19,6 @@ from starlette.status import (
 )
 
 from meldingen.models import Classification, Form, Melding, Question
-from meldingen.repositories import QuestionRepository
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -599,10 +599,10 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        test_melding_with_classification: Melding,
-        form_with_classification: Form,
+        melding_with_classification: Melding,
+        test_form_with_classification: Form,
     ) -> None:
-        components = await form_with_classification.awaitable_attrs.components
+        components = await test_form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -616,7 +616,7 @@ class TestMeldingQuestionAnswer:
 
         response = await client.post(
             app.url_path_for(
-                self.ROUTE_NAME_CREATE, melding_id=test_melding_with_classification.id, question_id=question.id
+                self.ROUTE_NAME_CREATE, melding_id=melding_with_classification.id, question_id=question.id
             ),
             params={"token": "supersecuretoken"},
             json=data,
@@ -634,9 +634,9 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        form_with_classification: Form,
+        test_form_with_classification: Form,
     ) -> None:
-        components = await form_with_classification.awaitable_attrs.components
+        components = await test_form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -664,10 +664,10 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        test_melding: Melding,
-        form_with_classification: Form,
+        melding: Melding,
+        test_form_with_classification: Form,
     ) -> None:
-        components = await form_with_classification.awaitable_attrs.components
+        components = await test_form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -680,7 +680,7 @@ class TestMeldingQuestionAnswer:
         data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id, question_id=question.id),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
             params={"token": "supersecuretoken"},
             json=data,
         )
@@ -692,10 +692,10 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        test_melding: Melding,
-        form_with_classification: Form,
+        melding: Melding,
+        test_form_with_classification: Form,
     ) -> None:
-        components = await form_with_classification.awaitable_attrs.components
+        components = await test_form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -708,7 +708,7 @@ class TestMeldingQuestionAnswer:
         data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id, question_id=question.id),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
             json=data,
         )
 
@@ -731,10 +731,10 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        test_melding: Melding,
-        form_with_classification: Form,
+        melding: Melding,
+        test_form_with_classification: Form,
     ) -> None:
-        components = await form_with_classification.awaitable_attrs.components
+        components = await test_form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -747,7 +747,7 @@ class TestMeldingQuestionAnswer:
         data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id, question_id=question.id),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
             params={"token": "supersecuretoken"},
             json=data,
         )
@@ -763,12 +763,12 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        test_melding: Melding,
+        melding: Melding,
     ) -> None:
         data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=test_melding.id, question_id=999),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=999),
             params={"token": "supersecuretoken"},
             json=data,
         )
@@ -790,17 +790,18 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        test_melding_with_classification: Melding,
-        question_repository: QuestionRepository,
+        melding_with_classification: Melding,
+        db_session: AsyncSession,
     ) -> None:
         question = Question(text="is dit een vraag?")
-        await question_repository.save(question)
+        db_session.add(question)
+        await db_session.commit()
 
         data = {"text": "Ja, dit is een vraag"}
 
         response = await client.post(
             app.url_path_for(
-                self.ROUTE_NAME_CREATE, melding_id=test_melding_with_classification.id, question_id=question.id
+                self.ROUTE_NAME_CREATE, melding_id=melding_with_classification.id, question_id=question.id
             ),
             params={"token": "supersecuretoken"},
             json=data,

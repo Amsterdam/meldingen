@@ -122,16 +122,17 @@ async def melding(
 
 
 @pytest.fixture
-async def test_melding_with_classification(
-    melding_repository: MeldingRepository,
-    test_melding: Melding,
-    classification: Classification,
+async def melding_with_classification(
+    db_session: AsyncSession,
+    melding: Melding,
+    test_classification: Classification,
 ) -> Melding:
-    test_melding.classification = classification
+    melding.classification = test_classification
 
-    await melding_repository.save(test_melding)
+    db_session.add(melding)
+    await db_session.commit()
 
-    return test_melding
+    return melding
 
 
 @pytest.fixture
