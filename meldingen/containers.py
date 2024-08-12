@@ -3,14 +3,8 @@ from typing import AsyncGenerator
 
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
-from meldingen_core.actions.melding import (
-    MeldingAnswerQuestionsAction,
-    MeldingCompleteAction,
-    MeldingProcessAction,
-    MeldingUpdateAction,
-)
+from meldingen_core.actions.melding import MeldingAnswerQuestionsAction, MeldingCompleteAction, MeldingProcessAction
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
-from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import TokenVerifier
 from mp_fsm.statemachine import BaseGuard, BaseTransition
@@ -34,7 +28,6 @@ from meldingen.actions import (
     UserRetrieveAction,
     UserUpdateAction,
 )
-from meldingen.classification import DummyClassifierAdapter
 from meldingen.factories import AttachmentFactory
 from meldingen.models import Melding
 from meldingen.repositories import (
@@ -176,12 +169,6 @@ class Container(DeclarativeContainer):
         MeldingStateMachine, state_machine=mp_fsm_melding_state_machine
     )
 
-    # classifier
-    dummy_classifier_adaper: Singleton[DummyClassifierAdapter] = Singleton(DummyClassifierAdapter)
-    classifier: Singleton[Classifier] = Singleton(
-        Classifier, adapter=dummy_classifier_adaper, repository=classification_repository
-    )
-
     # token
     token_verifier: Singleton[TokenVerifier[Melding]] = Singleton(TokenVerifier)
 
@@ -247,13 +234,6 @@ class Container(DeclarativeContainer):
     )
 
     # Meldingen actions
-    melding_update_action: Factory[MeldingUpdateAction[Melding, Melding]] = Factory(
-        MeldingUpdateAction,
-        repository=melding_repository,
-        token_verifier=token_verifier,
-        classifier=classifier,
-        state_machine=melding_state_machine,
-    )
     melding_answer_questions_action: Factory[MeldingAnswerQuestionsAction[Melding, Melding]] = Factory(
         MeldingAnswerQuestionsAction,
         state_machine=melding_state_machine,
