@@ -6,7 +6,6 @@ from dependency_injector.providers import Configuration, Factory, Resource, Sing
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
-    MeldingCreateAction,
     MeldingProcessAction,
     MeldingUpdateAction,
 )
@@ -76,7 +75,6 @@ from meldingen.statemachine import (
     MpFsmMeldingStateMachine,
     Process,
 )
-from meldingen.token import UrlSafeTokenGenerator
 
 
 def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
@@ -185,7 +183,6 @@ class Container(DeclarativeContainer):
     )
 
     # token
-    token_generator: Singleton[UrlSafeTokenGenerator] = Singleton(UrlSafeTokenGenerator)
     token_verifier: Singleton[TokenVerifier[Melding]] = Singleton(TokenVerifier)
 
     # filesystem
@@ -250,14 +247,6 @@ class Container(DeclarativeContainer):
     )
 
     # Meldingen actions
-    melding_create_action: Factory[MeldingCreateAction[Melding, Melding]] = Factory(
-        MeldingCreateAction,
-        repository=melding_repository,
-        classifier=classifier,
-        state_machine=melding_state_machine,
-        token_generator=token_generator,
-        token_duration=settings.token_duration,
-    )
     melding_update_action: Factory[MeldingUpdateAction[Melding, Melding]] = Factory(
         MeldingUpdateAction,
         repository=melding_repository,

@@ -34,7 +34,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.dependencies import melding_list_action, melding_retrieve_action
+from meldingen.dependencies import melding_create_action, melding_list_action, melding_retrieve_action
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
@@ -66,7 +66,7 @@ def _hydrate_output(melding: Melding) -> MeldingOutput:
 @inject
 async def create_melding(
     melding_input: MeldingInput,
-    action: MeldingCreateAction[Melding, Melding] = Depends(Provide(Container.melding_create_action)),
+    action: Annotated[MeldingCreateAction[Melding, Melding], Depends(melding_create_action)],
 ) -> MeldingCreateOutput:
     melding = Melding(**melding_input.model_dump())
 

@@ -4,6 +4,10 @@ from typing import Annotated, AsyncIterator
 
 from fastapi import Depends
 from jwt import PyJWKClient, PyJWT
+from meldingen_core.actions.melding import MeldingCreateAction
+from meldingen_core.classification import Classifier
+from meldingen_core.statemachine import MeldingTransitions
+from meldingen_core.token import BaseTokenGenerator
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions import (
@@ -15,9 +19,21 @@ from meldingen.actions import (
     MeldingListAction,
     MeldingRetrieveAction,
 )
+from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
+from meldingen.models import Melding
 from meldingen.repositories import ClassificationRepository, MeldingRepository, UserRepository
+from meldingen.statemachine import (
+    AnswerQuestions,
+    Classify,
+    Complete,
+    HasClassification,
+    MeldingStateMachine,
+    MpFsmMeldingStateMachine,
+    Process,
+)
+from meldingen.token import UrlSafeTokenGenerator
 
 
 @lru_cache
@@ -83,6 +99,36 @@ def user_repository(session: Annotated[AsyncSession, Depends(database_session)])
 
 def melding_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> MeldingRepository:
     return MeldingRepository(session)
+
+
+def classifier(repository: Annotated[ClassificationRepository, Depends(classification_repository)]) -> Classifier:
+    return Classifier(DummyClassifierAdapter(), repository)
+
+
+def token_generator() -> BaseTokenGenerator:
+    return UrlSafeTokenGenerator()
+
+
+def melding_state_machine() -> MeldingStateMachine:
+    return MeldingStateMachine(
+        MpFsmMeldingStateMachine(
+            {
+                MeldingTransitions.CLASSIFY: Classify([HasClassification()]),
+                MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions(),
+                MeldingTransitions.PROCESS: Process(),
+                MeldingTransitions.COMPLETE: Complete(),
+            }
+        )
+    )
+
+
+def melding_create_action(
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    classifier: Annotated[Classifier, Depends(classifier)],
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    token_generator: Annotated[BaseTokenGenerator, Depends(token_generator)],
+) -> MeldingCreateAction[Melding, Melding]:
+    return MeldingCreateAction(repository, classifier, state_machine, token_generator, settings.token_duration)
 
 
 def melding_retrieve_action(
