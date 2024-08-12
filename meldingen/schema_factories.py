@@ -130,6 +130,7 @@ class StaticFormSelectComponentOutputFactory:
             input=component.input,
             position=component.position,
             widget=component.widget,
+            placeholder=component.placeholder,
             data=await self._data(component),
         )
 
@@ -316,6 +317,7 @@ class FormSelectComponentOutputFactory:
             input=component.input,
             position=component.position,
             widget=component.widget,
+            placeholder=component.placeholder,
             data=await self._data(component),
             question=question.id,
         )

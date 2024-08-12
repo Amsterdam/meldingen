@@ -256,6 +256,7 @@ class FormIoSelectComponent(FormIoQuestionComponent):
     __table_args__ = {"extend_existing": True}
 
     widget: Mapped[str] = mapped_column(String(), nullable=True, default=None)
+    placeholder: Mapped[str] = mapped_column(String(), nullable=True, default=None)
     data: Mapped[FormIoSelectComponentData] = relationship(
         cascade="save-update, merge, delete, delete-orphan", back_populates="component", default=None
     )

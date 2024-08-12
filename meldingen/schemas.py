@@ -193,6 +193,7 @@ class FormSelectComponentInput(FormComponentInput):
 
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.select)]
     widget: str
+    placeholder: str
     data: FormSelectComponentDataInput
 
 
