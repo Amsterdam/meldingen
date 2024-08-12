@@ -135,16 +135,15 @@ async def test_melding_with_classification(
 
 
 @pytest.fixture
-async def test_meldingen(melding_repository: MeldingRepository, melding_text: str) -> list[Melding]:
-    """Fixture providing a list test melding instances."""
-
+async def meldingen(db_session: AsyncSession, melding_text: str) -> list[Melding]:
     meldingen = []
     for i in range(10):
         melding = Melding(text=f"{melding_text} {i}")
 
-        await melding_repository.save(melding)
-
+        db_session.add(melding)
         meldingen.append(melding)
+
+    await db_session.commit()
 
     return meldingen
 
