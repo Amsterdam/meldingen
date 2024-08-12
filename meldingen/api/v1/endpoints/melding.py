@@ -34,7 +34,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.dependencies import melding_retrieve_action
+from meldingen.dependencies import melding_list_action, melding_retrieve_action
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
@@ -96,14 +96,13 @@ async def _add_content_range_header(
     "/",
     name="melding:list",
     responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(_add_content_range_header)],
+    dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
 )
 @inject
 async def list_meldingen(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
-    user: Annotated[User, Depends(authenticate_user)],
-    action: MeldingListAction = Depends(Provide(Container.melding_list_action)),
+    action: Annotated[MeldingListAction, Depends(melding_list_action)],
 ) -> list[MeldingOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0

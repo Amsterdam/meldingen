@@ -12,6 +12,7 @@ from meldingen.actions import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    MeldingListAction,
     MeldingRetrieveAction,
 )
 from meldingen.config import settings
@@ -88,6 +89,10 @@ def melding_retrieve_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)]
 ) -> MeldingRetrieveAction:
     return MeldingRetrieveAction(repository)
+
+
+def melding_list_action(repository: Annotated[MeldingRepository, Depends(melding_repository)]) -> MeldingListAction:
+    return MeldingListAction(repository)
 
 
 def jwks_client() -> PyJWKClient:
