@@ -296,6 +296,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "waarom-meld-u-dit-bij-ons",
                     "type": FormIoComponentTypeEnum.select,
                     "input": True,
+                    "widget": "html5",
                     "data": {
                         "values": [
                             {"label": "label1", "value": "value1"},
@@ -325,6 +326,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert select.get("key") == "waarom-meld-u-dit-bij-ons"
         assert select.get("type") == FormIoComponentTypeEnum.select
         assert select.get("input") is True
+        assert select.get("widget") == "html5"
 
         select_data = select.get("data")
         assert select_data is not None

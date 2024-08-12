@@ -129,6 +129,7 @@ class FormSelectComponentDataOutput(BaseModel):
 
 
 class StaticFormSelectComponentOutput(BaseFormComponentOutput):
+    widget: str
     data: FormSelectComponentDataOutput
 
 

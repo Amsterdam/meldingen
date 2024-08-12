@@ -192,6 +192,7 @@ class FormSelectComponentInput(FormComponentInput):
     model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
 
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.select)]
+    widget: str
     data: FormSelectComponentDataInput
 
 
