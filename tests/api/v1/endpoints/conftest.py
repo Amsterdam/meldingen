@@ -98,6 +98,30 @@ async def test_melding(
 
 
 @pytest.fixture
+async def melding(
+    db_session: AsyncSession,
+    melding_text: str,
+    melding_state: str | None,
+    melding_token: str | None,
+    melding_token_expires: datetime | None,
+) -> Melding:
+    melding = Melding(text=melding_text)
+    if melding_state is not None:
+        melding.state = melding_state
+
+    if melding_token is not None:
+        melding.token = melding_token
+
+    if melding_token_expires is not None:
+        melding.token_expires = melding_token_expires
+
+    db_session.add(melding)
+    await db_session.commit()
+
+    return melding
+
+
+@pytest.fixture
 async def test_melding_with_classification(
     melding_repository: MeldingRepository,
     test_melding: Melding,

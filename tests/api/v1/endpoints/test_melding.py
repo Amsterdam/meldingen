@@ -279,20 +279,18 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
     @pytest.mark.parametrize(
         "melding_text", ["Er ligt poep op de stoep.", "Er is een matras naast de prullenbak gedumpt."], indirect=True
     )
-    async def test_retrieve_melding(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_melding: Melding
-    ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=test_melding.id))
+    async def test_retrieve_melding(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=melding.id))
 
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
-        assert data.get("id") == test_melding.id
-        assert data.get("text") == test_melding.text
+        assert data.get("id") == melding.id
+        assert data.get("text") == melding.text
         assert data.get("state") == MeldingStates.NEW
         assert data.get("classification", "") is None
-        assert data.get("created_at") == test_melding.created_at.isoformat()
-        assert data.get("updated_at") == test_melding.updated_at.isoformat()
+        assert data.get("created_at") == melding.created_at.isoformat()
+        assert data.get("updated_at") == melding.updated_at.isoformat()
 
     @pytest.mark.anyio
     async def test_retrieve_melding_that_does_not_exist(
