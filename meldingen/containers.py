@@ -3,11 +3,8 @@ from typing import AsyncGenerator
 
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
-from meldingen_core.actions.melding import MeldingAnswerQuestionsAction, MeldingCompleteAction, MeldingProcessAction
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
-from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import TokenVerifier
-from mp_fsm.statemachine import BaseGuard, BaseTransition
 from plugfs.filesystem import Filesystem
 from plugfs.local import LocalAdapter
 from pydantic_core import MultiHostUrl
@@ -59,15 +56,6 @@ from meldingen.schema_factories import (
     StaticFormTextAreaComponentOutputFactory,
     StaticFormTextFieldInputComponentOutputFactory,
 )
-from meldingen.statemachine import (
-    AnswerQuestions,
-    Classify,
-    Complete,
-    HasClassification,
-    MeldingStateMachine,
-    MpFsmMeldingStateMachine,
-    Process,
-)
 
 
 def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
@@ -96,21 +84,6 @@ async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSessi
     async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
         yield session
-
-
-def get_transitions(
-    classify: Classify, answer_questions: AnswerQuestions, process: Process, complete: Complete
-) -> dict[str, BaseTransition[Melding]]:
-    return {
-        MeldingTransitions.CLASSIFY: classify,
-        MeldingTransitions.ANSWER_QUESTIONS: answer_questions,
-        MeldingTransitions.PROCESS: process,
-        MeldingTransitions.COMPLETE: complete,
-    }
-
-
-def get_classify_guards(has_classification: HasClassification) -> list[BaseGuard[Melding]]:
-    return [has_classification]
 
 
 class Container(DeclarativeContainer):
@@ -145,29 +118,6 @@ class Container(DeclarativeContainer):
     question_repository: Factory[QuestionRepository] = Factory(QuestionRepository, session=database_session)
     answer_repository: Factory[AnswerRepository] = Factory(AnswerRepository, session=database_session)
     attachment_repository: Factory[AttachmentRepository] = Factory(AttachmentRepository, session=database_session)
-
-    # state machine
-    melding_has_classification_guard: Singleton[HasClassification] = Singleton(HasClassification)
-    melding_classify_transition_guards: Singleton[list[BaseGuard[Melding]]] = Singleton(
-        get_classify_guards, has_classification=melding_has_classification_guard
-    )
-    melding_classify_transition: Singleton[Classify] = Singleton(Classify, guards=melding_classify_transition_guards)
-    answer_questions_transition: Singleton[AnswerQuestions] = Singleton(AnswerQuestions)
-    melding_process_transition: Singleton[Process] = Singleton(Process)
-    melding_complete_transition: Singleton[Complete] = Singleton(Complete)
-    melding_transitions: Singleton[dict[str, BaseTransition[Melding]]] = Singleton(
-        get_transitions,
-        classify=melding_classify_transition,
-        answer_questions=answer_questions_transition,
-        process=melding_process_transition,
-        complete=melding_complete_transition,
-    )
-    mp_fsm_melding_state_machine: Singleton[MpFsmMeldingStateMachine] = Singleton(
-        MpFsmMeldingStateMachine, transitions=melding_transitions
-    )
-    melding_state_machine: Singleton[MeldingStateMachine] = Singleton(
-        MeldingStateMachine, state_machine=mp_fsm_melding_state_machine
-    )
 
     # token
     token_verifier: Singleton[TokenVerifier[Melding]] = Singleton(TokenVerifier)
@@ -231,20 +181,6 @@ class Container(DeclarativeContainer):
     )
     static_form_output_factory: Factory[StaticFormOutputFactory] = Factory(
         StaticFormOutputFactory, components_factory=static_form_components_factory
-    )
-
-    # Meldingen actions
-    melding_answer_questions_action: Factory[MeldingAnswerQuestionsAction[Melding, Melding]] = Factory(
-        MeldingAnswerQuestionsAction,
-        state_machine=melding_state_machine,
-        repository=melding_repository,
-        token_verifier=token_verifier,
-    )
-    melding_process_action: Factory[MeldingProcessAction[Melding, Melding]] = Factory(
-        MeldingProcessAction, state_machine=melding_state_machine, repository=melding_repository
-    )
-    melding_complete_action: Factory[MeldingCompleteAction[Melding, Melding]] = Factory(
-        MeldingCompleteAction, state_machine=melding_state_machine, repository=melding_repository
     )
 
     # User actions

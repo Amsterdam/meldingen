@@ -35,8 +35,11 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.dependencies import (
+    melding_answer_questions_action,
+    melding_complete_action,
     melding_create_action,
     melding_list_action,
+    melding_process_action,
     melding_retrieve_action,
     melding_update_action,
 )
@@ -181,9 +184,7 @@ async def update_melding(
 async def answer_questions(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    action: MeldingAnswerQuestionsAction[Melding, Melding] = Depends(
-        Provide(Container.melding_answer_questions_action)
-    ),
+    action: Annotated[MeldingAnswerQuestionsAction[Melding, Melding], Depends(melding_answer_questions_action)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id, token)
@@ -206,12 +207,11 @@ async def answer_questions(
         **not_found_response,
         **default_response,
     },
+    dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def process_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    user: Annotated[User, Depends(authenticate_user)],
-    action: MeldingProcessAction[Melding, Melding] = Depends(Provide(Container.melding_process_action)),
+    action: Annotated[MeldingProcessAction[Melding, Melding], Depends(melding_process_action)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id)
@@ -232,12 +232,11 @@ async def process_melding(
         **not_found_response,
         **default_response,
     },
+    dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def complete_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    user: Annotated[User, Depends(authenticate_user)],
-    action: MeldingCompleteAction[Melding, Melding] = Depends(Provide(Container.melding_complete_action)),
+    action: Annotated[MeldingCompleteAction[Melding, Melding], Depends(melding_complete_action)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id)

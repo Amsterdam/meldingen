@@ -4,7 +4,13 @@ from typing import Annotated, AsyncIterator
 
 from fastapi import Depends
 from jwt import PyJWKClient, PyJWT
-from meldingen_core.actions.melding import MeldingCreateAction, MeldingUpdateAction
+from meldingen_core.actions.melding import (
+    MeldingAnswerQuestionsAction,
+    MeldingCompleteAction,
+    MeldingCreateAction,
+    MeldingProcessAction,
+    MeldingUpdateAction,
+)
 from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
@@ -152,6 +158,28 @@ def melding_update_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
 ) -> MeldingUpdateAction[Melding, Melding]:
     return MeldingUpdateAction(repository, token_verifier, classifier, state_machine)
+
+
+def melding_answer_questions_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+) -> MeldingAnswerQuestionsAction[Melding, Melding]:
+    return MeldingAnswerQuestionsAction(state_machine, repository, token_verifier)
+
+
+def melding_process_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> MeldingProcessAction[Melding, Melding]:
+    return MeldingProcessAction(state_machine, repository)
+
+
+def melding_complete_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> MeldingCompleteAction[Melding, Melding]:
+    return MeldingCompleteAction(state_machine, repository)
 
 
 def jwks_client() -> PyJWKClient:
