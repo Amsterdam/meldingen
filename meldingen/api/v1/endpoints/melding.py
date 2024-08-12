@@ -96,13 +96,12 @@ async def _add_content_range_header(
     "/",
     name="melding:list",
     responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(_add_content_range_header)],
+    dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
 )
 @inject
 async def list_meldingen(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
-    user: Annotated[User, Depends(authenticate_user)],
     action: MeldingListAction = Depends(Provide(Container.melding_list_action)),
 ) -> list[MeldingOutput]:
     limit = pagination["limit"] or 0
