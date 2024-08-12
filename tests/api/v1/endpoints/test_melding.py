@@ -821,7 +821,9 @@ class TestMeldingUploadAttachment:
         ["melding_text", "melding_state", "melding_token"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
     )
-    async def test_upload_attachment(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+    async def test_upload_attachment(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, db_session: AsyncSession
+    ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": melding.token},
@@ -842,6 +844,7 @@ class TestMeldingUploadAttachment:
 
         assert response.status_code == HTTP_200_OK
 
+        await db_session.refresh(melding)
         attachments = await melding.awaitable_attrs.attachments
         assert len(attachments) == 1
 
