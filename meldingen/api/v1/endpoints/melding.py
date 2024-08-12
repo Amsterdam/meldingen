@@ -35,6 +35,7 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.dependencies import (
+    melding_answer_questions_action,
     melding_create_action,
     melding_list_action,
     melding_retrieve_action,
@@ -181,9 +182,7 @@ async def update_melding(
 async def answer_questions(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    action: MeldingAnswerQuestionsAction[Melding, Melding] = Depends(
-        Provide(Container.melding_answer_questions_action)
-    ),
+    action: Annotated[MeldingAnswerQuestionsAction[Melding, Melding], Depends(melding_answer_questions_action)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id, token)
