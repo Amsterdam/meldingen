@@ -5,4 +5,4 @@ from meldingen.models import Attachment, Melding
 
 class AttachmentFactory(BaseAttachmentFactory[Attachment, Melding]):
     def __call__(self, original_filename: str, melding: Melding) -> Attachment:
-        return Attachment(original_filename, melding)
+        return Attachment(original_filename=original_filename, melding=melding)
