@@ -15,7 +15,7 @@ from meldingen.actions import (
 )
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
-from meldingen.repositories import ClassificationRepository, UserRepository
+from meldingen.repositories import ClassificationRepository, MeldingRepository, UserRepository
 
 
 @lru_cache
@@ -77,6 +77,10 @@ def classification_update_action(
 
 def user_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> UserRepository:
     return UserRepository(session)
+
+
+def melding_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> MeldingRepository:
+    return MeldingRepository(session)
 
 
 def jwks_client() -> PyJWKClient:
