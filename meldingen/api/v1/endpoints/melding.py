@@ -117,11 +117,15 @@ async def list_meldingen(
     return output
 
 
-@router.get("/{melding_id}", name="melding:retrieve", responses={**unauthorized_response, **not_found_response})
+@router.get(
+    "/{melding_id}",
+    name="melding:retrieve",
+    responses={**unauthorized_response, **not_found_response},
+    dependencies=[Depends(authenticate_user)],
+)
 @inject
 async def retrieve_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    user: Annotated[User, Depends(authenticate_user)],
     action: MeldingRetrieveAction = Depends(Provide(Container.melding_retrieve_action)),
 ) -> MeldingOutput:
     melding = await action(pk=melding_id)
