@@ -848,6 +848,8 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "key": "waarom-meld-u-dit-bij-ons",
                             "type": FormIoComponentTypeEnum.select,
                             "input": True,
+                            "widget": "html5",
+                            "placeholder": "This is a placeholder value",
                             "data": {
                                 "values": [
                                     {"label": "label1", "value": "value1"},
@@ -889,6 +891,8 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert select.get("type") == FormIoComponentTypeEnum.select
         assert select.get("input") is True
         assert select.get("question") is not None
+        assert select.get("widget") == "html5"
+        assert select.get("placeholder") == "This is a placeholder value"
 
         select_data = select.get("data")
         assert select_data is not None
@@ -1067,6 +1071,8 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "key": "waarom-meld-u-dit-bij-ons",
                             "type": FormIoComponentTypeEnum.select,
                             "input": True,
+                            "widget": "html5",
+                            "placeholder": "This is a placeholder value",
                             "data": {
                                 "values": [
                                     {"label": "label1", "value": "value1"},
@@ -1108,6 +1114,8 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert select.get("type") == FormIoComponentTypeEnum.select
         assert select.get("input") is True
         assert select.get("question") is not None
+        assert select.get("widget") == "html5"
+        assert select.get("placeholder") == "This is a placeholder value"
 
         select_data = select.get("data")
         assert select_data is not None

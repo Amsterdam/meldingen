@@ -72,7 +72,9 @@ def test_component_discriminator_checkbox() -> None:
 
 def test_component_discriminator_select() -> None:
     result = component_discriminator(
-        FormSelectComponentInput(label="abc", description="abc", key="abc", input=True, data={"values": []})
+        FormSelectComponentInput(
+            label="abc", description="abc", key="abc", input=True, widget="html5", placeholder="", data={"values": []}
+        )
     )
 
     assert result == FormIoComponentTypeEnum.select
