@@ -4,9 +4,6 @@ from typing import AsyncGenerator
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
 from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
-from meldingen_core.token import TokenVerifier
-from plugfs.filesystem import Filesystem
-from plugfs.local import LocalAdapter
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -19,19 +16,14 @@ from meldingen.actions import (
     FormUpdateAction,
     StaticFormRetrieveByTypeAction,
     StaticFormUpdateAction,
-    UploadAttachmentAction,
     UserListAction,
     UserRetrieveAction,
     UserUpdateAction,
 )
-from meldingen.factories import AttachmentFactory
-from meldingen.models import Melding
 from meldingen.repositories import (
-    AttachmentRepository,
     ClassificationRepository,
     FormRepository,
     GroupRepository,
-    MeldingRepository,
     QuestionRepository,
     StaticFormRepository,
     UserRepository,
@@ -105,7 +97,6 @@ class Container(DeclarativeContainer):
     database_session: Resource[AsyncSession] = Resource(get_database_session, engine=database_engine)
 
     # repositories
-    melding_repository: Factory[MeldingRepository] = Factory(MeldingRepository, session=database_session)
     user_repository: Factory[UserRepository] = Factory(UserRepository, session=database_session)
     group_repository: Factory[GroupRepository] = Factory(GroupRepository, session=database_session)
     classification_repository: Factory[ClassificationRepository] = Factory(
@@ -114,17 +105,8 @@ class Container(DeclarativeContainer):
     form_repository: Factory[FormRepository] = Factory(FormRepository, session=database_session)
     static_form_repository: Factory[StaticFormRepository] = Factory(StaticFormRepository, session=database_session)
     question_repository: Factory[QuestionRepository] = Factory(QuestionRepository, session=database_session)
-    attachment_repository: Factory[AttachmentRepository] = Factory(AttachmentRepository, session=database_session)
-
-    # token
-    token_verifier: Singleton[TokenVerifier[Melding]] = Singleton(TokenVerifier)
-
-    # filesystem
-    filesystem_adapter: Factory[LocalAdapter] = Factory(LocalAdapter)
-    filesystem: Factory[Filesystem] = Factory(Filesystem, adapter=filesystem_adapter)
 
     # Factories
-    attachment_factory: Factory[AttachmentFactory] = Factory(AttachmentFactory)
     form_text_area_factory: Factory[FormTextAreaComponentOutputFactory] = Factory(FormTextAreaComponentOutputFactory)
     form_text_field_factory: Factory[FormTextFieldInputComponentOutputFactory] = Factory(
         FormTextFieldInputComponentOutputFactory
@@ -213,15 +195,4 @@ class Container(DeclarativeContainer):
     )
     static_form_update_action: Factory[StaticFormUpdateAction] = Factory(
         StaticFormUpdateAction, repository=static_form_repository
-    )
-
-    # Attachment actions
-    upload_attachment_action: Factory[UploadAttachmentAction] = Factory(
-        UploadAttachmentAction,
-        attachment_factory=attachment_factory,
-        attachment_repository=attachment_repository,
-        melding_repository=melding_repository,
-        filesystem=filesystem,
-        token_verifier=token_verifier,
-        base_directory=settings.attachment_storage_base_directory,
     )
