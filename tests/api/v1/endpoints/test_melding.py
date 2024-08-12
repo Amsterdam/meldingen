@@ -333,7 +333,7 @@ class TestMeldingUpdate:
 
     @pytest.mark.anyio
     async def test_update_melding_unauthorized_token_invalid(
-        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+        self, app: FastAPI, client: AsyncClient, melding: Melding
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": ""}, json={"text": "classification_name"}
@@ -348,7 +348,7 @@ class TestMeldingUpdate:
         indirect=True,
     )
     async def test_update_melding_unauthorized_token_expired(
-        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+        self, app: FastAPI, client: AsyncClient, melding: Melding
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=1),
@@ -365,7 +365,7 @@ class TestMeldingUpdate:
         indirect=True,
     )
     async def test_update_melding_classification_not_found(
-        self, app: FastAPI, client: AsyncClient, test_melding: Melding
+        self, app: FastAPI, client: AsyncClient, melding: Melding
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=1),
@@ -382,7 +382,7 @@ class TestMeldingUpdate:
         indirect=True,
     )
     async def test_update_melding(
-        self, app: FastAPI, client: AsyncClient, test_melding: Melding, classification: Classification
+        self, app: FastAPI, client: AsyncClient, melding: Melding, test_classification: Classification
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=1),
@@ -393,12 +393,12 @@ class TestMeldingUpdate:
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("id") == test_melding.id
+        assert body.get("id") == melding.id
         assert body.get("text") == "classification_name"
         assert body.get("state") == MeldingStates.CLASSIFIED
-        assert body.get("classification") == classification.id
-        assert body.get("created_at") == test_melding.created_at.isoformat()
-        assert body.get("updated_at") == test_melding.updated_at.isoformat()
+        assert body.get("classification") == test_classification.id
+        assert body.get("created_at") == melding.created_at.isoformat()
+        assert body.get("updated_at") == melding.updated_at.isoformat()
 
 
 class TestMeldingAnswerQuestions:

@@ -4,10 +4,10 @@ from typing import Annotated, AsyncIterator
 
 from fastapi import Depends
 from jwt import PyJWKClient, PyJWT
-from meldingen_core.actions.melding import MeldingCreateAction
+from meldingen_core.actions.melding import MeldingCreateAction, MeldingUpdateAction
 from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
-from meldingen_core.token import BaseTokenGenerator
+from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions import (
@@ -109,6 +109,10 @@ def token_generator() -> BaseTokenGenerator:
     return UrlSafeTokenGenerator()
 
 
+def token_verifier() -> TokenVerifier[Melding]:
+    return TokenVerifier()
+
+
 def melding_state_machine() -> MeldingStateMachine:
     return MeldingStateMachine(
         MpFsmMeldingStateMachine(
@@ -139,6 +143,15 @@ def melding_retrieve_action(
 
 def melding_list_action(repository: Annotated[MeldingRepository, Depends(melding_repository)]) -> MeldingListAction:
     return MeldingListAction(repository)
+
+
+def melding_update_action(
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    classifier: Annotated[Classifier, Depends(classifier)],
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+) -> MeldingUpdateAction[Melding, Melding]:
+    return MeldingUpdateAction(repository, token_verifier, classifier, state_machine)
 
 
 def jwks_client() -> PyJWKClient:

@@ -34,7 +34,12 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.dependencies import melding_create_action, melding_list_action, melding_retrieve_action
+from meldingen.dependencies import (
+    melding_create_action,
+    melding_list_action,
+    melding_retrieve_action,
+    melding_update_action,
+)
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
 from meldingen.repositories import MeldingRepository
@@ -147,7 +152,7 @@ async def update_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     melding_input: MeldingInput,
-    action: MeldingUpdateAction[Melding, Melding] = Depends(Provide(Container.melding_update_action)),
+    action: Annotated[MeldingUpdateAction[Melding, Melding], Depends(melding_update_action)],
 ) -> MeldingOutput:
     try:
         melding = await action(pk=melding_id, values=melding_input.model_dump(), token=token)
