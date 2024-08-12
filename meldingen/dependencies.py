@@ -6,6 +6,7 @@ from fastapi import Depends
 from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
+    MeldingCompleteAction,
     MeldingCreateAction,
     MeldingProcessAction,
     MeldingUpdateAction,
@@ -172,6 +173,13 @@ def melding_process_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingProcessAction[Melding, Melding]:
     return MeldingProcessAction(state_machine, repository)
+
+
+def melding_complete_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> MeldingCompleteAction[Melding, Melding]:
+    return MeldingCompleteAction(state_machine, repository)
 
 
 def jwks_client() -> PyJWKClient:
