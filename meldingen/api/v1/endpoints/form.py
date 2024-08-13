@@ -19,6 +19,7 @@ from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.dependencies import (
     form_list_action,
+    form_output_factory,
     form_repository,
     form_retrieve_action,
     form_retrieve_by_classification_action,
@@ -78,7 +79,7 @@ async def list_form(
 async def retrieve_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
     action: Annotated[FormRetrieveAction, Depends(form_retrieve_action)],
-    produce_output_model: FormOutputFactory = Depends(Provide[Container.form_output_factory]),
+    produce_output_model: Annotated[FormOutputFactory, Depends(form_output_factory)],
 ) -> FormOutput:
     db_form = await action(pk=form_id)
     if not db_form:
@@ -91,7 +92,7 @@ async def retrieve_form(
 async def retrieve_form_by_classification(
     classification_id: Annotated[int, Path(description="The id of the classification that the form belongs to.", ge=1)],
     action: Annotated[FormRetrieveByClassificationAction, Depends(form_retrieve_by_classification_action)],
-    produce_output_model: FormOutputFactory = Depends(Provide[Container.form_output_factory]),
+    produce_output_model: Annotated[FormOutputFactory, Depends(form_output_factory)],
 ) -> FormOutput:
     form = await action(classification_id)
 
