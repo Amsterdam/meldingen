@@ -8,7 +8,6 @@ from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from meldingen.actions import (
-    FormCreateAction,
     FormDeleteAction,
     FormUpdateAction,
     UserListAction,
@@ -132,12 +131,6 @@ class Container(DeclarativeContainer):
     user_update_action: Factory[UserUpdateAction] = Factory(UserUpdateAction, repository=user_repository)
 
     # Form actions
-    form_create_action: Factory[FormCreateAction] = Factory(
-        FormCreateAction,
-        repository=form_repository,
-        classification_repository=classification_repository,
-        question_repository=question_repository,
-    )
     form_update_action: Factory[FormUpdateAction] = Factory(
         FormUpdateAction,
         repository=form_repository,
