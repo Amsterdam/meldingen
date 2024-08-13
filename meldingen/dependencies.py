@@ -25,6 +25,7 @@ from meldingen.actions import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    FormCreateAction,
     FormListAction,
     FormRetrieveAction,
     FormRetrieveByClassificationAction,
@@ -397,6 +398,14 @@ def form_output_factory(
     factory: Annotated[FormComponentOutputFactory, Depends(form_component_output_factory)]
 ) -> FormOutputFactory:
     return FormOutputFactory(factory)
+
+
+def form_create_action(
+    repository: Annotated[FormRepository, Depends(form_repository)],
+    classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+    question_repository: Annotated[QuestionRepository, Depends(question_repository)],
+) -> FormCreateAction:
+    return FormCreateAction(repository, classification_repository, question_repository)
 
 
 def form_list_action(repository: Annotated[FormRepository, Depends(form_repository)]) -> FormListAction:

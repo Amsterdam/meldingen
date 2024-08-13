@@ -7,13 +7,7 @@ from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from meldingen.actions import (
-    FormDeleteAction,
-    FormUpdateAction,
-    UserListAction,
-    UserRetrieveAction,
-    UserUpdateAction,
-)
+from meldingen.actions import FormDeleteAction, FormUpdateAction, UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.repositories import (
     ClassificationRepository,
     FormRepository,
