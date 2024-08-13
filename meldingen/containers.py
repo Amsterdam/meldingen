@@ -14,7 +14,6 @@ from meldingen.actions import (
     FormRetrieveAction,
     FormRetrieveByClassificationAction,
     FormUpdateAction,
-    StaticFormUpdateAction,
     UserListAction,
     UserRetrieveAction,
     UserUpdateAction,
@@ -37,13 +36,6 @@ from meldingen.schema_factories import (
     FormSelectComponentOutputFactory,
     FormTextAreaComponentOutputFactory,
     FormTextFieldInputComponentOutputFactory,
-    StaticFormCheckboxComponentOutputFactory,
-    StaticFormComponentOutputFactory,
-    StaticFormOutputFactory,
-    StaticFormRadioComponentOutputFactory,
-    StaticFormSelectComponentOutputFactory,
-    StaticFormTextAreaComponentOutputFactory,
-    StaticFormTextFieldInputComponentOutputFactory,
 )
 
 
@@ -134,32 +126,6 @@ class Container(DeclarativeContainer):
     form_output_factory: Factory[FormOutputFactory] = Factory(
         FormOutputFactory, components_factory=form_components_factory
     )
-    static_form_text_area_factory: Factory[StaticFormTextAreaComponentOutputFactory] = Factory(
-        StaticFormTextAreaComponentOutputFactory
-    )
-    static_form_text_field_factory: Factory[StaticFormTextFieldInputComponentOutputFactory] = Factory(
-        StaticFormTextFieldInputComponentOutputFactory
-    )
-    static_form_checkbox_factory: Factory[StaticFormCheckboxComponentOutputFactory] = Factory(
-        StaticFormCheckboxComponentOutputFactory, values_factory=form_values_factory
-    )
-    static_form_radio_factory: Factory[StaticFormRadioComponentOutputFactory] = Factory(
-        StaticFormRadioComponentOutputFactory, values_factory=form_values_factory
-    )
-    static_select_factory: Factory[StaticFormSelectComponentOutputFactory] = Factory(
-        StaticFormSelectComponentOutputFactory, data_factory=form_select_data_factory
-    )
-    static_form_components_factory: Factory[StaticFormComponentOutputFactory] = Factory(
-        StaticFormComponentOutputFactory,
-        text_area_factory=static_form_text_area_factory,
-        text_field_factory=static_form_text_field_factory,
-        checkbox_factory=static_form_checkbox_factory,
-        radio_factory=static_form_radio_factory,
-        select_factory=static_select_factory,
-    )
-    static_form_output_factory: Factory[StaticFormOutputFactory] = Factory(
-        StaticFormOutputFactory, components_factory=static_form_components_factory
-    )
 
     # User actions
     user_create_action: Factory[UserCreateAction] = Factory(UserCreateAction, repository=user_repository)
@@ -186,9 +152,4 @@ class Container(DeclarativeContainer):
     form_delete_action: Factory[FormDeleteAction] = Factory(FormDeleteAction, repository=form_repository)
     form_classification_action: Factory[FormRetrieveByClassificationAction] = Factory(
         FormRetrieveByClassificationAction, repository=form_repository
-    )
-
-    # StaticForm actions
-    static_form_update_action: Factory[StaticFormUpdateAction] = Factory(
-        StaticFormUpdateAction, repository=static_form_repository
     )
