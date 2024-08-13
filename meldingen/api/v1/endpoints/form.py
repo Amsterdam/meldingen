@@ -17,6 +17,7 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
+from meldingen.dependencies import form_list_action, form_repository
 from meldingen.models import User
 from meldingen.output_schemas import FormOutput, SimpleFormOutput
 from meldingen.repositories import FormRepository
@@ -26,27 +27,24 @@ from meldingen.schemas import FormInput
 router = APIRouter()
 
 
-@inject
 async def _add_content_range_header(
     response: Response,
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
-    repo: FormRepository = Depends(Provide[Container.form_repository]),
+    repository: Annotated[FormRepository, Depends(form_repository)],
 ) -> None:
-    await ContentRangeHeaderAdder(repo, "form")(response, pagination)
+    await ContentRangeHeaderAdder(repository, "form")(response, pagination)
 
 
 @router.get(
     "/",
     name="form:list",
     responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(_add_content_range_header)],
+    dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
 )
-@inject
 async def list_form(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
-    user: Annotated[User, Depends(authenticate_user)],
-    action: FormListAction = Depends(Provide(Container.form_list_action)),
+    action: Annotated[FormListAction, Depends(form_list_action)],
 ) -> list[SimpleFormOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
