@@ -41,8 +41,6 @@ tests/api/v1/endpoints/conftest.py:0: error: Returning Any from function declare
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in "await" (actual type "ClassificationRepository", expected type "Awaitable[Any]")  [misc]
 tests/api/v1/endpoints/conftest.py:0: error: Returning Any from function declared to return "FormRepository"  [no-any-return]
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in "await" (actual type "FormRepository", expected type "Awaitable[Any]")  [misc]
-tests/api/v1/endpoints/conftest.py:0: error: Returning Any from function declared to return "StaticFormRepository"  [no-any-return]
-tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in "await" (actual type "StaticFormRepository", expected type "Awaitable[Any]")  [misc]
 tests/api/v1/endpoints/conftest.py:0: error: Returning Any from function declared to return "QuestionRepository"  [no-any-return]
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in "await" (actual type "QuestionRepository", expected type "Awaitable[Any]")  [misc]
 meldingen/main.py:0: error: Incompatible types in "await" (actual type "Awaitable[Any] | None", expected type "Awaitable[Any]")  [misc]
