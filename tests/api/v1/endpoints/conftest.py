@@ -6,6 +6,7 @@ from meldingen_core.exceptions import NotFoundException
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
 from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from meldingen.authentication import authenticate_user
@@ -371,5 +372,36 @@ async def primary_form(static_form_repository: StaticFormRepository) -> StaticFo
         components.append(component)
 
         await static_form_repository.save(primary_form)
+
+    return primary_form
+
+
+@pytest.fixture
+async def test_primary_form(db_session: AsyncSession) -> StaticForm:
+    try:
+        statement = select(StaticForm).where(StaticForm.type == StaticFormTypeEnum.primary)
+
+        result = await db_session.execute(statement)
+        primary_form = result.scalars().one()
+    except NoResultFound:
+        primary_form = StaticForm(
+            type=StaticFormTypeEnum.primary, title="Primary form", display=FormIoFormDisplayEnum.form
+        )
+
+        component = FormIoTextAreaComponent(
+            label="Waar gaat het om?",
+            description="",
+            key="waar-gaat-het-om",
+            type=FormIoComponentTypeEnum.text_area,
+            input=True,
+            auto_expand=True,
+            show_char_count=True,
+        )
+
+        components = await primary_form.awaitable_attrs.components
+        components.append(component)
+
+        db_session.add(primary_form)
+        await db_session.commit()
 
     return primary_form

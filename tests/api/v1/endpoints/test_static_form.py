@@ -23,19 +23,21 @@ class TestStaticFormRetrieveByType(BaseStaticFormTest):
     METHOD: Final[str] = "GET"
 
     @pytest.mark.anyio
-    async def test_retrieve_primary_form(self, app: FastAPI, client: AsyncClient, primary_form: StaticForm) -> None:
+    async def test_retrieve_primary_form(
+        self, app: FastAPI, client: AsyncClient, test_primary_form: StaticForm
+    ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, form_type=StaticFormTypeEnum.primary))
 
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
-        assert data.get("type") == primary_form.type
-        assert data.get("title") == primary_form.title
-        assert data.get("display") == primary_form.display
-        assert data.get("created_at") == primary_form.created_at.isoformat()
-        assert data.get("updated_at") == primary_form.updated_at.isoformat()
+        assert data.get("type") == test_primary_form.type
+        assert data.get("title") == test_primary_form.title
+        assert data.get("display") == test_primary_form.display
+        assert data.get("created_at") == test_primary_form.created_at.isoformat()
+        assert data.get("updated_at") == test_primary_form.updated_at.isoformat()
 
-        components = await primary_form.awaitable_attrs.components
+        components = await test_primary_form.awaitable_attrs.components
         assert len(data.get("components")) == len(components)
 
         component = components[0]
