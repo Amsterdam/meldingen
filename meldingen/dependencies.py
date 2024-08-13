@@ -27,6 +27,7 @@ from meldingen.actions import (
     ClassificationUpdateAction,
     MeldingListAction,
     MeldingRetrieveAction,
+    StaticFormRetrieveByTypeAction,
     UploadAttachmentAction,
 )
 from meldingen.classification import DummyClassifierAdapter
@@ -40,7 +41,19 @@ from meldingen.repositories import (
     ClassificationRepository,
     MeldingRepository,
     QuestionRepository,
+    StaticFormRepository,
     UserRepository,
+)
+from meldingen.schema_factories import (
+    FormComponentValueOutputFactory,
+    FormSelectComponentDataOutputFactory,
+    StaticFormCheckboxComponentOutputFactory,
+    StaticFormComponentOutputFactory,
+    StaticFormOutputFactory,
+    StaticFormRadioComponentOutputFactory,
+    StaticFormSelectComponentOutputFactory,
+    StaticFormTextAreaComponentOutputFactory,
+    StaticFormTextFieldInputComponentOutputFactory,
 )
 from meldingen.statemachine import (
     AnswerQuestions,
@@ -242,6 +255,76 @@ def melding_upload_attachment_action(
         token_verifier,
         str(settings.attachment_storage_base_directory),
     )
+
+
+def form_component_value_output_factory() -> FormComponentValueOutputFactory:
+    return FormComponentValueOutputFactory()
+
+
+def form_select_component_data_output_factory(
+    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)]
+) -> FormSelectComponentDataOutputFactory:
+    return FormSelectComponentDataOutputFactory(factory)
+
+
+def static_form_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> StaticFormRepository:
+    return StaticFormRepository(session)
+
+
+def static_form_retrieve_by_type_action(repository: StaticFormRepository) -> StaticFormRetrieveByTypeAction:
+    return StaticFormRetrieveByTypeAction(repository)
+
+
+def static_form_text_area_output_factory() -> StaticFormTextAreaComponentOutputFactory:
+    return StaticFormTextAreaComponentOutputFactory()
+
+
+def static_form_text_field_output_factory() -> StaticFormTextFieldInputComponentOutputFactory:
+    return StaticFormTextFieldInputComponentOutputFactory()
+
+
+def static_form_checkbox_output_factory(
+    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)]
+) -> StaticFormCheckboxComponentOutputFactory:
+    return StaticFormCheckboxComponentOutputFactory(factory)
+
+
+def static_form_radio_factory(
+    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)]
+) -> StaticFormRadioComponentOutputFactory:
+    return StaticFormRadioComponentOutputFactory(factory)
+
+
+def static_form_select_factory(
+    factory: Annotated[FormSelectComponentDataOutputFactory, Depends(form_select_component_data_output_factory)]
+) -> StaticFormSelectComponentOutputFactory:
+    return StaticFormSelectComponentOutputFactory(factory)
+
+
+def static_form_component_output_factory(
+    text_area_factory: Annotated[
+        StaticFormTextAreaComponentOutputFactory, Depends(static_form_text_area_output_factory)
+    ],
+    text_field_factory: Annotated[
+        StaticFormTextFieldInputComponentOutputFactory, Depends(static_form_text_field_output_factory)
+    ],
+    checkbox_factory: Annotated[StaticFormCheckboxComponentOutputFactory, Depends(static_form_checkbox_output_factory)],
+    radio_factory: Annotated[StaticFormRadioComponentOutputFactory, Depends(static_form_radio_factory)],
+    select_factory: Annotated[StaticFormSelectComponentOutputFactory, Depends(static_form_select_factory)],
+) -> StaticFormComponentOutputFactory:
+    return StaticFormComponentOutputFactory(
+        text_area_factory,
+        text_field_factory,
+        checkbox_factory,
+        radio_factory,
+        select_factory,
+    )
+
+
+def static_form_output_factory(
+    factory: Annotated[StaticFormComponentOutputFactory, Depends(static_form_component_output_factory)]
+) -> StaticFormOutputFactory:
+    return StaticFormOutputFactory(factory)
 
 
 def jwks_client() -> PyJWKClient:
