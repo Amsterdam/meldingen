@@ -39,12 +39,12 @@ async def retrieve_static_form(
         **unauthorized_response,
         **not_found_response,
     },
+    dependencies=[Depends(authenticate_user)],
 )
 @inject
 async def update_static_form(
     form_type: Annotated[StaticFormTypeEnum, Path(description="The type of the static form.")],
     form_input: StaticFormInput,
-    user: Annotated[User, Depends(authenticate_user)],
     action: StaticFormUpdateAction = Depends(Provide(Container.static_form_update_action)),
     produce_output_model: StaticFormOutputFactory = Depends(Provide(Container.static_form_output_factory)),
 ) -> StaticFormOutput:
