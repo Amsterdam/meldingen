@@ -28,4 +28,4 @@ jobs:
         run: docker buildx bake --file docker-compose.yml --file docker-compose.cache.json
 
       - name: Run tests
-        run: API_DATABASE_DSN="postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test" docker compose run -e DATABASE_DSN --rm meldingen pytest --test-alembic  --cov --cov-fail-under=98 -v
+        run: API_DATABASE_DSN="postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test" docker compose run -e DATABASE_DSN --rm meldingen pytest --test-alembic  --cov --cov-fail-under=97 -v

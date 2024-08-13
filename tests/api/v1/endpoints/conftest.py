@@ -24,7 +24,7 @@ from meldingen.models import (
     StaticFormTypeEnum,
     User,
 )
-from meldingen.repositories import ClassificationRepository, FormRepository, QuestionRepository, StaticFormRepository
+from meldingen.repositories import ClassificationRepository, FormRepository, QuestionRepository
 
 
 @pytest.fixture
@@ -190,11 +190,6 @@ async def form_repository(container: Container) -> FormRepository:
 
 
 @pytest.fixture
-async def static_form_repository(container: Container) -> StaticFormRepository:
-    return await container.static_form_repository()
-
-
-@pytest.fixture
 async def question_repository(container: Container) -> QuestionRepository:
     return await container.question_repository()
 
@@ -350,34 +345,7 @@ async def test_forms(form_repository: FormRepository) -> list[Form]:
 
 
 @pytest.fixture
-async def primary_form(static_form_repository: StaticFormRepository) -> StaticForm:
-    try:
-        primary_form = await static_form_repository.retrieve_by_type(StaticFormTypeEnum.primary)
-    except NotFoundException:
-        primary_form = StaticForm(
-            type=StaticFormTypeEnum.primary, title="Primary form", display=FormIoFormDisplayEnum.form
-        )
-
-        component = FormIoTextAreaComponent(
-            label="Waar gaat het om?",
-            description="",
-            key="waar-gaat-het-om",
-            type=FormIoComponentTypeEnum.text_area,
-            input=True,
-            auto_expand=True,
-            show_char_count=True,
-        )
-
-        components = await primary_form.awaitable_attrs.components
-        components.append(component)
-
-        await static_form_repository.save(primary_form)
-
-    return primary_form
-
-
-@pytest.fixture
-async def test_primary_form(db_session: AsyncSession) -> StaticForm:
+async def primary_form(db_session: AsyncSession) -> StaticForm:
     try:
         statement = select(StaticForm).where(StaticForm.type == StaticFormTypeEnum.primary)
 
