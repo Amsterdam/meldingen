@@ -17,7 +17,12 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.dependencies import form_list_action, form_repository, form_retrieve_action
+from meldingen.dependencies import (
+    form_list_action,
+    form_repository,
+    form_retrieve_action,
+    form_retrieve_by_classification_action,
+)
 from meldingen.models import User
 from meldingen.output_schemas import FormOutput, SimpleFormOutput
 from meldingen.repositories import FormRepository
@@ -83,10 +88,9 @@ async def retrieve_form(
 
 
 @router.get("/classification/{classification_id}", name="form:classification", responses={**not_found_response})
-@inject
 async def retrieve_form_by_classification(
     classification_id: Annotated[int, Path(description="The id of the classification that the form belongs to.", ge=1)],
-    action: FormRetrieveByClassificationAction = Depends(Provide(Container.form_classification_action)),
+    action: Annotated[FormRetrieveByClassificationAction, Depends(form_retrieve_by_classification_action)],
     produce_output_model: FormOutputFactory = Depends(Provide[Container.form_output_factory]),
 ) -> FormOutput:
     form = await action(classification_id)

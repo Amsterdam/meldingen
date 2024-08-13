@@ -27,6 +27,7 @@ from meldingen.actions import (
     ClassificationUpdateAction,
     FormListAction,
     FormRetrieveAction,
+    FormRetrieveByClassificationAction,
     MeldingListAction,
     MeldingRetrieveAction,
     StaticFormRetrieveByTypeAction,
@@ -349,6 +350,12 @@ def form_list_action(repository: Annotated[FormRepository, Depends(form_reposito
 
 def form_retrieve_action(repository: Annotated[FormRepository, Depends(form_repository)]) -> FormRetrieveAction:
     return FormRetrieveAction(repository)
+
+
+def form_retrieve_by_classification_action(
+    repository: Annotated[FormRepository, Depends(form_repository)]
+) -> FormRetrieveByClassificationAction:
+    return FormRetrieveByClassificationAction(repository)
 
 
 def jwks_client() -> PyJWKClient:
