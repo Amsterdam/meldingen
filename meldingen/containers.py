@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from meldingen.actions import (
     FormCreateAction,
     FormDeleteAction,
-    FormRetrieveByClassificationAction,
     FormUpdateAction,
     UserListAction,
     UserRetrieveAction,
@@ -146,6 +145,3 @@ class Container(DeclarativeContainer):
         question_repository=question_repository,
     )
     form_delete_action: Factory[FormDeleteAction] = Factory(FormDeleteAction, repository=form_repository)
-    form_classification_action: Factory[FormRetrieveByClassificationAction] = Factory(
-        FormRetrieveByClassificationAction, repository=form_repository
-    )
