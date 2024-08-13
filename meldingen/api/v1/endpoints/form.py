@@ -18,6 +18,7 @@ from meldingen.api.v1 import list_response, not_found_response, unauthorized_res
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.dependencies import (
+    form_create_action,
     form_list_action,
     form_output_factory,
     form_repository,
@@ -110,13 +111,12 @@ async def retrieve_form_by_classification(
             "content": {"application/json": {"example": {"detail": "Classification not found"}}},
         },
     },
+    dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def create_form(
     form_input: FormInput,
-    user: Annotated[User, Depends(authenticate_user)],
-    action: FormCreateAction = Depends(Provide(Container.form_create_action)),
-    produce_output_model: FormOutputFactory = Depends(Provide[Container.form_output_factory]),
+    action: Annotated[FormCreateAction, Depends(form_create_action)],
+    produce_output_model: Annotated[FormOutputFactory, Depends(form_output_factory)],
 ) -> FormOutput:
     form = await action(form_input)
 

@@ -7,14 +7,7 @@ from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from meldingen.actions import (
-    FormCreateAction,
-    FormDeleteAction,
-    FormUpdateAction,
-    UserListAction,
-    UserRetrieveAction,
-    UserUpdateAction,
-)
+from meldingen.actions import FormDeleteAction, FormUpdateAction, UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.repositories import (
     ClassificationRepository,
     FormRepository,
@@ -132,12 +125,6 @@ class Container(DeclarativeContainer):
     user_update_action: Factory[UserUpdateAction] = Factory(UserUpdateAction, repository=user_repository)
 
     # Form actions
-    form_create_action: Factory[FormCreateAction] = Factory(
-        FormCreateAction,
-        repository=form_repository,
-        classification_repository=classification_repository,
-        question_repository=question_repository,
-    )
     form_update_action: Factory[FormUpdateAction] = Factory(
         FormUpdateAction,
         repository=form_repository,

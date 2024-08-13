@@ -1130,12 +1130,12 @@ class TestFormCreate(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     async def test_create_form_with_classification(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classification: Classification
     ) -> None:
         data = {
             "title": "Formulier #1",
             "display": "form",
-            "classification": classification.id,
+            "classification": test_classification.id,
             "components": [],
         }
 
@@ -1147,7 +1147,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert data.get("title") == "Formulier #1"
         assert data.get("display") == "form"
         assert data.get("components") == []
-        assert data.get("classification") == classification.id
+        assert data.get("classification") == test_classification.id
 
     @pytest.mark.anyio
     async def test_create_form_with_classification_that_does_not_exist(
