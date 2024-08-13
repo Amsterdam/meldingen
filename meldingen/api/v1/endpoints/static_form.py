@@ -1,6 +1,5 @@
 from typing import Annotated
 
-from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_404_NOT_FOUND
@@ -8,9 +7,12 @@ from starlette.status import HTTP_404_NOT_FOUND
 from meldingen.actions import StaticFormRetrieveByTypeAction, StaticFormUpdateAction
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
-from meldingen.containers import Container
-from meldingen.dependencies import static_form_output_factory, static_form_retrieve_by_type_action
-from meldingen.models import StaticFormTypeEnum, User
+from meldingen.dependencies import (
+    static_form_output_factory,
+    static_form_retrieve_by_type_action,
+    static_form_update_action,
+)
+from meldingen.models import StaticFormTypeEnum
 from meldingen.output_schemas import StaticFormOutput
 from meldingen.schema_factories import StaticFormOutputFactory
 from meldingen.schemas import StaticFormInput
@@ -41,12 +43,11 @@ async def retrieve_static_form(
     },
     dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def update_static_form(
     form_type: Annotated[StaticFormTypeEnum, Path(description="The type of the static form.")],
     form_input: StaticFormInput,
-    action: StaticFormUpdateAction = Depends(Provide(Container.static_form_update_action)),
-    produce_output_model: StaticFormOutputFactory = Depends(Provide(Container.static_form_output_factory)),
+    action: Annotated[StaticFormUpdateAction, Depends(static_form_update_action)],
+    produce_output_model: Annotated[StaticFormOutputFactory, Depends(static_form_output_factory)],
 ) -> StaticFormOutput:
     db_form = await action(form_type, form_input)
 

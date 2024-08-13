@@ -28,6 +28,7 @@ from meldingen.actions import (
     MeldingListAction,
     MeldingRetrieveAction,
     StaticFormRetrieveByTypeAction,
+    StaticFormUpdateAction,
     UploadAttachmentAction,
 )
 from meldingen.classification import DummyClassifierAdapter
@@ -275,6 +276,12 @@ def static_form_retrieve_by_type_action(
     repository: Annotated[StaticFormRepository, Depends(static_form_repository)]
 ) -> StaticFormRetrieveByTypeAction:
     return StaticFormRetrieveByTypeAction(repository)
+
+
+def static_form_update_action(
+    repository: Annotated[StaticFormRepository, Depends(static_form_repository)]
+) -> StaticFormUpdateAction:
+    return StaticFormUpdateAction(repository)
 
 
 def static_form_text_area_output_factory() -> StaticFormTextAreaComponentOutputFactory:
