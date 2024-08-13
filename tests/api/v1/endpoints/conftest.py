@@ -233,6 +233,33 @@ async def form(form_repository: FormRepository, question_repository: QuestionRep
 
 
 @pytest.fixture
+async def test_form(db_session: AsyncSession, form_title: str) -> Form:
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
+
+    component = FormIoTextAreaComponent(
+        label="Wat is uw klacht?",
+        description="",
+        key="wat-is-uw_klacht",
+        type=FormIoComponentTypeEnum.text_area,
+        input=True,
+        auto_expand=True,
+        show_char_count=True,
+    )
+
+    components = await form.awaitable_attrs.components
+    components.append(component)
+
+    question = Question(text=component.description, form=form)
+
+    component.question = question
+
+    db_session.add(form)
+    await db_session.commit()
+
+    return form
+
+
+@pytest.fixture
 async def form_with_classification(
     classification_repository: ClassificationRepository,
     form_repository: FormRepository,

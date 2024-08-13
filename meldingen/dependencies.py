@@ -26,6 +26,8 @@ from meldingen.actions import (
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
     FormListAction,
+    FormRetrieveAction,
+    FormRetrieveByClassificationAction,
     MeldingListAction,
     MeldingRetrieveAction,
     StaticFormRetrieveByTypeAction,
@@ -48,8 +50,15 @@ from meldingen.repositories import (
     UserRepository,
 )
 from meldingen.schema_factories import (
+    FormCheckboxComponentOutputFactory,
+    FormComponentOutputFactory,
     FormComponentValueOutputFactory,
+    FormOutputFactory,
+    FormRadioComponentOutputFactory,
     FormSelectComponentDataOutputFactory,
+    FormSelectComponentOutputFactory,
+    FormTextAreaComponentOutputFactory,
+    FormTextFieldInputComponentOutputFactory,
     StaticFormCheckboxComponentOutputFactory,
     StaticFormComponentOutputFactory,
     StaticFormOutputFactory,
@@ -342,8 +351,66 @@ def form_repository(session: Annotated[AsyncSession, Depends(database_session)])
     return FormRepository(session)
 
 
+def form_text_area_output_factory() -> FormTextAreaComponentOutputFactory:
+    return FormTextAreaComponentOutputFactory()
+
+
+def form_text_field_input_factory() -> FormTextFieldInputComponentOutputFactory:
+    return FormTextFieldInputComponentOutputFactory()
+
+
+def form_checkbox_output_factory(
+    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)]
+) -> FormCheckboxComponentOutputFactory:
+    return FormCheckboxComponentOutputFactory(factory)
+
+
+def form_radio_factory(
+    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)]
+) -> FormRadioComponentOutputFactory:
+    return FormRadioComponentOutputFactory(factory)
+
+
+def form_select_factory(
+    factory: Annotated[FormSelectComponentDataOutputFactory, Depends(form_select_component_data_output_factory)]
+) -> FormSelectComponentOutputFactory:
+    return FormSelectComponentOutputFactory(factory)
+
+
+def form_component_output_factory(
+    text_area_factory: Annotated[FormTextAreaComponentOutputFactory, Depends(form_text_area_output_factory)],
+    text_field_factory: Annotated[FormTextFieldInputComponentOutputFactory, Depends(form_text_field_input_factory)],
+    checkbox_factory: Annotated[FormCheckboxComponentOutputFactory, Depends(form_checkbox_output_factory)],
+    radio_factory: Annotated[FormRadioComponentOutputFactory, Depends(form_radio_factory)],
+    select_factory: Annotated[FormSelectComponentOutputFactory, Depends(form_select_factory)],
+) -> FormComponentOutputFactory:
+    return FormComponentOutputFactory(
+        text_area_factory,
+        text_field_factory,
+        checkbox_factory,
+        radio_factory,
+        select_factory,
+    )
+
+
+def form_output_factory(
+    factory: Annotated[FormComponentOutputFactory, Depends(form_component_output_factory)]
+) -> FormOutputFactory:
+    return FormOutputFactory(factory)
+
+
 def form_list_action(repository: Annotated[FormRepository, Depends(form_repository)]) -> FormListAction:
     return FormListAction(repository)
+
+
+def form_retrieve_action(repository: Annotated[FormRepository, Depends(form_repository)]) -> FormRetrieveAction:
+    return FormRetrieveAction(repository)
+
+
+def form_retrieve_by_classification_action(
+    repository: Annotated[FormRepository, Depends(form_repository)]
+) -> FormRetrieveByClassificationAction:
+    return FormRetrieveByClassificationAction(repository)
 
 
 def jwks_client() -> PyJWKClient:
