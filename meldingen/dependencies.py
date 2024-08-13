@@ -25,6 +25,7 @@ from meldingen.actions import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    FormListAction,
     MeldingListAction,
     MeldingRetrieveAction,
     StaticFormRetrieveByTypeAction,
@@ -40,6 +41,7 @@ from meldingen.repositories import (
     AnswerRepository,
     AttachmentRepository,
     ClassificationRepository,
+    FormRepository,
     MeldingRepository,
     QuestionRepository,
     StaticFormRepository,
@@ -334,6 +336,14 @@ def static_form_output_factory(
     factory: Annotated[StaticFormComponentOutputFactory, Depends(static_form_component_output_factory)]
 ) -> StaticFormOutputFactory:
     return StaticFormOutputFactory(factory)
+
+
+def form_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> FormRepository:
+    return FormRepository(session)
+
+
+def form_list_action(repository: Annotated[FormRepository, Depends(form_repository)]) -> FormListAction:
+    return FormListAction(repository)
 
 
 def jwks_client() -> PyJWKClient:

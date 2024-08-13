@@ -124,7 +124,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         limit: int,
         offset: int,
         expected_result: int,
-        test_forms: list[Form],
+        forms: list[Form],
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
@@ -151,7 +151,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         limit: int,
         offset: int,
         expected_result: int,
-        test_forms: list[Form],
+        forms: list[Form],
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
@@ -243,7 +243,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
-        test_forms: list[Form],
+        forms: list[Form],
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
@@ -300,7 +300,7 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
-        test_forms: list[Form],
+        forms: list[Form],
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME),
