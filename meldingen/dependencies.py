@@ -271,7 +271,9 @@ def static_form_repository(session: Annotated[AsyncSession, Depends(database_ses
     return StaticFormRepository(session)
 
 
-def static_form_retrieve_by_type_action(repository: StaticFormRepository) -> StaticFormRetrieveByTypeAction:
+def static_form_retrieve_by_type_action(
+    repository: Annotated[StaticFormRepository, Depends(static_form_repository)]
+) -> StaticFormRetrieveByTypeAction:
     return StaticFormRetrieveByTypeAction(repository)
 
 
