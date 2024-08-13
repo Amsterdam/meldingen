@@ -332,14 +332,16 @@ async def test_form_with_classification(db_session: AsyncSession, form_title: st
 
 
 @pytest.fixture
-async def test_forms(form_repository: FormRepository) -> list[Form]:
+async def forms(db_session: AsyncSession) -> list[Form]:
     forms = []
     for n in range(1, 11):
         form = Form(title=f"Form #{n}", display=FormIoFormDisplayEnum.form)
 
-        await form_repository.save(form)
+        db_session.add(form)
 
         forms.append(form)
+
+    await db_session.commit()
 
     return forms
 
