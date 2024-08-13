@@ -328,7 +328,7 @@ class FormComponentOutputFactory:
     _text_field_component: FormTextFieldInputComponentOutputFactory
     _checkbox_component: FormCheckboxComponentOutputFactory
     _radio_component: FormRadioComponentOutputFactory
-    _select_component: FormSelectComponentDataOutputFactory
+    _select_component: FormSelectComponentOutputFactory
 
     def __init__(
         self,
@@ -336,7 +336,7 @@ class FormComponentOutputFactory:
         text_field_factory: FormTextFieldInputComponentOutputFactory,
         checkbox_factory: FormCheckboxComponentOutputFactory,
         radio_factory: FormRadioComponentOutputFactory,
-        select_factory: FormSelectComponentDataOutputFactory,
+        select_factory: FormSelectComponentOutputFactory,
     ):
         self._text_area_component = text_area_factory
         self._text_field_component = text_field_factory
@@ -351,7 +351,7 @@ class FormComponentOutputFactory:
             FormTextFieldInputComponentOutput,
             FormCheckboxComponentOutput,
             FormRadioComponentOutput,
-            FormSelectComponentDataOutput,
+            FormSelectComponentOutput,
         ]
     ]:
         output_components: list[
@@ -361,7 +361,7 @@ class FormComponentOutputFactory:
                 FormTextFieldInputComponentOutput,
                 FormCheckboxComponentOutput,
                 FormRadioComponentOutput,
-                FormSelectComponentDataOutput,
+                FormSelectComponentOutput,
             ]
         ] = []
         for component in components:
