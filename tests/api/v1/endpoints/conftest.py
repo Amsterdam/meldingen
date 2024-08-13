@@ -126,11 +126,6 @@ def auth_user(app: FastAPI) -> None:
 
 
 @pytest.fixture
-async def classification_repository(container: Container) -> ClassificationRepository:
-    return await container.classification_repository()
-
-
-@pytest.fixture
 def classification_name(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)
@@ -187,11 +182,6 @@ async def classification_with_form(db_session: AsyncSession) -> Classification:
 @pytest.fixture
 async def form_repository(container: Container) -> FormRepository:
     return await container.form_repository()
-
-
-@pytest.fixture
-async def question_repository(container: Container) -> QuestionRepository:
-    return await container.question_repository()
 
 
 @pytest.fixture
