@@ -1,5 +1,4 @@
 from typing import AsyncGenerator, AsyncIterator, Callable
-from unittest.mock import Mock
 
 import pytest
 from asgi_lifespan import LifespanManager
