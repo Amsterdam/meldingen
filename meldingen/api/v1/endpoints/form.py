@@ -25,6 +25,7 @@ from meldingen.dependencies import (
     form_repository,
     form_retrieve_action,
     form_retrieve_by_classification_action,
+    form_update_action,
 )
 from meldingen.models import User
 from meldingen.output_schemas import FormOutput, SimpleFormOutput
@@ -135,14 +136,13 @@ async def create_form(
             "content": {"application/json": {"example": {"detail": "Classification not found"}}},
         },
     },
+    dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def update_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
     form_input: FormInput,
-    user: Annotated[User, Depends(authenticate_user)],
-    action: FormUpdateAction = Depends(Provide(Container.form_update_action)),
-    produce_output_model: FormOutputFactory = Depends(Provide[Container.form_output_factory]),
+    action: Annotated[FormUpdateAction, Depends(form_update_action)],
+    produce_output_model: Annotated[FormOutputFactory, Depends(form_output_factory)],
 ) -> FormOutput:
     db_form = await action(form_id, form_input)
 
