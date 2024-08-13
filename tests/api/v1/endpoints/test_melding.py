@@ -600,9 +600,9 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         melding_with_classification: Melding,
-        test_form_with_classification: Form,
+        form_with_classification: Form,
     ) -> None:
-        components = await test_form_with_classification.awaitable_attrs.components
+        components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -634,9 +634,9 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        test_form_with_classification: Form,
+        form_with_classification: Form,
     ) -> None:
-        components = await test_form_with_classification.awaitable_attrs.components
+        components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -665,9 +665,9 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         melding: Melding,
-        test_form_with_classification: Form,
+        form_with_classification: Form,
     ) -> None:
-        components = await test_form_with_classification.awaitable_attrs.components
+        components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -693,9 +693,9 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         melding: Melding,
-        test_form_with_classification: Form,
+        form_with_classification: Form,
     ) -> None:
-        components = await test_form_with_classification.awaitable_attrs.components
+        components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -732,9 +732,9 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         melding: Melding,
-        test_form_with_classification: Form,
+        form_with_classification: Form,
     ) -> None:
-        components = await test_form_with_classification.awaitable_attrs.components
+        components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
