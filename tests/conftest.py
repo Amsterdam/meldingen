@@ -115,6 +115,22 @@ async def test_users(user_repository: UserRepository) -> list[User]:
 
 
 @pytest.fixture
+async def users(db_session: AsyncSession) -> list[User]:
+    """Fixture providing a list test user instances."""
+
+    users = []
+    for n in range(10):
+        user = User(username=f"test_user_{n}", email=f"test_email_{n}@example.com")
+
+        db_session.add(user)
+        users.append(user)
+
+    await db_session.commit()
+
+    return users
+
+
+@pytest.fixture
 def container(alembic_engine: AsyncEngine) -> Container:
     async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
         async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

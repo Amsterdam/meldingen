@@ -127,7 +127,7 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         limit: int,
         offset: int,
         expected_result: int,
-        test_users: list[User],
+        users: list[User],
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
@@ -215,7 +215,7 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
-        test_users: list[User],
+        users: list[User],
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
@@ -271,7 +271,7 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
-        test_users: list[User],
+        users: list[User],
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME),
