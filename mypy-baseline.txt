@@ -49,7 +49,5 @@ tests/conftest.py:0: error: Call to untyped function "compiles" in typed context
 tests/conftest.py:0: error: Untyped decorator makes function "_compile_drop_table" untyped  [misc]
 tests/conftest.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
 tests/conftest.py:0: error: Call to untyped function "visit_drop_table" in typed context  [no-untyped-call]
-tests/conftest.py:0: error: Returning Any from function declared to return "UserRepository"  [no-any-return]
-tests/conftest.py:0: error: Incompatible types in "await" (actual type "UserRepository", expected type "Awaitable[Any]")  [misc]
 tests/conftest.py:0: error: Argument "app" to "ASGITransport" has incompatible type "FastAPI"; expected "Callable[[dict[str, Any], Callable[[], Awaitable[dict[str, Any]]], Callable[[dict[str, Any]], Coroutine[None, None, None]]], Coroutine[None, None, None]]"  [arg-type]
 tests/conftest.py:0: note: "FastAPI.__call__" has type "Callable[[Arg(MutableMapping[str, Any], 'scope'), Arg(Callable[[], Awaitable[MutableMapping[str, Any]]], 'receive'), Arg(Callable[[MutableMapping[str, Any]], Awaitable[None]], 'send')], Coroutine[Any, Any, None]]"

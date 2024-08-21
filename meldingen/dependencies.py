@@ -35,6 +35,7 @@ from meldingen.actions import (
     StaticFormUpdateAction,
     UploadAttachmentAction,
     UserCreateAction,
+    UserDeleteAction,
     UserListAction,
     UserRetrieveAction,
     UserUpdateAction,
@@ -448,3 +449,7 @@ def user_retrieve_action(repository: Annotated[UserRepository, Depends(user_repo
 
 def user_update_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserUpdateAction:
     return UserUpdateAction(repository)
+
+
+def user_delete_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserDeleteAction:
+    return UserDeleteAction(repository)
