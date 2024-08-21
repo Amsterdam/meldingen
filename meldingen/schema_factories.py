@@ -129,7 +129,7 @@ class StaticFormSelectComponentOutputFactory:
             type=component.type,
             input=component.input,
             position=component.position,
-            widget=component.widget,
+            widget=await component.awaitable_attrs.widget,
             placeholder=component.placeholder,
             data=await self._data(component),
         )
