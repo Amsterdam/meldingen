@@ -386,8 +386,8 @@ class TestFormDelete(BaseUnauthorizedTest):
         [("Form #1",), ("Form #2",)],
         indirect=True,
     )
-    async def test_delete_form(self, app: FastAPI, client: AsyncClient, auth_user: None, test_form: Form) -> None:
-        response = await client.delete(app.url_path_for(self.ROUTE_NAME, form_id=test_form.id))
+    async def test_delete_form(self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form) -> None:
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, form_id=form.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
 
