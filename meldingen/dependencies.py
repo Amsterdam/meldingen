@@ -36,6 +36,7 @@ from meldingen.actions import (
     UploadAttachmentAction,
     UserCreateAction,
     UserListAction,
+    UserRetrieveAction,
 )
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
@@ -438,3 +439,7 @@ def user_create_action(repository: Annotated[UserRepository, Depends(user_reposi
 
 def user_list_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserListAction:
     return UserListAction(repository)
+
+
+def user_retrieve_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserRetrieveAction:
+    return UserRetrieveAction(repository)

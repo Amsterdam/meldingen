@@ -11,7 +11,7 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.dependencies import user_create_action, user_list_action, user_repository
+from meldingen.dependencies import user_create_action, user_list_action, user_repository, user_retrieve_action
 from meldingen.models import User
 from meldingen.repositories import UserRepository
 from meldingen.schemas import UserCreateInput, UserOutput, UserUpdateInput
@@ -75,12 +75,15 @@ async def list_users(
     return output
 
 
-@router.get("/{user_id}", name="user:retrieve", responses={**unauthorized_response, **not_found_response})
-@inject
+@router.get(
+    "/{user_id}",
+    name="user:retrieve",
+    responses={**unauthorized_response, **not_found_response},
+    dependencies=[Depends(authenticate_user)],
+)
 async def retrieve_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
-    user: Annotated[User, Depends(authenticate_user)],
-    action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
+    action: Annotated[UserRetrieveAction, Depends(user_retrieve_action)],
 ) -> UserOutput:
     db_user = await action(pk=user_id)
     if not db_user:
