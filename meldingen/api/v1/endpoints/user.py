@@ -54,13 +54,12 @@ async def _add_content_range_header(
     "/",
     name="user:list",
     responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(_add_content_range_header)],
+    dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
 )
 @inject
 async def list_users(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
-    user: Annotated[User, Depends(authenticate_user)],
     action: UserListAction = Depends(Provide(Container.user_list_action)),
 ) -> list[UserOutput]:
     limit = pagination["limit"] or 0
