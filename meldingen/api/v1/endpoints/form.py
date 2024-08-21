@@ -19,6 +19,7 @@ from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
 from meldingen.dependencies import (
     form_create_action,
+    form_delete_action,
     form_list_action,
     form_output_factory,
     form_repository,
@@ -158,10 +159,9 @@ async def update_form(
     },
     dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def delete_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
-    action: FormDeleteAction = Depends(Provide(Container.form_delete_action)),
+    action: Annotated[FormDeleteAction, Depends(form_delete_action)],
 ) -> None:
     try:
         await action(pk=form_id)

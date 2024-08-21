@@ -26,6 +26,7 @@ from meldingen.actions import (
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
     FormCreateAction,
+    FormDeleteAction,
     FormListAction,
     FormRetrieveAction,
     FormRetrieveByClassificationAction,
@@ -425,6 +426,10 @@ def form_retrieve_by_classification_action(
     repository: Annotated[FormRepository, Depends(form_repository)]
 ) -> FormRetrieveByClassificationAction:
     return FormRetrieveByClassificationAction(repository)
+
+
+def form_delete_action(repository: Annotated[FormRepository, Depends(form_repository)]) -> FormDeleteAction:
+    return FormDeleteAction(repository)
 
 
 def jwks_client() -> PyJWKClient:
