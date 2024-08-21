@@ -11,6 +11,7 @@ from meldingen_core.actions.melding import (
     MeldingProcessAction,
     MeldingUpdateAction,
 )
+from meldingen_core.actions.user import UserCreateAction
 from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
@@ -428,3 +429,7 @@ def jwks_client() -> PyJWKClient:
 
 def py_jwt() -> PyJWT:
     return PyJWT()
+
+
+def user_create_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserCreateAction:
+    return UserCreateAction(repository)

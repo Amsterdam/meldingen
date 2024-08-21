@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Configuration, Factory, Resource, Singleton
-from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
+from meldingen_core.actions.user import UserDeleteAction
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -118,7 +118,6 @@ class Container(DeclarativeContainer):
     )
 
     # User actions
-    user_create_action: Factory[UserCreateAction] = Factory(UserCreateAction, repository=user_repository)
     user_list_action: Factory[UserListAction] = Factory(UserListAction, repository=user_repository)
     user_retrieve_action: Factory[UserRetrieveAction] = Factory(UserRetrieveAction, repository=user_repository)
     user_delete_action: Factory[UserDeleteAction] = Factory(UserDeleteAction, repository=user_repository)

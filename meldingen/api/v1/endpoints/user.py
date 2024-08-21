@@ -11,6 +11,7 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
+from meldingen.dependencies import user_create_action
 from meldingen.models import User
 from meldingen.repositories import UserRepository
 from meldingen.schemas import UserCreateInput, UserOutput, UserUpdateInput
@@ -31,10 +32,9 @@ def _hydrate_output(user: User) -> UserOutput:
     responses={**unauthorized_response, **conflict_response},
     dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def create_user(
     user_input: UserCreateInput,
-    action: UserCreateAction = Depends(Provide(Container.user_create_action)),
+    action: Annotated[UserCreateAction, Depends(user_create_action)],
 ) -> UserOutput:
     db_user = User(**user_input.model_dump())
     await action(db_user)
