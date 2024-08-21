@@ -75,11 +75,15 @@ async def list_users(
     return output
 
 
-@router.get("/{user_id}", name="user:retrieve", responses={**unauthorized_response, **not_found_response})
+@router.get(
+    "/{user_id}",
+    name="user:retrieve",
+    responses={**unauthorized_response, **not_found_response},
+    dependencies=[Depends(authenticate_user)],
+)
 @inject
 async def retrieve_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
-    user: Annotated[User, Depends(authenticate_user)],
     action: UserRetrieveAction = Depends(Provide(Container.user_retrieve_action)),
 ) -> UserOutput:
     db_user = await action(pk=user_id)
