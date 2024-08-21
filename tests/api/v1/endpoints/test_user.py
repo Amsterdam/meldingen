@@ -354,8 +354,8 @@ class TestUserDelete(BaseUnauthorizedTest):
         [("username #1", "user-1@example.com"), ("username #2", "user-2@example.com")],
         indirect=True,
     )
-    async def test_delete_user(self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User) -> None:
-        response = await client.delete(app.url_path_for(self.ROUTE_NAME, user_id=test_user.id))
+    async def test_delete_user(self, app: FastAPI, client: AsyncClient, auth_user: None, user: User) -> None:
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, user_id=user.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
 

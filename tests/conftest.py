@@ -54,11 +54,6 @@ async def test_database(alembic_engine: AsyncEngine) -> None:
 
 
 @pytest.fixture
-async def user_repository(container: Container) -> UserRepository:
-    return await container.user_repository()
-
-
-@pytest.fixture
 def user_username(request: FixtureRequest) -> str:
     """Fixture providing a username."""
 
@@ -76,17 +71,6 @@ def user_email(request: FixtureRequest) -> str:
         return str(request.param)
     else:
         return "user@example.com"
-
-
-@pytest.fixture
-async def test_user(user_repository: UserRepository, user_username: str, user_email: str) -> User:
-    """Fixture providing a single test user instance."""
-
-    user = User(username=user_username, email=user_email)
-
-    await user_repository.save(user)
-
-    return user
 
 
 @pytest.fixture
