@@ -1,18 +1,16 @@
 from typing import Annotated
 
-from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
-from meldingen_core.actions.user import UserDeleteAction
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from meldingen.actions import UserCreateAction, UserListAction, UserRetrieveAction, UserUpdateAction
+from meldingen.actions import UserCreateAction, UserDeleteAction, UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
-from meldingen.containers import Container
 from meldingen.dependencies import (
     user_create_action,
+    user_delete_action,
     user_list_action,
     user_repository,
     user_retrieve_action,
@@ -111,11 +109,10 @@ async def retrieve_user(
         **not_found_response,
     },
 )
-@inject
 async def delete_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
     user: Annotated[User, Depends(authenticate_user)],
-    action: UserDeleteAction = Depends(Provide(Container.user_delete_action)),
+    action: Annotated[UserDeleteAction, Depends(user_delete_action)],
 ) -> None:
     if user.id == user_id:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="You cannot delete your own account")
