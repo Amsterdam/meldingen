@@ -6,7 +6,7 @@ from dependency_injector.providers import Configuration, Factory, Resource, Sing
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from meldingen.actions import FormDeleteAction, FormUpdateAction
+from meldingen.actions import FormUpdateAction
 from meldingen.repositories import (
     ClassificationRepository,
     FormRepository,
@@ -123,4 +123,3 @@ class Container(DeclarativeContainer):
         classification_repository=classification_repository,
         question_repository=question_repository,
     )
-    form_delete_action: Factory[FormDeleteAction] = Factory(FormDeleteAction, repository=form_repository)
