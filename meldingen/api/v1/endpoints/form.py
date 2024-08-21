@@ -156,11 +156,11 @@ async def update_form(
         **unauthorized_response,
         **not_found_response,
     },
+    dependencies=[Depends(authenticate_user)],
 )
 @inject
 async def delete_form(
     form_id: Annotated[int, Path(description="The id of the form.", ge=1)],
-    user: Annotated[User, Depends(authenticate_user)],
     action: FormDeleteAction = Depends(Provide(Container.form_delete_action)),
 ) -> None:
     try:
