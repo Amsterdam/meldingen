@@ -419,9 +419,9 @@ class TestUserUpdate(BaseUnauthorizedTest):
         indirect=["user_username", "user_email"],
     )
     async def test_update_user(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, new_data: dict[str, str]
+        self, app: FastAPI, client: AsyncClient, auth_user: None, user: User, new_data: dict[str, str]
     ) -> None:
-        response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=test_user.id), json=new_data)
+        response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=user.id), json=new_data)
 
         assert response.status_code == HTTP_200_OK
 
@@ -430,14 +430,14 @@ class TestUserUpdate(BaseUnauthorizedTest):
         for key, value in new_data.items():
             assert data.get(key) == value
 
-        assert data.get("created_at") == test_user.created_at.isoformat()
-        assert data.get("updated_at") == test_user.updated_at.isoformat()
+        assert data.get("created_at") == user.created_at.isoformat()
+        assert data.get("updated_at") == user.updated_at.isoformat()
 
     @pytest.mark.anyio
     async def test_update_user_username_minimum_length_violation(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User
+        self, app: FastAPI, client: AsyncClient, auth_user: None, user: User
     ) -> None:
-        response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=test_user.id), json={"username": "ab"})
+        response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=user.id), json={"username": "ab"})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -460,9 +460,9 @@ class TestUserUpdate(BaseUnauthorizedTest):
         ],
     )
     async def test_update_user_invalid_data(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, invalid_data: dict[str, str]
+        self, app: FastAPI, client: AsyncClient, auth_user: None, user: User, invalid_data: dict[str, str]
     ) -> None:
-        response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=test_user.id), json=invalid_data)
+        response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=user.id), json=invalid_data)
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -491,11 +491,11 @@ class TestUserUpdate(BaseUnauthorizedTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        test_users: list[User],
+        users: list[User],
         new_username: str,
         new_email: str,
     ) -> None:
-        test_user = test_users[0]
+        test_user = users[0]
 
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, user_id=test_user.id),
