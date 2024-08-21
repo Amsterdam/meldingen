@@ -90,6 +90,16 @@ async def test_user(user_repository: UserRepository, user_username: str, user_em
 
 
 @pytest.fixture
+async def user(db_session: AsyncSession, user_username: str, user_email: str) -> User:
+    user = User(username=user_username, email=user_email)
+
+    db_session.add(user)
+    await db_session.commit()
+
+    return user
+
+
+@pytest.fixture
 async def test_users(user_repository: UserRepository) -> list[User]:
     """Fixture providing a list test user instances."""
 
