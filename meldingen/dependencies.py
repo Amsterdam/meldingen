@@ -11,7 +11,6 @@ from meldingen_core.actions.melding import (
     MeldingProcessAction,
     MeldingUpdateAction,
 )
-from meldingen_core.actions.user import UserCreateAction
 from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
@@ -35,6 +34,7 @@ from meldingen.actions import (
     StaticFormRetrieveByTypeAction,
     StaticFormUpdateAction,
     UploadAttachmentAction,
+    UserCreateAction,
 )
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
