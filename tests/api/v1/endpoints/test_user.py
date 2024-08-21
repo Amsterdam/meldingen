@@ -312,17 +312,17 @@ class TestUserRetrieve(BaseUnauthorizedTest):
         [("username #1", "user-1@example.com"), ("username #2", "user-2@example.com")],
         indirect=True,
     )
-    async def test_retrieve_user(self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, user_id=test_user.id))
+    async def test_retrieve_user(self, app: FastAPI, client: AsyncClient, auth_user: None, user: User) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, user_id=user.id))
 
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
-        assert data.get("id") == test_user.id
-        assert data.get("username") == test_user.username
-        assert data.get("email") == test_user.email
-        assert data.get("created_at") == test_user.created_at.isoformat()
-        assert data.get("updated_at") == test_user.updated_at.isoformat()
+        assert data.get("id") == user.id
+        assert data.get("username") == user.username
+        assert data.get("email") == user.email
+        assert data.get("created_at") == user.created_at.isoformat()
+        assert data.get("updated_at") == user.updated_at.isoformat()
 
     @pytest.mark.anyio
     async def test_retrieve_user_that_does_not_exist(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
