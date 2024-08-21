@@ -14,6 +14,7 @@ from meldingen_core.actions.classification import ClassificationUpdateAction as 
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
 from meldingen_core.actions.user import UserCreateAction as BaseUserCreateAction
+from meldingen_core.actions.user import UserDeleteAction as BaseUserDeleteAction
 from meldingen_core.actions.user import UserListAction as BaseUserListAction
 from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
@@ -90,6 +91,9 @@ class UserRetrieveAction(BaseUserRetrieveAction[User, User]): ...
 
 
 class UserUpdateAction(BaseUserUpdateAction[User, User]): ...
+
+
+class UserDeleteAction(BaseUserDeleteAction[User, User]): ...
 
 
 class MeldingListAction(BaseMeldingListAction[Melding, Melding], BaseListAction[Melding, Melding]): ...
