@@ -121,13 +121,15 @@ async def delete_user(
 
 
 @router.patch(
-    "/{user_id}", name="user:update", responses={**unauthorized_response, **not_found_response, **conflict_response}
+    "/{user_id}",
+    name="user:update",
+    responses={**unauthorized_response, **not_found_response, **conflict_response},
+    dependencies=[Depends(authenticate_user)],
 )
 @inject
 async def update_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
     user_input: UserUpdateInput,
-    user: Annotated[User, Depends(authenticate_user)],
     action: UserUpdateAction = Depends(Provide(Container.user_update_action)),
 ) -> UserOutput:
     user_data = user_input.model_dump(exclude_unset=True)
