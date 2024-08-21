@@ -13,6 +13,7 @@ from meldingen_core.actions.classification import ClassificationRetrieveAction a
 from meldingen_core.actions.classification import ClassificationUpdateAction as BaseClassificationUpdateAction
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
+from meldingen_core.actions.user import UserCreateAction as BaseUserCreateAction
 from meldingen_core.actions.user import UserListAction as BaseUserListAction
 from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
@@ -77,6 +78,9 @@ class BaseListAction(BaseCoreListAction[T, T_co]):
                 HTTP_422_UNPROCESSABLE_ENTITY,
                 [{"loc": ("query", "sort"), "msg": e.message, "type": "attribute_not_found"}],
             )
+
+
+class UserCreateAction(BaseUserCreateAction[User, User]): ...
 
 
 class UserListAction(BaseUserListAction[User, User], BaseListAction[User, User]): ...

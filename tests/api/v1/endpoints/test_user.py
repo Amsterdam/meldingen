@@ -90,7 +90,7 @@ class TestUserCreate(BaseUnauthorizedTest):
         indirect=["user_username", "user_email"],
     )
     async def test_create_existing_user_invalid(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_user: User, new_username: str, new_email: str
+        self, app: FastAPI, client: AsyncClient, auth_user: None, user: User, new_username: str, new_email: str
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME), json={"username": new_username, "email": new_email}

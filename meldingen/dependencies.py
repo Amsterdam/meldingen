@@ -34,6 +34,7 @@ from meldingen.actions import (
     StaticFormRetrieveByTypeAction,
     StaticFormUpdateAction,
     UploadAttachmentAction,
+    UserCreateAction,
 )
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
@@ -428,3 +429,7 @@ def jwks_client() -> PyJWKClient:
 
 def py_jwt() -> PyJWT:
     return PyJWT()
+
+
+def user_create_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserCreateAction:
+    return UserCreateAction(repository)

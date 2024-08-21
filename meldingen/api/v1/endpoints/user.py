@@ -2,15 +2,16 @@ from typing import Annotated
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
-from meldingen_core.actions.user import UserCreateAction, UserDeleteAction
+from meldingen_core.actions.user import UserDeleteAction
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from meldingen.actions import UserListAction, UserRetrieveAction, UserUpdateAction
+from meldingen.actions import UserCreateAction, UserListAction, UserRetrieveAction, UserUpdateAction
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
+from meldingen.dependencies import user_create_action
 from meldingen.models import User
 from meldingen.repositories import UserRepository
 from meldingen.schemas import UserCreateInput, UserOutput, UserUpdateInput
@@ -25,13 +26,15 @@ def _hydrate_output(user: User) -> UserOutput:
 
 
 @router.post(
-    "/", name="user:create", status_code=HTTP_201_CREATED, responses={**unauthorized_response, **conflict_response}
+    "/",
+    name="user:create",
+    status_code=HTTP_201_CREATED,
+    responses={**unauthorized_response, **conflict_response},
+    dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def create_user(
     user_input: UserCreateInput,
-    user: Annotated[User, Depends(authenticate_user)],
-    action: UserCreateAction = Depends(Provide(Container.user_create_action)),
+    action: Annotated[UserCreateAction, Depends(user_create_action)],
 ) -> UserOutput:
     db_user = User(**user_input.model_dump())
     await action(db_user)
