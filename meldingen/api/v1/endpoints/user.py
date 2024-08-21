@@ -25,12 +25,15 @@ def _hydrate_output(user: User) -> UserOutput:
 
 
 @router.post(
-    "/", name="user:create", status_code=HTTP_201_CREATED, responses={**unauthorized_response, **conflict_response}
+    "/",
+    name="user:create",
+    status_code=HTTP_201_CREATED,
+    responses={**unauthorized_response, **conflict_response},
+    dependencies=[Depends(authenticate_user)],
 )
 @inject
 async def create_user(
     user_input: UserCreateInput,
-    user: Annotated[User, Depends(authenticate_user)],
     action: UserCreateAction = Depends(Provide(Container.user_create_action)),
 ) -> UserOutput:
     db_user = User(**user_input.model_dump())
