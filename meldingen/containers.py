@@ -6,7 +6,7 @@ from dependency_injector.providers import Configuration, Factory, Resource, Sing
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from meldingen.repositories import UserRepository, GroupRepository, StaticFormRepository
+from meldingen.repositories import GroupRepository, StaticFormRepository, UserRepository
 
 
 def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
