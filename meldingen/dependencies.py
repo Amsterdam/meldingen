@@ -35,6 +35,7 @@ from meldingen.actions import (
     StaticFormUpdateAction,
     UploadAttachmentAction,
     UserCreateAction,
+    UserListAction,
 )
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
@@ -433,3 +434,7 @@ def py_jwt() -> PyJWT:
 
 def user_create_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserCreateAction:
     return UserCreateAction(repository)
+
+
+def user_list_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserListAction:
+    return UserListAction(repository)

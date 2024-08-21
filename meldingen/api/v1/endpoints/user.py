@@ -11,7 +11,7 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.dependencies import user_create_action, user_repository
+from meldingen.dependencies import user_create_action, user_list_action, user_repository
 from meldingen.models import User
 from meldingen.repositories import UserRepository
 from meldingen.schemas import UserCreateInput, UserOutput, UserUpdateInput
@@ -56,11 +56,10 @@ async def _add_content_range_header(
     responses={**list_response, **unauthorized_response},
     dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
 )
-@inject
 async def list_users(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
-    action: UserListAction = Depends(Provide(Container.user_list_action)),
+    action: Annotated[UserListAction, Depends(user_list_action)],
 ) -> list[UserOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
