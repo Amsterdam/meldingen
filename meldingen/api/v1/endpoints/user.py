@@ -11,7 +11,13 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.containers import Container
-from meldingen.dependencies import user_create_action, user_list_action, user_repository, user_retrieve_action
+from meldingen.dependencies import (
+    user_create_action,
+    user_list_action,
+    user_repository,
+    user_retrieve_action,
+    user_update_action,
+)
 from meldingen.models import User
 from meldingen.repositories import UserRepository
 from meldingen.schemas import UserCreateInput, UserOutput, UserUpdateInput
@@ -121,14 +127,15 @@ async def delete_user(
 
 
 @router.patch(
-    "/{user_id}", name="user:update", responses={**unauthorized_response, **not_found_response, **conflict_response}
+    "/{user_id}",
+    name="user:update",
+    responses={**unauthorized_response, **not_found_response, **conflict_response},
+    dependencies=[Depends(authenticate_user)],
 )
-@inject
 async def update_user(
     user_id: Annotated[int, Path(description="The id of the user.", ge=1)],
     user_input: UserUpdateInput,
-    user: Annotated[User, Depends(authenticate_user)],
-    action: UserUpdateAction = Depends(Provide(Container.user_update_action)),
+    action: Annotated[UserUpdateAction, Depends(user_update_action)],
 ) -> UserOutput:
     user_data = user_input.model_dump(exclude_unset=True)
 
