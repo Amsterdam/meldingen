@@ -60,7 +60,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_create_classification_duplicate_name(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classification: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
         response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
 
@@ -273,7 +273,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_classification_with_form(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_form_with_classification: Form
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
@@ -281,11 +281,11 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         body = response.json()
         assert len(body) == 1
-        assert body[0].get("form") == test_form_with_classification.id
+        assert body[0].get("form") == form_with_classification.id
 
     @pytest.mark.anyio
     async def test_list_classifications_sort_on_relationship(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_form_with_classification: Form
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"sort": '["form", "ASC"]'})
 
@@ -318,9 +318,9 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_retrieve_classification(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classification: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=test_classification.id))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
 
         assert response.status_code == HTTP_200_OK
 
@@ -371,10 +371,10 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_update_classification(
-        self, app: FastAPI, client: AsyncClient, test_classification: Classification, auth_user: None
+        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, classification_id=test_classification.id), json={"name": "bladiebla"}
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"name": "bladiebla"}
         )
 
         assert response.status_code == HTTP_200_OK
@@ -446,9 +446,9 @@ class TestClassificationDelete(BaseUnauthorizedTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
     async def test_delete_classification(
-        self, app: FastAPI, client: AsyncClient, test_classification: Classification, auth_user: None
+        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
     ) -> None:
-        response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=test_classification.id))
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
 

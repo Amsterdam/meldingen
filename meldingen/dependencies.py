@@ -30,6 +30,7 @@ from meldingen.actions import (
     FormListAction,
     FormRetrieveAction,
     FormRetrieveByClassificationAction,
+    FormUpdateAction,
     MeldingListAction,
     MeldingRetrieveAction,
     StaticFormRetrieveByTypeAction,
@@ -426,6 +427,14 @@ def form_retrieve_by_classification_action(
     repository: Annotated[FormRepository, Depends(form_repository)]
 ) -> FormRetrieveByClassificationAction:
     return FormRetrieveByClassificationAction(repository)
+
+
+def form_update_action(
+    repository: Annotated[FormRepository, Depends(form_repository)],
+    classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+    question_repository: Annotated[QuestionRepository, Depends(question_repository)],
+) -> FormUpdateAction:
+    return FormUpdateAction(repository, classification_repository, question_repository)
 
 
 def form_delete_action(repository: Annotated[FormRepository, Depends(form_repository)]) -> FormDeleteAction:

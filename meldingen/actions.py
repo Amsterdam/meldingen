@@ -265,21 +265,7 @@ class FormRetrieveAction(BaseRetrieveAction[Form, Form]): ...
 class FormDeleteAction(BaseDeleteAction[Form, Form]): ...
 
 
-class BaseFormUpdateAction(BaseFormCreateUpdateAction):
-    async def _update(self, obj: Form, values: dict[str, Any]) -> Form:
-        component_values = values.pop("components", [])
-        if component_values:
-            await self._create_components(obj, component_values)
-
-        for key, value in values.items():
-            setattr(obj, key, value)
-
-        await self._repository.save(obj)
-
-        return obj
-
-
-class FormUpdateAction(BaseFormUpdateAction):
+class FormUpdateAction(BaseFormCreateUpdateAction):
     _classification_repository: ClassificationRepository
 
     def __init__(
@@ -306,6 +292,7 @@ class FormUpdateAction(BaseFormUpdateAction):
                 other_form = await self._repository.find_by_classification_id(form_input.classification)
                 other_form.classification = None
                 await self._repository.save(other_form, commit=False)
+                await self._repository.flush()
             except NotFoundException:
                 """If the classification is not assigned to another form we do not need to take any action."""
 
@@ -318,6 +305,18 @@ class FormUpdateAction(BaseFormUpdateAction):
         form_data["components"] = components
 
         return await self._update(obj, form_data)
+
+    async def _update(self, obj: Form, values: dict[str, Any]) -> Form:
+        component_values = values.pop("components", [])
+        if component_values:
+            await self._create_components(obj, component_values)
+
+        for key, value in values.items():
+            setattr(obj, key, value)
+
+        await self._repository.save(obj)
+
+        return obj
 
 
 class FormRetrieveByClassificationAction(BaseCRUDAction[Form, Form]):

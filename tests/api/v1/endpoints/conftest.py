@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 
 import pytest
 from fastapi import FastAPI
-from meldingen_core.exceptions import NotFoundException
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
 from sqlalchemy import select
@@ -10,7 +9,6 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from meldingen.authentication import authenticate_user
-from meldingen.containers import Container
 from meldingen.models import (
     Classification,
     Form,
@@ -24,7 +22,6 @@ from meldingen.models import (
     StaticFormTypeEnum,
     User,
 )
-from meldingen.repositories import ClassificationRepository, FormRepository, QuestionRepository
 
 
 @pytest.fixture
@@ -90,9 +87,9 @@ async def melding(
 async def melding_with_classification(
     db_session: AsyncSession,
     melding: Melding,
-    test_classification: Classification,
+    classification: Classification,
 ) -> Melding:
-    melding.classification = test_classification
+    melding.classification = classification
 
     db_session.add(melding)
     await db_session.commit()
@@ -126,11 +123,6 @@ def auth_user(app: FastAPI) -> None:
 
 
 @pytest.fixture
-async def classification_repository(container: Container) -> ClassificationRepository:
-    return await container.classification_repository()
-
-
-@pytest.fixture
 def classification_name(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)
@@ -139,20 +131,7 @@ def classification_name(request: FixtureRequest) -> str:
 
 
 @pytest.fixture
-async def classification(
-    classification_repository: ClassificationRepository, classification_name: str
-) -> Classification:
-    try:
-        classification = await classification_repository.find_by_name(classification_name)
-    except NotFoundException:
-        classification = Classification(name=classification_name)
-        await classification_repository.save(classification)
-
-    return classification
-
-
-@pytest.fixture
-async def test_classification(db_session: AsyncSession, classification_name: str) -> Classification:
+async def classification(db_session: AsyncSession, classification_name: str) -> Classification:
     classification = Classification(name=classification_name)
     db_session.add(classification)
     await db_session.commit()
@@ -185,16 +164,6 @@ async def classification_with_form(db_session: AsyncSession) -> Classification:
 
 
 @pytest.fixture
-async def form_repository(container: Container) -> FormRepository:
-    return await container.form_repository()
-
-
-@pytest.fixture
-async def question_repository(container: Container) -> QuestionRepository:
-    return await container.question_repository()
-
-
-@pytest.fixture
 def form_title(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)
@@ -203,37 +172,7 @@ def form_title(request: FixtureRequest) -> str:
 
 
 @pytest.fixture
-async def form(form_repository: FormRepository, question_repository: QuestionRepository, form_title: str) -> Form:
-    form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
-
-    component = FormIoTextAreaComponent(
-        label="Wat is uw klacht?",
-        description="",
-        key="wat-is-uw_klacht",
-        type=FormIoComponentTypeEnum.text_area,
-        input=True,
-        auto_expand=True,
-        show_char_count=True,
-    )
-
-    components = await form.awaitable_attrs.components
-    components.append(component)
-
-    await form_repository.save(form)
-
-    question = Question(text=component.description, form=form)
-
-    await question_repository.save(question)
-
-    component.question = question
-
-    await form_repository.save(form)
-
-    return form
-
-
-@pytest.fixture
-async def test_form(db_session: AsyncSession, form_title: str) -> Form:
+async def form(db_session: AsyncSession, form_title: str) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
     component = FormIoTextAreaComponent(
@@ -260,59 +199,7 @@ async def test_form(db_session: AsyncSession, form_title: str) -> Form:
 
 
 @pytest.fixture
-async def form_with_classification(
-    classification_repository: ClassificationRepository,
-    form_repository: FormRepository,
-    question_repository: QuestionRepository,
-    form_title: str,
-) -> Form:
-    form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
-
-    panel = FormIoPanelComponent(
-        label="Page 1",
-        key="page1",
-        input=False,
-        type=FormIoComponentTypeEnum.panel,
-    )
-
-    component = FormIoTextAreaComponent(
-        label="Wat is uw klacht?",
-        description="",
-        key="wat-is-uw_klacht",
-        type=FormIoComponentTypeEnum.text_area,
-        input=True,
-        auto_expand=True,
-        show_char_count=True,
-    )
-
-    panel_components = await panel.awaitable_attrs.components
-    panel_components.append(component)
-
-    components = await form.awaitable_attrs.components
-    components.append(panel)
-
-    await form_repository.save(form)
-
-    question = Question(text=component.description, form=form)
-
-    await question_repository.save(question)
-
-    component.question = question
-
-    try:
-        classification = await classification_repository.find_by_name("test_classification")
-    except NotFoundException:
-        classification = Classification("test_classification")
-        await classification_repository.save(classification)
-
-    form.classification = classification
-    await form_repository.save(form)
-
-    return form
-
-
-@pytest.fixture
-async def test_form_with_classification(db_session: AsyncSession, form_title: str) -> Form:
+async def form_with_classification(db_session: AsyncSession, form_title: str) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
     panel = FormIoPanelComponent(

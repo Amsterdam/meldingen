@@ -43,7 +43,7 @@ class TestMeldingCreate:
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["classification_name"], indirect=True)
     async def test_create_melding_with_classification(
-        self, app: FastAPI, client: AsyncClient, test_classification: Classification
+        self, app: FastAPI, client: AsyncClient, classification: Classification
     ) -> None:
         response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "classification_name"})
 
@@ -53,7 +53,7 @@ class TestMeldingCreate:
         assert data.get("id") == 1
         assert data.get("text") == "classification_name"
         assert data.get("state") == MeldingStates.CLASSIFIED
-        assert data.get("classification") == test_classification.id
+        assert data.get("classification") == classification.id
 
     @pytest.mark.anyio
     async def test_create_melding_text_minimum_length_violation(self, app: FastAPI, client: AsyncClient) -> None:
@@ -382,7 +382,7 @@ class TestMeldingUpdate:
         indirect=True,
     )
     async def test_update_melding(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, test_classification: Classification
+        self, app: FastAPI, client: AsyncClient, melding: Melding, classification: Classification
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=1),
@@ -396,7 +396,7 @@ class TestMeldingUpdate:
         assert body.get("id") == melding.id
         assert body.get("text") == "classification_name"
         assert body.get("state") == MeldingStates.CLASSIFIED
-        assert body.get("classification") == test_classification.id
+        assert body.get("classification") == classification.id
         assert body.get("created_at") == melding.created_at.isoformat()
         assert body.get("updated_at") == melding.updated_at.isoformat()
 
@@ -600,9 +600,9 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         melding_with_classification: Melding,
-        test_form_with_classification: Form,
+        form_with_classification: Form,
     ) -> None:
-        components = await test_form_with_classification.awaitable_attrs.components
+        components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -634,9 +634,9 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        test_form_with_classification: Form,
+        form_with_classification: Form,
     ) -> None:
-        components = await test_form_with_classification.awaitable_attrs.components
+        components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -665,9 +665,9 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         melding: Melding,
-        test_form_with_classification: Form,
+        form_with_classification: Form,
     ) -> None:
-        components = await test_form_with_classification.awaitable_attrs.components
+        components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -693,9 +693,9 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         melding: Melding,
-        test_form_with_classification: Form,
+        form_with_classification: Form,
     ) -> None:
-        components = await test_form_with_classification.awaitable_attrs.components
+        components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -732,9 +732,9 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         melding: Melding,
-        test_form_with_classification: Form,
+        form_with_classification: Form,
     ) -> None:
-        components = await test_form_with_classification.awaitable_attrs.components
+        components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]

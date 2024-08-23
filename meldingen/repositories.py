@@ -69,6 +69,9 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
 
             await self._session.refresh(model)
 
+    async def flush(self) -> None:
+        await self._session.flush()
+
     async def list(
         self,
         *,

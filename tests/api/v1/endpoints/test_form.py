@@ -327,34 +327,34 @@ class TestFormRetrieve(BaseFormTest):
     METHOD: Final[str] = "GET"
 
     @pytest.mark.anyio
-    async def test_retrieve_form(self, app: FastAPI, client: AsyncClient, test_form: Form) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=test_form.id))
+    async def test_retrieve_form(self, app: FastAPI, client: AsyncClient, form: Form) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=form.id))
 
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
-        assert data.get("id") == test_form.id
-        assert data.get("title") == test_form.title
-        assert data.get("display") == test_form.display
-        assert data.get("created_at") == test_form.created_at.isoformat()
-        assert data.get("updated_at") == test_form.updated_at.isoformat()
+        assert data.get("id") == form.id
+        assert data.get("title") == form.title
+        assert data.get("display") == form.display
+        assert data.get("created_at") == form.created_at.isoformat()
+        assert data.get("updated_at") == form.updated_at.isoformat()
 
-        await self._assert_components(data.get("components"), await test_form.awaitable_attrs.components)
+        await self._assert_components(data.get("components"), await form.awaitable_attrs.components)
 
     @pytest.mark.anyio
     async def test_retrieve_form_with_classification(
-        self, app: FastAPI, client: AsyncClient, test_form_with_classification: Form
+        self, app: FastAPI, client: AsyncClient, form_with_classification: Form
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=test_form_with_classification.id))
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=form_with_classification.id))
 
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
-        assert data.get("id") == test_form_with_classification.id
-        assert data.get("title") == test_form_with_classification.title
-        assert data.get("display") == test_form_with_classification.display
-        assert len(data.get("components")) == len(await test_form_with_classification.awaitable_attrs.components)
-        assert data.get("classification") == test_form_with_classification.classification_id
+        assert data.get("id") == form_with_classification.id
+        assert data.get("title") == form_with_classification.title
+        assert data.get("display") == form_with_classification.display
+        assert len(data.get("components")) == len(await form_with_classification.awaitable_attrs.components)
+        assert data.get("classification") == form_with_classification.classification_id
 
     @pytest.mark.anyio
     async def test_retrieve_form_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
@@ -386,8 +386,8 @@ class TestFormDelete(BaseUnauthorizedTest):
         [("Form #1",), ("Form #2",)],
         indirect=True,
     )
-    async def test_delete_form(self, app: FastAPI, client: AsyncClient, auth_user: None, test_form: Form) -> None:
-        response = await client.delete(app.url_path_for(self.ROUTE_NAME, form_id=test_form.id))
+    async def test_delete_form(self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form) -> None:
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, form_id=form.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
 
@@ -1130,12 +1130,12 @@ class TestFormCreate(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     async def test_create_form_with_classification(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classification: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
         data = {
             "title": "Formulier #1",
             "display": "form",
-            "classification": test_classification.id,
+            "classification": classification.id,
             "components": [],
         }
 
@@ -1147,7 +1147,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert data.get("title") == "Formulier #1"
         assert data.get("display") == "form"
         assert data.get("components") == []
-        assert data.get("classification") == test_classification.id
+        assert data.get("classification") == classification.id
 
     @pytest.mark.anyio
     async def test_create_form_with_classification_that_does_not_exist(
@@ -1366,18 +1366,16 @@ class TestFormClassification:
         assert detail[0].get("msg") == "Input should be greater than or equal to 1"
 
     @pytest.mark.anyio
-    async def test_form_classification(
-        self, app: FastAPI, client: AsyncClient, test_form_with_classification: Form
-    ) -> None:
-        classification = await test_form_with_classification.awaitable_attrs.classification
+    async def test_form_classification(self, app: FastAPI, client: AsyncClient, form_with_classification: Form) -> None:
+        classification = await form_with_classification.awaitable_attrs.classification
         response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
 
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("title") == test_form_with_classification.title
-        assert body.get("display") == test_form_with_classification.display
+        assert body.get("title") == form_with_classification.title
+        assert body.get("display") == form_with_classification.display
         assert len(body.get("components")) == 1
-        assert body.get("id") == test_form_with_classification.id
-        assert body.get("created_at") == test_form_with_classification.created_at.isoformat()
-        assert body.get("updated_at") == test_form_with_classification.updated_at.isoformat()
+        assert body.get("id") == form_with_classification.id
+        assert body.get("created_at") == form_with_classification.created_at.isoformat()
+        assert body.get("updated_at") == form_with_classification.updated_at.isoformat()

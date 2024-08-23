@@ -6,26 +6,7 @@ from dependency_injector.providers import Configuration, Factory, Resource, Sing
 from pydantic_core import MultiHostUrl
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from meldingen.actions import FormUpdateAction
-from meldingen.repositories import (
-    ClassificationRepository,
-    FormRepository,
-    GroupRepository,
-    QuestionRepository,
-    StaticFormRepository,
-    UserRepository,
-)
-from meldingen.schema_factories import (
-    FormCheckboxComponentOutputFactory,
-    FormComponentOutputFactory,
-    FormComponentValueOutputFactory,
-    FormOutputFactory,
-    FormRadioComponentOutputFactory,
-    FormSelectComponentDataOutputFactory,
-    FormSelectComponentOutputFactory,
-    FormTextAreaComponentOutputFactory,
-    FormTextFieldInputComponentOutputFactory,
-)
+from meldingen.repositories import GroupRepository, StaticFormRepository, UserRepository
 
 
 def get_database_engine(dsn: MultiHostUrl, log_level: int = logging.NOTSET) -> AsyncEngine:
@@ -79,47 +60,4 @@ class Container(DeclarativeContainer):
     # repositories
     user_repository: Factory[UserRepository] = Factory(UserRepository, session=database_session)
     group_repository: Factory[GroupRepository] = Factory(GroupRepository, session=database_session)
-    classification_repository: Factory[ClassificationRepository] = Factory(
-        ClassificationRepository, session=database_session
-    )
-    form_repository: Factory[FormRepository] = Factory(FormRepository, session=database_session)
     static_form_repository: Factory[StaticFormRepository] = Factory(StaticFormRepository, session=database_session)
-    question_repository: Factory[QuestionRepository] = Factory(QuestionRepository, session=database_session)
-
-    # Factories
-    form_text_area_factory: Factory[FormTextAreaComponentOutputFactory] = Factory(FormTextAreaComponentOutputFactory)
-    form_text_field_factory: Factory[FormTextFieldInputComponentOutputFactory] = Factory(
-        FormTextFieldInputComponentOutputFactory
-    )
-    form_values_factory: Factory[FormComponentValueOutputFactory] = Factory(FormComponentValueOutputFactory)
-    form_checkbox_factory: Factory[FormCheckboxComponentOutputFactory] = Factory(
-        FormCheckboxComponentOutputFactory, values_factory=form_values_factory
-    )
-    form_radio_factory: Factory[FormRadioComponentOutputFactory] = Factory(
-        FormRadioComponentOutputFactory, values_factory=form_values_factory
-    )
-    form_select_data_factory: Factory[FormSelectComponentDataOutputFactory] = Factory(
-        FormSelectComponentDataOutputFactory, values_factory=form_values_factory
-    )
-    form_select_factory: Factory[FormSelectComponentOutputFactory] = Factory(
-        FormSelectComponentOutputFactory, data_factory=form_select_data_factory
-    )
-    form_components_factory: Factory[FormComponentOutputFactory] = Factory(
-        FormComponentOutputFactory,
-        text_area_factory=form_text_area_factory,
-        text_field_factory=form_text_field_factory,
-        checkbox_factory=form_checkbox_factory,
-        radio_factory=form_radio_factory,
-        select_factory=form_select_factory,
-    )
-    form_output_factory: Factory[FormOutputFactory] = Factory(
-        FormOutputFactory, components_factory=form_components_factory
-    )
-
-    # Form actions
-    form_update_action: Factory[FormUpdateAction] = Factory(
-        FormUpdateAction,
-        repository=form_repository,
-        classification_repository=classification_repository,
-        question_repository=question_repository,
-    )
