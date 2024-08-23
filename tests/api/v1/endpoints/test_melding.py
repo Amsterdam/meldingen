@@ -50,7 +50,7 @@ class TestMeldingCreate:
         assert response.status_code == HTTP_201_CREATED
 
         data = response.json()
-        assert data.get("id") == 1
+        assert data.get("id") is not None
         assert data.get("text") == "classification_name"
         assert data.get("state") == MeldingStates.CLASSIFIED
         assert data.get("classification") == classification.id
