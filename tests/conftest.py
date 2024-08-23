@@ -1,3 +1,4 @@
+import contextlib
 from typing import AsyncGenerator, AsyncIterator, Callable
 
 import pytest
@@ -7,12 +8,12 @@ from httpx import ASGITransport, AsyncClient
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy import NullPool
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.compiler import DDLCompiler
 from sqlalchemy.sql.ddl import DropTable
 
-from meldingen.database import DatabaseSessionManager
+from meldingen.database import DatabaseSessionManager as BaseDatabaseSessionManager
 from meldingen.dependencies import database_engine, database_session, database_session_manager
 from meldingen.main import get_application
 from meldingen.models import BaseDBModel, User
@@ -41,8 +42,8 @@ def _compile_drop_table(element: DropTable, compiler: DDLCompiler) -> str:
     return compiler.visit_drop_table(element) + " CASCADE"
 
 
-@pytest.fixture
-async def test_database(db_engine: AsyncEngine) -> None:
+@pytest.fixture(scope="session", autouse=True)
+async def test_database(anyio_backend: str, db_engine: AsyncEngine) -> None:
     async with db_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
     async with db_engine.begin() as conn:
@@ -96,7 +97,7 @@ async def users(db_session: AsyncSession) -> list[User]:
 
 
 @pytest.fixture
-async def app(test_database: None) -> FastAPI:
+async def app() -> FastAPI:
     return get_application()
 
 
@@ -109,7 +110,7 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
             yield client
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def db_engine() -> AsyncEngine:
     return create_async_engine(TEST_DATABASE_URL, echo="debug", poolclass=NullPool)
 
@@ -122,6 +123,31 @@ def database_engine_override(app: FastAPI) -> None:
     # In some case a coroutine is passed here instead of an FastAPI object, causing the test to fail
     if isinstance(app, FastAPI):
         app.dependency_overrides[database_engine] = db_engine_override
+
+
+class DatabaseSessionManager(BaseDatabaseSessionManager):
+    _engine: AsyncEngine
+
+    def __init__(self, engine: AsyncEngine):
+        self._engine = engine
+
+    @contextlib.asynccontextmanager
+    async def session(self) -> AsyncIterator[AsyncSession]:
+        connection = await self._engine.connect()
+        transaction = await connection.begin()
+        sessionmaker = async_sessionmaker(
+            autocommit=False, bind=connection, expire_on_commit=False, join_transaction_mode="create_savepoint"
+        )
+        session = sessionmaker()
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+            await transaction.rollback()
+            await connection.close()
 
 
 @pytest.fixture
@@ -157,6 +183,6 @@ async def session_override(app: FastAPI, db_session: AsyncSession) -> None:
     app.dependency_overrides[database_session] = get_db_session_override
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def anyio_backend() -> str:
     return "asyncio"
