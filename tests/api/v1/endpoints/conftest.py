@@ -87,9 +87,9 @@ async def melding(
 async def melding_with_classification(
     db_session: AsyncSession,
     melding: Melding,
-    test_classification: Classification,
+    classification: Classification,
 ) -> Melding:
-    melding.classification = test_classification
+    melding.classification = classification
 
     db_session.add(melding)
     await db_session.commit()
@@ -131,7 +131,7 @@ def classification_name(request: FixtureRequest) -> str:
 
 
 @pytest.fixture
-async def test_classification(db_session: AsyncSession, classification_name: str) -> Classification:
+async def classification(db_session: AsyncSession, classification_name: str) -> Classification:
     classification = Classification(name=classification_name)
     db_session.add(classification)
     await db_session.commit()

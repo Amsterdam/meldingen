@@ -484,12 +484,12 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         client: AsyncClient,
         auth_user: None,
         form: Form,
-        test_classification: Classification,
+        classification: Classification,
     ) -> None:
         new_data = {
             "title": "Formulier #1",
             "display": "pdf",
-            "classification": test_classification.id,
+            "classification": classification.id,
             "components": [
                 {
                     "label": "Heeft u meer informatie die u met ons wilt delen?",
@@ -521,7 +521,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert data.get("id") == form.id
         assert data["title"] == new_data["title"]
         assert data["display"] == new_data["display"]
-        assert data.get("classification", "") == test_classification.id
+        assert data.get("classification", "") == classification.id
 
         components = await form.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
@@ -533,12 +533,12 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         client: AsyncClient,
         auth_user: None,
         form_with_classification: Form,
-        test_classification: Classification,
+        classification: Classification,
     ) -> None:
         new_data = {
             "title": "Formulier #1",
             "display": "pdf",
-            "classification": test_classification.id,
+            "classification": classification.id,
             "components": [
                 {
                     "label": "Heeft u meer informatie die u met ons wilt delen?",
@@ -572,7 +572,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert data.get("id") == form_with_classification.id
         assert data["title"] == new_data["title"]
         assert data["display"] == new_data["display"]
-        assert data.get("classification", "") == test_classification.id
+        assert data.get("classification", "") == classification.id
 
         components = await form_with_classification.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
@@ -1130,12 +1130,12 @@ class TestFormCreate(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     async def test_create_form_with_classification(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, test_classification: Classification
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
         data = {
             "title": "Formulier #1",
             "display": "form",
-            "classification": test_classification.id,
+            "classification": classification.id,
             "components": [],
         }
 
@@ -1147,7 +1147,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert data.get("title") == "Formulier #1"
         assert data.get("display") == "form"
         assert data.get("components") == []
-        assert data.get("classification") == test_classification.id
+        assert data.get("classification") == classification.id
 
     @pytest.mark.anyio
     async def test_create_form_with_classification_that_does_not_exist(
