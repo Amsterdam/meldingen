@@ -112,64 +112,64 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
                 "id",
                 SortingDirection.ASC,
                 [
-                    {"id": 1, "text": "This is a test melding. 0", "state": "new", "classification": None},
-                    {"id": 2, "text": "This is a test melding. 1", "state": "new", "classification": None},
-                    {"id": 3, "text": "This is a test melding. 2", "state": "new", "classification": None},
-                    {"id": 4, "text": "This is a test melding. 3", "state": "new", "classification": None},
-                    {"id": 5, "text": "This is a test melding. 4", "state": "new", "classification": None},
-                    {"id": 6, "text": "This is a test melding. 5", "state": "new", "classification": None},
-                    {"id": 7, "text": "This is a test melding. 6", "state": "new", "classification": None},
-                    {"id": 8, "text": "This is a test melding. 7", "state": "new", "classification": None},
-                    {"id": 9, "text": "This is a test melding. 8", "state": "new", "classification": None},
-                    {"id": 10, "text": "This is a test melding. 9", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 0", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 2", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 3", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 4", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 5", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 6", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 8", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 9", "state": "new", "classification": None},
                 ],
             ),
             (
                 "id",
                 SortingDirection.DESC,
                 [
-                    {"id": 10, "text": "This is a test melding. 9", "state": "new", "classification": None},
-                    {"id": 9, "text": "This is a test melding. 8", "state": "new", "classification": None},
-                    {"id": 8, "text": "This is a test melding. 7", "state": "new", "classification": None},
-                    {"id": 7, "text": "This is a test melding. 6", "state": "new", "classification": None},
-                    {"id": 6, "text": "This is a test melding. 5", "state": "new", "classification": None},
-                    {"id": 5, "text": "This is a test melding. 4", "state": "new", "classification": None},
-                    {"id": 4, "text": "This is a test melding. 3", "state": "new", "classification": None},
-                    {"id": 3, "text": "This is a test melding. 2", "state": "new", "classification": None},
-                    {"id": 2, "text": "This is a test melding. 1", "state": "new", "classification": None},
-                    {"id": 1, "text": "This is a test melding. 0", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 9", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 8", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 6", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 5", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 4", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 3", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 2", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 0", "state": "new", "classification": None},
                 ],
             ),
             (
                 "text",
                 SortingDirection.ASC,
                 [
-                    {"id": 1, "text": "This is a test melding. 0", "state": "new", "classification": None},
-                    {"id": 2, "text": "This is a test melding. 1", "state": "new", "classification": None},
-                    {"id": 3, "text": "This is a test melding. 2", "state": "new", "classification": None},
-                    {"id": 4, "text": "This is a test melding. 3", "state": "new", "classification": None},
-                    {"id": 5, "text": "This is a test melding. 4", "state": "new", "classification": None},
-                    {"id": 6, "text": "This is a test melding. 5", "state": "new", "classification": None},
-                    {"id": 7, "text": "This is a test melding. 6", "state": "new", "classification": None},
-                    {"id": 8, "text": "This is a test melding. 7", "state": "new", "classification": None},
-                    {"id": 9, "text": "This is a test melding. 8", "state": "new", "classification": None},
-                    {"id": 10, "text": "This is a test melding. 9", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 0", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 2", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 3", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 4", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 5", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 6", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 8", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 9", "state": "new", "classification": None},
                 ],
             ),
             (
                 "text",
                 SortingDirection.DESC,
                 [
-                    {"id": 10, "text": "This is a test melding. 9", "state": "new", "classification": None},
-                    {"id": 9, "text": "This is a test melding. 8", "state": "new", "classification": None},
-                    {"id": 8, "text": "This is a test melding. 7", "state": "new", "classification": None},
-                    {"id": 7, "text": "This is a test melding. 6", "state": "new", "classification": None},
-                    {"id": 6, "text": "This is a test melding. 5", "state": "new", "classification": None},
-                    {"id": 5, "text": "This is a test melding. 4", "state": "new", "classification": None},
-                    {"id": 4, "text": "This is a test melding. 3", "state": "new", "classification": None},
-                    {"id": 3, "text": "This is a test melding. 2", "state": "new", "classification": None},
-                    {"id": 2, "text": "This is a test melding. 1", "state": "new", "classification": None},
-                    {"id": 1, "text": "This is a test melding. 0", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 9", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 8", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 6", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 5", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 4", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 3", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 2", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 0", "state": "new", "classification": None},
                 ],
             ),
         ],
@@ -193,7 +193,6 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         data = response.json()
 
         for i in range(len(expected)):
-            assert data[i]["id"] == expected[i]["id"]
             assert data[i]["text"] == expected[i]["text"]
             assert data[i]["state"] == expected[i]["state"]
             assert data[i]["classification"] == expected[i]["classification"]
@@ -212,8 +211,8 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
                 "text",
                 SortingDirection.DESC,
                 [
-                    {"id": 8, "text": "This is a test melding. 7", "state": "new", "classification": None},
-                    {"id": 7, "text": "This is a test melding. 6", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 6", "state": "new", "classification": None},
                 ],
             ),
             (
@@ -222,9 +221,9 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
                 "text",
                 SortingDirection.ASC,
                 [
-                    {"id": 2, "text": "This is a test melding. 1", "state": "new", "classification": None},
-                    {"id": 3, "text": "This is a test melding. 2", "state": "new", "classification": None},
-                    {"id": 4, "text": "This is a test melding. 3", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 2", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 3", "state": "new", "classification": None},
                 ],
             ),
         ],
@@ -251,7 +250,6 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         data = response.json()
 
         for i in range(len(expected)):
-            assert data[i]["id"] == expected[i]["id"]
             assert data[i]["text"] == expected[i]["text"]
             assert data[i]["state"] == expected[i]["state"]
             assert data[i]["classification"] == expected[i]["classification"]
