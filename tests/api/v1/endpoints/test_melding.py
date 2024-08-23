@@ -484,7 +484,7 @@ class TestMeldingProcess(BaseUnauthorizedTest):
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
     async def test_process_melding(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
         response = await client.request(
-            self.get_method(), app.url_path_for(self.get_route_name(), **self.get_path_params())
+            self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
         )
 
         assert response.status_code == HTTP_200_OK
@@ -516,7 +516,7 @@ class TestMeldingProcess(BaseUnauthorizedTest):
         self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
     ) -> None:
         response = await client.request(
-            self.get_method(), app.url_path_for(self.get_route_name(), **self.get_path_params())
+            self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
         )
 
         assert response.status_code == HTTP_400_BAD_REQUEST
