@@ -3,21 +3,20 @@ import asyncio
 import typer
 from rich import print
 
-from meldingen.config import Settings
-from meldingen.containers import Container
+from meldingen.dependencies import database_engine, database_session, database_session_manager
 from meldingen.models import Group
+from meldingen.repositories import GroupRepository
 
 app = typer.Typer()
-container = Container()
-container.settings.from_dict(Settings().model_dump())
 
 
 async def async_add_group(name: str) -> None:
-    group_repository = await container.group_repository()
+    async for session in database_session(database_session_manager(database_engine())):
+        group_repository = GroupRepository(session)
 
-    await group_repository.save(Group(name=name))
+        await group_repository.save(Group(name=name))
 
-    print(f'[green]Success[/green] - Group "{name}" created!')
+        print(f'[green]Success[/green] - Group "{name}" created!')
 
 
 @app.command()

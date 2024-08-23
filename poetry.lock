@@ -870,30 +870,6 @@ test = ["certifi", "cryptography-vectors (==43.0.0)", "pretend", "pytest (>=6.2.
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
-name = "dependency-injector"
-version = "4.41.0"
-description = "Dependency injection framework for Python"
-optional = false
-python-versions = "*"
-files = []
-develop = false
-
-[package.dependencies]
-six = ">=1.7.0,<=1.16.0"
-
-[package.extras]
-aiohttp = ["aiohttp"]
-flask = ["flask"]
-pydantic = ["pydantic"]
-yaml = ["pyyaml"]
-
-[package.source]
-type = "git"
-url = "https://github.com/anton-petrov/python-dependency-injector.git"
-reference = "HEAD"
-resolved_reference = "a245e32e8286d0df34a6a731bf62fa86504ce6aa"
-
-[[package]]
 name = "distlib"
 version = "0.3.8"
 description = "Distribution utilities"
@@ -3210,4 +3186,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "f50e36b7e1789ff04e02edae9cf2707c7e076f79260c3e92053f858aca52d7b7"
+content-hash = "729ecbe8eecf92287c608464d299fb33ea70743acf419398f62a85eeca887728"
