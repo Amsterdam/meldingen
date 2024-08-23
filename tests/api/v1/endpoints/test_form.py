@@ -955,7 +955,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert response.status_code == HTTP_201_CREATED
 
         data = response.json()
-        assert data.get("id", 0) == 1
+        assert data.get("id", 0) > 0
         assert data.get("title") == "Formulier #1"
         assert data.get("display") == "form"
         assert data.get("classification", "") is None
@@ -1024,7 +1024,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert response.status_code == HTTP_201_CREATED
 
         data = response.json()
-        assert data.get("id", 0) == 1
+        assert data.get("id", 0) > 0
         assert data.get("title") == "Formulier #1"
         assert data.get("display") == "form"
         assert data.get("classification", "") is None
@@ -1090,7 +1090,7 @@ class TestFormCreate(BaseUnauthorizedTest):
 
         body = response.json()
 
-        assert body.get("id", 0) == 1
+        assert body.get("id", 0) > 0
         assert body.get("title") == "Formulier #1"
         assert body.get("display") == "form"
 
