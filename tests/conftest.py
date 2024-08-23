@@ -14,7 +14,7 @@ from sqlalchemy.sql.ddl import DropTable
 
 from meldingen.database import DatabaseSessionManager
 from meldingen.dependencies import database_engine, database_session, database_session_manager
-from meldingen.main import get_application, get_container
+from meldingen.main import get_application
 from meldingen.models import BaseDBModel, User
 
 TEST_DATABASE_URL: str = "postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test"
@@ -97,7 +97,7 @@ async def users(db_session: AsyncSession) -> list[User]:
 
 @pytest.fixture
 async def app(test_database: None) -> FastAPI:
-    return get_application(get_container())
+    return get_application()
 
 
 @pytest.fixture
