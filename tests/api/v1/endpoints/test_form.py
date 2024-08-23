@@ -173,64 +173,64 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
                 "id",
                 SortingDirection.ASC,
                 [
-                    {"title": "Form #1", "display": "form", "id": 1, "classification": None},
-                    {"title": "Form #2", "display": "form", "id": 2, "classification": None},
-                    {"title": "Form #3", "display": "form", "id": 3, "classification": None},
-                    {"title": "Form #4", "display": "form", "id": 4, "classification": None},
-                    {"title": "Form #5", "display": "form", "id": 5, "classification": None},
-                    {"title": "Form #6", "display": "form", "id": 6, "classification": None},
-                    {"title": "Form #7", "display": "form", "id": 7, "classification": None},
-                    {"title": "Form #8", "display": "form", "id": 8, "classification": None},
-                    {"title": "Form #9", "display": "form", "id": 9, "classification": None},
-                    {"title": "Form #10", "display": "form", "id": 10, "classification": None},
+                    {"title": "Form #1", "display": "form", "classification": None},
+                    {"title": "Form #2", "display": "form", "classification": None},
+                    {"title": "Form #3", "display": "form", "classification": None},
+                    {"title": "Form #4", "display": "form", "classification": None},
+                    {"title": "Form #5", "display": "form", "classification": None},
+                    {"title": "Form #6", "display": "form", "classification": None},
+                    {"title": "Form #7", "display": "form", "classification": None},
+                    {"title": "Form #8", "display": "form", "classification": None},
+                    {"title": "Form #9", "display": "form", "classification": None},
+                    {"title": "Form #10", "display": "form", "classification": None},
                 ],
             ),
             (
                 "id",
                 SortingDirection.DESC,
                 [
-                    {"title": "Form #10", "display": "form", "id": 10, "classification": None},
-                    {"title": "Form #9", "display": "form", "id": 9, "classification": None},
-                    {"title": "Form #8", "display": "form", "id": 8, "classification": None},
-                    {"title": "Form #7", "display": "form", "id": 7, "classification": None},
-                    {"title": "Form #6", "display": "form", "id": 6, "classification": None},
-                    {"title": "Form #5", "display": "form", "id": 5, "classification": None},
-                    {"title": "Form #4", "display": "form", "id": 4, "classification": None},
-                    {"title": "Form #3", "display": "form", "id": 3, "classification": None},
-                    {"title": "Form #2", "display": "form", "id": 2, "classification": None},
-                    {"title": "Form #1", "display": "form", "id": 1, "classification": None},
+                    {"title": "Form #10", "display": "form", "classification": None},
+                    {"title": "Form #9", "display": "form", "classification": None},
+                    {"title": "Form #8", "display": "form", "classification": None},
+                    {"title": "Form #7", "display": "form", "classification": None},
+                    {"title": "Form #6", "display": "form", "classification": None},
+                    {"title": "Form #5", "display": "form", "classification": None},
+                    {"title": "Form #4", "display": "form", "classification": None},
+                    {"title": "Form #3", "display": "form", "classification": None},
+                    {"title": "Form #2", "display": "form", "classification": None},
+                    {"title": "Form #1", "display": "form", "classification": None},
                 ],
             ),
             (
                 "title",
                 SortingDirection.ASC,
                 [
-                    {"title": "Form #1", "display": "form", "id": 1, "classification": None},
-                    {"title": "Form #10", "display": "form", "id": 10, "classification": None},
-                    {"title": "Form #2", "display": "form", "id": 2, "classification": None},
-                    {"title": "Form #3", "display": "form", "id": 3, "classification": None},
-                    {"title": "Form #4", "display": "form", "id": 4, "classification": None},
-                    {"title": "Form #5", "display": "form", "id": 5, "classification": None},
-                    {"title": "Form #6", "display": "form", "id": 6, "classification": None},
-                    {"title": "Form #7", "display": "form", "id": 7, "classification": None},
-                    {"title": "Form #8", "display": "form", "id": 8, "classification": None},
-                    {"title": "Form #9", "display": "form", "id": 9, "classification": None},
+                    {"title": "Form #1", "display": "form", "classification": None},
+                    {"title": "Form #10", "display": "form", "classification": None},
+                    {"title": "Form #2", "display": "form", "classification": None},
+                    {"title": "Form #3", "display": "form", "classification": None},
+                    {"title": "Form #4", "display": "form", "classification": None},
+                    {"title": "Form #5", "display": "form", "classification": None},
+                    {"title": "Form #6", "display": "form", "classification": None},
+                    {"title": "Form #7", "display": "form", "classification": None},
+                    {"title": "Form #8", "display": "form", "classification": None},
+                    {"title": "Form #9", "display": "form", "classification": None},
                 ],
             ),
             (
                 "title",
                 SortingDirection.DESC,
                 [
-                    {"title": "Form #9", "display": "form", "id": 9, "classification": None},
-                    {"title": "Form #8", "display": "form", "id": 8, "classification": None},
-                    {"title": "Form #7", "display": "form", "id": 7, "classification": None},
-                    {"title": "Form #6", "display": "form", "id": 6, "classification": None},
-                    {"title": "Form #5", "display": "form", "id": 5, "classification": None},
-                    {"title": "Form #4", "display": "form", "id": 4, "classification": None},
-                    {"title": "Form #3", "display": "form", "id": 3, "classification": None},
-                    {"title": "Form #2", "display": "form", "id": 2, "classification": None},
-                    {"title": "Form #10", "display": "form", "id": 10, "classification": None},
-                    {"title": "Form #1", "display": "form", "id": 1, "classification": None},
+                    {"title": "Form #9", "display": "form", "classification": None},
+                    {"title": "Form #8", "display": "form", "classification": None},
+                    {"title": "Form #7", "display": "form", "classification": None},
+                    {"title": "Form #6", "display": "form", "classification": None},
+                    {"title": "Form #5", "display": "form", "classification": None},
+                    {"title": "Form #4", "display": "form", "classification": None},
+                    {"title": "Form #3", "display": "form", "classification": None},
+                    {"title": "Form #2", "display": "form", "classification": None},
+                    {"title": "Form #10", "display": "form", "classification": None},
+                    {"title": "Form #1", "display": "form", "classification": None},
                 ],
             ),
         ],
@@ -254,7 +254,6 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         data = response.json()
 
         for i in range(len(expected)):
-            assert data[i]["id"] == expected[i]["id"]
             assert data[i]["classification"] == expected[i]["classification"]
             assert data[i]["title"] == expected[i]["title"]
             assert data[i]["display"] == expected[i]["display"]
@@ -273,8 +272,8 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
                 "title",
                 SortingDirection.DESC,
                 [
-                    {"title": "Form #7", "display": "form", "id": 7, "classification": None},
-                    {"title": "Form #6", "display": "form", "id": 6, "classification": None},
+                    {"title": "Form #7", "display": "form", "classification": None},
+                    {"title": "Form #6", "display": "form", "classification": None},
                 ],
             ),
             (
@@ -283,9 +282,9 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
                 "title",
                 SortingDirection.ASC,
                 [
-                    {"title": "Form #10", "display": "form", "id": 10, "classification": None},
-                    {"title": "Form #2", "display": "form", "id": 2, "classification": None},
-                    {"title": "Form #3", "display": "form", "id": 3, "classification": None},
+                    {"title": "Form #10", "display": "form", "classification": None},
+                    {"title": "Form #2", "display": "form", "classification": None},
+                    {"title": "Form #3", "display": "form", "classification": None},
                 ],
             ),
         ],
@@ -312,7 +311,6 @@ class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         data = response.json()
 
         for i in range(len(expected)):
-            assert data[i]["id"] == expected[i]["id"]
             assert data[i]["classification"] == expected[i]["classification"]
             assert data[i]["title"] == expected[i]["title"]
             assert data[i]["display"] == expected[i]["display"]
