@@ -5,8 +5,7 @@ import typer
 from meldingen_core.exceptions import NotFoundException
 from rich import print
 
-from meldingen.config import Settings
-from meldingen.containers import Container
+from meldingen.dependencies import database_engine, database_session, database_session_manager
 from meldingen.models import (
     FormIoComponentTypeEnum,
     FormIoFormDisplayEnum,
@@ -14,41 +13,41 @@ from meldingen.models import (
     StaticForm,
     StaticFormTypeEnum,
 )
+from meldingen.repositories import StaticFormRepository
 
 app = typer.Typer()
-container = Container()
-container.settings.from_dict(Settings().model_dump())
 
 
 async def async_add_primary_form(title: str) -> None:
-    static_form_repository = await container.static_form_repository()
+    async for session in database_session(database_session_manager(database_engine())):
+        static_form_repository = StaticFormRepository(session)
 
-    try:
-        await static_form_repository.retrieve_by_type(StaticFormTypeEnum.primary)
-        print("[red]Error[/red] - The primary form already exists")
-        raise typer.Exit
-    except NotFoundException:
-        # The primary from does not exist, let's create it!
-        ...
+        try:
+            await static_form_repository.retrieve_by_type(StaticFormTypeEnum.primary)
+            print("[red]Error[/red] - The primary form already exists")
+            raise typer.Exit
+        except NotFoundException:
+            # The primary from does not exist, let's create it!
+            ...
 
-    primary_form = StaticForm(type=StaticFormTypeEnum.primary, title=title, display=FormIoFormDisplayEnum.form)
+        primary_form = StaticForm(type=StaticFormTypeEnum.primary, title=title, display=FormIoFormDisplayEnum.form)
 
-    component = FormIoTextAreaComponent(
-        label="Waar gaat het om?",
-        description="",
-        key="waar-gaat-het-om",
-        type=FormIoComponentTypeEnum.text_area,
-        input=True,
-        auto_expand=False,
-        show_char_count=True,
-    )
+        component = FormIoTextAreaComponent(
+            label="Waar gaat het om?",
+            description="",
+            key="waar-gaat-het-om",
+            type=FormIoComponentTypeEnum.text_area,
+            input=True,
+            auto_expand=False,
+            show_char_count=True,
+        )
 
-    components = await primary_form.awaitable_attrs.components
-    components.append(component)
+        components = await primary_form.awaitable_attrs.components
+        components.append(component)
 
-    await static_form_repository.save(primary_form)
+        await static_form_repository.save(primary_form)
 
-    print(f"[green]Success[/green] - The primary form has been created")
+        print(f"[green]Success[/green] - The primary form has been created")
 
 
 @app.command()
