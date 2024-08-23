@@ -412,7 +412,7 @@ class TestMeldingAnswerQuestions:
     )
     async def test_answer_questions(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id), params={"token": "supersecrettoken"}
         )
 
         assert response.status_code == HTTP_200_OK
@@ -434,7 +434,7 @@ class TestMeldingAnswerQuestions:
     @pytest.mark.anyio
     async def test_answer_questions_token_invalid(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id), params={"token": "supersecrettoken"}
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -447,7 +447,7 @@ class TestMeldingAnswerQuestions:
     )
     async def test_answer_questions_token_expired(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id), params={"token": "supersecrettoken"}
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -460,7 +460,7 @@ class TestMeldingAnswerQuestions:
     )
     async def test_answer_questions_wrong_state(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id), params={"token": "supersecrettoken"}
         )
 
         assert response.status_code == HTTP_400_BAD_REQUEST
