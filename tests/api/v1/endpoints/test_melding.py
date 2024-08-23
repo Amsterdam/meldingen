@@ -334,7 +334,9 @@ class TestMeldingUpdate:
         self, app: FastAPI, client: AsyncClient, melding: Melding
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": ""}, json={"text": "classification_name"}
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": ""},
+            json={"text": "classification_name"},
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -349,7 +351,7 @@ class TestMeldingUpdate:
         self, app: FastAPI, client: AsyncClient, melding: Melding
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1),
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             json={"text": "classification_name"},
         )
@@ -366,7 +368,7 @@ class TestMeldingUpdate:
         self, app: FastAPI, client: AsyncClient, melding: Melding
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1),
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             json={"text": "classification_name"},
         )
@@ -383,7 +385,7 @@ class TestMeldingUpdate:
         self, app: FastAPI, client: AsyncClient, melding: Melding, classification: Classification
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1),
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             json={"text": "classification_name"},
         )
