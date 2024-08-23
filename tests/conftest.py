@@ -2,24 +2,20 @@ from typing import AsyncGenerator, AsyncIterator, Callable
 
 import pytest
 from asgi_lifespan import LifespanManager
-from dependency_injector import containers
-from dependency_injector.providers import Object, Resource
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy import NullPool
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.compiler import DDLCompiler
 from sqlalchemy.sql.ddl import DropTable
 
-from meldingen.containers import Container
 from meldingen.database import DatabaseSessionManager
 from meldingen.dependencies import database_engine, database_session, database_session_manager
 from meldingen.main import get_application, get_container
 from meldingen.models import BaseDBModel, User
-from meldingen.repositories import UserRepository
 
 TEST_DATABASE_URL: str = "postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test"
 
@@ -46,10 +42,10 @@ def _compile_drop_table(element: DropTable, compiler: DDLCompiler) -> str:
 
 
 @pytest.fixture
-async def test_database(alembic_engine: AsyncEngine) -> None:
-    async with alembic_engine.begin() as conn:
+async def test_database(db_engine: AsyncEngine) -> None:
+    async with db_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
-    async with alembic_engine.begin() as conn:
+    async with db_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.create_all)
 
 
@@ -100,29 +96,8 @@ async def users(db_session: AsyncSession) -> list[User]:
 
 
 @pytest.fixture
-def container(alembic_engine: AsyncEngine) -> Container:
-    async def get_database_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
-        async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-        async with async_session() as session:
-            try:
-                yield session
-            except:
-                await session.rollback()
-                raise
-            finally:
-                await session.close()
-
-    @containers.override(Container)
-    class TestContainer(containers.DeclarativeContainer):
-        database_engine: Object[AsyncEngine] = Object(alembic_engine)
-        database_session: Resource[AsyncSession] = Resource(get_database_session, engine=database_engine)
-
-    return get_container()
-
-
-@pytest.fixture
-async def app(test_database: None, container: Container) -> FastAPI:
-    return get_application(container)
+async def app(test_database: None) -> FastAPI:
+    return get_application(get_container())
 
 
 @pytest.fixture
