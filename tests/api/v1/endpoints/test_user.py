@@ -145,64 +145,64 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
                 "id",
                 SortingDirection.ASC,
                 [
-                    {"id": 1, "email": "test_email_0@example.com", "username": "test_user_0"},
-                    {"id": 2, "email": "test_email_1@example.com", "username": "test_user_1"},
-                    {"id": 3, "email": "test_email_2@example.com", "username": "test_user_2"},
-                    {"id": 4, "email": "test_email_3@example.com", "username": "test_user_3"},
-                    {"id": 5, "email": "test_email_4@example.com", "username": "test_user_4"},
-                    {"id": 6, "email": "test_email_5@example.com", "username": "test_user_5"},
-                    {"id": 7, "email": "test_email_6@example.com", "username": "test_user_6"},
-                    {"id": 8, "email": "test_email_7@example.com", "username": "test_user_7"},
-                    {"id": 9, "email": "test_email_8@example.com", "username": "test_user_8"},
-                    {"id": 10, "email": "test_email_9@example.com", "username": "test_user_9"},
+                    {"email": "test_email_0@example.com", "username": "test_user_0"},
+                    {"email": "test_email_1@example.com", "username": "test_user_1"},
+                    {"email": "test_email_2@example.com", "username": "test_user_2"},
+                    {"email": "test_email_3@example.com", "username": "test_user_3"},
+                    {"email": "test_email_4@example.com", "username": "test_user_4"},
+                    {"email": "test_email_5@example.com", "username": "test_user_5"},
+                    {"email": "test_email_6@example.com", "username": "test_user_6"},
+                    {"email": "test_email_7@example.com", "username": "test_user_7"},
+                    {"email": "test_email_8@example.com", "username": "test_user_8"},
+                    {"email": "test_email_9@example.com", "username": "test_user_9"},
                 ],
             ),
             (
                 "id",
                 SortingDirection.DESC,
                 [
-                    {"id": 10, "email": "test_email_9@example.com", "username": "test_user_9"},
-                    {"id": 9, "email": "test_email_8@example.com", "username": "test_user_8"},
-                    {"id": 8, "email": "test_email_7@example.com", "username": "test_user_7"},
-                    {"id": 7, "email": "test_email_6@example.com", "username": "test_user_6"},
-                    {"id": 6, "email": "test_email_5@example.com", "username": "test_user_5"},
-                    {"id": 5, "email": "test_email_4@example.com", "username": "test_user_4"},
-                    {"id": 4, "email": "test_email_3@example.com", "username": "test_user_3"},
-                    {"id": 3, "email": "test_email_2@example.com", "username": "test_user_2"},
-                    {"id": 2, "email": "test_email_1@example.com", "username": "test_user_1"},
-                    {"id": 1, "email": "test_email_0@example.com", "username": "test_user_0"},
+                    {"email": "test_email_9@example.com", "username": "test_user_9"},
+                    {"email": "test_email_8@example.com", "username": "test_user_8"},
+                    {"email": "test_email_7@example.com", "username": "test_user_7"},
+                    {"email": "test_email_6@example.com", "username": "test_user_6"},
+                    {"email": "test_email_5@example.com", "username": "test_user_5"},
+                    {"email": "test_email_4@example.com", "username": "test_user_4"},
+                    {"email": "test_email_3@example.com", "username": "test_user_3"},
+                    {"email": "test_email_2@example.com", "username": "test_user_2"},
+                    {"email": "test_email_1@example.com", "username": "test_user_1"},
+                    {"email": "test_email_0@example.com", "username": "test_user_0"},
                 ],
             ),
             (
                 "username",
                 SortingDirection.ASC,
                 [
-                    {"id": 1, "email": "test_email_0@example.com", "username": "test_user_0"},
-                    {"id": 2, "email": "test_email_1@example.com", "username": "test_user_1"},
-                    {"id": 3, "email": "test_email_2@example.com", "username": "test_user_2"},
-                    {"id": 4, "email": "test_email_3@example.com", "username": "test_user_3"},
-                    {"id": 5, "email": "test_email_4@example.com", "username": "test_user_4"},
-                    {"id": 6, "email": "test_email_5@example.com", "username": "test_user_5"},
-                    {"id": 7, "email": "test_email_6@example.com", "username": "test_user_6"},
-                    {"id": 8, "email": "test_email_7@example.com", "username": "test_user_7"},
-                    {"id": 9, "email": "test_email_8@example.com", "username": "test_user_8"},
-                    {"id": 10, "email": "test_email_9@example.com", "username": "test_user_9"},
+                    {"email": "test_email_0@example.com", "username": "test_user_0"},
+                    {"email": "test_email_1@example.com", "username": "test_user_1"},
+                    {"email": "test_email_2@example.com", "username": "test_user_2"},
+                    {"email": "test_email_3@example.com", "username": "test_user_3"},
+                    {"email": "test_email_4@example.com", "username": "test_user_4"},
+                    {"email": "test_email_5@example.com", "username": "test_user_5"},
+                    {"email": "test_email_6@example.com", "username": "test_user_6"},
+                    {"email": "test_email_7@example.com", "username": "test_user_7"},
+                    {"email": "test_email_8@example.com", "username": "test_user_8"},
+                    {"email": "test_email_9@example.com", "username": "test_user_9"},
                 ],
             ),
             (
                 "username",
                 SortingDirection.DESC,
                 [
-                    {"id": 10, "email": "test_email_9@example.com", "username": "test_user_9"},
-                    {"id": 9, "email": "test_email_8@example.com", "username": "test_user_8"},
-                    {"id": 8, "email": "test_email_7@example.com", "username": "test_user_7"},
-                    {"id": 7, "email": "test_email_6@example.com", "username": "test_user_6"},
-                    {"id": 6, "email": "test_email_5@example.com", "username": "test_user_5"},
-                    {"id": 5, "email": "test_email_4@example.com", "username": "test_user_4"},
-                    {"id": 4, "email": "test_email_3@example.com", "username": "test_user_3"},
-                    {"id": 3, "email": "test_email_2@example.com", "username": "test_user_2"},
-                    {"id": 2, "email": "test_email_1@example.com", "username": "test_user_1"},
-                    {"id": 1, "email": "test_email_0@example.com", "username": "test_user_0"},
+                    {"email": "test_email_9@example.com", "username": "test_user_9"},
+                    {"email": "test_email_8@example.com", "username": "test_user_8"},
+                    {"email": "test_email_7@example.com", "username": "test_user_7"},
+                    {"email": "test_email_6@example.com", "username": "test_user_6"},
+                    {"email": "test_email_5@example.com", "username": "test_user_5"},
+                    {"email": "test_email_4@example.com", "username": "test_user_4"},
+                    {"email": "test_email_3@example.com", "username": "test_user_3"},
+                    {"email": "test_email_2@example.com", "username": "test_user_2"},
+                    {"email": "test_email_1@example.com", "username": "test_user_1"},
+                    {"email": "test_email_0@example.com", "username": "test_user_0"},
                 ],
             ),
         ],
@@ -226,7 +226,6 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         data = response.json()
 
         for i in range(len(expected)):
-            assert data[i]["id"] == expected[i]["id"]
             assert data[i]["email"] == expected[i]["email"]
             assert data[i]["username"] == expected[i]["username"]
             assert data[i]["created_at"] is not None
@@ -244,8 +243,8 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
                 "username",
                 SortingDirection.DESC,
                 [
-                    {"id": 8, "email": "test_email_7@example.com", "username": "test_user_7"},
-                    {"id": 7, "email": "test_email_6@example.com", "username": "test_user_6"},
+                    {"email": "test_email_7@example.com", "username": "test_user_7"},
+                    {"email": "test_email_6@example.com", "username": "test_user_6"},
                 ],
             ),
             (
@@ -254,9 +253,9 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
                 "username",
                 SortingDirection.ASC,
                 [
-                    {"id": 2, "email": "test_email_1@example.com", "username": "test_user_1"},
-                    {"id": 3, "email": "test_email_2@example.com", "username": "test_user_2"},
-                    {"id": 4, "email": "test_email_3@example.com", "username": "test_user_3"},
+                    {"email": "test_email_1@example.com", "username": "test_user_1"},
+                    {"email": "test_email_2@example.com", "username": "test_user_2"},
+                    {"email": "test_email_3@example.com", "username": "test_user_3"},
                 ],
             ),
         ],
@@ -283,7 +282,6 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
         data = response.json()
 
         for i in range(len(expected)):
-            assert data[i]["id"] == expected[i]["id"]
             assert data[i]["email"] == expected[i]["email"]
             assert data[i]["username"] == expected[i]["username"]
             assert data[i]["created_at"] is not None

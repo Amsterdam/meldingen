@@ -128,64 +128,64 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
                 "id",
                 SortingDirection.ASC,
                 [
-                    {"name": "category: 0", "id": 1, "form": None},
-                    {"name": "category: 1", "id": 2, "form": None},
-                    {"name": "category: 2", "id": 3, "form": None},
-                    {"name": "category: 3", "id": 4, "form": None},
-                    {"name": "category: 4", "id": 5, "form": None},
-                    {"name": "category: 5", "id": 6, "form": None},
-                    {"name": "category: 6", "id": 7, "form": None},
-                    {"name": "category: 7", "id": 8, "form": None},
-                    {"name": "category: 8", "id": 9, "form": None},
-                    {"name": "category: 9", "id": 10, "form": None},
+                    {"name": "category: 0", "form": None},
+                    {"name": "category: 1", "form": None},
+                    {"name": "category: 2", "form": None},
+                    {"name": "category: 3", "form": None},
+                    {"name": "category: 4", "form": None},
+                    {"name": "category: 5", "form": None},
+                    {"name": "category: 6", "form": None},
+                    {"name": "category: 7", "form": None},
+                    {"name": "category: 8", "form": None},
+                    {"name": "category: 9", "form": None},
                 ],
             ),
             (
                 "id",
                 SortingDirection.DESC,
                 [
-                    {"name": "category: 9", "id": 10, "form": None},
-                    {"name": "category: 8", "id": 9, "form": None},
-                    {"name": "category: 7", "id": 8, "form": None},
-                    {"name": "category: 6", "id": 7, "form": None},
-                    {"name": "category: 5", "id": 6, "form": None},
-                    {"name": "category: 4", "id": 5, "form": None},
-                    {"name": "category: 3", "id": 4, "form": None},
-                    {"name": "category: 2", "id": 3, "form": None},
-                    {"name": "category: 1", "id": 2, "form": None},
-                    {"name": "category: 0", "id": 1, "form": None},
+                    {"name": "category: 9", "form": None},
+                    {"name": "category: 8", "form": None},
+                    {"name": "category: 7", "form": None},
+                    {"name": "category: 6", "form": None},
+                    {"name": "category: 5", "form": None},
+                    {"name": "category: 4", "form": None},
+                    {"name": "category: 3", "form": None},
+                    {"name": "category: 2", "form": None},
+                    {"name": "category: 1", "form": None},
+                    {"name": "category: 0", "form": None},
                 ],
             ),
             (
                 "name",
                 SortingDirection.ASC,
                 [
-                    {"name": "category: 0", "id": 1, "form": None},
-                    {"name": "category: 1", "id": 2, "form": None},
-                    {"name": "category: 2", "id": 3, "form": None},
-                    {"name": "category: 3", "id": 4, "form": None},
-                    {"name": "category: 4", "id": 5, "form": None},
-                    {"name": "category: 5", "id": 6, "form": None},
-                    {"name": "category: 6", "id": 7, "form": None},
-                    {"name": "category: 7", "id": 8, "form": None},
-                    {"name": "category: 8", "id": 9, "form": None},
-                    {"name": "category: 9", "id": 10, "form": None},
+                    {"name": "category: 0", "form": None},
+                    {"name": "category: 1", "form": None},
+                    {"name": "category: 2", "form": None},
+                    {"name": "category: 3", "form": None},
+                    {"name": "category: 4", "form": None},
+                    {"name": "category: 5", "form": None},
+                    {"name": "category: 6", "form": None},
+                    {"name": "category: 7", "form": None},
+                    {"name": "category: 8", "form": None},
+                    {"name": "category: 9", "form": None},
                 ],
             ),
             (
                 "name",
                 SortingDirection.DESC,
                 [
-                    {"name": "category: 9", "id": 10, "form": None},
-                    {"name": "category: 8", "id": 9, "form": None},
-                    {"name": "category: 7", "id": 8, "form": None},
-                    {"name": "category: 6", "id": 7, "form": None},
-                    {"name": "category: 5", "id": 6, "form": None},
-                    {"name": "category: 4", "id": 5, "form": None},
-                    {"name": "category: 3", "id": 4, "form": None},
-                    {"name": "category: 2", "id": 3, "form": None},
-                    {"name": "category: 1", "id": 2, "form": None},
-                    {"name": "category: 0", "id": 1, "form": None},
+                    {"name": "category: 9", "form": None},
+                    {"name": "category: 8", "form": None},
+                    {"name": "category: 7", "form": None},
+                    {"name": "category: 6", "form": None},
+                    {"name": "category: 5", "form": None},
+                    {"name": "category: 4", "form": None},
+                    {"name": "category: 3", "form": None},
+                    {"name": "category: 2", "form": None},
+                    {"name": "category: 1", "form": None},
+                    {"name": "category: 0", "form": None},
                 ],
             ),
         ],
@@ -209,7 +209,6 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         data = response.json()
 
         for i in range(0, len(data)):
-            assert data[i]["id"] == expected[i]["id"]
             assert data[i]["name"] == expected[i]["name"]
             assert data[i]["form"] == expected[i]["form"]
             assert data[i]["created_at"] is not None
@@ -226,7 +225,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
                 2,
                 "name",
                 SortingDirection.DESC,
-                [{"name": "category: 7", "id": 8, "form": None}, {"name": "category: 6", "id": 7, "form": None}],
+                [{"name": "category: 7", "form": None}, {"name": "category: 6", "form": None}],
             ),
             (
                 3,
@@ -234,9 +233,9 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
                 "name",
                 SortingDirection.ASC,
                 [
-                    {"name": "category: 1", "id": 2, "form": None},
-                    {"name": "category: 2", "id": 3, "form": None},
-                    {"name": "category: 3", "id": 4, "form": None},
+                    {"name": "category: 1", "form": None},
+                    {"name": "category: 2", "form": None},
+                    {"name": "category: 3", "form": None},
                 ],
             ),
         ],
@@ -263,7 +262,6 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         data = response.json()
 
         for i in range(0, len(data)):
-            assert data[i]["id"] == expected[i]["id"]
             assert data[i]["name"] == expected[i]["name"]
             assert data[i]["form"] == expected[i]["form"]
             assert data[i]["created_at"] is not None
@@ -325,7 +323,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
-        assert data.get("id") == 1
+        assert data.get("id") == classification.id
         assert data.get("name") == "bla"
         assert data.get("form", "") is None
         assert data.get("created_at") is not None
@@ -351,7 +349,8 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("form") == classification_with_form.id
+        form = await classification_with_form.awaitable_attrs.form
+        assert body.get("form") == form.id
 
 
 class TestClassificationUpdate(BaseUnauthorizedTest):
@@ -404,7 +403,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         self, app: FastAPI, client: AsyncClient, classifications: list[Classification], auth_user: None
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "category: 2"}
+            app.url_path_for(self.ROUTE_NAME, classification_id=classifications[0].id), json={"name": "category: 2"}
         )
 
         assert response.status_code == HTTP_409_CONFLICT
@@ -418,7 +417,9 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
     async def test_update_classification_with_form(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
     ) -> None:
-        response = await client.patch(app.url_path_for(self.ROUTE_NAME, classification_id=1), json={"name": "new_name"})
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification_with_form.id), json={"name": "new_name"}
+        )
 
         assert response.status_code == HTTP_200_OK
 
