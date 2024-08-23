@@ -630,10 +630,11 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         form: Form,
         form_with_classification: Form,
     ) -> None:
+        classification = await form_with_classification.awaitable_attrs.classification
         new_data = {
             "title": "Form",
             "display": "form",
-            "classification": 1,
+            "classification": classification.id,
             "components": [
                 {
                     "label": "Wat is uw klacht?",
@@ -652,7 +653,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("classification") == 1
+        assert body.get("classification") == classification.id
 
     @pytest.mark.anyio
     async def test_update_form_classification_id_validation(
@@ -866,7 +867,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         body = response.json()
 
-        assert body.get("id", 0) == 1
+        assert body.get("id", 0) == form.id
         assert body.get("title") == "Formulier #1"
         assert body.get("display") == "form"
 
