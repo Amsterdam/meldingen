@@ -16,7 +16,7 @@ asgi-correlation-id = "^4.3.2"
 asyncpg = "^0.29.0"
 fastapi = {extras = ["standard"], version = "^0.112.2"}
 geoalchemy2 = "^0.15.2"
-geojson-pydantic = "^1.0.2"
+geojson-pydantic = "^1.1.1"
 meldingen-core = {git = "https://github.com/amsterdam/meldingen-core.git"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
 pydantic = {extras = ["email"], version = "^2.6.1"}

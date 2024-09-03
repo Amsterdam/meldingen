@@ -1081,20 +1081,20 @@ shapely = ["Shapely (>=1.7)"]
 
 [[package]]
 name = "geojson-pydantic"
-version = "1.1.0"
+version = "1.1.1"
 description = "Pydantic data models for the GeoJSON spec."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "geojson_pydantic-1.1.0-py3-none-any.whl", hash = "sha256:0de723719d66e585123db10ead99dfa51aff8cec08be512646df25224ac425f4"},
-    {file = "geojson_pydantic-1.1.0.tar.gz", hash = "sha256:b214dc746f1e085641e32f0aaa47e0bfa67eefa2cf60a516326c68b87808e2ae"},
+    {file = "geojson_pydantic-1.1.1-py3-none-any.whl", hash = "sha256:3d8adeee9ee0e1bb658c262fcb2e0da44090e44c0123ea95f989e484bdf123d9"},
+    {file = "geojson_pydantic-1.1.1.tar.gz", hash = "sha256:9c4b3e0a384a41fc919f50766979a559efae2f04ac5936f3e7cb3e1cc28927a7"},
 ]
 
 [package.dependencies]
 pydantic = ">=2.0,<3.0"
 
 [package.extras]
-dev = ["pre-commit"]
+dev = ["bump-my-version", "pre-commit"]
 docs = ["mkdocs", "mkdocs-material", "pygments"]
 test = ["pytest", "pytest-cov", "shapely"]
 
@@ -3186,4 +3186,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "3d6371b7cc92dc3926e74755eb3c066c8eb0af151429c07e24f07618bc98f266"
+content-hash = "63e805debcc0aa4e0582ff00516cbdd79abfd4fd6d8cc15645c10d6841498aec"
