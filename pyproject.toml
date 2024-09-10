@@ -23,7 +23,7 @@ pydantic = {extras = ["email"], version = "^2.6.1"}
 pydantic-settings = "^2.4.0"
 pyjwt = {extras = ["crypto"], version = "^2.9.0"}
 python-multipart = "^0.0.9"
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.32"}
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.34"}
 structlog = "^24.1.0"
 
 [tool.poetry.group.dev.dependencies]
