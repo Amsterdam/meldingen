@@ -2270,6 +2270,24 @@ files = [
 typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
+name = "pydantic-jsonlogic"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = "^3.12"
+files = []
+develop = false
+
+[package.dependencies]
+pydantic = "^2.8.2"
+
+[package.source]
+type = "git"
+url = "https://github.com/Amsterdam/pydantic-jsonlogic.git"
+reference = "HEAD"
+resolved_reference = "f48c3b6cdec9050a3530f7abd199e9112cbc302b"
+
+[[package]]
 name = "pydantic-settings"
 version = "2.4.0"
 description = "Settings management using Pydantic"
@@ -3268,4 +3286,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "9f8e9961ff52765063f591ec1598cbb44a63e14c6c6f016a62ff6f209ef51f1e"
+content-hash = "325eb1cdf57c6855e935adb2a676511fda55b92d3d31b1b5755ab611a143c7f9"
