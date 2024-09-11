@@ -37,9 +37,10 @@ from meldingen.output_schemas import (
 
 
 class JsonLogicAdder:
-    def __call__(self, component: FormIoQuestionComponent, output: BaseFormComponentOutput) -> None:
-        if component.jsonlogic is not None:
-            output.validate_ = FormComponentOutputValidate.model_validate_json(f'{{"json": {component.jsonlogic}}}')
+    async def __call__(self, component: FormIoQuestionComponent, output: BaseFormComponentOutput) -> None:
+        jsonlogic = await component.awaitable_attrs.jsonlogic
+        if jsonlogic is not None:
+            output.validate_ = FormComponentOutputValidate.model_validate_json(f'{{"json": {jsonlogic}}}')
 
 
 class StaticFormTextAreaComponentOutputFactory:
@@ -60,7 +61,7 @@ class StaticFormTextAreaComponentOutputFactory:
             position=component.position,
         )
 
-        self._add_json_logic(component, output)
+        await self._add_json_logic(component, output)
 
         return output
 
@@ -81,7 +82,7 @@ class StaticFormTextFieldInputComponentOutputFactory:
             position=component.position,
         )
 
-        self._add_json_logic(component, output)
+        await self._add_json_logic(component, output)
 
         return output
 
@@ -125,7 +126,7 @@ class StaticFormCheckboxComponentOutputFactory:
             values=await self._values(component),
         )
 
-        self._add_json_logic(component, output)
+        await self._add_json_logic(component, output)
 
         return output
 
@@ -149,7 +150,7 @@ class StaticFormRadioComponentOutputFactory:
             values=await self._values(component),
         )
 
-        self._add_json_logic(component, output)
+        await self._add_json_logic(component, output)
 
         return output
 
@@ -175,7 +176,7 @@ class StaticFormSelectComponentOutputFactory:
             data=await self._data(component),
         )
 
-        self._add_json_logic(component, output)
+        await self._add_json_logic(component, output)
 
         return output
 
@@ -292,7 +293,7 @@ class FormTextAreaComponentOutputFactory:
             question=question.id,
         )
 
-        self._add_json_logic(component, output)
+        await self._add_json_logic(component, output)
 
         return output
 
@@ -316,7 +317,7 @@ class FormTextFieldInputComponentOutputFactory:
             question=question.id,
         )
 
-        self._add_json_logic(component, output)
+        await self._add_json_logic(component, output)
 
         return output
 
@@ -343,7 +344,7 @@ class FormCheckboxComponentOutputFactory:
             question=question.id,
         )
 
-        self._add_json_logic(component, output)
+        await self._add_json_logic(component, output)
 
         return output
 
@@ -370,7 +371,7 @@ class FormRadioComponentOutputFactory:
             question=question.id,
         )
 
-        self._add_json_logic(component, output)
+        await self._add_json_logic(component, output)
 
         return output
 
@@ -399,7 +400,7 @@ class FormSelectComponentOutputFactory:
             question=question.id,
         )
 
-        self._add_json_logic(component, output)
+        await self._add_json_logic(component, output)
 
         return output
 
