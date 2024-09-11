@@ -67,6 +67,7 @@ from meldingen.schema_factories import (
     FormSelectComponentOutputFactory,
     FormTextAreaComponentOutputFactory,
     FormTextFieldInputComponentOutputFactory,
+    JsonLogicAdder,
     StaticFormCheckboxComponentOutputFactory,
     StaticFormComponentOutputFactory,
     StaticFormOutputFactory,
@@ -359,30 +360,41 @@ def form_repository(session: Annotated[AsyncSession, Depends(database_session)])
     return FormRepository(session)
 
 
-def form_text_area_output_factory() -> FormTextAreaComponentOutputFactory:
-    return FormTextAreaComponentOutputFactory()
+def json_logic_adder() -> JsonLogicAdder:
+    return JsonLogicAdder()
 
 
-def form_text_field_input_factory() -> FormTextFieldInputComponentOutputFactory:
-    return FormTextFieldInputComponentOutputFactory()
+def form_text_area_output_factory(
+    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)]
+) -> FormTextAreaComponentOutputFactory:
+    return FormTextAreaComponentOutputFactory(_json_logic_adder)
+
+
+def form_text_field_input_factory(
+    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)]
+) -> FormTextFieldInputComponentOutputFactory:
+    return FormTextFieldInputComponentOutputFactory(_json_logic_adder)
 
 
 def form_checkbox_output_factory(
-    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)]
+    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)],
+    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)],
 ) -> FormCheckboxComponentOutputFactory:
-    return FormCheckboxComponentOutputFactory(factory)
+    return FormCheckboxComponentOutputFactory(factory, _json_logic_adder)
 
 
 def form_radio_factory(
-    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)]
+    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)],
+    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)],
 ) -> FormRadioComponentOutputFactory:
-    return FormRadioComponentOutputFactory(factory)
+    return FormRadioComponentOutputFactory(factory, _json_logic_adder)
 
 
 def form_select_factory(
-    factory: Annotated[FormSelectComponentDataOutputFactory, Depends(form_select_component_data_output_factory)]
+    factory: Annotated[FormSelectComponentDataOutputFactory, Depends(form_select_component_data_output_factory)],
+    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)],
 ) -> FormSelectComponentOutputFactory:
-    return FormSelectComponentOutputFactory(factory)
+    return FormSelectComponentOutputFactory(factory, _json_logic_adder)
 
 
 def form_component_output_factory(

@@ -6,6 +6,7 @@ from meldingen.models import (
     FormIoCheckBoxComponent,
     FormIoComponent,
     FormIoPanelComponent,
+    FormIoQuestionComponent,
     FormIoRadioComponent,
     FormIoSelectComponent,
     FormIoSelectComponentData,
@@ -14,6 +15,7 @@ from meldingen.models import (
     StaticForm,
 )
 from meldingen.output_schemas import (
+    BaseFormComponentOutput,
     FormCheckboxComponentOutput,
     FormComponentOutputValidate,
     FormComponentValueOutput,
@@ -227,7 +229,18 @@ class StaticFormOutputFactory:
         )
 
 
+class JsonLogicAdder:
+    def __call__(self, component: FormIoQuestionComponent, output: BaseFormComponentOutput) -> None:
+        if component.jsonlogic is not None:
+            output.validate_ = FormComponentOutputValidate.model_validate_json(f'{{"json": {component.jsonlogic}}}')
+
+
 class FormTextAreaComponentOutputFactory:
+    _add_json_logic: JsonLogicAdder
+
+    def __init__(self, json_logic_adder: JsonLogicAdder):
+        self._add_json_logic = json_logic_adder
+
     async def __call__(self, component: FormIoTextAreaComponent) -> FormTextAreaComponentOutput:
         question = await component.awaitable_attrs.question
 
@@ -243,17 +256,21 @@ class FormTextAreaComponentOutputFactory:
             question=question.id,
         )
 
-        if component.jsonlogic is not None:
-            output.validate_ = FormComponentOutputValidate.model_validate_json(f'{{"json": {component.jsonlogic}}}')
+        self._add_json_logic(component, output)
 
         return output
 
 
 class FormTextFieldInputComponentOutputFactory:
+    _add_json_logic: JsonLogicAdder
+
+    def __init__(self, json_logic_adder: JsonLogicAdder):
+        self._add_json_logic = json_logic_adder
+
     async def __call__(self, component: FormIoTextFieldComponent) -> FormTextFieldInputComponentOutput:
         question = await component.awaitable_attrs.question
 
-        return FormTextFieldInputComponentOutput(
+        output = FormTextFieldInputComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -262,18 +279,24 @@ class FormTextFieldInputComponentOutputFactory:
             position=component.position,
             question=question.id,
         )
+
+        self._add_json_logic(component, output)
+
+        return output
 
 
 class FormCheckboxComponentOutputFactory:
     _values: FormComponentValueOutputFactory
+    _add_json_logic: JsonLogicAdder
 
-    def __init__(self, values_factory: FormComponentValueOutputFactory):
+    def __init__(self, values_factory: FormComponentValueOutputFactory, json_logic_adder: JsonLogicAdder):
         self._values = values_factory
+        self._add_json_logic = json_logic_adder
 
     async def __call__(self, component: FormIoCheckBoxComponent) -> FormCheckboxComponentOutput:
         question = await component.awaitable_attrs.question
 
-        return FormCheckboxComponentOutput(
+        output = FormCheckboxComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -283,18 +306,24 @@ class FormCheckboxComponentOutputFactory:
             values=await self._values(component),
             question=question.id,
         )
+
+        self._add_json_logic(component, output)
+
+        return output
 
 
 class FormRadioComponentOutputFactory:
     _values: FormComponentValueOutputFactory
+    _add_json_logic: JsonLogicAdder
 
-    def __init__(self, values_factory: FormComponentValueOutputFactory):
+    def __init__(self, values_factory: FormComponentValueOutputFactory, json_logic_adder: JsonLogicAdder):
         self._values = values_factory
+        self._add_json_logic = json_logic_adder
 
     async def __call__(self, component: FormIoRadioComponent) -> FormRadioComponentOutput:
         question = await component.awaitable_attrs.question
 
-        return FormRadioComponentOutput(
+        output = FormRadioComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -305,17 +334,23 @@ class FormRadioComponentOutputFactory:
             question=question.id,
         )
 
+        self._add_json_logic(component, output)
+
+        return output
+
 
 class FormSelectComponentOutputFactory:
     _data: FormSelectComponentDataOutputFactory
+    _add_json_logic: JsonLogicAdder
 
-    def __init__(self, data_factory: FormSelectComponentDataOutputFactory):
+    def __init__(self, data_factory: FormSelectComponentDataOutputFactory, json_logic_adder: JsonLogicAdder):
         self._data = data_factory
+        self._add_json_logic = json_logic_adder
 
     async def __call__(self, component: FormIoSelectComponent) -> FormSelectComponentOutput:
         question = await component.awaitable_attrs.question
 
-        return FormSelectComponentOutput(
+        output = FormSelectComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -327,6 +362,10 @@ class FormSelectComponentOutputFactory:
             data=await self._data(component),
             question=question.id,
         )
+
+        self._add_json_logic(component, output)
+
+        return output
 
 
 class FormComponentOutputFactory:
