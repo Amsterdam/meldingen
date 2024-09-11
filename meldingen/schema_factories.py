@@ -36,9 +36,20 @@ from meldingen.output_schemas import (
 )
 
 
+class JsonLogicAdder:
+    def __call__(self, component: FormIoQuestionComponent, output: BaseFormComponentOutput) -> None:
+        if component.jsonlogic is not None:
+            output.validate_ = FormComponentOutputValidate.model_validate_json(f'{{"json": {component.jsonlogic}}}')
+
+
 class StaticFormTextAreaComponentOutputFactory:
+    _add_json_logic: JsonLogicAdder
+
+    def __init__(self, json_logic_adder: JsonLogicAdder):
+        self._add_json_logic = json_logic_adder
+
     async def __call__(self, component: FormIoTextAreaComponent) -> StaticFormTextAreaComponentOutput:
-        return StaticFormTextAreaComponentOutput(
+        output = StaticFormTextAreaComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -49,10 +60,19 @@ class StaticFormTextAreaComponentOutputFactory:
             position=component.position,
         )
 
+        self._add_json_logic(component, output)
+
+        return output
+
 
 class StaticFormTextFieldInputComponentOutputFactory:
+    _add_json_logic: JsonLogicAdder
+
+    def __init__(self, json_logic_adder: JsonLogicAdder):
+        self._add_json_logic = json_logic_adder
+
     async def __call__(self, component: FormIoTextFieldComponent) -> StaticFormTextFieldInputComponentOutput:
-        return StaticFormTextFieldInputComponentOutput(
+        output = StaticFormTextFieldInputComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -60,6 +80,10 @@ class StaticFormTextFieldInputComponentOutputFactory:
             input=component.input,
             position=component.position,
         )
+
+        self._add_json_logic(component, output)
+
+        return output
 
 
 class FormComponentValueOutputFactory:
@@ -84,12 +108,14 @@ class FormSelectComponentDataOutputFactory:
 
 class StaticFormCheckboxComponentOutputFactory:
     _values: FormComponentValueOutputFactory
+    _add_json_logic: JsonLogicAdder
 
-    def __init__(self, values_factory: FormComponentValueOutputFactory) -> None:
+    def __init__(self, values_factory: FormComponentValueOutputFactory, json_logic_adder: JsonLogicAdder) -> None:
         self._values = values_factory
+        self._add_json_logic = json_logic_adder
 
     async def __call__(self, component: FormIoCheckBoxComponent) -> StaticFormCheckboxComponentOutput:
-        return StaticFormCheckboxComponentOutput(
+        output = StaticFormCheckboxComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -98,16 +124,22 @@ class StaticFormCheckboxComponentOutputFactory:
             position=component.position,
             values=await self._values(component),
         )
+
+        self._add_json_logic(component, output)
+
+        return output
 
 
 class StaticFormRadioComponentOutputFactory:
     _values: FormComponentValueOutputFactory
+    _add_json_logic: JsonLogicAdder
 
-    def __init__(self, values_factory: FormComponentValueOutputFactory) -> None:
+    def __init__(self, values_factory: FormComponentValueOutputFactory, json_logic_adder: JsonLogicAdder) -> None:
         self._values = values_factory
+        self._add_json_logic = json_logic_adder
 
     async def __call__(self, component: FormIoRadioComponent) -> StaticFormRadioComponentOutput:
-        return StaticFormRadioComponentOutput(
+        output = StaticFormRadioComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -117,15 +149,21 @@ class StaticFormRadioComponentOutputFactory:
             values=await self._values(component),
         )
 
+        self._add_json_logic(component, output)
+
+        return output
+
 
 class StaticFormSelectComponentOutputFactory:
     _data: FormSelectComponentDataOutputFactory
+    _add_json_logic: JsonLogicAdder
 
-    def __init__(self, data_factory: FormSelectComponentDataOutputFactory):
+    def __init__(self, data_factory: FormSelectComponentDataOutputFactory, json_logic_adder: JsonLogicAdder) -> None:
         self._data = data_factory
+        self._add_json_logic = json_logic_adder
 
     async def __call__(self, component: FormIoSelectComponent) -> StaticFormSelectComponentOutput:
-        return StaticFormSelectComponentOutput(
+        output = StaticFormSelectComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -136,6 +174,10 @@ class StaticFormSelectComponentOutputFactory:
             placeholder=component.placeholder,
             data=await self._data(component),
         )
+
+        self._add_json_logic(component, output)
+
+        return output
 
 
 class StaticFormComponentOutputFactory:
@@ -227,12 +269,6 @@ class StaticFormOutputFactory:
             created_at=static_form.created_at,
             updated_at=static_form.updated_at,
         )
-
-
-class JsonLogicAdder:
-    def __call__(self, component: FormIoQuestionComponent, output: BaseFormComponentOutput) -> None:
-        if component.jsonlogic is not None:
-            output.validate_ = FormComponentOutputValidate.model_validate_json(f'{{"json": {component.jsonlogic}}}')
 
 
 class FormTextAreaComponentOutputFactory:
