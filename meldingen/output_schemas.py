@@ -74,6 +74,7 @@ class StaticFormPanelComponentOutput(BaseFormPanelComponentOutput):
             "StaticFormTextFieldInputComponentOutput",
             "StaticFormCheckboxComponentOutput",
             "StaticFormRadioComponentOutput",
+            "StaticFormSelectComponentOutput",
         ]
     ]
 
