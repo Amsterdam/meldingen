@@ -15,6 +15,7 @@ from meldingen.models import (
 )
 from meldingen.output_schemas import (
     FormCheckboxComponentOutput,
+    FormComponentOutputValidate,
     FormComponentValueOutput,
     FormOutput,
     FormPanelComponentOutput,
@@ -230,7 +231,7 @@ class FormTextAreaComponentOutputFactory:
     async def __call__(self, component: FormIoTextAreaComponent) -> FormTextAreaComponentOutput:
         question = await component.awaitable_attrs.question
 
-        return FormTextAreaComponentOutput(
+        output = FormTextAreaComponentOutput(
             label=component.label,
             description=component.description,
             key=component.key,
@@ -241,6 +242,11 @@ class FormTextAreaComponentOutputFactory:
             position=component.position,
             question=question.id,
         )
+
+        if component.jsonlogic is not None:
+            output.validate_ = FormComponentOutputValidate.model_validate_json(f'{{"json": {component.jsonlogic}}}')
+
+        return output
 
 
 class FormTextFieldInputComponentOutputFactory:
