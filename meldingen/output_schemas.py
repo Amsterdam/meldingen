@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Union
 
-from pydantic import AliasGenerator, BaseModel, ConfigDict
+from pydantic import AliasGenerator, BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
+from pydantic_jsonlogic import JSONLogic
 
 ### Form.io ###
 
@@ -89,6 +90,10 @@ class FormPanelComponentOutput(BaseFormPanelComponentOutput):
     ]
 
 
+class FormComponentOutputValidate(BaseModel):
+    json_: JSONLogic = Field(alias="json")
+
+
 class BaseFormComponentOutput(BaseModel):
     model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))
 
@@ -100,6 +105,8 @@ class BaseFormComponentOutput(BaseModel):
     input: bool
 
     position: int
+
+    validate_: FormComponentOutputValidate | None = Field(alias="validate", default=None)
 
 
 class StaticFormTextAreaComponentOutput(BaseFormComponentOutput):
