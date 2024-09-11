@@ -158,6 +158,7 @@ class FormComponentInputValidate(BaseModel):
 
     @model_serializer
     def serialize_model(self) -> str:
+        """We serialize the model to a string, as that is how we need to store it in the database."""
         return self.json_.model_dump_json()
 
 
