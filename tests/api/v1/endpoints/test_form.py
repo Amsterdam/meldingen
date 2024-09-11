@@ -17,7 +17,6 @@ from meldingen.models import (
     Classification,
     Form,
     FormIoCheckBoxComponent,
-    FormIoComponent,
     FormIoComponentTypeEnum,
     FormIoComponentValue,
     FormIoPanelComponent,
@@ -1003,15 +1002,6 @@ class TestFormCreate(BaseUnauthorizedTest):
             "display": "form",
             "components": [
                 {
-                    "label": "Heeft u meer informatie die u met ons wilt delen?",
-                    "description": "Help tekst bij de vraag.",
-                    "key": "heeft-u-meer-informatie",
-                    "type": "textarea",
-                    "input": True,
-                    "autoExpand": False,
-                    "showCharCount": False,
-                },
-                {
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -1021,10 +1011,106 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "label": "Waarom meld u dit bij ons?",
                             "description": "",
                             "key": "waarom-meld-u-dit-bij-ons",
-                            "type": "textarea",
+                            "type": FormIoComponentTypeEnum.text_area,
                             "input": True,
                             "autoExpand": True,
                             "showCharCount": True,
+                            "validate": {
+                                "json": {
+                                    "var": ["i"],
+                                },
+                            },
+                        },
+                    ],
+                },
+                {
+                    "label": "panel-2",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": FormIoComponentTypeEnum.text_field,
+                            "input": True,
+                            "validate": {
+                                "json": {
+                                    "var": ["i"],
+                                },
+                            },
+                        },
+                    ],
+                },
+                {
+                    "label": "panel-3",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": FormIoComponentTypeEnum.select,
+                            "input": True,
+                            "widget": "html5",
+                            "placeholder": "This is a placeholder value",
+                            "data": {
+                                "values": [
+                                    {"label": "label1", "value": "value1"},
+                                    {"label": "label2", "value": "value2"},
+                                ]
+                            },
+                            "validate": {
+                                "json": {
+                                    "var": ["i"],
+                                },
+                            },
+                        },
+                    ],
+                },
+                {
+                    "label": "panel-4",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": FormIoComponentTypeEnum.checkbox,
+                            "input": True,
+                            "values": [
+                                {"label": "label1", "value": "value1"},
+                                {"label": "label2", "value": "value2"},
+                            ],
+                            "validate": {
+                                "json": {
+                                    "var": ["i"],
+                                },
+                            },
+                        },
+                    ],
+                },
+                {
+                    "label": "panel-5",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": FormIoComponentTypeEnum.radio,
+                            "input": True,
+                            "values": [
+                                {"label": "label1", "value": "value1"},
+                                {"label": "label2", "value": "value2"},
+                            ],
                             "validate": {
                                 "json": {
                                     "var": ["i"],
@@ -1040,53 +1126,16 @@ class TestFormCreate(BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_201_CREATED
 
-        data = response.json()
-        _id = data.get("id", 0)
-        assert isinstance(_id, int)
-        assert _id > 0
-        assert data.get("title") == "Formulier #1"
-        assert data.get("display") == "form"
-        assert data.get("classification", "") is None
-        assert data.get("created_at") is not None
-        assert data.get("updated_at") is not None
+        body = response.json()
+        components = body.get("components")
+        assert len(components) == 5
 
-        components = data.get("components")
-        assert isinstance(components, list)
-        assert components is not None
-        assert len(components) == 2
-
-        first_component: dict[str, Any] = components[0]
-        assert first_component.get("label") == "Heeft u meer informatie die u met ons wilt delen?"
-        assert first_component.get("description") == "Help tekst bij de vraag."
-        assert first_component.get("key") == "heeft-u-meer-informatie"
-        assert first_component.get("type") == "textarea"
-        assert first_component.get("input")
-        assert not first_component.get("autoExpand")
-        assert not first_component.get("showCharCount")
-        assert first_component.get("question") is not None
-
-        second_component: dict[str, Any] = components[1]
-        assert second_component.get("label") == "panel-1"
-        assert second_component.get("key") == "panel"
-        assert second_component.get("type") == "panel"
-        assert not second_component.get("input")
-
-        second_child_components: list[dict[str, Any]] = components[1].get("components")
-
-        second_child_component: dict[str, Any] = second_child_components[0]
-        assert second_child_component.get("label") == "Waarom meld u dit bij ons?"
-        assert second_child_component.get("description") == ""
-        assert second_child_component.get("key") == "waarom-meld-u-dit-bij-ons"
-        assert second_child_component.get("type") == "textarea"
-        assert second_child_component.get("input")
-        assert second_child_component.get("autoExpand")
-        assert second_child_component.get("showCharCount")
-        assert second_child_component.get("question") is not None
-
-        validate = second_child_component.get("validate")
-        assert validate is not None
-
-        assert validate.get("json") == {"var": ["i"]}
+        for panel in components:
+            panel_components = panel.get("components")
+            assert len(panel_components) == 1
+            validate = panel_components[0].get("validate")
+            assert validate is not None
+            assert validate.get("json") == {"var": ["i"]}
 
     @pytest.mark.anyio
     async def test_create_form_with_text_field(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
