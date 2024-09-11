@@ -480,7 +480,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
     ) -> None:
         data = {
             "title": "Formulier #1",
-            "display": "form",
+            "display": "wizard",
             "components": [
                 {
                     "label": "panel-1",
