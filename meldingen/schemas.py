@@ -2,8 +2,19 @@ from datetime import datetime
 from typing import Annotated, Any, Union
 
 from meldingen_core.models import Classification, User
-from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
+from pydantic import (
+    AfterValidator,
+    AliasGenerator,
+    BaseModel,
+    ConfigDict,
+    Discriminator,
+    EmailStr,
+    Field,
+    Tag,
+    model_serializer,
+)
 from pydantic.alias_generators import to_camel
+from pydantic_jsonlogic import JSONLogic
 
 from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
 from meldingen.validators import create_non_match_validator
@@ -142,6 +153,15 @@ class FormPanelComponentInput(BaseModel):
 panel_not_allowed = create_non_match_validator(FormIoComponentTypeEnum.panel, "{value} is not allowed")
 
 
+class FormComponentInputValidate(BaseModel):
+    json_: JSONLogic = Field(alias="json")
+
+    @model_serializer
+    def serialize_model(self) -> str:
+        """We serialize the model to a string, as that is how we need to store it in the database."""
+        return self.json_.model_dump_json()
+
+
 class FormComponentInput(BaseModel):
     label: Annotated[str, Field(min_length=3)]
     description: str | None
@@ -149,6 +169,7 @@ class FormComponentInput(BaseModel):
     key: Annotated[str, Field(min_length=3)]
     type: Annotated[FormIoComponentTypeEnum, Field(), AfterValidator(panel_not_allowed)]
     input: bool
+    validate_: FormComponentInputValidate | None = Field(default=None, alias="validate")
 
 
 class FormTextAreaComponentInput(FormComponentInput):

@@ -174,6 +174,10 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
             else:
                 value_data = component_values.pop("values", [])
 
+                validate = component_values.pop("validate_")
+                if validate is not None:
+                    component_values["jsonlogic"] = validate
+
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                     c_component = FormIoCheckBoxComponent(**component_values)
                     _c_component = await self._create_component_values(component=c_component, values=value_data)
@@ -433,6 +437,10 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
                 parent_components.append(panel_component)
             else:
                 value_data = component_values.pop("values", [])
+
+                validate = component_values.pop("validate_")
+                if validate is not None:
+                    component_values["jsonlogic"] = validate
 
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                     c_component = FormIoCheckBoxComponent(**component_values)
