@@ -1,0 +1,20 @@
+name: Cleanup Packages
+on:
+  workflow_dispatch: ~
+  schedule:
+    - cron: '35 8 * * *'
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'meldingen'
+          package-type: 'container'
+          min-versions-to-keep: 2
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'meldingen-keycloak'
+          package-type: 'container'
+          min-versions-to-keep: 2
