@@ -39,7 +39,7 @@ async def async_add_primary_form(title: str) -> None:
             type=FormIoComponentTypeEnum.text_area,
             input=True,
             auto_expand=False,
-            show_char_count=True,
+            max_char_count=255,
         )
 
         components = await primary_form.awaitable_attrs.components
