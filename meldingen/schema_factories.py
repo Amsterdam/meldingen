@@ -57,7 +57,7 @@ class StaticFormTextAreaComponentOutputFactory:
             type=component.type,
             input=component.input,
             auto_expand=await component.awaitable_attrs.auto_expand,
-            show_char_count=component.show_char_count,
+            max_char_count=component.max_char_count,
             position=component.position,
         )
 
@@ -288,7 +288,7 @@ class FormTextAreaComponentOutputFactory:
             type=component.type,
             input=component.input,
             auto_expand=component.auto_expand,
-            show_char_count=component.show_char_count,
+            max_char_count=component.max_char_count,
             position=component.position,
             question=question.id,
         )
