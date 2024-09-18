@@ -47,7 +47,7 @@ class TestStaticFormRetrieveByType(BaseStaticFormTest):
         assert component.type == data_component.get("type")
         assert component.input == data_component.get("input")
         assert component.auto_expand == data_component.get("autoExpand")
-        assert component.show_char_count == data_component.get("showCharCount")
+        assert component.max_char_count == data_component.get("maxCharCount")
 
     @pytest.mark.anyio
     async def test_retrieve_primary_form_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
@@ -98,7 +98,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "type": "textarea",
                             "input": True,
                             "autoExpand": False,
-                            "showCharCount": False,
+                            "maxCharCount": -1,
                         }
                     ],
                 }
@@ -148,7 +148,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "type": FormIoComponentTypeEnum.text_area,
                             "input": True,
                             "autoExpand": True,
-                            "showCharCount": True,
+                            "maxCharCount": 255,
                             "validate": {
                                 "json": {
                                     "var": ["i"],
@@ -344,7 +344,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "type": "textarea",
                             "input": True,
                             "autoExpand": False,
-                            "showCharCount": False,
+                            "maxCharCount": -1,
                         }
                     ],
                 }

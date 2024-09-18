@@ -97,7 +97,7 @@ class BaseFormTest:
 
         if isinstance(component, FormIoTextAreaComponent):
             assert data.get("autoExpand") == component.auto_expand
-            assert data.get("showCharCount") == component.show_char_count
+            assert data.get("maxCharCount") == component.max_char_count
 
 
 class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
@@ -431,7 +431,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "type": "textarea",
                     "input": True,
                     "autoExpand": False,
-                    "showCharCount": False,
+                    "maxCharCount": -1,
                 },
                 {
                     "label": "panel-1",
@@ -446,7 +446,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "type": "textarea",
                             "input": True,
                             "autoExpand": True,
-                            "showCharCount": True,
+                            "maxCharCount": 255,
                         },
                     ],
                 },
@@ -495,7 +495,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "type": FormIoComponentTypeEnum.text_area,
                             "input": True,
                             "autoExpand": True,
-                            "showCharCount": True,
+                            "maxCharCount": 255,
                             "validate": {
                                 "json": {
                                     "var": ["i"],
@@ -639,7 +639,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "type": "textarea",
                     "input": True,
                     "autoExpand": True,
-                    "showCharCount": True,
+                    "maxCharCount": 255,
                 },
                 {
                     "label": "Waarom meld u dit bij ons?",
@@ -648,7 +648,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "type": "textarea",
                     "input": True,
                     "autoExpand": True,
-                    "showCharCount": True,
+                    "maxCharCount": 255,
                 },
             ],
         }
@@ -688,7 +688,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "type": "textarea",
                     "input": True,
                     "autoExpand": True,
-                    "showCharCount": True,
+                    "maxCharCount": 255,
                 },
                 {
                     "label": "Waarom meld u dit bij ons?",
@@ -697,7 +697,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "type": "textarea",
                     "input": True,
                     "autoExpand": True,
-                    "showCharCount": True,
+                    "maxCharCount": 255,
                 },
             ],
         }
@@ -786,7 +786,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "type": "textarea",
                     "input": True,
                     "autoExpand": True,
-                    "showCharCount": True,
+                    "maxCharCount": 255,
                 }
             ],
         }
@@ -853,7 +853,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                                     "type": "textarea",
                                     "input": True,
                                     "autoExpand": False,
-                                    "showCharCount": False,
+                                    "maxCharCount": -1,
                                 }
                             ],
                         },
@@ -1071,7 +1071,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                     "type": "textarea",
                     "input": True,
                     "autoExpand": False,
-                    "showCharCount": False,
+                    "maxCharCount": -1,
                 },
                 {
                     "label": "panel-1",
@@ -1086,7 +1086,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "type": "textarea",
                             "input": True,
                             "autoExpand": True,
-                            "showCharCount": True,
+                            "maxCharCount": 255,
                         },
                     ],
                 },
@@ -1119,7 +1119,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert first_component.get("type") == "textarea"
         assert first_component.get("input")
         assert not first_component.get("autoExpand")
-        assert not first_component.get("showCharCount")
+        assert first_component.get("maxCharCount") == -1
         assert first_component.get("question") is not None
 
         second_component: dict[str, Any] = components[1]
@@ -1137,7 +1137,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert second_child_component.get("type") == "textarea"
         assert second_child_component.get("input")
         assert second_child_component.get("autoExpand")
-        assert second_child_component.get("showCharCount")
+        assert second_child_component.get("maxCharCount") == 255
         assert second_child_component.get("question") is not None
 
     @pytest.mark.anyio
@@ -1159,7 +1159,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "type": FormIoComponentTypeEnum.text_area,
                             "input": True,
                             "autoExpand": True,
-                            "showCharCount": True,
+                            "maxCharCount": 255,
                             "validate": {
                                 "json": {
                                     "var": ["i"],
@@ -1532,7 +1532,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "type": "textarea",
                             "input": True,
                             "autoExpand": False,
-                            "showCharCount": False,
+                            "maxCharCount": -1,
                             "components": [
                                 {
                                     "label": "Waarom meld u dit bij ons?",
@@ -1541,7 +1541,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                                     "type": "textarea",
                                     "input": True,
                                     "autoExpand": True,
-                                    "showCharCount": True,
+                                    "maxCharCount": 255,
                                 },
                             ],
                         },
@@ -1570,7 +1570,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                 "type": "textarea",
                 "input": True,
                 "autoExpand": True,
-                "showCharCount": True,
+                "maxCharCount": 255,
             },
         ]
 
@@ -1601,7 +1601,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                                     "type": "textarea",
                                     "input": True,
                                     "autoExpand": False,
-                                    "showCharCount": False,
+                                    "maxCharCount": -1,
                                 }
                             ],
                         },
