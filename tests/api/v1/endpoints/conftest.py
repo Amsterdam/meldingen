@@ -182,7 +182,7 @@ async def form(db_session: AsyncSession, form_title: str) -> Form:
         type=FormIoComponentTypeEnum.text_area,
         input=True,
         auto_expand=True,
-        show_char_count=True,
+        max_char_count=255,
     )
 
     components = await form.awaitable_attrs.components
@@ -216,7 +216,7 @@ async def form_with_classification(db_session: AsyncSession, form_title: str) ->
         type=FormIoComponentTypeEnum.text_area,
         input=True,
         auto_expand=True,
-        show_char_count=True,
+        max_char_count=255,
     )
 
     panel_components = await panel.awaitable_attrs.components
@@ -279,7 +279,7 @@ async def primary_form(db_session: AsyncSession) -> StaticForm:
             type=FormIoComponentTypeEnum.text_area,
             input=True,
             auto_expand=True,
-            show_char_count=True,
+            max_char_count=255,
         )
 
         components = await primary_form.awaitable_attrs.components
