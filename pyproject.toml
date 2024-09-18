@@ -21,7 +21,7 @@ meldingen-core = {git = "https://github.com/amsterdam/meldingen-core.git"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
 pydantic = {extras = ["email"], version = "^2.9.1"}
 pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git"}
-pydantic-settings = "^2.4.0"
+pydantic-settings = "^2.5.2"
 pyjwt = {extras = ["crypto"], version = "^2.9.0"}
 python-multipart = "^0.0.9"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.34"}
