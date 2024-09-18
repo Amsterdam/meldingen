@@ -23,6 +23,7 @@ pydantic = {extras = ["email"], version = "^2.9.2"}
 pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git"}
 pydantic-settings = "^2.5.2"
 pyjwt = {extras = ["crypto"], version = "^2.9.0"}
+python-jsonlogic = "^0.1.0"
 python-multipart = "^0.0.10"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.35"}
 structlog = "^24.1.0"
