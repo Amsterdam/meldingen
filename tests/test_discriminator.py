@@ -41,7 +41,7 @@ def test_component_discriminator_panel() -> None:
 def test_component_discriminator_textarea() -> None:
     result = component_discriminator(
         FormTextAreaComponentInput(
-            label="abc", key="abc", description="abc", input=True, autoExpand=True, showCharCount=True
+            label="abc", key="abc", description="abc", input=True, autoExpand=True, maxCharCount=255
         )
     )
 
