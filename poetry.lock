@@ -1582,6 +1582,26 @@ files = [
 ]
 
 [[package]]
+name = "maykin-json-logic-py"
+version = "0.13.0"
+description = "Build complex rules, serialize them as JSON, and execute them in Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "maykin-json-logic-py-0.13.0.tar.gz", hash = "sha256:4cd508d8fa03b17c2ad8719df1d30c1d0cbda8a0dd4427d11691d2f253eacf0a"},
+    {file = "maykin_json_logic_py-0.13.0-py3-none-any.whl", hash = "sha256:ff712855d3bb13e1078d391f0336a3874e0dfb53541ab95c4233f120642b4703"},
+]
+
+[package.dependencies]
+isodate = "*"
+
+[package.extras]
+coverage = ["coverage"]
+pep8 = ["flake8"]
+release = ["bumpversion", "twine"]
+tests = ["black", "coverage", "flake8", "freezegun", "isort", "pytest-cov", "tox"]
+
+[[package]]
 name = "mdurl"
 version = "0.1.2"
 description = "Markdown URL utilities"
@@ -3332,4 +3352,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "9999898db6a6b1cb71daadd3bcc3ec9323960485862d66db0ecfb9f10803ffd7"
+content-hash = "2d7180261d8a9f2bb7792205d2549a994b5900ff48686cd0b906ebb1b58c00b3"
