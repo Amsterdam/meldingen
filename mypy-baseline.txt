@@ -1,3 +1,4 @@
+meldingen/jsonlogic.py:0: error: Call to untyped function "jsonLogic" in typed context  [no-untyped-call]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Classification" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Melding" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "StateAware" defined the type as "str")  [assignment]
