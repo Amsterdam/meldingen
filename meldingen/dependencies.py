@@ -46,11 +46,13 @@ from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import AttachmentFactory
+from meldingen.jsonlogic import JSONLogicValidator
 from meldingen.models import Melding
 from meldingen.repositories import (
     AnswerRepository,
     AttachmentRepository,
     ClassificationRepository,
+    FormIoQuestionComponentRepository,
     FormRepository,
     MeldingRepository,
     QuestionRepository,
@@ -244,13 +246,32 @@ def melding_complete_action(
     return MeldingCompleteAction(state_machine, repository)
 
 
+def jsonlogic_validator() -> JSONLogicValidator:
+    return JSONLogicValidator()
+
+
+def form_io_question_component_repository(
+    session: Annotated[AsyncSession, Depends(database_session)]
+) -> FormIoQuestionComponentRepository:
+    return FormIoQuestionComponentRepository(session)
+
+
 def melding_answer_create_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
+    component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
+    jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
 ) -> AnswerCreateAction:
-    return AnswerCreateAction(answer_repository, token_verifier, melding_repository, question_repository)
+    return AnswerCreateAction(
+        answer_repository,
+        token_verifier,
+        melding_repository,
+        question_repository,
+        component_repository,
+        jsonlogic_validator,
+    )
 
 
 def filesystem_adapter() -> Adapter:
