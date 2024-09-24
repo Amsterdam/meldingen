@@ -19,7 +19,7 @@ geoalchemy2 = "^0.15.2"
 geojson-pydantic = "^1.1.1"
 meldingen-core = {git = "https://github.com/amsterdam/meldingen-core.git"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
-pydantic = {extras = ["email"], version = "^2.9.1"}
+pydantic = {extras = ["email"], version = "^2.9.2"}
 pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git"}
 pydantic-settings = "^2.5.2"
 pyjwt = {extras = ["crypto"], version = "^2.9.0"}
