@@ -199,7 +199,15 @@ async def form(db_session: AsyncSession, form_title: str) -> Form:
 
 
 @pytest.fixture
-async def form_with_classification(db_session: AsyncSession, form_title: str) -> Form:
+def jsonlogic(request: FixtureRequest) -> str | None:
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
+async def form_with_classification(db_session: AsyncSession, form_title: str, jsonlogic: str | None) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
     panel = FormIoPanelComponent(
@@ -217,6 +225,7 @@ async def form_with_classification(db_session: AsyncSession, form_title: str) ->
         input=True,
         auto_expand=True,
         max_char_count=255,
+        jsonlogic=jsonlogic,
     )
 
     panel_components = await panel.awaitable_attrs.components

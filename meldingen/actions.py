@@ -23,6 +23,7 @@ from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 from meldingen.exceptions import MeldingNotClassifiedException
+from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
 from meldingen.models import (
     Answer,
     Attachment,
@@ -50,6 +51,7 @@ from meldingen.repositories import (
     AnswerRepository,
     AttributeNotFoundException,
     ClassificationRepository,
+    FormIoQuestionComponentRepository,
     FormRepository,
     MeldingRepository,
     QuestionRepository,
@@ -337,6 +339,8 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
     _token_verifier: TokenVerifier[Melding]
     _melding_repository: MeldingRepository
     _question_repository: QuestionRepository
+    _component_repository: FormIoQuestionComponentRepository
+    _jsonlogic_validate: JSONLogicValidator
 
     def __init__(
         self,
@@ -344,11 +348,15 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         token_verifier: TokenVerifier[Melding],
         melding_repository: MeldingRepository,
         question_repository: QuestionRepository,
+        component_repository: FormIoQuestionComponentRepository,
+        jsonlogic_validator: JSONLogicValidator,
     ):
         super().__init__(repository)
         self._token_verifier = token_verifier
         self._melding_repository = melding_repository
         self._question_repository = question_repository
+        self._component_repository = component_repository
+        self._jsonlogic_validate = jsonlogic_validator
 
     async def __call__(self, melding_id: int, token: str, question_id: int, answer_input: AnswerInput) -> Answer:
         """
@@ -360,8 +368,6 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         3. The melding must be classified.
         4. The question must exist.
         5. The question must belong to an existing and active form.
-
-        TODO: Validate the answer against the rules stored in the component (using JSONLogic?).
         """
         # Question must exist
         question = await self._question_repository.retrieve(question_id)
@@ -386,8 +392,13 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
             raise NotFoundException()
 
         # Store the answer
-        # TODO: Add validation (using JSONLogic?)
         answer_data = answer_input.model_dump(by_alias=True)
+        form_component = await self._component_repository.find_component_by_question_id(question.id)
+        if form_component.jsonlogic is not None:
+            try:
+                self._jsonlogic_validate(form_component.jsonlogic, answer_data)
+            except JSONLogicValidationException:
+                raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid input")
 
         answer = Answer(**answer_data, melding=melding, question=question)
 

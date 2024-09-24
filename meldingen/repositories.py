@@ -26,6 +26,7 @@ from meldingen.models import (
     BaseDBModel,
     Classification,
     Form,
+    FormIoQuestionComponent,
     Group,
     Melding,
     Question,
@@ -218,6 +219,21 @@ class StaticFormRepository(BaseSQLAlchemyRepository[StaticForm, StaticForm]):
 class QuestionRepository(BaseSQLAlchemyRepository[Question, Question], BaseQuestionRepository):
     def get_model_type(self) -> type[Question]:
         return Question
+
+
+class FormIoQuestionComponentRepository(BaseSQLAlchemyRepository[FormIoQuestionComponent, FormIoQuestionComponent]):
+    def get_model_type(self) -> type[FormIoQuestionComponent]:
+        return FormIoQuestionComponent
+
+    async def find_component_by_question_id(self, question_id: int) -> FormIoQuestionComponent:
+        _type = self.get_model_type()
+        statement = select(_type).where(FormIoQuestionComponent.question_id == question_id)
+
+        result = await self._session.execute(statement)
+        try:
+            return result.scalars().one()
+        except NoResultFound:
+            raise NotFoundException()
 
 
 class AnswerRepository(BaseSQLAlchemyRepository[Answer, Answer], BaseAnswerRepository):
