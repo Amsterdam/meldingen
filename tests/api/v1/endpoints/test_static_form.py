@@ -98,7 +98,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "type": "textarea",
                             "input": True,
                             "autoExpand": False,
-                            "maxCharCount": -1,
+                            "maxCharCount": None,
                         }
                     ],
                 }
@@ -344,7 +344,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "type": "textarea",
                             "input": True,
                             "autoExpand": False,
-                            "maxCharCount": -1,
+                            "maxCharCount": None,
                         }
                     ],
                 }

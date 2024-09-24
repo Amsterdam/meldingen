@@ -431,7 +431,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "type": "textarea",
                     "input": True,
                     "autoExpand": False,
-                    "maxCharCount": -1,
+                    "maxCharCount": None,
                 },
                 {
                     "label": "panel-1",
@@ -853,7 +853,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                                     "type": "textarea",
                                     "input": True,
                                     "autoExpand": False,
-                                    "maxCharCount": -1,
+                                    "maxCharCount": None,
                                 }
                             ],
                         },
@@ -1071,7 +1071,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                     "type": "textarea",
                     "input": True,
                     "autoExpand": False,
-                    "maxCharCount": -1,
+                    "maxCharCount": None,
                 },
                 {
                     "label": "panel-1",
@@ -1119,7 +1119,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert first_component.get("type") == "textarea"
         assert first_component.get("input")
         assert not first_component.get("autoExpand")
-        assert first_component.get("maxCharCount") == -1
+        assert first_component.get("maxCharCount", "") is None
         assert first_component.get("question") is not None
 
         second_component: dict[str, Any] = components[1]
@@ -1532,7 +1532,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "type": "textarea",
                             "input": True,
                             "autoExpand": False,
-                            "maxCharCount": -1,
+                            "maxCharCount": None,
                             "components": [
                                 {
                                     "label": "Waarom meld u dit bij ons?",
@@ -1601,7 +1601,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                                     "type": "textarea",
                                     "input": True,
                                     "autoExpand": False,
-                                    "maxCharCount": -1,
+                                    "maxCharCount": None,
                                 }
                             ],
                         },
