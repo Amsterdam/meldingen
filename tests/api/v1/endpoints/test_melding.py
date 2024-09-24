@@ -647,6 +647,56 @@ class TestMeldingQuestionAnswer:
                 MeldingStates.CLASSIFIED,
                 "supersecuretoken",
                 "test_classification",
+                '{"==":[{"var": "text"}, "dit is het antwoord op de vraag"]}',
+            )
+        ],
+        indirect=[
+            "classification_name",
+            "jsonlogic",
+        ],
+    )
+    async def test_answer_question_without_component(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+        db_session: AsyncSession,
+    ) -> None:
+        components = await form_with_classification.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        await db_session.delete(panel_components[0])
+        await db_session.commit()
+
+        data = {"text": "dit is het antwoord op de vraag"}
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE, melding_id=melding_with_classification.id, question_id=question.id
+            ),
+            params={"token": "supersecuretoken"},
+            json=data,
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name", "jsonlogic"],
+        [
+            (
+                "klacht over iets",
+                MeldingStates.CLASSIFIED,
+                "supersecuretoken",
+                "test_classification",
                 '{"!=":[{"var": "text"}, "dit is het antwoord op de vraag"]}',
             )
         ],
