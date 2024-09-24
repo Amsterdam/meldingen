@@ -171,7 +171,7 @@ class FormIoTextAreaComponent(FormIoQuestionComponent):
     __table_args__ = {"extend_existing": True}
 
     auto_expand: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
-    max_char_count: Mapped[int] = mapped_column(Integer(), nullable=True, default=None)
+    max_char_count: Mapped[int | None] = mapped_column(Integer(), nullable=True, default=None)
 
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:

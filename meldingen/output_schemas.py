@@ -112,7 +112,7 @@ class BaseFormComponentOutput(BaseModel):
 
 class StaticFormTextAreaComponentOutput(BaseFormComponentOutput):
     auto_expand: bool
-    max_char_count: int
+    max_char_count: int | None
 
 
 class StaticFormTextFieldInputComponentOutput(BaseFormComponentOutput): ...

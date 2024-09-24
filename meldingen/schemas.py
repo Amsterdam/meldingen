@@ -177,7 +177,7 @@ class FormTextAreaComponentInput(FormComponentInput):
 
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.text_area)]
     auto_expand: bool
-    max_char_count: int
+    max_char_count: Annotated[int | None, Field(gt=0)] = None
 
 
 class FormTextFieldComponentInput(FormComponentInput):
