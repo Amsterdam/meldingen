@@ -80,5 +80,6 @@ concurrency = ["greenlet"]
 omit = [
   "tests/*",
   "migrations/env.py",
-  "meldingen/dependencies.py"
+  "meldingen/dependencies.py",
+  "meldingen/database.py",
 ]
