@@ -498,7 +498,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "maxCharCount": 255,
                             "validate": {
                                 "json": {
-                                    "var": ["i"],
+                                    "==": [1, 1],
                                 },
                             },
                         },
@@ -518,7 +518,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "input": True,
                             "validate": {
                                 "json": {
-                                    "var": ["i"],
+                                    "==": [1, 1],
                                 },
                             },
                         },
@@ -546,7 +546,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             },
                             "validate": {
                                 "json": {
-                                    "var": ["i"],
+                                    "==": [1, 1],
                                 },
                             },
                         },
@@ -570,7 +570,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             ],
                             "validate": {
                                 "json": {
-                                    "var": ["i"],
+                                    "==": [1, 1],
                                 },
                             },
                         },
@@ -594,7 +594,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             ],
                             "validate": {
                                 "json": {
-                                    "var": ["i"],
+                                    "==": [1, 1],
                                 },
                             },
                         },
@@ -604,7 +604,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         }
 
         response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=data)
-
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
@@ -616,7 +615,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             assert len(panel_components) == 1
             validate = panel_components[0].get("validate")
             assert validate is not None
-            assert validate.get("json") == {"var": ["i"]}
+            assert validate.get("json") == {"==": [1, 1]}
 
     @pytest.mark.anyio
     async def test_update_form_with_new_classification(
