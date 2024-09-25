@@ -152,7 +152,8 @@ panel_not_allowed = create_non_match_validator(FormIoComponentTypeEnum.panel, "{
 
 
 class FormComponentInputValidate(BaseModel):
-    json_: JSONLogic = Field(alias="json")
+    json_: Annotated[JSONLogic | None, Field(alias="json")] = None
+    required: bool = False
 
 
 class FormComponentInput(BaseModel):
