@@ -422,7 +422,7 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
 
     async def _create_component_values(
         self, component: BaseFormIoValuesComponent, values: list[dict[str, Any]]
-    ) -> BaseFormIoValuesComponent:
+    ) -> None:
         component_values = await component.awaitable_attrs.values
 
         for value in values:
@@ -430,7 +430,6 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
             component_values.append(component_value)
 
         component_values.reorder()
-        return component
 
     async def _create_components(
         self, parent: StaticForm | FormIoPanelComponent, components_values: list[dict[str, Any]]
@@ -455,14 +454,12 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
 
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                     c_component = FormIoCheckBoxComponent(**component_values)
-                    _c_component = await self._create_component_values(component=c_component, values=value_data)
-                    c_component = cast(FormIoCheckBoxComponent, _c_component)  # Needed for mypy
+                    await self._create_component_values(component=c_component, values=value_data)
 
                     parent_components.append(c_component)
                 elif component_values.get("type") == FormIoComponentTypeEnum.radio:
                     r_component = FormIoRadioComponent(**component_values)
-                    _r_component = await self._create_component_values(component=r_component, values=value_data)
-                    r_component = cast(FormIoRadioComponent, _r_component)  # Needed for mypy
+                    await self._create_component_values(component=r_component, values=value_data)
 
                     parent_components.append(r_component)
                 elif component_values.get("type") == FormIoComponentTypeEnum.select:
