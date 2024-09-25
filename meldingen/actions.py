@@ -456,7 +456,6 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                     c_component = FormIoCheckBoxComponent(**component_values)
                     _c_component = await self._create_component_values(component=c_component, values=value_data)
-                    _c_component = await self._create_component_values(component=c_component, values=value_data)
                     c_component = cast(FormIoCheckBoxComponent, _c_component)  # Needed for mypy
 
                     parent_components.append(c_component)
