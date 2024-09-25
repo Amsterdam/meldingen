@@ -1313,7 +1313,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "input": True,
                             "validate": {
                                 "required": True,
-                            }
+                            },
                         },
                     ],
                 },
