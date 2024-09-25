@@ -101,22 +101,20 @@ def component_discriminator(value: Any) -> str | None:
     return None
 
 
+FormComponent = Union[
+    Annotated["FormPanelComponentInput", Tag(FormIoComponentTypeEnum.panel)],
+    Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
+    Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
+    Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
+    Annotated["FormCheckboxComponentInput", Tag(FormIoComponentTypeEnum.checkbox)],
+    Annotated["FormSelectComponentInput", Tag(FormIoComponentTypeEnum.select)],
+]
+
+
 class BaseFormInput(BaseModel):
     title: Annotated[str, Field(min_length=3)]
     display: FormIoFormDisplayEnum
-    components: list[
-        Annotated[
-            Union[
-                Annotated["FormPanelComponentInput", Tag(FormIoComponentTypeEnum.panel)],
-                Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
-                Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
-                Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
-                Annotated["FormCheckboxComponentInput", Tag(FormIoComponentTypeEnum.checkbox)],
-                Annotated["FormSelectComponentInput", Tag(FormIoComponentTypeEnum.select)],
-            ],
-            Discriminator(component_discriminator),
-        ]
-    ]
+    components: list[Annotated[FormComponent, Discriminator(component_discriminator)]]
 
 
 class FormInput(BaseFormInput):
