@@ -69,7 +69,6 @@ from meldingen.schema_factories import (
     FormSelectComponentOutputFactory,
     FormTextAreaComponentOutputFactory,
     FormTextFieldInputComponentOutputFactory,
-    JsonLogicAdder,
     StaticFormCheckboxComponentOutputFactory,
     StaticFormComponentOutputFactory,
     StaticFormOutputFactory,
@@ -77,6 +76,7 @@ from meldingen.schema_factories import (
     StaticFormSelectComponentOutputFactory,
     StaticFormTextAreaComponentOutputFactory,
     StaticFormTextFieldInputComponentOutputFactory,
+    ValidateAdder,
 )
 from meldingen.statemachine import (
     AnswerQuestions,
@@ -325,41 +325,41 @@ def static_form_update_action(
     return StaticFormUpdateAction(repository)
 
 
-def json_logic_adder() -> JsonLogicAdder:
-    return JsonLogicAdder()
+def validate_adder() -> ValidateAdder:
+    return ValidateAdder()
 
 
 def static_form_text_area_output_factory(
-    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)]
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)]
 ) -> StaticFormTextAreaComponentOutputFactory:
-    return StaticFormTextAreaComponentOutputFactory(_json_logic_adder)
+    return StaticFormTextAreaComponentOutputFactory(_validate_adder)
 
 
 def static_form_text_field_output_factory(
-    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)]
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)]
 ) -> StaticFormTextFieldInputComponentOutputFactory:
-    return StaticFormTextFieldInputComponentOutputFactory(_json_logic_adder)
+    return StaticFormTextFieldInputComponentOutputFactory(_validate_adder)
 
 
 def static_form_checkbox_output_factory(
     factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)],
-    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)],
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> StaticFormCheckboxComponentOutputFactory:
-    return StaticFormCheckboxComponentOutputFactory(factory, _json_logic_adder)
+    return StaticFormCheckboxComponentOutputFactory(factory, _validate_adder)
 
 
 def static_form_radio_factory(
     factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)],
-    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)],
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> StaticFormRadioComponentOutputFactory:
-    return StaticFormRadioComponentOutputFactory(factory, _json_logic_adder)
+    return StaticFormRadioComponentOutputFactory(factory, _validate_adder)
 
 
 def static_form_select_factory(
     factory: Annotated[FormSelectComponentDataOutputFactory, Depends(form_select_component_data_output_factory)],
-    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)],
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> StaticFormSelectComponentOutputFactory:
-    return StaticFormSelectComponentOutputFactory(factory, _json_logic_adder)
+    return StaticFormSelectComponentOutputFactory(factory, _validate_adder)
 
 
 def static_form_component_output_factory(
@@ -393,36 +393,36 @@ def form_repository(session: Annotated[AsyncSession, Depends(database_session)])
 
 
 def form_text_area_output_factory(
-    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)]
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)]
 ) -> FormTextAreaComponentOutputFactory:
-    return FormTextAreaComponentOutputFactory(_json_logic_adder)
+    return FormTextAreaComponentOutputFactory(_validate_adder)
 
 
 def form_text_field_input_factory(
-    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)]
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)]
 ) -> FormTextFieldInputComponentOutputFactory:
-    return FormTextFieldInputComponentOutputFactory(_json_logic_adder)
+    return FormTextFieldInputComponentOutputFactory(_validate_adder)
 
 
 def form_checkbox_output_factory(
     factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)],
-    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)],
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> FormCheckboxComponentOutputFactory:
-    return FormCheckboxComponentOutputFactory(factory, _json_logic_adder)
+    return FormCheckboxComponentOutputFactory(factory, _validate_adder)
 
 
 def form_radio_factory(
     factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)],
-    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)],
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> FormRadioComponentOutputFactory:
-    return FormRadioComponentOutputFactory(factory, _json_logic_adder)
+    return FormRadioComponentOutputFactory(factory, _validate_adder)
 
 
 def form_select_factory(
     factory: Annotated[FormSelectComponentDataOutputFactory, Depends(form_select_component_data_output_factory)],
-    _json_logic_adder: Annotated[JsonLogicAdder, Depends(json_logic_adder)],
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> FormSelectComponentOutputFactory:
-    return FormSelectComponentOutputFactory(factory, _json_logic_adder)
+    return FormSelectComponentOutputFactory(factory, _validate_adder)
 
 
 def form_component_output_factory(

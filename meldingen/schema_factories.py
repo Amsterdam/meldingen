@@ -36,18 +36,26 @@ from meldingen.output_schemas import (
 )
 
 
-class JsonLogicAdder:
+class ValidateAdder:
     async def __call__(self, component: FormIoQuestionComponent, output: BaseFormComponentOutput) -> None:
+        required = component.required
+        if required is None:
+            required = False
+
         jsonlogic = await component.awaitable_attrs.jsonlogic
         if jsonlogic is not None:
-            output.validate_ = FormComponentOutputValidate.model_validate_json(f'{{"json": {jsonlogic}}}')
+            output.validate_ = FormComponentOutputValidate.model_validate_json(
+                f'{{"json": {jsonlogic}, "required": {"true" if required else "false"} }}'
+            )
+        else:
+            output.validate_ = FormComponentOutputValidate(required=required)
 
 
 class StaticFormTextAreaComponentOutputFactory:
-    _add_json_logic: JsonLogicAdder
+    _add_validate: ValidateAdder
 
-    def __init__(self, json_logic_adder: JsonLogicAdder):
-        self._add_json_logic = json_logic_adder
+    def __init__(self, validate_adder: ValidateAdder):
+        self._add_validate = validate_adder
 
     async def __call__(self, component: FormIoTextAreaComponent) -> StaticFormTextAreaComponentOutput:
         output = StaticFormTextAreaComponentOutput(
@@ -61,16 +69,16 @@ class StaticFormTextAreaComponentOutputFactory:
             position=component.position,
         )
 
-        await self._add_json_logic(component, output)
+        await self._add_validate(component, output)
 
         return output
 
 
 class StaticFormTextFieldInputComponentOutputFactory:
-    _add_json_logic: JsonLogicAdder
+    _add_validate: ValidateAdder
 
-    def __init__(self, json_logic_adder: JsonLogicAdder):
-        self._add_json_logic = json_logic_adder
+    def __init__(self, validate_adder: ValidateAdder):
+        self._add_validate = validate_adder
 
     async def __call__(self, component: FormIoTextFieldComponent) -> StaticFormTextFieldInputComponentOutput:
         output = StaticFormTextFieldInputComponentOutput(
@@ -82,7 +90,7 @@ class StaticFormTextFieldInputComponentOutputFactory:
             position=component.position,
         )
 
-        await self._add_json_logic(component, output)
+        await self._add_validate(component, output)
 
         return output
 
@@ -109,11 +117,11 @@ class FormSelectComponentDataOutputFactory:
 
 class StaticFormCheckboxComponentOutputFactory:
     _values: FormComponentValueOutputFactory
-    _add_json_logic: JsonLogicAdder
+    _add_validate: ValidateAdder
 
-    def __init__(self, values_factory: FormComponentValueOutputFactory, json_logic_adder: JsonLogicAdder) -> None:
+    def __init__(self, values_factory: FormComponentValueOutputFactory, validate_adder: ValidateAdder) -> None:
         self._values = values_factory
-        self._add_json_logic = json_logic_adder
+        self._add_validate = validate_adder
 
     async def __call__(self, component: FormIoCheckBoxComponent) -> StaticFormCheckboxComponentOutput:
         output = StaticFormCheckboxComponentOutput(
@@ -126,18 +134,18 @@ class StaticFormCheckboxComponentOutputFactory:
             values=await self._values(component),
         )
 
-        await self._add_json_logic(component, output)
+        await self._add_validate(component, output)
 
         return output
 
 
 class StaticFormRadioComponentOutputFactory:
     _values: FormComponentValueOutputFactory
-    _add_json_logic: JsonLogicAdder
+    _add_validate: ValidateAdder
 
-    def __init__(self, values_factory: FormComponentValueOutputFactory, json_logic_adder: JsonLogicAdder) -> None:
+    def __init__(self, values_factory: FormComponentValueOutputFactory, validate_adder: ValidateAdder) -> None:
         self._values = values_factory
-        self._add_json_logic = json_logic_adder
+        self._add_validate = validate_adder
 
     async def __call__(self, component: FormIoRadioComponent) -> StaticFormRadioComponentOutput:
         output = StaticFormRadioComponentOutput(
@@ -150,18 +158,18 @@ class StaticFormRadioComponentOutputFactory:
             values=await self._values(component),
         )
 
-        await self._add_json_logic(component, output)
+        await self._add_validate(component, output)
 
         return output
 
 
 class StaticFormSelectComponentOutputFactory:
     _data: FormSelectComponentDataOutputFactory
-    _add_json_logic: JsonLogicAdder
+    _add_validate: ValidateAdder
 
-    def __init__(self, data_factory: FormSelectComponentDataOutputFactory, json_logic_adder: JsonLogicAdder) -> None:
+    def __init__(self, data_factory: FormSelectComponentDataOutputFactory, validate_adder: ValidateAdder) -> None:
         self._data = data_factory
-        self._add_json_logic = json_logic_adder
+        self._add_validate = validate_adder
 
     async def __call__(self, component: FormIoSelectComponent) -> StaticFormSelectComponentOutput:
         output = StaticFormSelectComponentOutput(
@@ -176,7 +184,7 @@ class StaticFormSelectComponentOutputFactory:
             data=await self._data(component),
         )
 
-        await self._add_json_logic(component, output)
+        await self._add_validate(component, output)
 
         return output
 
@@ -273,10 +281,10 @@ class StaticFormOutputFactory:
 
 
 class FormTextAreaComponentOutputFactory:
-    _add_json_logic: JsonLogicAdder
+    _add_validate: ValidateAdder
 
-    def __init__(self, json_logic_adder: JsonLogicAdder):
-        self._add_json_logic = json_logic_adder
+    def __init__(self, validate_adder: ValidateAdder):
+        self._add_validate = validate_adder
 
     async def __call__(self, component: FormIoTextAreaComponent) -> FormTextAreaComponentOutput:
         question = await component.awaitable_attrs.question
@@ -293,16 +301,16 @@ class FormTextAreaComponentOutputFactory:
             question=question.id,
         )
 
-        await self._add_json_logic(component, output)
+        await self._add_validate(component, output)
 
         return output
 
 
 class FormTextFieldInputComponentOutputFactory:
-    _add_json_logic: JsonLogicAdder
+    _add_validate: ValidateAdder
 
-    def __init__(self, json_logic_adder: JsonLogicAdder):
-        self._add_json_logic = json_logic_adder
+    def __init__(self, validate_adder: ValidateAdder):
+        self._add_validate = validate_adder
 
     async def __call__(self, component: FormIoTextFieldComponent) -> FormTextFieldInputComponentOutput:
         question = await component.awaitable_attrs.question
@@ -317,18 +325,18 @@ class FormTextFieldInputComponentOutputFactory:
             question=question.id,
         )
 
-        await self._add_json_logic(component, output)
+        await self._add_validate(component, output)
 
         return output
 
 
 class FormCheckboxComponentOutputFactory:
     _values: FormComponentValueOutputFactory
-    _add_json_logic: JsonLogicAdder
+    _add_validate: ValidateAdder
 
-    def __init__(self, values_factory: FormComponentValueOutputFactory, json_logic_adder: JsonLogicAdder):
+    def __init__(self, values_factory: FormComponentValueOutputFactory, validate_adder: ValidateAdder):
         self._values = values_factory
-        self._add_json_logic = json_logic_adder
+        self._add_validate = validate_adder
 
     async def __call__(self, component: FormIoCheckBoxComponent) -> FormCheckboxComponentOutput:
         question = await component.awaitable_attrs.question
@@ -344,18 +352,18 @@ class FormCheckboxComponentOutputFactory:
             question=question.id,
         )
 
-        await self._add_json_logic(component, output)
+        await self._add_validate(component, output)
 
         return output
 
 
 class FormRadioComponentOutputFactory:
     _values: FormComponentValueOutputFactory
-    _add_json_logic: JsonLogicAdder
+    _add_validate: ValidateAdder
 
-    def __init__(self, values_factory: FormComponentValueOutputFactory, json_logic_adder: JsonLogicAdder):
+    def __init__(self, values_factory: FormComponentValueOutputFactory, validate_adder: ValidateAdder):
         self._values = values_factory
-        self._add_json_logic = json_logic_adder
+        self._add_validate = validate_adder
 
     async def __call__(self, component: FormIoRadioComponent) -> FormRadioComponentOutput:
         question = await component.awaitable_attrs.question
@@ -371,18 +379,18 @@ class FormRadioComponentOutputFactory:
             question=question.id,
         )
 
-        await self._add_json_logic(component, output)
+        await self._add_validate(component, output)
 
         return output
 
 
 class FormSelectComponentOutputFactory:
     _data: FormSelectComponentDataOutputFactory
-    _add_json_logic: JsonLogicAdder
+    _add_validate: ValidateAdder
 
-    def __init__(self, data_factory: FormSelectComponentDataOutputFactory, json_logic_adder: JsonLogicAdder):
+    def __init__(self, data_factory: FormSelectComponentDataOutputFactory, validate_adder: ValidateAdder):
         self._data = data_factory
-        self._add_json_logic = json_logic_adder
+        self._add_validate = validate_adder
 
     async def __call__(self, component: FormIoSelectComponent) -> FormSelectComponentOutput:
         question = await component.awaitable_attrs.question
@@ -400,7 +408,7 @@ class FormSelectComponentOutputFactory:
             question=question.id,
         )
 
-        await self._add_json_logic(component, output)
+        await self._add_validate(component, output)
 
         return output
 
