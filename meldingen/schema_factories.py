@@ -38,7 +38,7 @@ from meldingen.output_schemas import (
 
 class ValidateAdder:
     async def __call__(self, component: FormIoQuestionComponent, output: BaseFormComponentOutput) -> None:
-        required = component.required
+        required = await component.awaitable_attrs.required
         if required is None:
             required = False
 
