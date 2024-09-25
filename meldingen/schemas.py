@@ -154,11 +154,6 @@ panel_not_allowed = create_non_match_validator(FormIoComponentTypeEnum.panel, "{
 class FormComponentInputValidate(BaseModel):
     json_: JSONLogic = Field(alias="json")
 
-    @model_serializer
-    def serialize_model(self) -> str:
-        """We serialize the model to a string, as that is how we need to store it in the database."""
-        return self.json_.model_dump_json(by_alias=True)
-
 
 class FormComponentInput(BaseModel):
     label: Annotated[str, Field(min_length=3)]
