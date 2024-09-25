@@ -95,6 +95,10 @@ class BaseFormTest:
         assert data.get("position") == component.position
         assert data.get("question") == component.question_id
 
+        validate = data.get("validate")
+        assert validate is not None
+        assert validate.get("required") is not None
+
         if isinstance(component, FormIoTextAreaComponent):
             assert data.get("autoExpand") == component.auto_expand
             assert data.get("maxCharCount") == component.max_char_count
@@ -616,6 +620,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             validate = panel_components[0].get("validate")
             assert validate is not None
             assert validate.get("json") == {"==": [1, 1]}
+            assert validate.get("required") is False
 
     @pytest.mark.anyio
     async def test_update_form_with_new_classification(
@@ -1120,6 +1125,9 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert not first_component.get("autoExpand")
         assert first_component.get("maxCharCount", "") is None
         assert first_component.get("question") is not None
+        first_component_validate = first_component.get("validate")
+        assert first_component_validate is not None
+        assert first_component_validate.get("required") is False
 
         second_component: dict[str, Any] = components[1]
         assert second_component.get("label") == "panel-1"
@@ -1138,6 +1146,9 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert second_child_component.get("autoExpand")
         assert second_child_component.get("maxCharCount") == 255
         assert second_child_component.get("question") is not None
+        second_child_component_validate = second_child_component.get("validate")
+        assert second_child_component_validate is not None
+        assert second_child_component_validate.get("required") is False
 
     @pytest.mark.anyio
     async def test_create_form_with_jsonlogic(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
@@ -1280,6 +1291,7 @@ class TestFormCreate(BaseUnauthorizedTest):
             validate = panel_components[0].get("validate")
             assert validate is not None
             assert validate.get("json") == {"var": ["i"]}
+            assert validate.get("required") is False
 
     @pytest.mark.anyio
     async def test_create_form_with_text_field(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
