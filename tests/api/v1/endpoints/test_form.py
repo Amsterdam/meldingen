@@ -1311,6 +1311,9 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "key": "waarom-meld-u-dit-bij-ons",
                             "type": FormIoComponentTypeEnum.text_field,
                             "input": True,
+                            "validate": {
+                                "required": True,
+                            }
                         },
                     ],
                 },
@@ -1351,6 +1354,9 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert text_field.get("type") == FormIoComponentTypeEnum.text_field
         assert text_field.get("input")
         assert text_field.get("question") is not None
+        validate = text_field.get("validate")
+        assert validate is not None
+        assert validate.get("required") is True
 
     @pytest.mark.anyio
     async def test_create_form_with_select(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:

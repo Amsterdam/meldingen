@@ -184,6 +184,9 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
                     if component.validate_.json_ is not None:
                         component_values["jsonlogic"] = component.validate_.json_.model_dump_json(by_alias=True)
 
+                    if component.validate_.required is not None:
+                        component_values["required"] = component.validate_.required
+
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                     c_component = FormIoCheckBoxComponent(**component_values)
                     await self._create_component_values(component=c_component, values=value_data)
@@ -443,6 +446,9 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
                 if component.validate_ is not None:
                     if component.validate_.json_ is not None:
                         component_values["jsonlogic"] = component.validate_.json_.model_dump_json(by_alias=True)
+
+                    if component.validate_.required is not None:
+                        component_values["required"] = component.validate_.required
 
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                     c_component = FormIoCheckBoxComponent(**component_values)
