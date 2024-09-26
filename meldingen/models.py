@@ -157,6 +157,7 @@ class FormIoQuestionComponent(FormIoComponent):
 
     question_id: Mapped[int | None] = mapped_column(ForeignKey("question.id", ondelete="SET NULL"), default=None)
     jsonlogic: Mapped[str | None] = mapped_column(String(), nullable=True, default=None)
+    required: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
 
     @declared_attr
     def question(self) -> Mapped[Union["Question", None]]:

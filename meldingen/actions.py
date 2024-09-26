@@ -1,4 +1,4 @@
-from typing import Any, Collection, TypeVar, cast
+from typing import Any, Collection, Sequence, TypeVar
 
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
@@ -57,7 +57,7 @@ from meldingen.repositories import (
     QuestionRepository,
     StaticFormRepository,
 )
-from meldingen.schemas import AnswerInput, FormInput, StaticFormInput
+from meldingen.schemas import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, StaticFormInput
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
@@ -150,7 +150,7 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
 
     async def _create_component_values(
         self, component: BaseFormIoValuesComponent, values: list[dict[str, Any]]
-    ) -> BaseFormIoValuesComponent:
+    ) -> None:
         component_values = await component.awaitable_attrs.values
 
         for value in values:
@@ -158,39 +158,44 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
             component_values.append(component_value)
 
         component_values.reorder()
-        return component
 
     async def _create_components(
-        self, parent: Form | FormIoPanelComponent, components_values: list[dict[str, Any]]
+        self, parent: Form | FormIoPanelComponent, components: Sequence[FormComponent]
     ) -> None:
         parent_components = await parent.awaitable_attrs.components
         parent_components.clear()
 
-        for component_values in components_values:
-            if component_values.get("type") == FormIoComponentTypeEnum.panel:
-                child_components_values = component_values.pop("components", [])
+        for component in components:
+            component_values = component.model_dump()
+
+            if isinstance(component, FormPanelComponentInput):
+                component_values.pop("components")
+
                 panel_component = FormIoPanelComponent(**component_values)
                 parent_components.append(panel_component)
 
-                await self._create_components(parent=panel_component, components_values=child_components_values)
+                await self._create_components(parent=panel_component, components=component.components)
             else:
                 value_data = component_values.pop("values", [])
 
-                validate = component_values.pop("validate_")
-                if validate is not None:
-                    component_values["jsonlogic"] = validate
+                component_values.pop("validate_")
+
+                if component.validate_ is not None:
+                    if component.validate_.json_ is not None:
+                        component_values["jsonlogic"] = component.validate_.json_.model_dump_json(by_alias=True)
+
+                    if component.validate_.required is not None:
+                        component_values["required"] = component.validate_.required
 
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                     c_component = FormIoCheckBoxComponent(**component_values)
-                    _c_component = await self._create_component_values(component=c_component, values=value_data)
-                    c_component = cast(FormIoCheckBoxComponent, _c_component)  # Needed for mypy
+                    await self._create_component_values(component=c_component, values=value_data)
 
                     parent_components.append(c_component)
                     await self._create_question(component=c_component)
                 elif component_values.get("type") == FormIoComponentTypeEnum.radio:
                     r_component = FormIoRadioComponent(**component_values)
-                    _r_component = await self._create_component_values(component=r_component, values=value_data)
-                    r_component = cast(FormIoRadioComponent, _r_component)  # Needed for mypy
+                    await self._create_component_values(component=r_component, values=value_data)
 
                     parent_components.append(r_component)
                     await self._create_question(component=r_component)
@@ -249,14 +254,10 @@ class FormCreateAction(BaseFormCreateUpdateAction):
         dumped_form_input = form_input.model_dump(by_alias=True)
         dumped_form_input.pop("components")
 
-        dumped_components_input = []
-        for component in form_input.components:
-            dumped_components_input.append(component.model_dump())
-
         form = Form(**dumped_form_input)
         form.classification = classification
 
-        await self._create_components(form, dumped_components_input)
+        await self._create_components(form, form_input.components)
         await self._repository.save(form)
 
         return form
@@ -305,21 +306,11 @@ class FormUpdateAction(BaseFormCreateUpdateAction):
         form_data = form_input.model_dump(exclude_unset=True, by_alias=True)
         form_data["classification"] = classification
         form_data.pop("components")
-        components = []
-        for component in form_input.components:
-            components.append(component.model_dump())
-        form_data["components"] = components
 
-        return await self._update(obj, form_data)
-
-    async def _update(self, obj: Form, values: dict[str, Any]) -> Form:
-        component_values = values.pop("components", [])
-        if component_values:
-            await self._create_components(obj, component_values)
-
-        for key, value in values.items():
+        for key, value in form_data.items():
             setattr(obj, key, value)
 
+        await self._create_components(obj, form_input.components)
         await self._repository.save(obj)
 
         return obj
@@ -422,7 +413,7 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
 
     async def _create_component_values(
         self, component: BaseFormIoValuesComponent, values: list[dict[str, Any]]
-    ) -> BaseFormIoValuesComponent:
+    ) -> None:
         component_values = await component.awaitable_attrs.values
 
         for value in values:
@@ -430,40 +421,43 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
             component_values.append(component_value)
 
         component_values.reorder()
-        return component
 
     async def _create_components(
-        self, parent: StaticForm | FormIoPanelComponent, components_values: list[dict[str, Any]]
+        self, parent: StaticForm | FormIoPanelComponent, components: Sequence[FormComponent]
     ) -> None:
         parent_components = await parent.awaitable_attrs.components
         parent_components.clear()
 
-        for component_values in components_values:
-            if component_values.get("type") == FormIoComponentTypeEnum.panel:
-                child_components_values = component_values.pop("components", [])
+        for component in components:
+            component_values = component.model_dump()
+
+            if isinstance(component, FormPanelComponentInput):
+                component_values.pop("components")
                 panel_component = FormIoPanelComponent(**component_values)
 
-                await self._create_components(parent=panel_component, components_values=child_components_values)
+                await self._create_components(parent=panel_component, components=component.components)
 
                 parent_components.append(panel_component)
             else:
                 value_data = component_values.pop("values", [])
 
-                validate = component_values.pop("validate_")
-                if validate is not None:
-                    component_values["jsonlogic"] = validate
+                component_values.pop("validate_")
+
+                if component.validate_ is not None:
+                    if component.validate_.json_ is not None:
+                        component_values["jsonlogic"] = component.validate_.json_.model_dump_json(by_alias=True)
+
+                    if component.validate_.required is not None:
+                        component_values["required"] = component.validate_.required
 
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                     c_component = FormIoCheckBoxComponent(**component_values)
-                    _c_component = await self._create_component_values(component=c_component, values=value_data)
-                    _c_component = await self._create_component_values(component=c_component, values=value_data)
-                    c_component = cast(FormIoCheckBoxComponent, _c_component)  # Needed for mypy
+                    await self._create_component_values(component=c_component, values=value_data)
 
                     parent_components.append(c_component)
                 elif component_values.get("type") == FormIoComponentTypeEnum.radio:
                     r_component = FormIoRadioComponent(**component_values)
-                    _r_component = await self._create_component_values(component=r_component, values=value_data)
-                    r_component = cast(FormIoRadioComponent, _r_component)  # Needed for mypy
+                    await self._create_component_values(component=r_component, values=value_data)
 
                     parent_components.append(r_component)
                 elif component_values.get("type") == FormIoComponentTypeEnum.select:
@@ -505,13 +499,7 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
         for key, value in form_data.items():
             setattr(obj, key, value)
 
-        form_component_data = []
-        for component in form_input.components:
-            form_component_data.append(component.model_dump())
-
-        if form_component_data:
-            await self._create_components(obj, form_component_data)
-
+        await self._create_components(obj, form_input.components)
         await self._repository.save(obj)
 
         return obj

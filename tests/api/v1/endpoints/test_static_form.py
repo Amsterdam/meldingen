@@ -270,6 +270,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             validate = panel_components[0].get("validate")
             assert validate is not None
             assert validate.get("json") == {"var": ["i"]}
+            assert validate.get("required") is False
 
     @pytest.mark.anyio
     async def test_update_form_with_text_field(

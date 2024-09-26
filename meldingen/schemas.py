@@ -101,22 +101,20 @@ def component_discriminator(value: Any) -> str | None:
     return None
 
 
+FormComponent = Union[
+    Annotated["FormPanelComponentInput", Tag(FormIoComponentTypeEnum.panel)],
+    Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
+    Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
+    Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
+    Annotated["FormCheckboxComponentInput", Tag(FormIoComponentTypeEnum.checkbox)],
+    Annotated["FormSelectComponentInput", Tag(FormIoComponentTypeEnum.select)],
+]
+
+
 class BaseFormInput(BaseModel):
     title: Annotated[str, Field(min_length=3)]
     display: FormIoFormDisplayEnum
-    components: list[
-        Annotated[
-            Union[
-                Annotated["FormPanelComponentInput", Tag(FormIoComponentTypeEnum.panel)],
-                Annotated["FormTextAreaComponentInput", Tag(FormIoComponentTypeEnum.text_area)],
-                Annotated["FormTextFieldComponentInput", Tag(FormIoComponentTypeEnum.text_field)],
-                Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
-                Annotated["FormCheckboxComponentInput", Tag(FormIoComponentTypeEnum.checkbox)],
-                Annotated["FormSelectComponentInput", Tag(FormIoComponentTypeEnum.select)],
-            ],
-            Discriminator(component_discriminator),
-        ]
-    ]
+    components: list[Annotated[FormComponent, Discriminator(component_discriminator)]]
 
 
 class FormInput(BaseFormInput):
@@ -154,12 +152,8 @@ panel_not_allowed = create_non_match_validator(FormIoComponentTypeEnum.panel, "{
 
 
 class FormComponentInputValidate(BaseModel):
-    json_: JSONLogic = Field(alias="json")
-
-    @model_serializer
-    def serialize_model(self) -> str:
-        """We serialize the model to a string, as that is how we need to store it in the database."""
-        return self.json_.model_dump_json(by_alias=True)
+    json_: Annotated[JSONLogic | None, Field(alias="json")] = None
+    required: bool = False
 
 
 class FormComponentInput(BaseModel):

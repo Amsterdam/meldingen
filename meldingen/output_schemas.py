@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union
+from typing import Annotated, Union
 
 from pydantic import AliasGenerator, BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
@@ -92,7 +92,8 @@ class FormPanelComponentOutput(BaseFormPanelComponentOutput):
 
 
 class FormComponentOutputValidate(BaseModel):
-    json_: JSONLogic = Field(alias="json")
+    json_: Annotated[JSONLogic | None, Field(alias="json")] = None
+    required: bool
 
 
 class BaseFormComponentOutput(BaseModel):
