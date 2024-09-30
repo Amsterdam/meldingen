@@ -18,7 +18,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from meldingen.models import Classification, Form, Melding, Question
+from meldingen.models import Attachment, Classification, Form, Melding, Question
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -1135,6 +1135,22 @@ class TestMeldingDownloadAttachment:
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=456),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_download_attachment_attached_to_other_melding(
+        self, app: FastAPI, client: AsyncClient, attachment: Attachment, db_session: AsyncSession
+    ) -> None:
+        melding = Melding(text="Hoi!", token="supersecuretoken")
+
+        db_session.add(melding)
+        await db_session.commit()
+
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=attachment.id),
             params={"token": "supersecuretoken"},
         )
 

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from meldingen.authentication import authenticate_user
 from meldingen.models import (
+    Attachment,
     Classification,
     Form,
     FormIoComponentTypeEnum,
@@ -298,3 +299,24 @@ async def primary_form(db_session: AsyncSession) -> StaticForm:
         await db_session.commit()
 
     return primary_form
+
+
+@pytest.fixture
+def attachment_filename(request: FixtureRequest) -> str:
+    """Fixture providing a test melding text."""
+
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return "test.jpg"
+
+
+@pytest.fixture
+async def attachment(db_session: AsyncSession, melding: Melding, attachment_filename: str) -> Attachment:
+    attachment = Attachment(original_filename=attachment_filename, melding=melding)
+    attachment.file_path = f"/path/to/{attachment_filename}"
+
+    db_session.add(attachment)
+    await db_session.commit()
+
+    return attachment
