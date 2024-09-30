@@ -1070,10 +1070,12 @@ class TestMeldingUploadAttachment:
 
 
 class TestMeldingDownloadAttachment:
+    ROUTE_NAME: Final[str] = "melding:attachment-download"
+
     @pytest.mark.anyio
     async def test_download_attachment_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.get(
-            app.url_path_for("melding:attachment-download", melding_id=123, attachment_id=456),
+            app.url_path_for(self.ROUTE_NAME, melding_id=123, attachment_id=456),
             params={"token": "supersecuretoken"},
         )
 
@@ -1082,7 +1084,7 @@ class TestMeldingDownloadAttachment:
     @pytest.mark.anyio
     async def test_download_attachment_token_missing(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.get(
-            app.url_path_for("melding:attachment-download", melding_id=123, attachment_id=456),
+            app.url_path_for(self.ROUTE_NAME, melding_id=123, attachment_id=456),
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -1094,3 +1096,14 @@ class TestMeldingDownloadAttachment:
         assert detail[0].get("type") == "missing"
         assert detail[0].get("loc") == ["query", "token"]
         assert detail[0].get("msg") == "Field required"
+
+    @pytest.mark.anyio
+    async def test_download_attachment_unauthorized_token_invalid(
+            self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=456),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
