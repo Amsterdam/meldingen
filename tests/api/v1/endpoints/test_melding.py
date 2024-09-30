@@ -1078,3 +1078,19 @@ class TestMeldingDownloadAttachment:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_download_attachment_token_missing(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.get(
+            app.url_path_for("melding:attachment-download", melding_id=123, attachment_id=456),
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+
+        assert len(detail) == 1
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["query", "token"]
+        assert detail[0].get("msg") == "Field required"
