@@ -1123,3 +1123,19 @@ class TestMeldingDownloadAttachment:
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_download_attachment_attachment_not_found(
+        self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=456),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
