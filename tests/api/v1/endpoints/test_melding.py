@@ -1,4 +1,5 @@
 import os
+import shutil
 from os import path
 from typing import Any, Final
 
@@ -1173,3 +1174,26 @@ class TestMeldingDownloadAttachment:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_download_attachment(self, app: FastAPI, client: AsyncClient, attachment: Attachment) -> None:
+        os.makedirs(path.dirname(attachment.file_path))
+        with open(attachment.file_path, "wb") as file:
+            file.write(b"some data")
+
+        melding = await attachment.awaitable_attrs.melding
+
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=attachment.id),
+            params={"token": "supersecuretoken"},
+        )
+
+        shutil.rmtree(path.dirname(attachment.file_path))
+
+        assert response.status_code == HTTP_200_OK
+        assert response.text == "some data"

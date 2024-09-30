@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
@@ -303,18 +304,16 @@ async def primary_form(db_session: AsyncSession) -> StaticForm:
 
 @pytest.fixture
 def attachment_filename(request: FixtureRequest) -> str:
-    """Fixture providing a test melding text."""
-
     if hasattr(request, "param"):
         return str(request.param)
-    else:
-        return "test.jpg"
+
+    return "test.jpg"
 
 
 @pytest.fixture
 async def attachment(db_session: AsyncSession, melding: Melding, attachment_filename: str) -> Attachment:
     attachment = Attachment(original_filename=attachment_filename, melding=melding)
-    attachment.file_path = f"/path/to/{attachment_filename}"
+    attachment.file_path = f"/tmp/{uuid4()}/{attachment_filename}"
 
     db_session.add(attachment)
     await db_session.commit()
