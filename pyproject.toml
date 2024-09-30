@@ -18,7 +18,7 @@ fastapi = {extras = ["standard"], version = "^0.115.0"}
 geoalchemy2 = "^0.15.2"
 geojson-pydantic = "^1.1.1"
 maykin-json-logic-py = "^0.13.0"
-meldingen-core = {git = "https://github.com/amsterdam/meldingen-core.git"}
+meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git", rev = "feature/download-attachment-action"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
 pydantic = {extras = ["email"], version = "^2.9.2"}
 pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git"}
