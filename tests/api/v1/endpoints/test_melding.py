@@ -1099,7 +1099,23 @@ class TestMeldingDownloadAttachment:
 
     @pytest.mark.anyio
     async def test_download_attachment_unauthorized_token_invalid(
-            self, app: FastAPI, client: AsyncClient, melding: Melding
+        self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=456),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
+        indirect=True,
+    )
+    async def test_download_attachment_unauthorized_token_expired(
+        self, app: FastAPI, client: AsyncClient, melding: Melding
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=456),
