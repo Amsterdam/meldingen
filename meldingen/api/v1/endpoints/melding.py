@@ -343,10 +343,10 @@ async def download_attachment(
     action: Annotated[DownloadAttachmentAction, Depends(melding_download_attachment_action)],
 ) -> StreamingResponse:
     try:
-        file_data = await action(melding_id, attachment_id, token)
+        iterator = await action(melding_id, attachment_id, token)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return StreamingResponse([file_data])
+    return StreamingResponse(iterator)
