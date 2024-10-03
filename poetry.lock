@@ -1278,13 +1278,13 @@ files = [
 
 [[package]]
 name = "httpcore"
-version = "1.0.5"
+version = "1.0.6"
 description = "A minimal low-level HTTP client."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "httpcore-1.0.5-py3-none-any.whl", hash = "sha256:421f18bac248b25d310f3cacd198d55b8e6125c107797b609ff9b7a6ba7991b5"},
-    {file = "httpcore-1.0.5.tar.gz", hash = "sha256:34a38e2f9291467ee3b44e89dd52615370e152954ba21721378a87b2960f7a61"},
+    {file = "httpcore-1.0.6-py3-none-any.whl", hash = "sha256:27b59625743b85577a8c0e10e55b50b5368a4f2cfe8cc7bcfa9cf00829c2682f"},
+    {file = "httpcore-1.0.6.tar.gz", hash = "sha256:73f6dbd6eb8c21bbf7ef8efad555481853f5f6acdeaff1edb0694289269ee17f"},
 ]
 
 [package.dependencies]
@@ -1295,7 +1295,7 @@ h11 = ">=0.13,<0.15"
 asyncio = ["anyio (>=4.0,<5.0)"]
 http2 = ["h2 (>=3,<5)"]
 socks = ["socksio (==1.*)"]
-trio = ["trio (>=0.22.0,<0.26.0)"]
+trio = ["trio (>=0.22.0,<1.0)"]
 
 [[package]]
 name = "httptools"
@@ -1622,14 +1622,14 @@ files = []
 develop = false
 
 [package.dependencies]
-plugfs = {git = "https://github.com/amsterdam/plugfs.git"}
+plugfs = {git = "https://github.com/amsterdam/plugfs"}
 structlog = "^24.1.0"
 
 [package.source]
 type = "git"
 url = "https://github.com/amsterdam/meldingen-core.git"
 reference = "HEAD"
-resolved_reference = "976fed8f88e4acd6cf8bf6ba432e802738c6ea08"
+resolved_reference = "0ae28724b30f0d36aad418563e887d0bc0e5c6d2"
 
 [[package]]
 name = "mergedeep"
@@ -1806,7 +1806,7 @@ name = "mp-fsm"
 version = "0.1.0"
 description = ""
 optional = false
-python-versions = "^3.11"
+python-versions = "^3.12"
 files = []
 develop = false
 
@@ -1814,7 +1814,7 @@ develop = false
 type = "git"
 url = "https://github.com/Amsterdam/mp-fsm.git"
 reference = "HEAD"
-resolved_reference = "987e8ed72f85c52cb50d106217166a1c6931c44a"
+resolved_reference = "02b67a8bc7ea9a3a2d103ed570fba9c446007300"
 
 [[package]]
 name = "multidict"
@@ -2070,9 +2070,9 @@ azure-storage-blob = "^12.23.1"
 
 [package.source]
 type = "git"
-url = "https://github.com/amsterdam/plugfs.git"
+url = "https://github.com/amsterdam/plugfs"
 reference = "HEAD"
-resolved_reference = "04333bcd643991ef2305659203f66ec9b7e2f26a"
+resolved_reference = "925b23c55d612827d757e74c4627f2706ab70bb8"
 
 [[package]]
 name = "pluggy"
@@ -2383,13 +2383,13 @@ tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
 name = "pymdown-extensions"
-version = "10.11.1"
+version = "10.11.2"
 description = "Extension pack for Python Markdown."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pymdown_extensions-10.11.1-py3-none-any.whl", hash = "sha256:a2b28f5786e041f19cb5bb30a1c2c853668a7099da8e3dd822a5ad05f2e855e3"},
-    {file = "pymdown_extensions-10.11.1.tar.gz", hash = "sha256:a8836e955851542fa2625d04d59fdf97125ca001377478ed5618e04f9183a59a"},
+    {file = "pymdown_extensions-10.11.2-py3-none-any.whl", hash = "sha256:41cdde0a77290e480cf53892f5c5e50921a7ee3e5cd60ba91bf19837b33badcf"},
+    {file = "pymdown_extensions-10.11.2.tar.gz", hash = "sha256:bc8847ecc9e784a098efd35e20cba772bc5a1b529dfcef9dc1972db9021a1049"},
 ]
 
 [package.dependencies]
