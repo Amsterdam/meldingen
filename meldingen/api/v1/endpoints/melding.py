@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, AsyncIterator
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
@@ -313,8 +313,12 @@ async def upload_attachment(
     # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
     assert file.filename is not None
 
+    async def iterate() -> AsyncIterator[bytes]:
+        while chunk := await file.read(1024 * 1024):
+            yield chunk
+
     try:
-        attachment = await action(melding_id, token, file.filename, await file.read())
+        attachment = await action(melding_id, token, file.filename, iterate())
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
