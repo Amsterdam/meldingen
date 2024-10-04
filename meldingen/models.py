@@ -354,7 +354,7 @@ class Answer(BaseDBModel, BaseAnswer):
     melding: Mapped[Melding] = relationship()
 
 
-class Attachment(BaseDBModel, BaseAttachment):
+class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     file_path: Mapped[str] = mapped_column(String(), init=False)
     original_filename: Mapped[str] = mapped_column(String())
 

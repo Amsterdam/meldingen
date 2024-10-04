@@ -2,6 +2,7 @@ from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
+from fastapi.responses import StreamingResponse
 from meldingen_core.actions.melding import (
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
@@ -22,7 +23,13 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from meldingen.actions import AnswerCreateAction, MeldingListAction, MeldingRetrieveAction, UploadAttachmentAction
+from meldingen.actions import (
+    AnswerCreateAction,
+    DownloadAttachmentAction,
+    MeldingListAction,
+    MeldingRetrieveAction,
+    UploadAttachmentAction,
+)
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (
     default_response,
@@ -37,6 +44,7 @@ from meldingen.dependencies import (
     melding_answer_questions_action,
     melding_complete_action,
     melding_create_action,
+    melding_download_attachment_action,
     melding_list_action,
     melding_process_action,
     melding_repository,
@@ -318,3 +326,27 @@ async def upload_attachment(
         created_at=attachment.created_at,
         updated_at=attachment.updated_at,
     )
+
+
+@router.get(
+    "/{melding_id}/attachment/{attachment_id}/download",
+    name="melding:attachment-download",
+    responses={
+        **not_found_response,
+        **unauthorized_response,
+    },
+)
+async def download_attachment(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[DownloadAttachmentAction, Depends(melding_download_attachment_action)],
+) -> StreamingResponse:
+    try:
+        iterator = await action(melding_id, attachment_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return StreamingResponse(iterator)

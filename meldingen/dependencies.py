@@ -25,6 +25,7 @@ from meldingen.actions import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    DownloadAttachmentAction,
     FormCreateAction,
     FormDeleteAction,
     FormListAction,
@@ -297,6 +298,15 @@ def melding_upload_attachment_action(
         token_verifier,
         str(settings.attachment_storage_base_directory),
     )
+
+
+def melding_download_attachment_action(
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
+) -> DownloadAttachmentAction:
+    return DownloadAttachmentAction(melding_repository, token_verifier, attachment_repository, filesystem)
 
 
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:
