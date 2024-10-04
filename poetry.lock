@@ -1622,14 +1622,14 @@ files = []
 develop = false
 
 [package.dependencies]
-plugfs = {git = "https://github.com/amsterdam/plugfs.git", rev = "feat/provide-file-data-iterators"}
+plugfs = {git = "https://github.com/amsterdam/plugfs.git"}
 structlog = "^24.1.0"
 
 [package.source]
 type = "git"
-url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feature/download-attachment-action"
-resolved_reference = "747c90b3363112bf3c4d31cff9aa04da80e21e3c"
+url = "https://github.com/amsterdam/meldingen-core.git"
+reference = "HEAD"
+resolved_reference = "976fed8f88e4acd6cf8bf6ba432e802738c6ea08"
 
 [[package]]
 name = "mergedeep"
@@ -2071,8 +2071,8 @@ azure-storage-blob = "^12.23.1"
 [package.source]
 type = "git"
 url = "https://github.com/amsterdam/plugfs.git"
-reference = "feat/provide-file-data-iterators"
-resolved_reference = "ed56a7d973a096a5a285b95c71651adddac55405"
+reference = "HEAD"
+resolved_reference = "04333bcd643991ef2305659203f66ec9b7e2f26a"
 
 [[package]]
 name = "pluggy"
@@ -3338,4 +3338,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "5e1656f0b4b6886488d709e13d099319b7d81acfd7af703bcf5d55bf687a98e5"
+content-hash = "65a636c75ba4c297992033fd88082a5f77e8f3d4cbee0f55abbc083d548963e2"
