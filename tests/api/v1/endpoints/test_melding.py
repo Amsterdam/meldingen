@@ -500,7 +500,7 @@ class TestMeldingAddAttachments(BaseUnauthorizedTest):
     @pytest.mark.anyio
     async def test_add_attachments_not_found(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": "supersecrettoken"}
+            app.url_path_for(self.get_route_name(), melding_id=1), params={"token": "supersecrettoken"}
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
@@ -508,7 +508,7 @@ class TestMeldingAddAttachments(BaseUnauthorizedTest):
     @pytest.mark.anyio
     async def test_add_attachments_token_invalid(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id), params={"token": "supersecrettoken"}
+            app.url_path_for(self.get_route_name(), melding_id=melding.id), params={"token": "supersecrettoken"}
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -521,7 +521,7 @@ class TestMeldingAddAttachments(BaseUnauthorizedTest):
     )
     async def test_add_attachments_token_expired(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id), params={"token": "supersecrettoken"}
+            app.url_path_for(self.get_route_name(), melding_id=melding.id), params={"token": "supersecrettoken"}
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -534,7 +534,7 @@ class TestMeldingAddAttachments(BaseUnauthorizedTest):
     )
     async def test_add_attachments_wrong_state(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id), params={"token": "supersecrettoken"}
+            app.url_path_for(self.get_route_name(), melding_id=melding.id), params={"token": "supersecrettoken"}
         )
 
         assert response.status_code == HTTP_400_BAD_REQUEST
