@@ -74,6 +74,10 @@ def test_invalid_non_match_validator(value: Any, match_value: Any, error_msg: st
 
 
 class TestMediaTypeValidator:
+    @pytest.fixture
+    def media_type_validator(self) -> MediaTypeValidator:
+        return MediaTypeValidator(["image/jpeg", "image/jpg", "image/png", "image/webp"])
+
     @pytest.mark.parametrize(
         "media_type",
         [
@@ -83,11 +87,9 @@ class TestMediaTypeValidator:
             "image/webp",
         ],
     )
-    def test_media_type_validator(self, media_type: str) -> None:
-        validate = MediaTypeValidator()
-        validate(media_type)
+    def test_media_type_validator(self, media_type_validator: MediaTypeValidator, media_type: str) -> None:
+        media_type_validator(media_type)
 
-    def test_media_type_not_allowed(self) -> None:
-        validate = MediaTypeValidator()
+    def test_media_type_not_allowed(self, media_type_validator: MediaTypeValidator) -> None:
         with pytest.raises(MediaTypeNotAllowed):
-            validate("application/octet-stream")
+            media_type_validator("application/octet-stream")

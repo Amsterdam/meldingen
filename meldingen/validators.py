@@ -2,8 +2,6 @@ from typing import Any, Callable
 
 from meldingen_core.validators import BaseMediaTypeValidator, MediaTypeNotAllowed
 
-from meldingen.config import settings
-
 
 def create_match_validator(match_value: Any, error_msg: str) -> Callable[[Any], Any]:
     """
@@ -44,6 +42,11 @@ def create_non_match_validator(match_value: Any, error_msg: str) -> Callable[[An
 
 
 class MediaTypeValidator(BaseMediaTypeValidator):
+    _allowed_media_types: list[str]
+
+    def __init__(self, allowed_media_types: list[str]) -> None:
+        self._allowed_media_types = allowed_media_types
+
     def __call__(self, media_type: str) -> None:
-        if media_type not in settings.attachment_allow_media_types:
+        if media_type not in self._allowed_media_types:
             raise MediaTypeNotAllowed()
