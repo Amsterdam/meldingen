@@ -5,6 +5,7 @@ from typing import Annotated, AsyncIterator
 from fastapi import Depends
 from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.melding import (
+    MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
     MeldingCreateAction,
@@ -231,6 +232,14 @@ def melding_answer_questions_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> MeldingAnswerQuestionsAction[Melding, Melding]:
     return MeldingAnswerQuestionsAction(state_machine, repository, token_verifier)
+
+
+def melding_add_attachments_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+) -> MeldingAddAttachmentsAction[Melding, Melding]:
+    return MeldingAddAttachmentsAction(state_machine, repository, token_verifier)
 
 
 def melding_process_action(

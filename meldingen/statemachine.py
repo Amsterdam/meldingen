@@ -50,6 +50,16 @@ class AnswerQuestions(BaseTransition[Melding]):
         return MeldingStates.QUESTIONS_ANSWERED
 
 
+class AddAttachments(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.QUESTIONS_ANSWERED]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.ATTACHMENTS_ADDED
+
+
 class Complete(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:

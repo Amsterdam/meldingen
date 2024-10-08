@@ -9,6 +9,7 @@ from meldingen_core.actions.melding import (
     MeldingCreateAction,
     MeldingProcessAction,
     MeldingUpdateAction,
+    MeldingAddAttachmentsAction,
 )
 from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
@@ -51,6 +52,7 @@ from meldingen.dependencies import (
     melding_retrieve_action,
     melding_update_action,
     melding_upload_attachment_action,
+    melding_add_attachments_action,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
@@ -188,6 +190,33 @@ async def answer_questions(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingAnswerQuestionsAction[Melding, Melding], Depends(melding_answer_questions_action)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return _hydrate_output(melding)
+
+
+@router.put(
+    "/{melding_id}/add_attachments",
+    name="melding:add-attachments",
+    responses={
+        **transition_not_allowed,
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+)
+async def add_attachments(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[MeldingAddAttachmentsAction[Melding, Melding], Depends(melding_add_attachments_action)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id, token)
