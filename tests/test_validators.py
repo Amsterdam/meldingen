@@ -2,6 +2,7 @@ from typing import Any
 
 import pytest
 from meldingen_core.validators import MediaTypeNotAllowed
+from pydantic_media_type import MediaType
 
 from meldingen.validators import MediaTypeValidator, create_match_validator, create_non_match_validator
 
@@ -76,7 +77,9 @@ def test_invalid_non_match_validator(value: Any, match_value: Any, error_msg: st
 class TestMediaTypeValidator:
     @pytest.fixture
     def media_type_validator(self) -> MediaTypeValidator:
-        return MediaTypeValidator(["image/jpeg", "image/jpg", "image/png", "image/webp"])
+        return MediaTypeValidator(
+            [MediaType("image/jpeg"), MediaType("image/jpg"), MediaType("image/png"), MediaType("image/webp")]
+        )
 
     @pytest.mark.parametrize(
         "media_type",
