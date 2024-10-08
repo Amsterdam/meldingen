@@ -14,6 +14,7 @@ from meldingen_core.actions.melding import (
 from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenException
+from meldingen_core.validators import MediaTypeNotAllowed
 from mp_fsm.statemachine import WrongStateException
 from starlette.status import (
     HTTP_200_OK,
@@ -330,6 +331,20 @@ async def answer_additional_question(
     responses={
         **not_found_response,
         **unauthorized_response,
+        **{
+            HTTP_400_BAD_REQUEST: {
+                "description": "",
+                "content": {
+                    "application/json": {
+                        "examples": {
+                            "Uploading attachment with media type that is not allowed.": {
+                                "value": {"detail": "Attachment not allowed"}
+                            },
+                        },
+                    },
+                },
+            },
+        },
     },
 )
 async def upload_attachment(
@@ -341,17 +356,20 @@ async def upload_attachment(
     # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
     # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
     assert file.filename is not None
+    assert file.content_type is not None
 
     async def iterate() -> AsyncIterator[bytes]:
         while chunk := await file.read(1024 * 1024):
             yield chunk
 
     try:
-        attachment = await action(melding_id, token, file.filename, iterate())
+        attachment = await action(melding_id, token, file.filename, file.content_type, iterate())
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+    except MediaTypeNotAllowed:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Attachment not allowed")
 
     return AttachmentOutput(
         id=attachment.id,
