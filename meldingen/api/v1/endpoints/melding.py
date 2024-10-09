@@ -4,12 +4,12 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from meldingen_core.actions.melding import (
+    MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
     MeldingCreateAction,
     MeldingProcessAction,
     MeldingUpdateAction,
-    MeldingAddAttachmentsAction,
 )
 from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
@@ -41,6 +41,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
+    melding_add_attachments_action,
     melding_answer_create_action,
     melding_answer_questions_action,
     melding_complete_action,
@@ -52,7 +53,6 @@ from meldingen.dependencies import (
     melding_retrieve_action,
     melding_update_action,
     melding_upload_attachment_action,
-    melding_add_attachments_action,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
