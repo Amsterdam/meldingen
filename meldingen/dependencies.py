@@ -293,8 +293,12 @@ def filesystem(adapter: Annotated[Adapter, Depends(filesystem_adapter)]) -> File
     return Filesystem(adapter)
 
 
-def file_size_validator() -> FileSizeValidator:
-    return FileSizeValidator(settings.attachment_max_file_size)
+def attachment_max_size() -> int:
+    return settings.attachment_max_file_size
+
+
+def file_size_validator(max_size: Annotated[int, Depends(attachment_max_size)]) -> FileSizeValidator:
+    return FileSizeValidator(max_size)
 
 
 def melding_upload_attachment_action(
