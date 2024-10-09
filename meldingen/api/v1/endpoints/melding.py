@@ -337,9 +337,7 @@ async def answer_additional_question(
                 "description": "",
                 "content": {
                     "application/json": {
-                        "examples": {
-                            "Maximum file size exceeded.": {"value": {"detail": "File size not allowed"}}
-                        },
+                        "examples": {"Maximum file size exceeded.": {"value": {"detail": "File size not allowed"}}},
                     },
                 },
             },
