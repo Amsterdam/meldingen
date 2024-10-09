@@ -1,8 +1,9 @@
 from typing import Any
 
 import pytest
+from meldingen_core.validators import FileSizeNotAllowed
 
-from meldingen.validators import create_match_validator, create_non_match_validator
+from meldingen.validators import create_match_validator, create_non_match_validator, FileSizeValidator
 
 
 @pytest.mark.parametrize(
@@ -70,3 +71,16 @@ def test_invalid_non_match_validator(value: Any, match_value: Any, error_msg: st
     test_validator = create_non_match_validator(match_value, error_msg=error_msg)
     with pytest.raises(AssertionError, match=error_msg.format(value=value, match_value=match_value)):
         test_validator(value)
+
+
+class TestFileSizeValidator:
+    @pytest.fixture
+    def validate(self) -> FileSizeValidator:
+        return FileSizeValidator(123)
+
+    def test_file_size_validation(self, validate: FileSizeValidator) -> None:
+        validate(122)
+
+    def test_file_size_invalid(self, validate: FileSizeValidator) -> None:
+        with pytest.raises(FileSizeNotAllowed):
+            validate(124)
