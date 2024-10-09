@@ -4,16 +4,17 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from meldingen_core.actions.melding import (
+    MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
     MeldingCreateAction,
     MeldingProcessAction,
     MeldingUpdateAction,
-    MeldingAddAttachmentsAction,
 )
 from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenException
+from meldingen_core.validators import FileSizeNotAllowed
 from mp_fsm.statemachine import WrongStateException
 from starlette.status import (
     HTTP_200_OK,
@@ -41,6 +42,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
+    melding_add_attachments_action,
     melding_answer_create_action,
     melding_answer_questions_action,
     melding_complete_action,
@@ -52,7 +54,6 @@ from meldingen.dependencies import (
     melding_retrieve_action,
     melding_update_action,
     melding_upload_attachment_action,
-    melding_add_attachments_action,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Melding, User
@@ -330,6 +331,19 @@ async def answer_additional_question(
     responses={
         **not_found_response,
         **unauthorized_response,
+        **default_response,
+        **{
+            HTTP_400_BAD_REQUEST: {
+                "description": "",
+                "content": {
+                    "application/json": {
+                        "examples": {
+                            "Maximum file size exceeded.": {"value": {"detail": "File size not allowed"}}
+                        },
+                    },
+                },
+            },
+        },
     },
 )
 async def upload_attachment(
@@ -347,11 +361,13 @@ async def upload_attachment(
             yield chunk
 
     try:
-        attachment = await action(melding_id, token, file.filename, iterate())
+        attachment = await action(melding_id, token, file.filename, file.content_type, file.size, iterate())
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+    except FileSizeNotAllowed:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="File size not allowed")
 
     return AttachmentOutput(
         id=attachment.id,
