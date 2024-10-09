@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 from meldingen_core.validators import FileSizeNotAllowed
 
-from meldingen.validators import create_match_validator, create_non_match_validator, FileSizeValidator
+from meldingen.validators import FileSizeValidator, create_match_validator, create_non_match_validator
 
 
 @pytest.mark.parametrize(
