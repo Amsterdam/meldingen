@@ -353,6 +353,8 @@ async def upload_attachment(
     # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
     # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
     assert file.filename is not None
+    assert file.content_type is not None
+    assert file.size is not None
 
     async def iterate() -> AsyncIterator[bytes]:
         while chunk := await file.read(1024 * 1024):
