@@ -19,6 +19,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
+from meldingen.dependencies import attachment_max_size
 from meldingen.models import Attachment, Classification, Form, Melding, Question
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -1141,6 +1142,39 @@ class TestMeldingUploadAttachment:
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+    )
+    async def test_upload_attachment_file_size_not_allowed(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+        def attachment_max_file_size_override() -> int:
+            return 0
+
+        app.dependency_overrides[attachment_max_size] = attachment_max_file_size_override
+
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
+            params={"token": melding.token},
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        "test_file.txt",
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        body = response.json()
+        assert body.get("detail") == "File size not allowed"
 
 
 class TestMeldingDownloadAttachment:
