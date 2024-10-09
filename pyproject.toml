@@ -30,7 +30,7 @@ structlog = "^24.1.0"
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2.1.0"
-black = "^24.8.0"
+black = "^24.10.0"
 httpx = "^0.27.2"
 isort = "^5.13.2"
 mkdocs-literate-nav = "^0.6.1"
