@@ -37,6 +37,7 @@ class Settings(BaseSettings):
 
     # Storage
     attachment_storage_base_directory: Path
+    attachment_max_file_size: int = 20971520  # 20MB
 
 
 # Create an instance of the Settings model
