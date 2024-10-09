@@ -1,5 +1,7 @@
 from typing import Any, Callable
 
+from meldingen_core.validators import BaseFileSizeValidator, FileSizeNotAllowed
+
 
 def create_match_validator(match_value: Any, error_msg: str) -> Callable[[Any], Any]:
     """
@@ -37,3 +39,14 @@ def create_non_match_validator(match_value: Any, error_msg: str) -> Callable[[An
         return value
 
     return validator
+
+
+class FileSizeValidator(BaseFileSizeValidator):
+    max_file_size: int
+
+    def __init__(self, max_file_size: int):
+        self.max_file_size = max_file_size
+
+    def __call__(self, file_size: int) -> None:
+        if file_size > self.max_file_size:
+            raise FileSizeNotAllowed()
