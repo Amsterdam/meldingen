@@ -1627,9 +1627,9 @@ structlog = "^24.1.0"
 
 [package.source]
 type = "git"
-url = "https://github.com/amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "c38362b97bb4a4804ef73a7bb5013e50e4903388"
+url = "https://github.com/Amsterdam/meldingen-core.git"
+reference = "feat/file-size-validation"
+resolved_reference = "f6434deeb6a42c4f21df684641e0c2d4dd08d6c7"
 
 [[package]]
 name = "mergedeep"
@@ -3338,4 +3338,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "936c4f98bb3b95c0584b2f0833264d4a721b3b1e1407be4d5371f5fcd3dcacd9"
+content-hash = "9426e81816d841df32b2b09e195d8d09a610d018753727dbcd05203743eb18e7"
