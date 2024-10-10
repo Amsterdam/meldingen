@@ -1,8 +1,10 @@
 from typing import Any
 
 import pytest
+from meldingen_core.validators import MediaTypeNotAllowed
+from pydantic_media_type import MediaType
 
-from meldingen.validators import create_match_validator, create_non_match_validator
+from meldingen.validators import MediaTypeValidator, create_match_validator, create_non_match_validator
 
 
 @pytest.mark.parametrize(
@@ -70,3 +72,27 @@ def test_invalid_non_match_validator(value: Any, match_value: Any, error_msg: st
     test_validator = create_non_match_validator(match_value, error_msg=error_msg)
     with pytest.raises(AssertionError, match=error_msg.format(value=value, match_value=match_value)):
         test_validator(value)
+
+
+class TestMediaTypeValidator:
+    @pytest.fixture
+    def media_type_validator(self) -> MediaTypeValidator:
+        return MediaTypeValidator(
+            [MediaType("image/jpeg"), MediaType("image/jpg"), MediaType("image/png"), MediaType("image/webp")]
+        )
+
+    @pytest.mark.parametrize(
+        "media_type",
+        [
+            "image/png",
+            "image/jpeg",
+            "image/jpg",
+            "image/webp",
+        ],
+    )
+    def test_media_type_validator(self, media_type_validator: MediaTypeValidator, media_type: str) -> None:
+        media_type_validator(media_type)
+
+    def test_media_type_not_allowed(self, media_type_validator: MediaTypeValidator) -> None:
+        with pytest.raises(MediaTypeNotAllowed):
+            media_type_validator("application/octet-stream")

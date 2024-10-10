@@ -1000,11 +1000,15 @@ class TestMeldingUploadAttachment:
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_token"],
-        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        ["melding_text", "melding_state", "melding_token", "filename"],
+        [
+            ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam-logo.jpg"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam-logo.png"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam-logo.webp"),
+        ],
     )
     async def test_upload_attachment(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, db_session: AsyncSession
+        self, app: FastAPI, client: AsyncClient, melding: Melding, db_session: AsyncSession, filename: str
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1014,7 +1018,7 @@ class TestMeldingUploadAttachment:
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
-                        "test_file.txt",
+                        filename,
                     ),
                     "rb",
                 ),
@@ -1033,6 +1037,36 @@ class TestMeldingUploadAttachment:
         assert path.exists(attachments[0].file_path)
 
         os.remove(attachments[0].file_path)
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "filename"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "test_file.txt")],
+    )
+    async def test_upload_attachment_media_type_not_allowed(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, db_session: AsyncSession, filename: str
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
+            params={"token": melding.token},
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        filename,
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        body = response.json()
+        assert body.get("detail") == "Attachment not allowed"
 
     @pytest.mark.anyio
     async def test_upload_attachment_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:

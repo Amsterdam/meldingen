@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from pydantic import PostgresDsn
+from pydantic_media_type import MediaType
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,6 +38,7 @@ class Settings(BaseSettings):
 
     # Storage
     attachment_storage_base_directory: Path
+    attachment_allow_media_types: list[MediaType]
 
 
 # Create an instance of the Settings model
