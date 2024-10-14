@@ -1642,7 +1642,7 @@ structlog = "^24.1.0"
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "HEAD"
-resolved_reference = "a1c7b5841f408be780b8652a5d5e81937dfc62dc"
+resolved_reference = "deb5f0c2f0f6c165f82beaa4ba42551449e9dd37"
 
 [[package]]
 name = "mergedeep"
