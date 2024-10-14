@@ -1,6 +1,11 @@
-from typing import Any, Callable
+from typing import Any, AsyncIterator, Callable
 
-from meldingen_core.validators import BaseMediaTypeValidator, MediaTypeNotAllowed
+from meldingen_core.validators import (
+    BaseMediaTypeIntegrityValidator,
+    BaseMediaTypeValidator,
+    MediaTypeIntegrityError,
+    MediaTypeNotAllowed,
+)
 from pydantic_media_type import MediaType
 
 
@@ -51,3 +56,8 @@ class MediaTypeValidator(BaseMediaTypeValidator):
     def __call__(self, media_type: str) -> None:
         if media_type not in self._allowed_media_types:
             raise MediaTypeNotAllowed()
+
+
+class MediaTypeIntegrityValidator(BaseMediaTypeIntegrityValidator):
+    def __call__(self, media_type: str, data: AsyncIterator[bytes]) -> None:
+        raise MediaTypeIntegrityError()
