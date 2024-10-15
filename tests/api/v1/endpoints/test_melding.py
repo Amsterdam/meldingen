@@ -1035,6 +1035,13 @@ class TestMeldingUploadAttachment:
         assert len(attachments) == 1
 
         assert path.exists(attachments[0].file_path)
+        assert path.getsize(attachments[0].file_path) == path.getsize(
+            path.join(
+                path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                "resources",
+                filename,
+            )
+        )
 
         os.remove(attachments[0].file_path)
 
