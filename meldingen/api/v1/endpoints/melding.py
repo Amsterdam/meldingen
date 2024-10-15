@@ -14,7 +14,7 @@ from meldingen_core.actions.melding import (
 from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenException
-from meldingen_core.validators import MediaTypeNotAllowed
+from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import WrongStateException
 from starlette.status import (
     HTTP_200_OK,
@@ -340,6 +340,9 @@ async def answer_additional_question(
                             "Uploading attachment with media type that is not allowed.": {
                                 "value": {"detail": "Attachment not allowed"}
                             },
+                            "Media type of data does not match the media type in the Content-Type header": {
+                                "value": {"detail": "Media type of data does not match provided media type"}
+                            },
                         },
                     },
                 },
@@ -370,6 +373,10 @@ async def upload_attachment(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
     except MediaTypeNotAllowed:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Attachment not allowed")
+    except MediaTypeIntegrityError:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST, detail="Media type of data does not match provided media type"
+        )
 
     return AttachmentOutput(
         id=attachment.id,

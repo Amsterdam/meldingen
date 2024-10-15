@@ -1069,6 +1069,40 @@ class TestMeldingUploadAttachment:
         assert body.get("detail") == "Attachment not allowed"
 
     @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+    )
+    async def test_upload_attachment_media_type_integrity_validation_fails(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, db_session: AsyncSession
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
+            params={"token": melding.token},
+            files={
+                "file": (
+                    "amsterdam-logo.png",
+                    open(
+                        path.join(
+                            path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                            "resources",
+                            "amsterdam-logo.png",
+                        ),
+                        "rb",
+                    ),
+                    "image/jpeg",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        body = response.json()
+        assert body.get("detail") == "Media type of data does not match provided media type"
+
+    @pytest.mark.anyio
     async def test_upload_attachment_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=123),
