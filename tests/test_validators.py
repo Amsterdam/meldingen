@@ -1,10 +1,16 @@
-from typing import Any
+from os import path
+from typing import Any, AsyncIterator
 
 import pytest
-from meldingen_core.validators import MediaTypeNotAllowed
+from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from pydantic_media_type import MediaType
 
-from meldingen.validators import MediaTypeValidator, create_match_validator, create_non_match_validator
+from meldingen.validators import (
+    MediaTypeIntegrityValidator,
+    MediaTypeValidator,
+    create_match_validator,
+    create_non_match_validator,
+)
 
 
 @pytest.mark.parametrize(
@@ -96,3 +102,23 @@ class TestMediaTypeValidator:
     def test_media_type_not_allowed(self, media_type_validator: MediaTypeValidator) -> None:
         with pytest.raises(MediaTypeNotAllowed):
             media_type_validator("application/octet-stream")
+
+
+class TestMediaTypeIntegrityValidator:
+    @pytest.fixture
+    def media_type_integrity_validator(self) -> MediaTypeIntegrityValidator:
+        return MediaTypeIntegrityValidator()
+
+    async def _iterator(self) -> AsyncIterator[bytes]:
+        with open(path.join(path.abspath(path.dirname(__file__)), "resources", "amsterdam-logo.png"), "rb") as file:
+            while chunk := file.read(1024):
+                yield chunk
+
+    @pytest.mark.anyio
+    async def test_media_type_matches(self, media_type_integrity_validator: MediaTypeIntegrityValidator) -> None:
+        await media_type_integrity_validator("image/png", self._iterator())
+
+    @pytest.mark.anyio
+    async def test_media_type_does_not_match(self, media_type_integrity_validator: MediaTypeIntegrityValidator) -> None:
+        with pytest.raises(MediaTypeIntegrityError):
+            await media_type_integrity_validator("image/jpeg", self._iterator())
