@@ -14,7 +14,7 @@ from meldingen_core.actions.melding import (
 from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenException
-from meldingen_core.validators import MediaTypeNotAllowed
+from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import WrongStateException
 from starlette.status import (
     HTTP_200_OK,
@@ -340,6 +340,9 @@ async def answer_additional_question(
                             "Uploading attachment with media type that is not allowed.": {
                                 "value": {"detail": "Attachment not allowed"}
                             },
+                            "Media type of data does not match the media type in the Content-Type header": {
+                                "value": {"detail": "Media type of data does not match provided media type"}
+                            },
                         },
                     },
                 },
@@ -358,18 +361,25 @@ async def upload_attachment(
     assert file.filename is not None
     assert file.content_type is not None
 
+    data_header = await file.read(2048)
+    await file.seek(0)
+
     async def iterate() -> AsyncIterator[bytes]:
         while chunk := await file.read(1024 * 1024):
             yield chunk
 
     try:
-        attachment = await action(melding_id, token, file.filename, file.content_type, iterate())
+        attachment = await action(melding_id, token, file.filename, file.content_type, data_header, iterate())
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
     except MediaTypeNotAllowed:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Attachment not allowed")
+    except MediaTypeIntegrityError:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST, detail="Media type of data does not match provided media type"
+        )
 
     return AttachmentOutput(
         id=attachment.id,

@@ -33,7 +33,5 @@ migrations/versions/102eaa13b8d8_add_select_component_type_to_enum.py:0: error: 
 migrations/versions/102eaa13b8d8_add_select_component_type_to_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 tests/api/v1/endpoints/test_form.py:0: error: Need type annotation for "new_data"  [var-annotated]
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (expression has type "datetime", variable has type "SQLCoreOperations[DateTime | None] | DateTime | None")  [assignment]
-tests/conftest.py:0: error: Call to untyped function "compiles" in typed context  [no-untyped-call]
-tests/conftest.py:0: error: Untyped decorator makes function "_compile_drop_table" untyped  [misc]
 tests/conftest.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
 tests/conftest.py:0: error: Call to untyped function "visit_drop_table" in typed context  [no-untyped-call]

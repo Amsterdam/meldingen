@@ -1,6 +1,12 @@
 from typing import Any, Callable
 
-from meldingen_core.validators import BaseMediaTypeValidator, MediaTypeNotAllowed
+import magic
+from meldingen_core.validators import (
+    BaseMediaTypeIntegrityValidator,
+    BaseMediaTypeValidator,
+    MediaTypeIntegrityError,
+    MediaTypeNotAllowed,
+)
 from pydantic_media_type import MediaType
 
 
@@ -51,3 +57,11 @@ class MediaTypeValidator(BaseMediaTypeValidator):
     def __call__(self, media_type: str) -> None:
         if media_type not in self._allowed_media_types:
             raise MediaTypeNotAllowed()
+
+
+class MediaTypeIntegrityValidator(BaseMediaTypeIntegrityValidator):
+    def __call__(self, media_type: str, data: bytes) -> None:
+        magic_media_type = magic.from_buffer(data, mime=True)
+
+        if media_type != magic_media_type:
+            raise MediaTypeIntegrityError()

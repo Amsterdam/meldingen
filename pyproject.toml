@@ -25,6 +25,7 @@ pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git
 pydantic-media-type = {git = "https://github.com/Amsterdam/pydantic-media-type.git"}
 pydantic-settings = "^2.5.2"
 pyjwt = {extras = ["crypto"], version = "^2.9.0"}
+python-magic = "^0.4.27"
 python-multipart = "^0.0.12"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.35"}
 structlog = "^24.1.0"

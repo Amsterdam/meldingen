@@ -90,7 +90,7 @@ from meldingen.statemachine import (
     Process,
 )
 from meldingen.token import UrlSafeTokenGenerator
-from meldingen.validators import MediaTypeValidator
+from meldingen.validators import MediaTypeIntegrityValidator, MediaTypeValidator
 
 
 @lru_cache
@@ -297,6 +297,10 @@ def media_type_validator() -> MediaTypeValidator:
     return MediaTypeValidator(settings.attachment_allow_media_types)
 
 
+def media_type_integrity_validator() -> MediaTypeIntegrityValidator:
+    return MediaTypeIntegrityValidator()
+
+
 def melding_upload_attachment_action(
     factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
     repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
@@ -304,6 +308,7 @@ def melding_upload_attachment_action(
     filesystem: Annotated[Filesystem, Depends(filesystem)],
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     media_type_validator: Annotated[MediaTypeValidator, Depends(media_type_validator)],
+    media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
 ) -> UploadAttachmentAction:
     return UploadAttachmentAction(
         factory,
@@ -312,6 +317,7 @@ def melding_upload_attachment_action(
         filesystem,
         token_verifier,
         media_type_validator,
+        media_type_integrity_validator,
         str(settings.attachment_storage_base_directory),
     )
 
