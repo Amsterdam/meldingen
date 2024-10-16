@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     attachment_storage_base_directory: Path
     attachment_allow_media_types: list[MediaType]
 
+    # imgproxy
+    imgproxy_key: str
+    imgproxy_salt: str
+    imgproxy_base_url: str
+
 
 # Create an instance of the Settings model
 settings = Settings()

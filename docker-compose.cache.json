@@ -32,6 +32,28 @@
       "output": [
         "type=docker"
       ]
+    },
+    "azurite": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-azurite:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-azurite:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    },
+    "imgproxy": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-imgproxy:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-imgproxy:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
     }
   }
 }
