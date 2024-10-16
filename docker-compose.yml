@@ -70,8 +70,8 @@ services:
     ports:
       - "8081:8080"
     environment:
-      IMGPROXY_KEY: 313233
-      IMGPROXY_SALT: 313233
+      IMGPROXY_KEY: 000000
+      IMGPROXY_SALT: 111111
       IMGPROXY_USE_ABS: "true"
       IMGPROXY_ABS_NAME: devstoreaccount1
       IMGPROXY_ABS_KEY: Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
