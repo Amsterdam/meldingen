@@ -361,12 +361,15 @@ async def upload_attachment(
     assert file.filename is not None
     assert file.content_type is not None
 
+    data_header = await file.read(2048)
+    await file.seek(0)
+
     async def iterate() -> AsyncIterator[bytes]:
         while chunk := await file.read(1024 * 1024):
             yield chunk
 
     try:
-        attachment = await action(melding_id, token, file.filename, file.content_type, iterate())
+        attachment = await action(melding_id, token, file.filename, file.content_type, data_header, iterate())
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:

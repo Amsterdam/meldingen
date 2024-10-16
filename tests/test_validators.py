@@ -1,5 +1,5 @@
 from os import path
-from typing import Any, AsyncIterator
+from typing import Any
 
 import pytest
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
@@ -109,16 +109,13 @@ class TestMediaTypeIntegrityValidator:
     def media_type_integrity_validator(self) -> MediaTypeIntegrityValidator:
         return MediaTypeIntegrityValidator()
 
-    async def _iterator(self) -> AsyncIterator[bytes]:
+    def _get_header(self) -> bytes:
         with open(path.join(path.abspath(path.dirname(__file__)), "resources", "amsterdam-logo.png"), "rb") as file:
-            while chunk := file.read(1024):
-                yield chunk
+            return file.read(2048)
 
-    @pytest.mark.anyio
-    async def test_media_type_matches(self, media_type_integrity_validator: MediaTypeIntegrityValidator) -> None:
-        await media_type_integrity_validator("image/png", self._iterator())
+    def test_media_type_matches(self, media_type_integrity_validator: MediaTypeIntegrityValidator) -> None:
+        media_type_integrity_validator("image/png", self._get_header())
 
-    @pytest.mark.anyio
-    async def test_media_type_does_not_match(self, media_type_integrity_validator: MediaTypeIntegrityValidator) -> None:
+    def test_media_type_does_not_match(self, media_type_integrity_validator: MediaTypeIntegrityValidator) -> None:
         with pytest.raises(MediaTypeIntegrityError):
-            await media_type_integrity_validator("image/jpeg", self._iterator())
+            media_type_integrity_validator("image/jpeg", self._get_header())

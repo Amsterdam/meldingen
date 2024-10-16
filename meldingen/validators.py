@@ -1,4 +1,4 @@
-from typing import Any, AsyncIterator, Callable
+from typing import Any, Callable
 
 import magic
 from meldingen_core.validators import (
@@ -60,14 +60,8 @@ class MediaTypeValidator(BaseMediaTypeValidator):
 
 
 class MediaTypeIntegrityValidator(BaseMediaTypeIntegrityValidator):
-    async def __call__(self, media_type: str, data: AsyncIterator[bytes]) -> None:
-        buffer: bytes = b""
-        async for chunk in data:
-            buffer += chunk
-            if len(buffer) > 2048:
-                break
-
-        magic_media_type = magic.from_buffer(buffer, mime=True)
+    def __call__(self, media_type: str, data: bytes) -> None:
+        magic_media_type = magic.from_buffer(data, mime=True)
 
         if media_type != magic_media_type:
             raise MediaTypeIntegrityError()
