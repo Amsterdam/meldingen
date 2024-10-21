@@ -105,7 +105,9 @@ async def app() -> FastAPI:
 async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://testserver", headers={"Content-Type": "application/json"}
+            transport=ASGITransport(app=app, raise_app_exceptions=False),
+            base_url="http://testserver",
+            headers={"Content-Type": "application/json"},
         ) as client:
             yield client
 
