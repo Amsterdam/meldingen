@@ -356,10 +356,12 @@ def static_form_update_action(
 ) -> StaticFormUpdateAction:
     return StaticFormUpdateAction(repository)
 
+
 def static_form_list_action(
     repository: Annotated[StaticFormRepository, Depends(static_form_repository)]
 ) -> StaticFormListAction:
     return StaticFormListAction(repository)
+
 
 def validate_adder() -> ValidateAdder:
     return ValidateAdder()
