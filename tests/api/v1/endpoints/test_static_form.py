@@ -491,7 +491,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             i = i + 1
 
 
-class TestStaticFormList(BaseStaticFormTest):
+class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "static-form:list"
     METHOD: Final[str] = "GET"
 

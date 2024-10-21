@@ -55,16 +55,15 @@ async def update_static_form(
     return await produce_output_model(db_form)
 
 
-@router.get("/", name="static-form:list", responses={**not_found_response})
+@router.get(
+    "/",
+    name="static-form:list",
+    responses={**not_found_response}
+)
 async def list_static_forms(
     action: Annotated[StaticFormListAction, Depends(static_form_list_action)],
     produce_output_model: Annotated[StaticFormOutputFactory, Depends(static_form_output_factory)],
 ) -> list[StaticFormOutput]:
-    # limit = pagination["limit"] or 0
-    # offset = pagination["offset"] or 0
-
-    forms = await action(
-        # limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
-    )
+    forms = await action()
 
     return [await produce_output_model(db_form) for db_form in forms]

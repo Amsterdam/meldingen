@@ -42,14 +42,36 @@ async def async_add_primary_form(title: str) -> None:
             max_char_count=255,
         )
 
-        # TODO nieuwe static forms toevoegen aan command text area
-
         components = await primary_form.awaitable_attrs.components
         components.append(component)
 
         await static_form_repository.save(primary_form)
 
-        print(f"[green]Success[/green] - The primary form has been created")
+        for form_type in StaticFormTypeEnum:
+            label = form_type.capitalize()
+
+            form = StaticForm(
+                type=StaticFormTypeEnum[form_type],
+                title=f"{label}",
+                display=FormIoFormDisplayEnum.form,
+            )
+
+            component = FormIoTextAreaComponent(
+                label=f"{label}",
+                description="",
+                key=f"{form_type}",
+                type=FormIoComponentTypeEnum.text_area,
+                input=True,
+                auto_expand=True,
+                max_char_count=255,
+            )
+
+            components = await form.awaitable_attrs.components
+            components.append(component)
+
+            await static_form_repository.save(form)
+
+        print("[green]Success[/green] - The primary form has been created")
 
 
 @app.command()
