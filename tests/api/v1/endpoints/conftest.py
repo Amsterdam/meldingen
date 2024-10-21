@@ -303,19 +303,20 @@ async def primary_form(db_session: AsyncSession) -> StaticForm:
 
 
 @pytest.fixture
-async def primary_forms(db_session: AsyncSession) -> list[StaticForm]:
-    primary_forms = []
-    for n in range(1, 3):
+async def static_forms(db_session: AsyncSession) -> list[StaticForm]:
+    static_forms = []
+    for form_type in StaticFormTypeEnum:
+        print(form_type)
         form = StaticForm(
-            type=StaticFormTypeEnum.primary,
-            title=f"Primary form #{n}",
+            type=StaticFormTypeEnum[form_type],
+            title=f"{form_type}",
             display=FormIoFormDisplayEnum.form,
         )
 
         component = FormIoTextAreaComponent(
-            label="Waar gaat het om? #{n}",
+            label=f"{form_type}",
             description="",
-            key="waar-gaat-het-om-{n}",
+            key=f"{form_type}",
             type=FormIoComponentTypeEnum.text_area,
             input=True,
             auto_expand=True,
@@ -326,11 +327,11 @@ async def primary_forms(db_session: AsyncSession) -> list[StaticForm]:
         components.append(component)
 
         db_session.add(form)
-        primary_forms.append(form)
+        static_forms.append(form)
 
     await db_session.commit()
 
-    return primary_forms
+    return static_forms
 
 
 @pytest.fixture
