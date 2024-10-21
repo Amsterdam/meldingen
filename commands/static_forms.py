@@ -42,6 +42,8 @@ async def async_add_primary_form(title: str) -> None:
             max_char_count=255,
         )
 
+        # TODO nieuwe static forms toevoegen aan command text area
+
         components = await primary_form.awaitable_attrs.components
         components.append(component)
 
