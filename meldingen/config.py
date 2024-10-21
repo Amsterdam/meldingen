@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     project_name: str = "Meldingen Openbare Ruimte"
     url_prefix: str = "/api"
     default_page_size: int = 50
+    content_size_limit: int = 1024 * 1024 * 20  # 20MB
 
     # Database settings
     database_dsn: PostgresDsn

@@ -15,6 +15,7 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
+    HTTP_413_REQUEST_ENTITY_TOO_LARGE,
     HTTP_422_UNPROCESSABLE_ENTITY,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
@@ -1044,6 +1045,35 @@ class TestMeldingUploadAttachment:
         )
 
         os.remove(attachments[0].file_path)
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+    )
+    async def test_upload_attachment_too_large(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, db_session: AsyncSession
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
+            params={"token": melding.token},
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        "too-large.jpg",
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_413_REQUEST_ENTITY_TOO_LARGE
+        assert response.json().get("detail") == "Allowed content size exceeded"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(

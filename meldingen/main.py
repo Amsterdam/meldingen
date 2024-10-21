@@ -13,6 +13,7 @@ from starlette.status import HTTP_409_CONFLICT
 from meldingen.api.v1.api import api_router
 from meldingen.config import settings
 from meldingen.logging import setup_logging
+from meldingen.middleware import ContentSizeLimitMiddleware
 from meldingen.utils import get_version
 
 
@@ -63,6 +64,7 @@ def get_application() -> FastAPI:
             content={"detail": "The requested operation could not be completed due to a conflict with existing data."},
         )
 
+    application.add_middleware(ContentSizeLimitMiddleware, max_size=settings.content_size_limit)
     application.add_middleware(CorrelationIdMiddleware)
 
     application.add_middleware(

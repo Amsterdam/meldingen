@@ -22,6 +22,7 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
+    HTTP_413_REQUEST_ENTITY_TOO_LARGE,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
@@ -346,6 +347,10 @@ async def answer_additional_question(
                         },
                     },
                 },
+            },
+            HTTP_413_REQUEST_ENTITY_TOO_LARGE: {
+                "description": "Uploading attachment that is too large.",
+                "content": {"application/json": {"example": {"detail": "Allowed content size exceeded"}}},
             },
         },
     },
