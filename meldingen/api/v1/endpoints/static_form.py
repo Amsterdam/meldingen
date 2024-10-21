@@ -4,10 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, Path
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_404_NOT_FOUND
 
-from meldingen.actions import StaticFormRetrieveByTypeAction, StaticFormUpdateAction
+from meldingen.actions import StaticFormListAction, StaticFormRetrieveByTypeAction, StaticFormUpdateAction
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
+    static_form_list_action,
     static_form_output_factory,
     static_form_retrieve_by_type_action,
     static_form_update_action,
@@ -52,3 +53,20 @@ async def update_static_form(
     db_form = await action(form_type, form_input)
 
     return await produce_output_model(db_form)
+
+
+@router.get('/', name="static-form:list", responses={**not_found_response})
+async def list_static_forms(
+    action: Annotated[StaticFormListAction, Depends(static_form_list_action)],
+    produce_output_model: Annotated[StaticFormOutputFactory, Depends(static_form_output_factory)],
+) -> list[StaticFormOutput]:
+    # limit = pagination["limit"] or 0
+    # offset = pagination["offset"] or 0
+
+    forms = await action(
+        # limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+    )
+
+    return [await produce_output_model(db_form) for db_form in forms]
+
+

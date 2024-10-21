@@ -303,6 +303,37 @@ async def primary_form(db_session: AsyncSession) -> StaticForm:
 
 
 @pytest.fixture
+async def primary_forms(db_session: AsyncSession) -> list[StaticForm]:
+    primary_forms = []
+    for n in range(1, 3):
+        form = StaticForm(
+            type=StaticFormTypeEnum.primary,
+            title=f"Primary form #{n}",
+            display=FormIoFormDisplayEnum.form,
+        )
+
+        component = FormIoTextAreaComponent(
+            label="Waar gaat het om? #{n}",
+            description="",
+            key="waar-gaat-het-om-{n}",
+            type=FormIoComponentTypeEnum.text_area,
+            input=True,
+            auto_expand=True,
+            max_char_count=255,
+        )
+
+        components = await form.awaitable_attrs.components
+        components.append(component)
+
+        db_session.add(form)
+        primary_forms.append(form)
+
+    await db_session.commit()
+
+    return primary_forms
+
+
+@pytest.fixture
 def attachment_filename(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)

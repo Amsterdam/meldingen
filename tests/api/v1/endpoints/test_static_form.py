@@ -489,3 +489,38 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             assert value.get("label") == f"label{i}"
             assert value.get("value") == f"value{i}"
             i = i + 1
+
+
+class TestStaticFormList(BaseStaticFormTest):
+    ROUTE_NAME: Final[str] = "static-form:list"
+    METHOD: Final[str] = "GET"
+
+    @pytest.mark.anyio
+    async def test_list_primary_forms(self, app: FastAPI, client: AsyncClient, primary_forms: list[StaticForm]):
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == len(primary_forms)
+
+        for i, form in enumerate(primary_forms):
+            assert data[i].get("type") == form.type
+            assert data[i].get("title") == form.title
+            assert data[i].get("display") == form.display
+            assert data[i].get("created_at") == form.created_at.isoformat()
+            assert data[i].get("updated_at") == form.updated_at.isoformat()
+
+            components = await form.awaitable_attrs.components
+            assert len(data[i].get("components")) == len(components)
+
+            component = components[0]
+            data_component = data[i].get("components")[0]
+
+            assert component.label == data_component.get("label")
+            assert component.description == data_component.get("description")
+            assert component.key == data_component.get("key")
+            assert component.type == data_component.get("type")
+            assert component.input == data_component.get("input")
+            assert component.auto_expand == data_component.get("auto_expand")
+            assert component.max_char_count == data_component.get("max_char_count")

@@ -317,6 +317,9 @@ class Form(AsyncAttrs, BaseDBModel, BaseForm):
 
 class StaticFormTypeEnum(enum.StrEnum):
     primary: Final[str] = "primary"
+    attachment: Final[str] = "attachment"
+    location: Final[str] = "location"
+    contact: Final[str] = "contact"
 
 
 class StaticForm(AsyncAttrs, BaseDBModel):
