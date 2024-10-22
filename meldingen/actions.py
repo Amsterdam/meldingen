@@ -328,7 +328,7 @@ class FormRetrieveByClassificationAction(BaseCRUDAction[Form, Form]):
 
 
 class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
-    _token_verifier: TokenVerifier[Melding]
+    _token_verifier: TokenVerifier[Melding, Melding]
     _melding_repository: MeldingRepository
     _question_repository: QuestionRepository
     _component_repository: FormIoQuestionComponentRepository
@@ -337,7 +337,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
     def __init__(
         self,
         repository: AnswerRepository,
-        token_verifier: TokenVerifier[Melding],
+        token_verifier: TokenVerifier[Melding, Melding],
         melding_repository: MeldingRepository,
         question_repository: QuestionRepository,
         component_repository: FormIoQuestionComponentRepository,
@@ -366,13 +366,8 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         if question is None:
             raise NotFoundException()
 
-        # Melding must exist
-        melding = await self._melding_repository.retrieve(melding_id)
-        if melding is None:
-            raise NotFoundException()
-
         # Token must valid
-        self._token_verifier(melding, token)
+        melding = await self._token_verifier(melding_id, token)
 
         # Melding must be classified
         if not await melding.awaitable_attrs.classification:
