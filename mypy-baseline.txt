@@ -36,3 +36,6 @@ tests/api/v1/endpoints/test_form.py:0: error: Need type annotation for "new_data
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (expression has type "datetime", variable has type "SQLCoreOperations[DateTime | None] | DateTime | None")  [assignment]
 tests/conftest.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
 tests/conftest.py:0: error: Call to untyped function "visit_drop_table" in typed context  [no-untyped-call]
+migrations/versions/f00d6c808e2d_add_other_static_form_types.py:13: error: Module "alembic_postgresql_enum" does not explicitly export attribute "TableReference"  [attr-defined]
+migrations/versions/f00d6c808e2d_add_other_static_form_types.py:24: error: Module has no attribute "sync_enum_values"  [attr-defined]
+migrations/versions/f00d6c808e2d_add_other_static_form_types.py:42: error: Module has no attribute "sync_enum_values"  [attr-defined]
