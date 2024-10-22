@@ -178,8 +178,10 @@ def token_generator() -> BaseTokenGenerator:
     return UrlSafeTokenGenerator()
 
 
-def token_verifier() -> TokenVerifier[Melding]:
-    return TokenVerifier()
+def token_verifier(
+    repository: Annotated[MeldingRepository, Depends(melding_repository)]
+) -> TokenVerifier[Melding, Melding]:
+    return TokenVerifier(repository)
 
 
 def attachment_factory() -> AttachmentFactory:
@@ -220,7 +222,7 @@ def melding_list_action(repository: Annotated[MeldingRepository, Depends(melding
 
 def melding_update_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
     classifier: Annotated[Classifier, Depends(classifier)],
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
 ) -> MeldingUpdateAction[Melding, Melding]:
@@ -230,7 +232,7 @@ def melding_update_action(
 def melding_answer_questions_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
 ) -> MeldingAnswerQuestionsAction[Melding, Melding]:
     return MeldingAnswerQuestionsAction(state_machine, repository, token_verifier)
 
@@ -238,7 +240,7 @@ def melding_answer_questions_action(
 def melding_add_attachments_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
 ) -> MeldingAddAttachmentsAction[Melding, Melding]:
     return MeldingAddAttachmentsAction(state_machine, repository, token_verifier)
 
@@ -269,7 +271,7 @@ def form_io_question_component_repository(
 
 def melding_answer_create_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
     melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
@@ -304,16 +306,14 @@ def media_type_integrity_validator() -> MediaTypeIntegrityValidator:
 def melding_upload_attachment_action(
     factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
     repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
     media_type_validator: Annotated[MediaTypeValidator, Depends(media_type_validator)],
     media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
 ) -> UploadAttachmentAction:
     return UploadAttachmentAction(
         factory,
         repository,
-        melding_repository,
         filesystem,
         token_verifier,
         media_type_validator,
@@ -323,12 +323,11 @@ def melding_upload_attachment_action(
 
 
 def melding_download_attachment_action(
-    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> DownloadAttachmentAction:
-    return DownloadAttachmentAction(melding_repository, token_verifier, attachment_repository, filesystem)
+    return DownloadAttachmentAction(token_verifier, attachment_repository, filesystem)
 
 
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:
