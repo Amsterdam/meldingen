@@ -81,7 +81,7 @@ $ python main.py users add-to-group user@example.com test-group
 
 **Syntax:**
 ```bash
-$ python main.py static-forms add-primary [OPTIONS]
+$ python main.py static-forms create [OPTIONS]
 
 Options:
 
@@ -92,11 +92,11 @@ Options:
 Example:
 
 ```bash
-$ python main.py static-forms add-primary
+$ python main.py static-forms create
 ```
 
 or
 
 ```bash
-$ python main.py static-forms add-primary --title "The primary form."
+$ python main.py static-forms create --title "The primary form."
 ```
