@@ -496,12 +496,7 @@ class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
     METHOD: Final[str] = "GET"
 
     @pytest.mark.anyio
-    async def test_list_primary_forms(
-        self,
-        app: FastAPI,
-        client: AsyncClient,
-        static_forms: list[StaticForm]
-    ) -> None:
+    async def test_list_primary_forms(self, app: FastAPI, client: AsyncClient, static_forms: list[StaticForm]) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
         assert response.status_code == HTTP_200_OK
