@@ -33,6 +33,7 @@ from meldingen.actions import (
     FormRetrieveAction,
     FormRetrieveByClassificationAction,
     FormUpdateAction,
+    ListAttachmentsAction,
     MeldingListAction,
     MeldingRetrieveAction,
     StaticFormListAction,
@@ -329,6 +330,13 @@ def melding_download_attachment_action(
     filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> DownloadAttachmentAction:
     return DownloadAttachmentAction(token_verifier, attachment_repository, filesystem)
+
+
+def melding_list_attachments_action(
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+) -> ListAttachmentsAction:
+    return ListAttachmentsAction(token_verifier, attachment_repository)
 
 
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:

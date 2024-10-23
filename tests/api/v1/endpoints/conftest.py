@@ -350,3 +350,18 @@ async def attachment(db_session: AsyncSession, melding: Melding, attachment_file
     await db_session.commit()
 
     return attachment
+
+
+@pytest.fixture
+async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -> Melding:
+    for i in range(9):
+        filename = f"test{i}.jpg"
+        attachment = Attachment(original_filename=filename, melding=melding)
+        attachment.file_path = f"/tmp/{uuid4()}/{filename}"
+
+        db_session.add(attachment)
+
+    await db_session.commit()
+    await db_session.refresh(melding)
+
+    return melding

@@ -29,6 +29,7 @@ from starlette.status import (
 from meldingen.actions import (
     AnswerCreateAction,
     DownloadAttachmentAction,
+    ListAttachmentsAction,
     MeldingListAction,
     MeldingRetrieveAction,
     UploadAttachmentAction,
@@ -50,6 +51,7 @@ from meldingen.dependencies import (
     melding_create_action,
     melding_download_attachment_action,
     melding_list_action,
+    melding_list_attachments_action,
     melding_process_action,
     melding_repository,
     melding_retrieve_action,
@@ -57,7 +59,7 @@ from meldingen.dependencies import (
     melding_upload_attachment_action,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
-from meldingen.models import Melding, User
+from meldingen.models import Attachment, Melding, User
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas import (
     AnswerInput,
@@ -326,6 +328,15 @@ async def answer_additional_question(
     return AnswerOutput(id=answer.id, created_at=answer.created_at, updated_at=answer.updated_at)
 
 
+def _hydrate_attachment_output(attachment: Attachment) -> AttachmentOutput:
+    return AttachmentOutput(
+        id=attachment.id,
+        original_filename=attachment.original_filename,
+        created_at=attachment.created_at,
+        updated_at=attachment.updated_at,
+    )
+
+
 @router.post(
     "/{melding_id}/attachment",
     name="melding:attachment",
@@ -386,12 +397,7 @@ async def upload_attachment(
             status_code=HTTP_400_BAD_REQUEST, detail="Media type of data does not match provided media type"
         )
 
-    return AttachmentOutput(
-        id=attachment.id,
-        original_filename=attachment.original_filename,
-        created_at=attachment.created_at,
-        updated_at=attachment.updated_at,
-    )
+    return _hydrate_attachment_output(attachment)
 
 
 @router.get(
@@ -416,3 +422,27 @@ async def download_attachment(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return StreamingResponse(iterator)
+
+
+@router.get(
+    "/{melding_id}/attachments",
+    name="melding:attachments",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def list_attachments(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
+) -> list[AttachmentOutput]:
+    try:
+        attachments = await action(melding_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    output = []
+    for attachment in attachments:
+        output.append(_hydrate_attachment_output(attachment))
+
+    return output
