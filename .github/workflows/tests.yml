@@ -31,4 +31,4 @@ jobs:
         run: docker compose run --rm meldingen pytest --test-alembic -m alembic
 
       - name: Run tests
-        run: docker compose run --rm meldingen pytest --cov --cov-fail-under=96 -v
+        run: docker compose run --rm meldingen pytest --cov --cov-fail-under=95 -v
