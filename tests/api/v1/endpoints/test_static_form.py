@@ -489,3 +489,30 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             assert value.get("label") == f"label{i}"
             assert value.get("value") == f"value{i}"
             i = i + 1
+
+
+class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "static-form:list"
+    METHOD: Final[str] = "GET"
+
+    @pytest.mark.anyio
+    async def test_list_primary_forms(self, app: FastAPI, client: AsyncClient, static_forms: list[StaticForm]) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        for form in data:
+
+            fixture_form = next(static_form for static_form in static_forms if static_form.type == form.get("type"))
+
+            assert form.get("title") == fixture_form.title
+            assert form.get("display") == fixture_form.display
+
+            fixture_component = fixture_form.components[0]
+            data_component = form.get("components")[0]
+
+            assert fixture_component.label == data_component.get("label")
+            assert fixture_component.key == data_component.get("key")
+            assert fixture_component.type == data.component.get("type")

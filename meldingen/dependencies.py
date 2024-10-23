@@ -35,6 +35,7 @@ from meldingen.actions import (
     FormUpdateAction,
     MeldingListAction,
     MeldingRetrieveAction,
+    StaticFormListAction,
     StaticFormRetrieveByTypeAction,
     StaticFormUpdateAction,
     UploadAttachmentAction,
@@ -354,6 +355,12 @@ def static_form_update_action(
     repository: Annotated[StaticFormRepository, Depends(static_form_repository)]
 ) -> StaticFormUpdateAction:
     return StaticFormUpdateAction(repository)
+
+
+def static_form_list_action(
+    repository: Annotated[StaticFormRepository, Depends(static_form_repository)]
+) -> StaticFormListAction:
+    return StaticFormListAction(repository)
 
 
 def validate_adder() -> ValidateAdder:

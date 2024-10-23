@@ -303,6 +303,37 @@ async def primary_form(db_session: AsyncSession) -> StaticForm:
 
 
 @pytest.fixture
+async def static_forms(db_session: AsyncSession) -> list[StaticForm]:
+    static_forms = []
+    for form_type in StaticFormTypeEnum:
+        form = StaticForm(
+            type=StaticFormTypeEnum[form_type],
+            title=f"{form_type}",
+            display=FormIoFormDisplayEnum.form,
+        )
+
+        component = FormIoTextAreaComponent(
+            label=f"{form_type}",
+            description="",
+            key=f"{form_type}",
+            type=FormIoComponentTypeEnum.text_area,
+            input=True,
+            auto_expand=True,
+            max_char_count=255,
+        )
+
+        components = await form.awaitable_attrs.components
+        components.append(component)
+
+        db_session.add(form)
+        static_forms.append(form)
+
+    await db_session.commit()
+
+    return static_forms
+
+
+@pytest.fixture
 def attachment_filename(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)

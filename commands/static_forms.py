@@ -18,7 +18,7 @@ from meldingen.repositories import StaticFormRepository
 app = typer.Typer()
 
 
-async def async_add_primary_form(title: str) -> None:
+async def async_create_static_forms(title: str) -> None:
     async for session in database_session(database_session_manager(database_engine())):
         static_form_repository = StaticFormRepository(session)
 
@@ -47,12 +47,44 @@ async def async_add_primary_form(title: str) -> None:
 
         await static_form_repository.save(primary_form)
 
-        print(f"[green]Success[/green] - The primary form has been created")
+        for form_type in StaticFormTypeEnum:
+            """
+            Generate all forms based on form_type.
+            Needs to be done more precise later.
+            """
+
+            if form_type == StaticFormTypeEnum.primary:
+                continue
+
+            label = form_type.capitalize()
+
+            form = StaticForm(
+                type=StaticFormTypeEnum[form_type],
+                title=f"{label}",
+                display=FormIoFormDisplayEnum.form,
+            )
+
+            component = FormIoTextAreaComponent(
+                label=f"{label}",
+                description="",
+                key=f"{form_type}",
+                type=FormIoComponentTypeEnum.text_area,
+                input=True,
+                auto_expand=True,
+                max_char_count=255,
+            )
+
+            components = await form.awaitable_attrs.components
+            components.append(component)
+
+            await static_form_repository.save(form)
+
+        print("[green]Success[/green] - The primary form has been created")
 
 
 @app.command()
-def add_primary(title: Annotated[str, typer.Option(prompt=True, help="The title of the primary form")]) -> None:
-    asyncio.run(async_add_primary_form(title))
+def create(title: Annotated[str, typer.Option(prompt=True, help="The title of the primary form")]) -> None:
+    asyncio.run(async_create_static_forms(title))
 
 
 if __name__ == "__main__":

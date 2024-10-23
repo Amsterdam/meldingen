@@ -501,6 +501,9 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
         return obj
 
 
+class StaticFormListAction(BaseListAction[StaticForm, StaticForm]): ...
+
+
 class UploadAttachmentAction(BaseUploadAttachmentAction[Attachment, Melding, Melding]): ...
 
 
