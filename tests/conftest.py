@@ -28,13 +28,9 @@ def alembic_config() -> PytestAlembicConfig:
 
 
 @pytest.fixture
-async def alembic_engine() -> AsyncIterator[AsyncEngine]:
+def alembic_engine() -> AsyncEngine:
     """Override this fixture to provide pytest-alembic powered tests with a database handle."""
-    engine = create_async_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
-    try:
-        yield engine
-    finally:
-        await engine.dispose()
+    return create_async_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
 
 
 @compiles(DropTable, "postgresql")
@@ -42,7 +38,7 @@ def _compile_drop_table(element: DropTable, compiler: DDLCompiler) -> str:
     return compiler.visit_drop_table(element) + " CASCADE"
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 async def test_database(anyio_backend: str, db_engine: AsyncEngine) -> None:
     async with db_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
@@ -102,7 +98,7 @@ async def app() -> FastAPI:
 
 
 @pytest.fixture
-async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
+async def client(app: FastAPI, test_database: None) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(
             transport=ASGITransport(app=app, raise_app_exceptions=False),
