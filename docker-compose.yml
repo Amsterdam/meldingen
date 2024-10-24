@@ -5,7 +5,14 @@ services:
       context: .
       args:
         INSTALL_DEV: ${INSTALL_DEV-true}
-    command: ["fastapi", "dev", "--host", "0.0.0.0", "/opt/meldingen/meldingen/main.py"]
+    command:
+      [
+        "fastapi",
+        "dev",
+        "--host",
+        "0.0.0.0",
+        "/opt/meldingen/meldingen/main.py",
+      ]
     ports:
       - "8000:8000"
     env_file:
@@ -29,7 +36,7 @@ services:
     volumes:
       - "./docker/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d"
     healthcheck:
-      test: [ "CMD", "pg_isready", "-q", "-d", "meldingen", "-U", "meldingen" ]
+      test: ["CMD", "pg_isready", "-q", "-d", "meldingen", "-U", "meldingen"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -70,8 +77,8 @@ services:
     ports:
       - "8081:8080"
     environment:
-      IMGPROXY_KEY: 000000
-      IMGPROXY_SALT: 111111
+      IMGPROXY_KEY: "000000"
+      IMGPROXY_SALT: "111111"
       IMGPROXY_USE_ABS: "true"
       IMGPROXY_ABS_NAME: devstoreaccount1
       IMGPROXY_ABS_KEY: Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
