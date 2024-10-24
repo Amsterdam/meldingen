@@ -1891,7 +1891,7 @@ develop = false
 type = "git"
 url = "https://github.com/Amsterdam/mp-fsm.git"
 reference = "HEAD"
-resolved_reference = "3554fe57302b1761e0d554c3a5a15901d8e1a9f2"
+resolved_reference = "adc59ba9668cb5e0193b0585cf6c67f3e08f3219"
 
 [[package]]
 name = "multidict"
@@ -2515,7 +2515,7 @@ pydantic = "^2.9.2"
 type = "git"
 url = "https://github.com/Amsterdam/pydantic-jsonlogic.git"
 reference = "HEAD"
-resolved_reference = "1c11262b9a602172aa2961e46ebd05360d24114d"
+resolved_reference = "7a7332522a9ce5c704e7b9e6d170a68807799d97"
 
 [[package]]
 name = "pydantic-media-type"
@@ -2533,7 +2533,7 @@ pydantic = "^2.9.2"
 type = "git"
 url = "https://github.com/Amsterdam/pydantic-media-type.git"
 reference = "HEAD"
-resolved_reference = "0a8354539cc063a46afe0df81a131c9fabbb47fe"
+resolved_reference = "bb21f77cac6564afad373caaeb207ad716382ea8"
 
 [[package]]
 name = "pydantic-settings"
