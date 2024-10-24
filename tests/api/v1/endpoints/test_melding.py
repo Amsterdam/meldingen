@@ -1375,3 +1375,54 @@ class TestMeldingDownloadAttachment:
 
         assert response.status_code == HTTP_200_OK
         assert response.text == "some data"
+
+
+class TestMeldingListAttachments:
+    ROUTE_NAME: Final[str] = "melding:attachments"
+
+    @pytest.mark.anyio
+    async def test_list_attachments_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=123),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_list_attachments_unauthorized_token_invalid(
+        self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_attachments.id),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token", "melding_token_expires"], [("supersecuretoken", "PT1H")], indirect=True)
+    async def test_list_attachments_unauthorized_token_expired(
+        self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_attachments.id),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
+    async def test_list_attachments(self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_attachments.id),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        attachments = await melding_with_attachments.awaitable_attrs.attachments
+        body = response.json()
+
+        assert len(attachments) == len(body)

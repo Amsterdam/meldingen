@@ -241,8 +241,17 @@ class AnswerRepository(BaseSQLAlchemyRepository[Answer, Answer], BaseAnswerRepos
         return Answer
 
 
-class AttachmentRepository(BaseSQLAlchemyRepository[Attachment, Attachment], BaseAttachmentRepository):
+class AttachmentRepository(
+    BaseSQLAlchemyRepository[Attachment, Attachment], BaseAttachmentRepository[Attachment, Attachment]
+):
     """Repository for Attachment model."""
 
     def get_model_type(self) -> type[Attachment]:
         return Attachment
+
+    async def find_by_melding(self, melding_id: int) -> Collection[Attachment]:
+        statement = select(Attachment).where(Attachment.melding_id == melding_id)
+
+        result = await self._session.execute(statement)
+
+        return result.scalars().all()
