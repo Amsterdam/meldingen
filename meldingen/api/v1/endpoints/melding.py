@@ -28,6 +28,7 @@ from starlette.status import (
 
 from meldingen.actions import (
     AnswerCreateAction,
+    DeleteAttachmentAction,
     DownloadAttachmentAction,
     ListAttachmentsAction,
     MeldingListAction,
@@ -49,6 +50,7 @@ from meldingen.dependencies import (
     melding_answer_questions_action,
     melding_complete_action,
     melding_create_action,
+    melding_delete_attachment_action,
     melding_download_attachment_action,
     melding_list_action,
     melding_list_attachments_action,
@@ -446,3 +448,22 @@ async def list_attachments(
         output.append(_hydrate_attachment_output(attachment))
 
     return output
+
+
+@router.delete(
+    "/{melding_id}/attachment/{attachment_id}",
+    name="melding:attachment-delete",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def delete_attachment(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[DeleteAttachmentAction, Depends(melding_delete_attachment_action)],
+) -> None:
+    try:
+        await action(melding_id, attachment_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
