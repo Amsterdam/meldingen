@@ -1426,3 +1426,130 @@ class TestMeldingListAttachments:
         body = response.json()
 
         assert len(attachments) == len(body)
+
+
+class TestMeldingDeleteAttachmentAction:
+    ROUTE_NAME: Final[str] = "melding:attachment-delete"
+
+    @pytest.mark.anyio
+    async def test_delete_attachment_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=123, attachment_id=456),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_delete_attachment_token_missing(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=123, attachment_id=456),
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+
+        assert len(detail) == 1
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["query", "token"]
+        assert detail[0].get("msg") == "Field required"
+
+    @pytest.mark.anyio
+    async def test_delete_attachment_unauthorized_token_invalid(
+        self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=456),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
+        indirect=True,
+    )
+    async def test_delete_attachment_unauthorized_token_expired(
+        self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=456),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_delete_attachment_attachment_not_found(
+        self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=456),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_delete_attachment_attached_to_other_melding(
+        self, app: FastAPI, client: AsyncClient, attachment: Attachment, db_session: AsyncSession
+    ) -> None:
+        melding = Melding(text="Hoi!", token="supersecuretoken")
+
+        db_session.add(melding)
+        await db_session.commit()
+
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=attachment.id),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_delete_attachment_file_not_found(
+        self, app: FastAPI, client: AsyncClient, attachment: Attachment
+    ) -> None:
+        melding = await attachment.awaitable_attrs.melding
+
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=attachment.id),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_delete_attachment(self, app: FastAPI, client: AsyncClient, attachment: Attachment) -> None:
+        os.makedirs(path.dirname(attachment.file_path))
+        with open(attachment.file_path, "wb") as file:
+            file.write(b"some data")
+
+        melding = await attachment.awaitable_attrs.melding
+
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=attachment.id),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        assert not path.exists(attachment.file_path)

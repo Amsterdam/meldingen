@@ -2,6 +2,7 @@ from typing import Any, Collection, Sequence, TypeVar
 
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
+from meldingen_core.actions.attachment import DeleteAttachmentAction as BaseDeleteAttachmentAction
 from meldingen_core.actions.attachment import DownloadAttachmentAction as BaseDownloadAttachmentAction
 from meldingen_core.actions.attachment import ListAttachmentsAction as BaseListAttachmentsAction
 from meldingen_core.actions.attachment import UploadAttachmentAction as BaseUploadAttachmentAction
@@ -512,3 +513,6 @@ class DownloadAttachmentAction(BaseDownloadAttachmentAction[Attachment, Attachme
 
 
 class ListAttachmentsAction(BaseListAttachmentsAction[Attachment, Attachment, Melding, Melding]): ...
+
+
+class DeleteAttachmentAction(BaseDeleteAttachmentAction[Attachment, Attachment, Melding, Melding]): ...

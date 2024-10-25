@@ -26,6 +26,7 @@ from meldingen.actions import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    DeleteAttachmentAction,
     DownloadAttachmentAction,
     FormCreateAction,
     FormDeleteAction,
@@ -337,6 +338,14 @@ def melding_list_attachments_action(
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
 ) -> ListAttachmentsAction:
     return ListAttachmentsAction(token_verifier, attachment_repository)
+
+
+def melding_delete_attachment_action(
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
+) -> DeleteAttachmentAction:
+    return DeleteAttachmentAction(token_verifier, attachment_repository, filesystem)
 
 
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:
