@@ -1705,8 +1705,8 @@ structlog = "^24.1.0"
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feat/attachment-delete"
-resolved_reference = "50e92a1d15eb9f69a722bcc28c033a5d552ce9ec"
+reference = "HEAD"
+resolved_reference = "f63cc455d64c7ff0877bb6333ec0307f5fb63a62"
 
 [[package]]
 name = "mergedeep"
@@ -3563,4 +3563,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "8d2087b445b84c0f282a50de1b8f5cd4d96f225caad535128647471d8ce36b0c"
+content-hash = "adc1f24e257a5893b32db8de603ffbadd0ad19bd7d5391f891f7df9edf62e293"
