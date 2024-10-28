@@ -4,6 +4,7 @@ from os import path
 from typing import Any, Final
 
 import pytest
+from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
 from meldingen_core import SortingDirection
@@ -996,6 +997,14 @@ class TestMeldingQuestionAnswer:
         assert data.get("detail") == "Not Found"
 
 
+async def assert_container_empty(container_client: ContainerClient) -> None:
+    count = 0
+    async for _ in container_client.list_blob_names():
+        count += 1
+
+    assert count == 0
+
+
 class TestMeldingUploadAttachment:
     ROUTE_NAME_CREATE: Final[str] = "melding:attachment"
 
@@ -1009,7 +1018,13 @@ class TestMeldingUploadAttachment:
         ],
     )
     async def test_upload_attachment(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, db_session: AsyncSession, filename: str
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
+        db_session: AsyncSession,
+        container_client: ContainerClient,
+        filename: str,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1035,8 +1050,12 @@ class TestMeldingUploadAttachment:
         attachments = await melding.awaitable_attrs.attachments
         assert len(attachments) == 1
 
-        assert path.exists(attachments[0].file_path)
-        assert path.getsize(attachments[0].file_path) == path.getsize(
+        blob_client = container_client.get_blob_client(attachments[0].file_path)
+        async with blob_client:
+            assert await blob_client.exists() is True
+            properties = await blob_client.get_blob_properties()
+
+        assert properties.size == path.getsize(
             path.join(
                 path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                 "resources",
@@ -1044,15 +1063,18 @@ class TestMeldingUploadAttachment:
             )
         )
 
-        os.remove(attachments[0].file_path)
-
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
     )
     async def test_upload_attachment_too_large(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, db_session: AsyncSession
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
+        db_session: AsyncSession,
+        container_client: ContainerClient,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1074,6 +1096,7 @@ class TestMeldingUploadAttachment:
 
         assert response.status_code == HTTP_413_REQUEST_ENTITY_TOO_LARGE
         assert response.json().get("detail") == "Allowed content size exceeded"
+        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1081,7 +1104,13 @@ class TestMeldingUploadAttachment:
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "test_file.txt")],
     )
     async def test_upload_attachment_media_type_not_allowed(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, db_session: AsyncSession, filename: str
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
+        db_session: AsyncSession,
+        filename: str,
+        container_client: ContainerClient,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1104,6 +1133,7 @@ class TestMeldingUploadAttachment:
         assert response.status_code == HTTP_400_BAD_REQUEST
         body = response.json()
         assert body.get("detail") == "Attachment not allowed"
+        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1111,7 +1141,12 @@ class TestMeldingUploadAttachment:
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
     )
     async def test_upload_attachment_media_type_integrity_validation_fails(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, db_session: AsyncSession
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
+        db_session: AsyncSession,
+        container_client: ContainerClient,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1138,9 +1173,12 @@ class TestMeldingUploadAttachment:
         assert response.status_code == HTTP_400_BAD_REQUEST
         body = response.json()
         assert body.get("detail") == "Media type of data does not match provided media type"
+        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
-    async def test_upload_attachment_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+    async def test_upload_attachment_melding_not_found(
+        self, app: FastAPI, client: AsyncClient, container_client: ContainerClient
+    ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=123),
             params={"token": "supersecuretoken"},
@@ -1160,13 +1198,16 @@ class TestMeldingUploadAttachment:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
+        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
     )
-    async def test_upload_attachment_token_missing(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+    async def test_upload_attachment_token_missing(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, container_client: ContainerClient
+    ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             files={
@@ -1193,10 +1234,11 @@ class TestMeldingUploadAttachment:
         assert detail[0].get("type") == "missing"
         assert detail[0].get("loc") == ["query", "token"]
         assert detail[0].get("msg") == "Field required"
+        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
     async def test_upload_attachment_unauthorized_token_invalid(
-        self, app: FastAPI, client: AsyncClient, melding: Melding
+        self, app: FastAPI, client: AsyncClient, melding: Melding, container_client: ContainerClient
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1217,6 +1259,7 @@ class TestMeldingUploadAttachment:
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
+        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1225,7 +1268,7 @@ class TestMeldingUploadAttachment:
         indirect=True,
     )
     async def test_upload_attachment_unauthorized_token_expired(
-        self, app: FastAPI, client: AsyncClient, melding: Melding
+        self, app: FastAPI, client: AsyncClient, melding: Melding, container_client: ContainerClient
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1246,6 +1289,7 @@ class TestMeldingUploadAttachment:
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
+        await assert_container_empty(container_client)
 
 
 class TestMeldingDownloadAttachment:
@@ -1359,10 +1403,12 @@ class TestMeldingDownloadAttachment:
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
         indirect=True,
     )
-    async def test_download_attachment(self, app: FastAPI, client: AsyncClient, attachment: Attachment) -> None:
-        os.makedirs(path.dirname(attachment.file_path))
-        with open(attachment.file_path, "wb") as file:
-            file.write(b"some data")
+    async def test_download_attachment(
+        self, app: FastAPI, client: AsyncClient, attachment: Attachment, container_client: ContainerClient
+    ) -> None:
+        blob_client = container_client.get_blob_client(attachment.file_path)
+        async with blob_client:
+            await blob_client.upload_blob(b"some data")
 
         melding = await attachment.awaitable_attrs.melding
 
@@ -1370,8 +1416,6 @@ class TestMeldingDownloadAttachment:
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=attachment.id),
             params={"token": "supersecuretoken"},
         )
-
-        shutil.rmtree(path.dirname(attachment.file_path))
 
         assert response.status_code == HTTP_200_OK
         assert response.text == "some data"
@@ -1539,10 +1583,12 @@ class TestMeldingDeleteAttachmentAction:
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
         indirect=True,
     )
-    async def test_delete_attachment(self, app: FastAPI, client: AsyncClient, attachment: Attachment) -> None:
-        os.makedirs(path.dirname(attachment.file_path))
-        with open(attachment.file_path, "wb") as file:
-            file.write(b"some data")
+    async def test_delete_attachment(
+        self, app: FastAPI, client: AsyncClient, attachment: Attachment, container_client: ContainerClient
+    ) -> None:
+        blob_client = container_client.get_blob_client(attachment.file_path)
+        async with blob_client:
+            await blob_client.upload_blob(b"some data")
 
         melding = await attachment.awaitable_attrs.melding
 
@@ -1552,4 +1598,6 @@ class TestMeldingDeleteAttachmentAction:
         )
 
         assert response.status_code == HTTP_200_OK
-        assert not path.exists(attachment.file_path)
+
+        async with blob_client:
+            assert await blob_client.exists() == False

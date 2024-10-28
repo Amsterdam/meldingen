@@ -2,7 +2,7 @@ import logging
 from datetime import timedelta
 from pathlib import Path
 
-from pydantic import PostgresDsn
+from pydantic import HttpUrl, PostgresDsn
 from pydantic_media_type import MediaType
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     imgproxy_key: str
     imgproxy_salt: str
     imgproxy_base_url: str
+
+    # azure storage blobs
+    azure_account_name: str
+    azure_account_key: str
+    azure_storage_url: HttpUrl
+    azure_container: str
 
 
 # Create an instance of the Settings model
