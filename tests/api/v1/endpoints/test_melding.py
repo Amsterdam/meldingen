@@ -1050,6 +1050,9 @@ class TestMeldingUploadAttachment:
         attachments = await melding.awaitable_attrs.attachments
         assert len(attachments) == 1
 
+        assert attachments[0].original_filename == filename
+        assert attachments[0].optimized is False
+
         blob_client = container_client.get_blob_client(attachments[0].file_path)
         async with blob_client:
             assert await blob_client.exists() is True

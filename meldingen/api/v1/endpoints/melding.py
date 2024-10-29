@@ -334,6 +334,7 @@ def _hydrate_attachment_output(attachment: Attachment) -> AttachmentOutput:
     return AttachmentOutput(
         id=attachment.id,
         original_filename=attachment.original_filename,
+        optimized=attachment.optimized,
         created_at=attachment.created_at,
         updated_at=attachment.updated_at,
     )
