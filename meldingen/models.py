@@ -363,3 +363,5 @@ class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
 
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
     melding: Mapped[Melding] = relationship()
+
+    optimized: Mapped[bool] = mapped_column(Boolean(), default=False)
