@@ -20,3 +20,18 @@ class IMGProxySignatureGenerator:
         ).digest()
 
         return base64.urlsafe_b64encode(digest).decode().rstrip("=")
+
+
+class IMGProxyImageOptimizerUrlGenerator:
+    _generate_signature: IMGProxySignatureGenerator
+    _imgproxy_base_url: str
+
+    def __init__(self, generate_signature: IMGProxySignatureGenerator, imgproxy_base_url: str):
+        self._generate_signature = generate_signature
+        self._imgproxy_base_url = imgproxy_base_url
+
+    def __call__(self, image_url: str) -> str:
+        url_path = f"/f:webp/{image_url}"
+        signature = self._generate_signature(url_path)
+
+        return f"{self._imgproxy_base_url}/{signature}{url_path}"

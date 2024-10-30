@@ -1,4 +1,6 @@
-from meldingen.image import IMGProxySignatureGenerator
+from unittest.mock import Mock
+
+from meldingen.image import IMGProxyImageOptimizerUrlGenerator, IMGProxySignatureGenerator
 
 
 def test_imgproxy_signature_generator() -> None:
@@ -10,3 +12,14 @@ def test_imgproxy_signature_generator() -> None:
     )
 
     assert signature == "oKfUtW34Dvo2BGQehJFR4Nr0_rIjOtdtzJ3QFsUcXH8"
+
+
+def test_imgproxy_image_optimizer_url_generator() -> None:
+    signature_generator = Mock(IMGProxySignatureGenerator)
+    signature_generator.return_value = "oKfUtW34Dvo2BGQehJFR4Nr0_rIjOtdtzJ3QFsUcXH8"
+
+    generate_url = IMGProxyImageOptimizerUrlGenerator(signature_generator, "http://imgproxy")
+
+    url = generate_url("https://images/path/to/image.jpg")
+
+    assert url == "http://imgproxy/oKfUtW34Dvo2BGQehJFR4Nr0_rIjOtdtzJ3QFsUcXH8/f:webp/https://images/path/to/image.jpg"
