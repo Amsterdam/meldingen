@@ -3,6 +3,8 @@ from typing import AsyncGenerator, AsyncIterator, Callable
 
 import pytest
 from asgi_lifespan import LifespanManager
+from azure.core.exceptions import ResourceNotFoundError
+from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from pytest import FixtureRequest
@@ -13,8 +15,9 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.compiler import DDLCompiler
 from sqlalchemy.sql.ddl import DropTable
 
+from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager as BaseDatabaseSessionManager
-from meldingen.dependencies import database_engine, database_session, database_session_manager
+from meldingen.dependencies import azure_container_client, database_engine, database_session, database_session_manager
 from meldingen.main import get_application
 from meldingen.models import BaseDBModel, User
 
@@ -179,6 +182,35 @@ async def session_override(app: FastAPI, db_session: AsyncSession) -> None:
         yield db_session
 
     app.dependency_overrides[database_session] = get_db_session_override
+
+
+@pytest.fixture
+async def container_client() -> AsyncIterator[ContainerClient]:
+    client = ContainerClient.from_connection_string(
+        f"DefaultEndpointsProtocol=http;AccountName={settings.azure_account_name};"
+        f"AccountKey={settings.azure_account_key};"
+        f"BlobEndpoint={str(settings.azure_storage_url)}{settings.azure_account_name};",
+        "meldingentestcontainer",
+    )
+    async with client:
+        try:
+            await client.delete_container()
+        except ResourceNotFoundError:
+            """No need to delete the container if it does not exist."""
+
+        await client.create_container()
+
+        yield client
+
+
+@pytest.fixture(autouse=True)
+def azure_container_client_override(app: FastAPI, container_client: ContainerClient) -> None:
+    async def get_azure_container_client() -> AsyncIterator[ContainerClient]:
+        yield container_client
+
+    # In some case a coroutine is passed here instead of an FastAPI object, causing the test to fail
+    if isinstance(app, FastAPI):
+        app.dependency_overrides[azure_container_client] = get_azure_container_client
 
 
 @pytest.fixture(scope="session")

@@ -2,6 +2,7 @@ import logging
 from functools import lru_cache
 from typing import Annotated, AsyncIterator
 
+from azure.storage.blob.aio import ContainerClient
 from fastapi import Depends
 from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.melding import (
@@ -15,8 +16,8 @@ from meldingen_core.actions.melding import (
 from meldingen_core.classification import Classifier
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
+from plugfs.azure import AzureStorageBlobsAdapter
 from plugfs.filesystem import Adapter, Filesystem
-from plugfs.local import LocalAdapter
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions import (
@@ -290,8 +291,19 @@ def melding_answer_create_action(
     )
 
 
-def filesystem_adapter() -> Adapter:
-    return LocalAdapter()
+async def azure_container_client() -> AsyncIterator[ContainerClient]:
+    client = ContainerClient.from_connection_string(
+        f"DefaultEndpointsProtocol=http;AccountName={settings.azure_account_name};"
+        f"AccountKey={settings.azure_account_key};"
+        f"BlobEndpoint={str(settings.azure_storage_url)}{settings.azure_account_name};",
+        settings.azure_container,
+    )
+    async with client:
+        yield client
+
+
+def filesystem_adapter(container_client: Annotated[ContainerClient, Depends(azure_container_client)]) -> Adapter:
+    return AzureStorageBlobsAdapter(container_client)
 
 
 def filesystem(adapter: Annotated[Adapter, Depends(filesystem_adapter)]) -> Filesystem:
