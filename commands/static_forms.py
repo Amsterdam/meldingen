@@ -18,34 +18,9 @@ from meldingen.repositories import StaticFormRepository
 app = typer.Typer()
 
 
-async def async_create_static_forms(title: str) -> None:
+async def async_create_static_forms() -> None:
     async for session in database_session(database_session_manager(database_engine())):
         static_form_repository = StaticFormRepository(session)
-
-        try:
-            await static_form_repository.retrieve_by_type(StaticFormTypeEnum.primary)
-            print("[red]Error[/red] - The primary form already exists")
-            raise typer.Exit
-        except NotFoundException:
-            # The primary from does not exist, let's create it!
-            ...
-
-        primary_form = StaticForm(type=StaticFormTypeEnum.primary, title=title, display=FormIoFormDisplayEnum.form)
-
-        component = FormIoTextAreaComponent(
-            label="Waar gaat het om?",
-            description="",
-            key="waar-gaat-het-om",
-            type=FormIoComponentTypeEnum.text_area,
-            input=True,
-            auto_expand=False,
-            max_char_count=255,
-        )
-
-        components = await primary_form.awaitable_attrs.components
-        components.append(component)
-
-        await static_form_repository.save(primary_form)
 
         for form_type in StaticFormTypeEnum:
             """
@@ -53,8 +28,13 @@ async def async_create_static_forms(title: str) -> None:
             Needs to be done more precise later.
             """
 
-            if form_type == StaticFormTypeEnum.primary:
+            try:
+                await static_form_repository.retrieve_by_type(StaticFormTypeEnum[form_type])
+                print(f"[red]Error[/red] - The {form_type} form already exists")
                 continue
+            except NotFoundException:
+                # The primary from does not exist, let's create it!
+                ...
 
             label = form_type.capitalize()
 
@@ -83,8 +63,8 @@ async def async_create_static_forms(title: str) -> None:
 
 
 @app.command()
-def create(title: Annotated[str, typer.Option(prompt=True, help="The title of the primary form")]) -> None:
-    asyncio.run(async_create_static_forms(title))
+def create() -> None:
+    asyncio.run(async_create_static_forms())
 
 
 if __name__ == "__main__":
