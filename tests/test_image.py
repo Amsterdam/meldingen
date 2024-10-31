@@ -31,7 +31,10 @@ def test_imgproxy_image_optimizer_url_generator() -> None:
 
     url = generate_url("https://images/path/to/image.jpg")
 
-    assert url == "http://imgproxy/oKfUtW34Dvo2BGQehJFR4Nr0_rIjOtdtzJ3QFsUcXH8/f:webp/plain/https://images/path/to/image.jpg"
+    assert (
+        url
+        == "http://imgproxy/oKfUtW34Dvo2BGQehJFR4Nr0_rIjOtdtzJ3QFsUcXH8/f:webp/plain/https://images/path/to/image.jpg"
+    )
 
 
 @pytest.mark.anyio

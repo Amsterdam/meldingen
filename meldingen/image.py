@@ -3,6 +3,7 @@ import hashlib
 import hmac
 
 from httpx import AsyncClient
+from meldingen_core.image import BaseImageOptimizer
 from plugfs.filesystem import Filesystem
 from starlette.status import HTTP_200_OK
 
@@ -44,7 +45,7 @@ class IMGProxyImageOptimizerUrlGenerator:
         return f"{self._imgproxy_base_url}/{signature}{url_path}"
 
 
-class IMGProxyImageOptimizer:
+class IMGProxyImageOptimizer(BaseImageOptimizer):
     _generate_url: IMGProxyImageOptimizerUrlGenerator
     _filesystem: Filesystem
     _http_client: AsyncClient
