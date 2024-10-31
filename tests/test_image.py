@@ -1,6 +1,15 @@
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
-from meldingen.image import IMGProxyImageOptimizerUrlGenerator, IMGProxySignatureGenerator
+import pytest
+from httpx import AsyncClient, Response
+from plugfs.filesystem import Filesystem
+
+from meldingen.image import (
+    ImageOptimizerException,
+    IMGProxyImageOptimizer,
+    IMGProxyImageOptimizerUrlGenerator,
+    IMGProxySignatureGenerator,
+)
 
 
 def test_imgproxy_signature_generator() -> None:
@@ -22,4 +31,39 @@ def test_imgproxy_image_optimizer_url_generator() -> None:
 
     url = generate_url("https://images/path/to/image.jpg")
 
-    assert url == "http://imgproxy/oKfUtW34Dvo2BGQehJFR4Nr0_rIjOtdtzJ3QFsUcXH8/f:webp/https://images/path/to/image.jpg"
+    assert url == "http://imgproxy/oKfUtW34Dvo2BGQehJFR4Nr0_rIjOtdtzJ3QFsUcXH8/f:webp/plain/https://images/path/to/image.jpg"
+
+
+@pytest.mark.anyio
+async def test_imgproxy_image_optimizer() -> None:
+    url_generator = Mock(IMGProxyImageOptimizerUrlGenerator)
+    url_generator.return_value = "http://some.url"
+
+    filesystem = Mock(Filesystem)
+
+    response = Mock(Response)
+    response.status_code = 200
+
+    http_client = AsyncMock(AsyncClient)
+    http_client.stream.return_value.__aenter__.return_value = response
+    optimize = IMGProxyImageOptimizer(url_generator, filesystem, http_client)
+
+    optimized_url = await optimize("abs://meldingentestcontainer/path/to/image.jpg")
+
+    http_client.stream.assert_called_with("GET", "http://some.url")
+    filesystem.write_iterator.assert_awaited_once()
+    assert optimized_url == "abs://meldingentestcontainer/path/to/image-optimized.webp"
+
+
+@pytest.mark.anyio
+async def test_imgproxy_image_optimizer_request_failed() -> None:
+    response = Mock(Response)
+    response.status_code = 404
+
+    http_client = AsyncMock(AsyncClient)
+    http_client.stream.return_value.__aenter__.return_value = response
+
+    optimize = IMGProxyImageOptimizer(Mock(IMGProxyImageOptimizerUrlGenerator), Mock(Filesystem), http_client)
+
+    with pytest.raises(ImageOptimizerException):
+        await optimize("abs://meldingentestcontainer/path/to/image.jpg")
