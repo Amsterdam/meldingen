@@ -9,7 +9,6 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagin
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
-    classification_repository,
     static_form_list_action,
     static_form_output_factory,
     static_form_repository,

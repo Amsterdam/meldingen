@@ -501,8 +501,9 @@ class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
         assert response.status_code == HTTP_200_OK
-
         data = response.json()
+
+        assert len(data) == len(static_forms)
 
         for form in data:
 
@@ -575,6 +576,9 @@ class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_200_OK
         data = response.json()
+
+        assert len(data) == len(static_forms)
+        assert response.headers.get("content-range") == "StaticForm 0-49/4"
 
         for i in range(len(expected)):
             assert data[i].get("type") == expected[i].get("type")
