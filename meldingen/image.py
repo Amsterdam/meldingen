@@ -7,6 +7,9 @@ from meldingen_core.image import BaseImageOptimizer
 from plugfs.filesystem import Filesystem
 from starlette.status import HTTP_200_OK
 
+from meldingen.models import Attachment
+from meldingen.repositories import AttachmentRepository
+
 
 class ImageOptimizerException(Exception): ...
 
@@ -70,3 +73,17 @@ class IMGProxyImageOptimizer(BaseImageOptimizer):
             raise ImageOptimizerException()
 
         return optimized_path
+
+
+class ImageOptimizerTask:
+    _optimizer: BaseImageOptimizer
+    _repository: AttachmentRepository
+
+    def __init__(self, optimizer: BaseImageOptimizer, repository: AttachmentRepository):
+        self._optimizer = optimizer
+        self._repository = repository
+
+    async def __call__(self, attachment: Attachment) -> None:
+        attachment.optimized_path = await self._optimizer(attachment.file_path)
+
+        await self._repository.save(attachment)

@@ -2,14 +2,18 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from httpx import AsyncClient, Response
+from meldingen_core.image import BaseImageOptimizer
 from plugfs.filesystem import Filesystem
 
 from meldingen.image import (
     ImageOptimizerException,
+    ImageOptimizerTask,
     IMGProxyImageOptimizer,
     IMGProxyImageOptimizerUrlGenerator,
     IMGProxySignatureGenerator,
 )
+from meldingen.models import Attachment, Melding
+from meldingen.repositories import AttachmentRepository
 
 
 def test_imgproxy_signature_generator() -> None:
@@ -70,3 +74,20 @@ async def test_imgproxy_image_optimizer_request_failed() -> None:
 
     with pytest.raises(ImageOptimizerException):
         await optimize("/path/to/image.jpg")
+
+
+@pytest.mark.anyio
+async def test_image_optimizer_task() -> None:
+    attachment = Attachment(original_filename="image.jpg", melding=Mock(Melding))
+    attachment.file_path = "/path/to/image.jpg"
+
+    optimized_path = "/path/to/image-optimized.webp"
+    optimizer = AsyncMock(BaseImageOptimizer, return_value=optimized_path)
+    repository = Mock(AttachmentRepository)
+
+    run = ImageOptimizerTask(optimizer, repository)
+
+    await run(attachment)
+
+    assert attachment.optimized_path == optimized_path
+    repository.save.assert_awaited_once_with(attachment)

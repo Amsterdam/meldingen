@@ -4,6 +4,7 @@ from typing import Annotated, AsyncIterator
 
 from azure.storage.blob.aio import ContainerClient
 from fastapi import Depends
+from httpx import AsyncClient
 from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
@@ -14,6 +15,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
 )
 from meldingen_core.classification import Classifier
+from meldingen_core.image import BaseImageOptimizer
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from plugfs.azure import AzureStorageBlobsAdapter
@@ -52,6 +54,12 @@ from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import AttachmentFactory
+from meldingen.image import (
+    ImageOptimizerTask,
+    IMGProxyImageOptimizer,
+    IMGProxyImageOptimizerUrlGenerator,
+    IMGProxySignatureGenerator,
+)
 from meldingen.jsonlogic import JSONLogicValidator
 from meldingen.models import Melding
 from meldingen.repositories import (
@@ -574,3 +582,32 @@ def user_update_action(repository: Annotated[UserRepository, Depends(user_reposi
 
 def user_delete_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserDeleteAction:
     return UserDeleteAction(repository)
+
+
+def img_proxy_signature_generator() -> IMGProxySignatureGenerator:
+    return IMGProxySignatureGenerator(settings.imgproxy_key, settings.imgproxy_salt)
+
+
+def http_client() -> AsyncClient:
+    return AsyncClient()
+
+
+def img_proxy_image_optimizer_url_generator(
+    signature_generator: Annotated[IMGProxySignatureGenerator, Depends(img_proxy_signature_generator)],
+) -> IMGProxyImageOptimizerUrlGenerator:
+    return IMGProxyImageOptimizerUrlGenerator(signature_generator, settings.imgproxy_base_url)
+
+
+def image_optimizer(
+    url_generator: Annotated[IMGProxyImageOptimizerUrlGenerator, Depends(img_proxy_image_optimizer_url_generator)],
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
+    http_client: Annotated[AsyncClient, Depends(http_client)],
+) -> BaseImageOptimizer:
+    return IMGProxyImageOptimizer(url_generator, filesystem, http_client)
+
+
+def image_optimizer_task(
+    image_optimizer: Annotated[IMGProxyImageOptimizer, Depends(image_optimizer)],
+    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+) -> ImageOptimizerTask:
+    return ImageOptimizerTask(image_optimizer, attachment_repository)
