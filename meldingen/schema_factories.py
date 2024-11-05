@@ -271,6 +271,7 @@ class StaticFormOutputFactory:
         components = await static_form.awaitable_attrs.components
 
         return StaticFormOutput(
+            id=static_form.id,
             type=str(static_form.type),
             title=static_form.title,
             display=static_form.display,

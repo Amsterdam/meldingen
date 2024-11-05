@@ -5,7 +5,7 @@ from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_404_NOT_FOUND
 
 from meldingen.actions import StaticFormListAction, StaticFormRetrieveByTypeAction, StaticFormUpdateAction
-from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagination_params, SortParams, sort_param
+from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
