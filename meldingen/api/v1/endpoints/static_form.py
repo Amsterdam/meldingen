@@ -5,7 +5,7 @@ from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_404_NOT_FOUND
 
 from meldingen.actions import StaticFormListAction, StaticFormRetrieveByTypeAction, StaticFormUpdateAction
-from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagination_params
+from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagination_params, SortParams, sort_param
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
@@ -76,7 +76,14 @@ async def update_static_form(
 async def list_static_forms(
     action: Annotated[StaticFormListAction, Depends(static_form_list_action)],
     produce_output_model: Annotated[StaticFormOutputFactory, Depends(static_form_output_factory)],
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    sort: Annotated[SortParams, Depends(sort_param)],
 ) -> list[StaticFormOutput]:
-    forms = await action()
+    limit = pagination["limit"] or 0
+    offset = pagination["offset"] or 0
+
+    forms = await action(
+        limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+    )
 
     return [await produce_output_model(db_form) for db_form in forms]
