@@ -67,10 +67,10 @@ class IMGProxyImageOptimizer(BaseImageOptimizer):
         optimized_path = f"{file_path}-optimized.webp"
 
         async with self._http_client.stream("GET", imgproxy_url) as response:
-            await self._filesystem.write_iterator(optimized_path, response.aiter_bytes())
+            if response.status_code != HTTP_200_OK:
+                raise ImageOptimizerException()
 
-        if response.status_code != HTTP_200_OK:
-            raise ImageOptimizerException()
+            await self._filesystem.write_iterator(optimized_path, response.aiter_bytes())
 
         return optimized_path
 
