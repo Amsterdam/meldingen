@@ -1,24 +1,36 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_404_NOT_FOUND
 
 from meldingen.actions import StaticFormListAction, StaticFormRetrieveByTypeAction, StaticFormUpdateAction
+from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, pagination_params
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
+    classification_repository,
     static_form_list_action,
     static_form_output_factory,
+    static_form_repository,
     static_form_retrieve_by_type_action,
     static_form_update_action,
 )
 from meldingen.models import StaticFormTypeEnum
 from meldingen.output_schemas import StaticFormOutput
+from meldingen.repositories import StaticFormRepository
 from meldingen.schema_factories import StaticFormOutputFactory
 from meldingen.schemas import StaticFormInput
 
 router = APIRouter()
+
+
+async def _add_content_range_header(
+    response: Response,
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    repo: Annotated[StaticFormRepository, Depends(static_form_repository)],
+) -> None:
+    await ContentRangeHeaderAdder(repo, "StaticForm")(response, pagination)
 
 
 @router.get("/{form_type}", name="static-form:retrieve-by-type", responses={**not_found_response})
@@ -55,7 +67,12 @@ async def update_static_form(
     return await produce_output_model(db_form)
 
 
-@router.get("/", name="static-form:list", responses={**not_found_response})
+@router.get(
+    "/",
+    name="static-form:list",
+    responses={**not_found_response},
+    dependencies=[Depends(_add_content_range_header)],
+)
 async def list_static_forms(
     action: Annotated[StaticFormListAction, Depends(static_form_list_action)],
     produce_output_model: Annotated[StaticFormOutputFactory, Depends(static_form_output_factory)],
