@@ -190,7 +190,7 @@ async def container_client() -> AsyncIterator[ContainerClient]:
         f"DefaultEndpointsProtocol=http;AccountName={settings.azure_account_name};"
         f"AccountKey={settings.azure_account_key};"
         f"BlobEndpoint={str(settings.azure_storage_url)}{settings.azure_account_name};",
-        "meldingentestcontainer",
+        "meldingencontainer",
     )
     async with client:
         try:

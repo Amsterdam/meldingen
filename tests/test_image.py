@@ -51,11 +51,11 @@ async def test_imgproxy_image_optimizer() -> None:
     http_client.stream.return_value.__aenter__.return_value = response
     optimize = IMGProxyImageOptimizer(url_generator, filesystem, http_client)
 
-    optimized_url = await optimize("abs://meldingentestcontainer/path/to/image.jpg")
+    optimized_url = await optimize("/path/to/image.jpg")
 
     http_client.stream.assert_called_with("GET", "http://some.url")
     filesystem.write_iterator.assert_awaited_once()
-    assert optimized_url == "abs://meldingentestcontainer/path/to/image-optimized.webp"
+    assert optimized_url == "/path/to/image-optimized.webp"
 
 
 @pytest.mark.anyio
@@ -69,4 +69,4 @@ async def test_imgproxy_image_optimizer_request_failed() -> None:
     optimize = IMGProxyImageOptimizer(Mock(IMGProxyImageOptimizerUrlGenerator), Mock(Filesystem), http_client)
 
     with pytest.raises(ImageOptimizerException):
-        await optimize("abs://meldingentestcontainer/path/to/image.jpg")
+        await optimize("/path/to/image.jpg")

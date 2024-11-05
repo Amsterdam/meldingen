@@ -57,10 +57,10 @@ class IMGProxyImageOptimizer(BaseImageOptimizer):
         self._filesystem = filesystem
         self._http_client = http_client
 
-    async def __call__(self, image_url: str) -> str:
-        imgproxy_url = self._generate_url(image_url)
+    async def __call__(self, image_path: str) -> str:
+        imgproxy_url = self._generate_url(image_path)
 
-        file_path, _ = image_url.rsplit(".", 1)
+        file_path, _ = image_path.rsplit(".", 1)
         optimized_path = f"{file_path}-optimized.webp"
 
         async with self._http_client.stream("GET", imgproxy_url) as response:
