@@ -16,12 +16,8 @@ class BaseFormOutput(BaseModel):
     updated_at: datetime
 
 
-class SimpleStaticFormOutput(BaseModel):
+class SimpleStaticFormOutput(BaseFormOutput):
     type: str
-    title: str
-    display: str
-    created_at: datetime
-    updated_at: datetime
 
 
 class StaticFormOutput(SimpleStaticFormOutput):

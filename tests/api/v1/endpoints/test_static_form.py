@@ -3,6 +3,7 @@ from typing import Any, Final
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
+from meldingen_core import SortingDirection
 from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
 from meldingen.models import FormIoComponentTypeEnum, FormIoQuestionComponent, StaticForm, StaticFormTypeEnum
@@ -500,8 +501,9 @@ class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
         assert response.status_code == HTTP_200_OK
-
         data = response.json()
+
+        assert len(data) == len(static_forms)
 
         for form in data:
 
@@ -518,3 +520,90 @@ class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
             assert fixture_component.type == data.component.get("type")
 
             assert response.headers.get("content-range") == "StaticForm 0-49/4"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "attribute, direction, expected",
+        [
+            (
+                "title",
+                SortingDirection.ASC,
+                [
+                    {"type": "attachments", "title": "Attachments"},
+                    {"type": "contact", "title": "Contact"},
+                    {"type": "location", "title": "Location"},
+                    {"type": "primary", "title": "Primary"},
+                ],
+            ),
+            (
+                "title",
+                SortingDirection.DESC,
+                [
+                    {"type": "primary", "title": "Primary"},
+                    {"type": "location", "title": "Location"},
+                    {"type": "contact", "title": "Contact"},
+                    {"type": "attachments", "title": "Attachments"},
+                ],
+            ),
+            (
+                "id",
+                SortingDirection.ASC,
+                [
+                    {"type": "primary", "title": "Primary"},
+                    {"type": "attachments", "title": "Attachments"},
+                    {"type": "location", "title": "Location"},
+                    {"type": "contact", "title": "Contact"},
+                ],
+            ),
+            (
+                "id",
+                SortingDirection.DESC,
+                [
+                    {"type": "contact", "title": "Contact"},
+                    {"type": "location", "title": "Location"},
+                    {"type": "attachments", "title": "Attachments"},
+                    {"type": "primary", "title": "Primary"},
+                ],
+            ),
+            (
+                "type",
+                SortingDirection.ASC,
+                [
+                    {"type": "attachments", "title": "Attachments"},
+                    {"type": "contact", "title": "Contact"},
+                    {"type": "location", "title": "Location"},
+                    {"type": "primary", "title": "Primary"},
+                ],
+            ),
+            (
+                "type",
+                SortingDirection.DESC,
+                [
+                    {"type": "primary", "title": "Primary"},
+                    {"type": "location", "title": "Location"},
+                    {"type": "contact", "title": "Contact"},
+                    {"type": "attachments", "title": "Attachments"},
+                ],
+            ),
+        ],
+    )
+    async def test_list_static_forms_sorted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        static_forms: list[StaticForm],
+        attribute: str,
+        direction: SortingDirection,
+        expected: list[dict[str, Any]],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, params={"sort": f"{attribute}:{direction}"}))
+
+        assert response.status_code == HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == len(static_forms)
+        assert response.headers.get("content-range") == "StaticForm 0-49/4"
+
+        for i in range(len(expected)):
+            assert data[i].get("type") == expected[i].get("type")
+            assert data[i].get("title") == expected[i].get("title")
