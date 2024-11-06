@@ -1,3 +1,4 @@
+import asyncio
 import os
 import shutil
 from os import path
@@ -1050,8 +1051,13 @@ class TestMeldingUploadAttachment:
         attachments = await melding.awaitable_attrs.attachments
         assert len(attachments) == 1
 
+        await db_session.refresh(attachments[0])
+
         assert attachments[0].original_filename == filename
-        assert attachments[0].optimized is False
+
+        optimized_path, _ = attachments[0].file_path.rsplit(".", 1)
+        optimized_path = f"{optimized_path}-optimized.webp"
+        assert attachments[0].optimized_path == optimized_path
 
         blob_client = container_client.get_blob_client(attachments[0].file_path)
         async with blob_client:
