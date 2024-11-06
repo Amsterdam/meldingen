@@ -77,6 +77,6 @@ services:
       IMGPROXY_ABS_KEY: Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
       IMGPROXY_ABS_ENDPOINT: http://azurite:10000/devstoreaccount1
       IMGPROXY_LOG_LEVEL: debug
-      IMGPROXY_BASE_URL: abs://meldingencontainer
+      IMGPROXY_BASE_URL: abs://meldingencontainer/
     healthcheck:
       test: ["CMD", "imgproxy", "health"]
