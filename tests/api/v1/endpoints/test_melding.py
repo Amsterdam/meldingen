@@ -1,4 +1,3 @@
-from asyncio import sleep
 from os import path
 from typing import Any, Final
 from uuid import uuid4
@@ -1050,7 +1049,6 @@ class TestMeldingUploadAttachment:
         attachments = await melding.awaitable_attrs.attachments
         assert len(attachments) == 1
 
-        await sleep(1)
         await db_session.refresh(attachments[0])
 
         assert attachments[0].original_filename == filename
