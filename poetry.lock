@@ -1743,8 +1743,8 @@ structlog = "^24.1.0"
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feat/optimize-images"
-resolved_reference = "6f7a2f1ce82a3625fdd425f7e18d5bd371011d3c"
+reference = "HEAD"
+resolved_reference = "81ca5b5306ef9569e315bd75b5aed3f6a2c6c40a"
 
 [[package]]
 name = "mergedeep"
@@ -3601,4 +3601,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "cc62c195283c6e27e1d6983916bf5ec2f3eecff03dfdb9d008dd732e8860de4b"
+content-hash = "351120e261c46361959442de758e4cb078041e513b8e64d39d1bb74c5b0c7f3f"
