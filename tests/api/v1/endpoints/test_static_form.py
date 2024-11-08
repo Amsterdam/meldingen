@@ -19,14 +19,13 @@ class BaseStaticFormTest(BaseFormTest):
         assert data.get("question") is None
 
 
-class TestStaticFormRetrieveByType(BaseStaticFormTest):
-    ROUTE_NAME: Final[str] = "static-form:retrieve-by-type"
+class TestStaticFormRetrieve(BaseStaticFormTest):
+    ROUTE_NAME: Final[str] = "static-form:retrieve"
     METHOD: Final[str] = "GET"
 
     @pytest.mark.anyio
-    async def test_retrieve_primary_form(self, app: FastAPI, client: AsyncClient, primary_form: StaticForm) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_type=StaticFormTypeEnum.primary))
-
+    async def test_retrieve_by_id(self, app: FastAPI, client: AsyncClient, primary_form: StaticForm) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, static_form_id=primary_form.id))
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
@@ -51,8 +50,8 @@ class TestStaticFormRetrieveByType(BaseStaticFormTest):
         assert component.max_char_count == data_component.get("maxCharCount")
 
     @pytest.mark.anyio
-    async def test_retrieve_primary_form_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_type=StaticFormTypeEnum.primary))
+    async def test_retrieve_by_id_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, static_form_id=99999))
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
