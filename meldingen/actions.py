@@ -396,14 +396,14 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         return answer
 
 
-class StaticFormRetrieveByTypeAction(BaseCRUDAction[StaticForm, StaticForm]):
+class StaticFormRetrieveAction(BaseCRUDAction[StaticForm, StaticForm]):
     _repository: StaticFormRepository
 
     def __init__(self, repository: StaticFormRepository):
         super().__init__(repository)
 
-    async def __call__(self, form_type: StaticFormTypeEnum) -> StaticForm:
-        return await self._repository.retrieve_by_type(form_type)
+    async def __call__(self, static_form_id: int) -> StaticForm | None:
+        return await self._repository.retrieve(static_form_id)
 
 
 class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):

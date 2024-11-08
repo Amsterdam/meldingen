@@ -39,7 +39,7 @@ from meldingen.actions import (
     MeldingListAction,
     MeldingRetrieveAction,
     StaticFormListAction,
-    StaticFormRetrieveByTypeAction,
+    StaticFormRetrieveAction,
     StaticFormUpdateAction,
     UploadAttachmentAction,
     UserCreateAction,
@@ -374,10 +374,10 @@ def static_form_repository(session: Annotated[AsyncSession, Depends(database_ses
     return StaticFormRepository(session)
 
 
-def static_form_retrieve_by_type_action(
+def static_form_retrieve_action(
     repository: Annotated[StaticFormRepository, Depends(static_form_repository)]
-) -> StaticFormRetrieveByTypeAction:
-    return StaticFormRetrieveByTypeAction(repository)
+) -> StaticFormRetrieveAction:
+    return StaticFormRetrieveAction(repository)
 
 
 def static_form_update_action(
