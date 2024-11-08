@@ -34,7 +34,7 @@ async def _add_content_range_header(
 
 @router.get("/{static_form_id}", name="static-form:retrieve", responses={**not_found_response})
 async def retrieve_static_form(
-    static_form_id: Annotated[int, Path(description="The id of the static form.")],
+    static_form_id: Annotated[int, Path(description="The id of the static form.", ge=1)],
     action: Annotated[StaticFormRetrieveAction, Depends(static_form_retrieve_action)],
     produce_output_model: Annotated[StaticFormOutputFactory, Depends(static_form_output_factory)],
 ) -> StaticFormOutput:
