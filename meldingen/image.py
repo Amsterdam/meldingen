@@ -1,9 +1,10 @@
 import base64
 import hashlib
 import hmac
+from abc import ABCMeta, abstractmethod
 
 from httpx import AsyncClient
-from meldingen_core.image import BaseImageOptimizer
+from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from plugfs.filesystem import Filesystem
 from starlette.status import HTTP_200_OK
 
@@ -33,7 +34,12 @@ class IMGProxySignatureGenerator:
         return base64.urlsafe_b64encode(digest).decode().rstrip("=")
 
 
-class IMGProxyImageOptimizerUrlGenerator:
+class BaseIMGProxyUrlGenerator(metaclass=ABCMeta):
+    @abstractmethod
+    def __call__(self, image_path: str) -> str: ...
+
+
+class IMGProxyImageOptimizerUrlGenerator(BaseIMGProxyUrlGenerator):
     _generate_signature: IMGProxySignatureGenerator
     _imgproxy_base_url: str
 
@@ -41,38 +47,77 @@ class IMGProxyImageOptimizerUrlGenerator:
         self._generate_signature = signature_generator
         self._imgproxy_base_url = imgproxy_base_url
 
-    def __call__(self, image_url: str) -> str:
-        url_path = f"/f:webp/plain/{image_url}"
+    def __call__(self, image_path: str) -> str:
+        url_path = f"/f:webp/plain/{image_path}"
         signature = self._generate_signature(url_path)
 
         return f"{self._imgproxy_base_url}/{signature}{url_path}"
 
 
-class IMGProxyImageOptimizer(BaseImageOptimizer):
-    _generate_url: IMGProxyImageOptimizerUrlGenerator
-    _filesystem: Filesystem
-    _http_client: AsyncClient
+class IMGProxyThumbnailUrlGenerator(BaseIMGProxyUrlGenerator):
+    _generate_signature: IMGProxySignatureGenerator
+    _imgproxy_base_url: str
+    _width: int
+    _height: int
 
     def __init__(
-        self, url_generator: IMGProxyImageOptimizerUrlGenerator, filesystem: Filesystem, http_client: AsyncClient
+        self, signature_generator: IMGProxySignatureGenerator, imgproxy_base_url: str, width: int, height: int
     ):
-        self._generate_url = url_generator
-        self._filesystem = filesystem
-        self._http_client = http_client
+        self._generate_signature = signature_generator
+        self._imgproxy_base_url = imgproxy_base_url
+        self._width = width
+        self._height = height
 
-    async def __call__(self, image_path: str) -> str:
+    def __call__(self, image_path: str) -> str:
+        url_path = f"/rs:auto:{self._width}:{self._height}/f:webp/plain/{image_path}"
+        signature = self._generate_signature(url_path)
+
+        return f"{self._imgproxy_base_url}/{signature}{url_path}"
+
+
+class IMGProxyImageProcessor:
+    _generate_url: BaseIMGProxyUrlGenerator
+    _http_client: AsyncClient
+    _filesystem: Filesystem
+
+    def __init__(self, url_generator: BaseIMGProxyUrlGenerator, http_client: AsyncClient, filesystem: Filesystem):
+        self._generate_url = url_generator
+        self._http_client = http_client
+        self._filesystem = filesystem
+
+    async def __call__(self, image_path: str, suffix: str) -> str:
         imgproxy_url = self._generate_url(image_path)
 
         file_path, _ = image_path.rsplit(".", 1)
-        optimized_path = f"{file_path}-optimized.webp"
+        processed_path = f"{file_path}-{suffix}.webp"
 
         async with self._http_client.stream("GET", imgproxy_url) as response:
             if response.status_code != HTTP_200_OK:
                 raise ImageOptimizerException()
 
-            await self._filesystem.write_iterator(optimized_path, response.aiter_bytes())
+            await self._filesystem.write_iterator(processed_path, response.aiter_bytes())
 
-        return optimized_path
+        return processed_path
+
+
+class IMGProxyImageOptimizer(BaseImageOptimizer):
+    _process: IMGProxyImageProcessor
+
+    def __init__(self, img_proxy_processor: IMGProxyImageProcessor):
+        self._process = img_proxy_processor
+
+    async def __call__(self, image_path: str) -> str:
+        return await self._process(image_path, "optimized")
+
+
+class IMGProxyThumbnailGenerator(BaseThumbnailGenerator):
+    _process: IMGProxyImageProcessor
+
+    def __init__(self, img_proxy_processor: IMGProxyImageProcessor):
+        self._process = img_proxy_processor
+
+    async def __call__(self, image_path: str) -> str:
+        return await self._process(image_path, "thumbnail")
 
 
 class ImageOptimizerTask:
@@ -85,5 +130,19 @@ class ImageOptimizerTask:
 
     async def __call__(self, attachment: Attachment) -> None:
         attachment.optimized_path = await self._optimizer(attachment.file_path)
+
+        await self._repository.save(attachment)
+
+
+class ThumbnailGeneratorTask:
+    _thumbnail_generator: BaseThumbnailGenerator
+    _repository: AttachmentRepository
+
+    def __init__(self, thumbnail_generator: BaseThumbnailGenerator, repository: AttachmentRepository):
+        self._thumbnail_generator = thumbnail_generator
+        self._repository = repository
+
+    async def __call__(self, attachment: Attachment) -> None:
+        attachment.thumbnail_path = await self._thumbnail_generator(attachment.file_path)
 
         await self._repository.save(attachment)
