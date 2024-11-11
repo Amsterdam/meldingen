@@ -15,7 +15,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
 )
 from meldingen_core.classification import Classifier
-from meldingen_core.image import BaseImageOptimizer
+from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from plugfs.azure import AzureStorageBlobsAdapter
@@ -60,6 +60,9 @@ from meldingen.image import (
     IMGProxyImageOptimizerUrlGenerator,
     IMGProxyImageProcessor,
     IMGProxySignatureGenerator,
+    IMGProxyThumbnailGenerator,
+    IMGProxyThumbnailUrlGenerator,
+    ThumbnailGeneratorTask,
 )
 from meldingen.jsonlogic import JSONLogicValidator
 from meldingen.models import Melding
@@ -599,7 +602,7 @@ def img_proxy_image_optimizer_url_generator(
     return IMGProxyImageOptimizerUrlGenerator(signature_generator, settings.imgproxy_base_url)
 
 
-def img_proxy_processor(
+def img_proxy_image_optimizer_processor(
     url_generator: Annotated[IMGProxyImageOptimizerUrlGenerator, Depends(img_proxy_image_optimizer_url_generator)],
     http_client: Annotated[AsyncClient, Depends(http_client)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
@@ -607,12 +610,43 @@ def img_proxy_processor(
     return IMGProxyImageProcessor(url_generator, http_client, filesystem)
 
 
-def image_optimizer(processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_processor)]) -> BaseImageOptimizer:
+def image_optimizer(
+    processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_image_optimizer_processor)]
+) -> BaseImageOptimizer:
     return IMGProxyImageOptimizer(processor)
 
 
 def image_optimizer_task(
-    image_optimizer: Annotated[IMGProxyImageOptimizer, Depends(image_optimizer)],
+    image_optimizer: Annotated[BaseImageOptimizer, Depends(image_optimizer)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
 ) -> ImageOptimizerTask:
     return ImageOptimizerTask(image_optimizer, attachment_repository)
+
+
+def img_proxy_thumbnail_url_generator(
+    signature_generator: Annotated[IMGProxySignatureGenerator, Depends(img_proxy_signature_generator)],
+) -> IMGProxyThumbnailUrlGenerator:
+    return IMGProxyThumbnailUrlGenerator(
+        signature_generator, settings.imgproxy_base_url, settings.thumbnail_width, settings.thumbnail_height
+    )
+
+
+def img_proxy_thumbnail_processor(
+    url_generator: Annotated[IMGProxyThumbnailUrlGenerator, Depends(img_proxy_thumbnail_url_generator)],
+    http_client: Annotated[AsyncClient, Depends(http_client)],
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
+) -> IMGProxyImageProcessor:
+    return IMGProxyImageProcessor(url_generator, http_client, filesystem)
+
+
+def thumbnail_generator(
+    processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_thumbnail_processor)]
+) -> BaseThumbnailGenerator:
+    return IMGProxyThumbnailGenerator(processor)
+
+
+def thumbnail_generator_task(
+    thumbnail_generator: Annotated[BaseThumbnailGenerator, Depends(thumbnail_generator)],
+    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+) -> ThumbnailGeneratorTask:
+    return ThumbnailGeneratorTask(thumbnail_generator, attachment_repository)

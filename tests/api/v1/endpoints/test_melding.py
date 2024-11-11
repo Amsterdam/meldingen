@@ -1053,9 +1053,12 @@ class TestMeldingUploadAttachment:
 
         assert attachments[0].original_filename == filename
 
-        optimized_path, _ = attachments[0].file_path.rsplit(".", 1)
-        optimized_path = f"{optimized_path}-optimized.webp"
+        split_path, _ = attachments[0].file_path.rsplit(".", 1)
+        optimized_path = f"{split_path}-optimized.webp"
         assert attachments[0].optimized_path == optimized_path
+
+        thumbnail_path = f"{split_path}-thumbnail.webp"
+        assert attachments[0].thumbnail_path == thumbnail_path
 
         blob_client = container_client.get_blob_client(attachments[0].file_path)
         async with blob_client:

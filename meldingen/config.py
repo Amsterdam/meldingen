@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     azure_storage_url: HttpUrl
     azure_container: str
 
+    # thumbnail
+    thumbnail_width: int = 150
+    thumbnail_height: int = 150
+
 
 # Create an instance of the Settings model
 settings = Settings()
