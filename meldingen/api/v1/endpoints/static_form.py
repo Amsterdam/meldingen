@@ -15,7 +15,6 @@ from meldingen.dependencies import (
     static_form_retrieve_action,
     static_form_update_action,
 )
-from meldingen.models import StaticFormTypeEnum
 from meldingen.output_schemas import StaticFormOutput
 from meldingen.repositories import StaticFormRepository
 from meldingen.schema_factories import StaticFormOutputFactory
@@ -47,7 +46,7 @@ async def retrieve_static_form(
 
 
 @router.put(
-    "/{form_type}",
+    "/{static_form_id}",
     name="static-form:update",
     responses={
         **unauthorized_response,
@@ -56,12 +55,12 @@ async def retrieve_static_form(
     dependencies=[Depends(authenticate_user)],
 )
 async def update_static_form(
-    form_type: Annotated[StaticFormTypeEnum, Path(description="The type of the static form.")],
+    static_form_id: Annotated[int, Path(description="The id of the static form.", ge=1)],
     form_input: StaticFormInput,
     action: Annotated[StaticFormUpdateAction, Depends(static_form_update_action)],
     produce_output_model: Annotated[StaticFormOutputFactory, Depends(static_form_output_factory)],
 ) -> StaticFormOutput:
-    db_form = await action(form_type, form_input)
+    db_form = await action(static_form_id, form_input)
 
     return await produce_output_model(db_form)
 

@@ -1,8 +1,6 @@
 import asyncio
-from typing import Annotated
 
 import typer
-from meldingen_core.exceptions import NotFoundException
 from rich import print
 
 from meldingen.dependencies import database_engine, database_session, database_session_manager
@@ -21,6 +19,8 @@ app = typer.Typer()
 async def async_create_static_forms() -> None:
     async for session in database_session(database_session_manager(database_engine())):
         static_form_repository = StaticFormRepository(session)
+        current_forms = await static_form_repository.list()
+        current_form_types = [form.type for form in current_forms]
 
         for form_type in StaticFormTypeEnum:
             """
@@ -28,13 +28,9 @@ async def async_create_static_forms() -> None:
             Needs to be done more precise later.
             """
 
-            try:
-                await static_form_repository.retrieve_by_type(StaticFormTypeEnum[form_type])
+            if form_type in current_form_types:
                 print(f"[red]Error[/red] - The {form_type} form already exists")
                 continue
-            except NotFoundException:
-                # The primary from does not exist, let's create it!
-                ...
 
             label = form_type.capitalize()
 
@@ -59,7 +55,7 @@ async def async_create_static_forms() -> None:
 
             await static_form_repository.save(form)
 
-        print("[green]Success[/green] - The primary form has been created")
+            print(f"[green]Success[/green] - The {form_type} form has been created")
 
 
 @app.command()
