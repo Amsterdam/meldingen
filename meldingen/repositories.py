@@ -205,16 +205,6 @@ class StaticFormRepository(BaseSQLAlchemyRepository[StaticForm, StaticForm]):
     def get_model_type(self) -> type[StaticForm]:
         return StaticForm
 
-    async def retrieve_by_type(self, form_type: StaticFormTypeEnum) -> StaticForm:
-        _type = self.get_model_type()
-        statement = select(_type).where(_type.type == form_type)
-
-        result = await self._session.execute(statement)
-        try:
-            return result.scalars().one()
-        except NoResultFound:
-            raise NotFoundException()
-
 
 class QuestionRepository(BaseSQLAlchemyRepository[Question, Question], BaseQuestionRepository):
     def get_model_type(self) -> type[Question]:

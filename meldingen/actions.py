@@ -485,10 +485,10 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
 
         parent_components.reorder()
 
-    async def __call__(self, form_type: StaticFormTypeEnum, form_input: StaticFormInput) -> StaticForm:
-        try:
-            obj = await self._repository.retrieve_by_type(form_type=form_type)
-        except NotFoundException:
+    async def __call__(self, form_id: int, form_input: StaticFormInput) -> StaticForm:
+        obj = await self._repository.retrieve(pk=form_id)
+
+        if obj is None:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
         form_data = form_input.model_dump(exclude_unset=True, by_alias=True)
