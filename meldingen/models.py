@@ -365,3 +365,4 @@ class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     melding: Mapped[Melding] = relationship()
 
     optimized_path: Mapped[str | None] = mapped_column(String(), default=None)
+    thumbnail_path: Mapped[str | None] = mapped_column(String(), default=None)
