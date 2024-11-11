@@ -58,6 +58,7 @@ from meldingen.image import (
     ImageOptimizerTask,
     IMGProxyImageOptimizer,
     IMGProxyImageOptimizerUrlGenerator,
+    IMGProxyImageProcessor,
     IMGProxySignatureGenerator,
 )
 from meldingen.jsonlogic import JSONLogicValidator
@@ -598,12 +599,16 @@ def img_proxy_image_optimizer_url_generator(
     return IMGProxyImageOptimizerUrlGenerator(signature_generator, settings.imgproxy_base_url)
 
 
-def image_optimizer(
+def img_proxy_processor(
     url_generator: Annotated[IMGProxyImageOptimizerUrlGenerator, Depends(img_proxy_image_optimizer_url_generator)],
-    filesystem: Annotated[Filesystem, Depends(filesystem)],
     http_client: Annotated[AsyncClient, Depends(http_client)],
-) -> BaseImageOptimizer:
-    return IMGProxyImageOptimizer(url_generator, filesystem, http_client)
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
+) -> IMGProxyImageProcessor:
+    return IMGProxyImageProcessor(url_generator, http_client, filesystem)
+
+
+def image_optimizer(processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_processor)]) -> BaseImageOptimizer:
+    return IMGProxyImageOptimizer(processor)
 
 
 def image_optimizer_task(
