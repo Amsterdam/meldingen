@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from fastapi import BackgroundTasks
 from httpx import AsyncClient, Response
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from plugfs.filesystem import Filesystem
@@ -14,6 +15,7 @@ from meldingen.image import (
     IMGProxySignatureGenerator,
     IMGProxyThumbnailGenerator,
     IMGProxyThumbnailUrlGenerator,
+    Ingestor,
     ThumbnailGeneratorTask,
 )
 from meldingen.models import Attachment, Melding
@@ -159,3 +161,17 @@ async def test_thumbnail_generator_task() -> None:
 
     assert attachment.thumbnail_path == thumbnail_path
     repository.save.assert_awaited_once_with(attachment)
+
+
+@pytest.mark.anyio
+async def test_ingestor() -> None:
+    task_manager = Mock(BackgroundTasks)
+    optimizer_task = Mock(ImageOptimizerTask)
+    thumbnail_task = Mock(ThumbnailGeneratorTask)
+    attachment = Attachment(original_filename="image.jpg", melding=Mock(Melding))
+    ingest = Ingestor(task_manager, optimizer_task, thumbnail_task)
+
+    await ingest(attachment)
+
+    task_manager.add_task.assert_any_call(optimizer_task, attachment=attachment)
+    task_manager.add_task.assert_any_call(thumbnail_task, attachment=attachment)

@@ -3,8 +3,9 @@ import hashlib
 import hmac
 from abc import ABCMeta, abstractmethod
 
+from fastapi import BackgroundTasks
 from httpx import AsyncClient
-from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
+from meldingen_core.image import BaseImageOptimizer, BaseIngestor, BaseThumbnailGenerator
 from plugfs.filesystem import Filesystem
 from starlette.status import HTTP_200_OK
 
@@ -146,3 +147,23 @@ class ThumbnailGeneratorTask:
         attachment.thumbnail_path = await self._thumbnail_generator(attachment.file_path)
 
         await self._repository.save(attachment)
+
+
+class Ingestor(BaseIngestor[Attachment]):
+    _background_task_manager: BackgroundTasks
+    _image_optimizer_task: ImageOptimizerTask
+    _thumbnail_generator_task: ThumbnailGeneratorTask
+
+    def __init__(
+        self,
+        background_task_manager: BackgroundTasks,
+        image_optimizer_task: ImageOptimizerTask,
+        thumbnail_generator_task: ThumbnailGeneratorTask,
+    ):
+        self._background_task_manager = background_task_manager
+        self._image_optimizer_task = image_optimizer_task
+        self._thumbnail_generator_task = thumbnail_generator_task
+
+    async def __call__(self, attachment: Attachment) -> None:
+        self._background_task_manager.add_task(self._image_optimizer_task, attachment=attachment)
+        self._background_task_manager.add_task(self._thumbnail_generator_task, attachment=attachment)
