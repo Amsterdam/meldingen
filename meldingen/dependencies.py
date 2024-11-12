@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import Annotated, AsyncIterator
 
 from azure.storage.blob.aio import ContainerClient
-from fastapi import Depends
+from fastapi import BackgroundTasks, Depends
 from httpx import AsyncClient
 from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.melding import (
@@ -62,6 +62,7 @@ from meldingen.image import (
     IMGProxySignatureGenerator,
     IMGProxyThumbnailGenerator,
     IMGProxyThumbnailUrlGenerator,
+    Ingestor,
     ThumbnailGeneratorTask,
 )
 from meldingen.jsonlogic import JSONLogicValidator
@@ -330,6 +331,78 @@ def media_type_integrity_validator() -> MediaTypeIntegrityValidator:
     return MediaTypeIntegrityValidator()
 
 
+def img_proxy_signature_generator() -> IMGProxySignatureGenerator:
+    return IMGProxySignatureGenerator(settings.imgproxy_key, settings.imgproxy_salt)
+
+
+def http_client() -> AsyncClient:
+    return AsyncClient()
+
+
+def img_proxy_image_optimizer_url_generator(
+    signature_generator: Annotated[IMGProxySignatureGenerator, Depends(img_proxy_signature_generator)],
+) -> IMGProxyImageOptimizerUrlGenerator:
+    return IMGProxyImageOptimizerUrlGenerator(signature_generator, settings.imgproxy_base_url)
+
+
+def img_proxy_image_optimizer_processor(
+    url_generator: Annotated[IMGProxyImageOptimizerUrlGenerator, Depends(img_proxy_image_optimizer_url_generator)],
+    http_client: Annotated[AsyncClient, Depends(http_client)],
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
+) -> IMGProxyImageProcessor:
+    return IMGProxyImageProcessor(url_generator, http_client, filesystem)
+
+
+def image_optimizer(
+    processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_image_optimizer_processor)]
+) -> BaseImageOptimizer:
+    return IMGProxyImageOptimizer(processor)
+
+
+def image_optimizer_task(
+    image_optimizer: Annotated[BaseImageOptimizer, Depends(image_optimizer)],
+    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+) -> ImageOptimizerTask:
+    return ImageOptimizerTask(image_optimizer, attachment_repository)
+
+
+def img_proxy_thumbnail_url_generator(
+    signature_generator: Annotated[IMGProxySignatureGenerator, Depends(img_proxy_signature_generator)],
+) -> IMGProxyThumbnailUrlGenerator:
+    return IMGProxyThumbnailUrlGenerator(
+        signature_generator, settings.imgproxy_base_url, settings.thumbnail_width, settings.thumbnail_height
+    )
+
+
+def img_proxy_thumbnail_processor(
+    url_generator: Annotated[IMGProxyThumbnailUrlGenerator, Depends(img_proxy_thumbnail_url_generator)],
+    http_client: Annotated[AsyncClient, Depends(http_client)],
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
+) -> IMGProxyImageProcessor:
+    return IMGProxyImageProcessor(url_generator, http_client, filesystem)
+
+
+def thumbnail_generator(
+    processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_thumbnail_processor)]
+) -> BaseThumbnailGenerator:
+    return IMGProxyThumbnailGenerator(processor)
+
+
+def thumbnail_generator_task(
+    thumbnail_generator: Annotated[BaseThumbnailGenerator, Depends(thumbnail_generator)],
+    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+) -> ThumbnailGeneratorTask:
+    return ThumbnailGeneratorTask(thumbnail_generator, attachment_repository)
+
+
+def attachment_ingestor(
+    background_task_manager: BackgroundTasks,
+    optimizer_task: Annotated[ImageOptimizerTask, Depends(image_optimizer_task)],
+    thumbnail_task: Annotated[ThumbnailGeneratorTask, Depends(thumbnail_generator_task)],
+) -> Ingestor:
+    return Ingestor(background_task_manager, optimizer_task, thumbnail_task)
+
+
 def melding_upload_attachment_action(
     factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
     repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
@@ -337,6 +410,7 @@ def melding_upload_attachment_action(
     token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
     media_type_validator: Annotated[MediaTypeValidator, Depends(media_type_validator)],
     media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
+    ingestor: Annotated[Ingestor, Depends(attachment_ingestor)],
 ) -> UploadAttachmentAction:
     return UploadAttachmentAction(
         factory,
@@ -345,6 +419,7 @@ def melding_upload_attachment_action(
         token_verifier,
         media_type_validator,
         media_type_integrity_validator,
+        ingestor,
         str(settings.attachment_storage_base_directory),
     )
 
@@ -586,67 +661,3 @@ def user_update_action(repository: Annotated[UserRepository, Depends(user_reposi
 
 def user_delete_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserDeleteAction:
     return UserDeleteAction(repository)
-
-
-def img_proxy_signature_generator() -> IMGProxySignatureGenerator:
-    return IMGProxySignatureGenerator(settings.imgproxy_key, settings.imgproxy_salt)
-
-
-def http_client() -> AsyncClient:
-    return AsyncClient()
-
-
-def img_proxy_image_optimizer_url_generator(
-    signature_generator: Annotated[IMGProxySignatureGenerator, Depends(img_proxy_signature_generator)],
-) -> IMGProxyImageOptimizerUrlGenerator:
-    return IMGProxyImageOptimizerUrlGenerator(signature_generator, settings.imgproxy_base_url)
-
-
-def img_proxy_image_optimizer_processor(
-    url_generator: Annotated[IMGProxyImageOptimizerUrlGenerator, Depends(img_proxy_image_optimizer_url_generator)],
-    http_client: Annotated[AsyncClient, Depends(http_client)],
-    filesystem: Annotated[Filesystem, Depends(filesystem)],
-) -> IMGProxyImageProcessor:
-    return IMGProxyImageProcessor(url_generator, http_client, filesystem)
-
-
-def image_optimizer(
-    processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_image_optimizer_processor)]
-) -> BaseImageOptimizer:
-    return IMGProxyImageOptimizer(processor)
-
-
-def image_optimizer_task(
-    image_optimizer: Annotated[BaseImageOptimizer, Depends(image_optimizer)],
-    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-) -> ImageOptimizerTask:
-    return ImageOptimizerTask(image_optimizer, attachment_repository)
-
-
-def img_proxy_thumbnail_url_generator(
-    signature_generator: Annotated[IMGProxySignatureGenerator, Depends(img_proxy_signature_generator)],
-) -> IMGProxyThumbnailUrlGenerator:
-    return IMGProxyThumbnailUrlGenerator(
-        signature_generator, settings.imgproxy_base_url, settings.thumbnail_width, settings.thumbnail_height
-    )
-
-
-def img_proxy_thumbnail_processor(
-    url_generator: Annotated[IMGProxyThumbnailUrlGenerator, Depends(img_proxy_thumbnail_url_generator)],
-    http_client: Annotated[AsyncClient, Depends(http_client)],
-    filesystem: Annotated[Filesystem, Depends(filesystem)],
-) -> IMGProxyImageProcessor:
-    return IMGProxyImageProcessor(url_generator, http_client, filesystem)
-
-
-def thumbnail_generator(
-    processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_thumbnail_processor)]
-) -> BaseThumbnailGenerator:
-    return IMGProxyThumbnailGenerator(processor)
-
-
-def thumbnail_generator_task(
-    thumbnail_generator: Annotated[BaseThumbnailGenerator, Depends(thumbnail_generator)],
-    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-) -> ThumbnailGeneratorTask:
-    return ThumbnailGeneratorTask(thumbnail_generator, attachment_repository)
