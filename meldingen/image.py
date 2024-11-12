@@ -2,6 +2,8 @@ import base64
 import hashlib
 import hmac
 from abc import ABCMeta, abstractmethod
+from typing import AsyncIterator
+from uuid import uuid4
 
 from fastapi import BackgroundTasks
 from httpx import AsyncClient
@@ -150,20 +152,32 @@ class ThumbnailGeneratorTask:
 
 
 class Ingestor(BaseIngestor[Attachment]):
+    _filesystem: Filesystem
     _background_task_manager: BackgroundTasks
     _image_optimizer_task: ImageOptimizerTask
     _thumbnail_generator_task: ThumbnailGeneratorTask
+    _base_directory: str
 
     def __init__(
         self,
+        filesystem: Filesystem,
         background_task_manager: BackgroundTasks,
         image_optimizer_task: ImageOptimizerTask,
         thumbnail_generator_task: ThumbnailGeneratorTask,
+        base_directory: str,
     ):
+        self._filesystem = filesystem
         self._background_task_manager = background_task_manager
         self._image_optimizer_task = image_optimizer_task
         self._thumbnail_generator_task = thumbnail_generator_task
+        self._base_directory = base_directory
 
-    async def __call__(self, attachment: Attachment) -> None:
+    async def __call__(self, attachment: Attachment, data: AsyncIterator[bytes]) -> None:
+        path = f"{self._base_directory}/{str(uuid4()).replace("-", "/")}/"
+        attachment.file_path = path + attachment.original_filename
+
+        await self._filesystem.makedirs(path)
+        await self._filesystem.write_iterator(attachment.file_path, data)
+
         self._background_task_manager.add_task(self._image_optimizer_task, attachment=attachment)
         self._background_task_manager.add_task(self._thumbnail_generator_task, attachment=attachment)

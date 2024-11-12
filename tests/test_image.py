@@ -1,3 +1,4 @@
+from typing import AsyncIterator
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -165,13 +166,22 @@ async def test_thumbnail_generator_task() -> None:
 
 @pytest.mark.anyio
 async def test_ingestor() -> None:
+    filesystem = Mock(Filesystem)
     task_manager = Mock(BackgroundTasks)
     optimizer_task = Mock(ImageOptimizerTask)
     thumbnail_task = Mock(ThumbnailGeneratorTask)
     attachment = Attachment(original_filename="image.jpg", melding=Mock(Melding))
-    ingest = Ingestor(task_manager, optimizer_task, thumbnail_task)
+    ingest = Ingestor(filesystem, task_manager, optimizer_task, thumbnail_task, "/tmp")
 
-    await ingest(attachment)
+    async def iterate() -> AsyncIterator[bytes]:
+        for chunk in [b"Hello", b"World", b"!", b"!", b"!", b"!"]:
+            yield chunk
 
+    iterator = iterate()
+
+    await ingest(attachment, iterator)
+
+    filesystem.makedirs.assert_awaited_once()
+    filesystem.write_iterator.assert_awaited_once_with(attachment.file_path, iterator)
     task_manager.add_task.assert_any_call(optimizer_task, attachment=attachment)
     task_manager.add_task.assert_any_call(thumbnail_task, attachment=attachment)

@@ -396,17 +396,23 @@ def thumbnail_generator_task(
 
 
 def attachment_ingestor(
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
     background_task_manager: BackgroundTasks,
     optimizer_task: Annotated[ImageOptimizerTask, Depends(image_optimizer_task)],
     thumbnail_task: Annotated[ThumbnailGeneratorTask, Depends(thumbnail_generator_task)],
 ) -> Ingestor:
-    return Ingestor(background_task_manager, optimizer_task, thumbnail_task)
+    return Ingestor(
+        filesystem,
+        background_task_manager,
+        optimizer_task,
+        thumbnail_task,
+        str(settings.attachment_storage_base_directory),
+    )
 
 
 def melding_upload_attachment_action(
     factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
     repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-    filesystem: Annotated[Filesystem, Depends(filesystem)],
     token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
     media_type_validator: Annotated[MediaTypeValidator, Depends(media_type_validator)],
     media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
@@ -415,12 +421,10 @@ def melding_upload_attachment_action(
     return UploadAttachmentAction(
         factory,
         repository,
-        filesystem,
         token_verifier,
         media_type_validator,
         media_type_integrity_validator,
         ingestor,
-        str(settings.attachment_storage_base_directory),
     )
 
 
