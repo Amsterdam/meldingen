@@ -1744,7 +1744,7 @@ structlog = "^24.1.0"
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "feat/attachment-ingestor"
-resolved_reference = "99e5d697f7dfa352c52f1ac2321de6b3b6ef9e5c"
+resolved_reference = "627f334d5f4689f464159f2205f4ca50f07367be"
 
 [[package]]
 name = "mergedeep"
