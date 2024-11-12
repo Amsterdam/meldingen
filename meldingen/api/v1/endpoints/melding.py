@@ -1,7 +1,7 @@
 from typing import Annotated, AsyncIterator
 
 import structlog
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query, Response, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.actions.melding import (
@@ -46,7 +46,6 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
-    image_optimizer_task,
     melding_add_attachments_action,
     melding_answer_create_action,
     melding_answer_questions_action,
@@ -61,11 +60,9 @@ from meldingen.dependencies import (
     melding_retrieve_action,
     melding_update_action,
     melding_upload_attachment_action,
-    thumbnail_generator_task,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
-from meldingen.image import ImageOptimizerTask, ThumbnailGeneratorTask
-from meldingen.models import Attachment, Melding, User
+from meldingen.models import Attachment, Melding
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas import (
     AnswerInput,
@@ -377,9 +374,6 @@ async def upload_attachment(
     token: Annotated[str, Query(description="The token of the melding.")],
     file: UploadFile,
     action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action)],
-    background_tasks: BackgroundTasks,
-    image_optimizer_task: Annotated[ImageOptimizerTask, Depends(image_optimizer_task)],
-    thumbnail_generator_task: Annotated[ThumbnailGeneratorTask, Depends(thumbnail_generator_task)],
 ) -> AttachmentOutput:
     # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
     # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
@@ -405,9 +399,6 @@ async def upload_attachment(
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST, detail="Media type of data does not match provided media type"
         )
-
-    background_tasks.add_task(image_optimizer_task, attachment=attachment)
-    background_tasks.add_task(thumbnail_generator_task, attachment=attachment)
 
     return _hydrate_attachment_output(attachment)
 
