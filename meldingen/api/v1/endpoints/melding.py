@@ -61,9 +61,10 @@ from meldingen.dependencies import (
     melding_retrieve_action,
     melding_update_action,
     melding_upload_attachment_action,
+    thumbnail_generator_task,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
-from meldingen.image import ImageOptimizerTask
+from meldingen.image import ImageOptimizerTask, ThumbnailGeneratorTask
 from meldingen.models import Attachment, Melding, User
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas import (
@@ -378,6 +379,7 @@ async def upload_attachment(
     action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action)],
     background_tasks: BackgroundTasks,
     image_optimizer_task: Annotated[ImageOptimizerTask, Depends(image_optimizer_task)],
+    thumbnail_generator_task: Annotated[ThumbnailGeneratorTask, Depends(thumbnail_generator_task)],
 ) -> AttachmentOutput:
     # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
     # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
@@ -405,6 +407,7 @@ async def upload_attachment(
         )
 
     background_tasks.add_task(image_optimizer_task, attachment=attachment)
+    background_tasks.add_task(thumbnail_generator_task, attachment=attachment)
 
     return _hydrate_attachment_output(attachment)
 
