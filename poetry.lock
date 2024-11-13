@@ -1743,8 +1743,8 @@ structlog = "^24.1.0"
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feat/attachment-ingestor"
-resolved_reference = "5a466ef78c24406cc939539384e02fe6d128f77c"
+reference = "HEAD"
+resolved_reference = "cae44964f36fd07f397a380d8b4a0a4bb7623dbc"
 
 [[package]]
 name = "mergedeep"
@@ -3584,4 +3584,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "d31c08044890acc1e7f690d47e14e202716c62d827ffeb5a95df04122ae18c82"
+content-hash = "ea5d41718becdf88fb66caf7e38f637afa10936933b5ae8981773d926b5ea41c"
