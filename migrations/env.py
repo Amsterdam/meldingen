@@ -3,10 +3,10 @@ from logging.config import fileConfig
 
 import alembic_postgresql_enum
 from alembic import context
+from geoalchemy2 import alembic_helpers
 from sqlalchemy import Connection, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlalchemy.sql.schema import SchemaItem
-from geoalchemy2 import alembic_helpers
 
 from meldingen import models
 from meldingen.config import settings
