@@ -1480,6 +1480,56 @@ class TestMeldingDownloadAttachment:
         assert response.status_code == HTTP_200_OK
         assert response.text == "some data"
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_download_thumbnail_attachment_not_found(
+        self, app: FastAPI, client: AsyncClient, attachment: Attachment
+    ) -> None:
+        melding = await attachment.awaitable_attrs.melding
+
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=attachment.id),
+            params={"token": "supersecuretoken", "type": "thumbnail"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_download_thumbnail_attachment(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        attachment: Attachment,
+        container_client: ContainerClient,
+        db_session: AsyncSession,
+    ) -> None:
+        attachment.thumbnail_path = f"/tmp/{uuid4()}/thumbnail.webp"
+        db_session.add(attachment)
+        await db_session.commit()
+
+        blob_client = container_client.get_blob_client(attachment.thumbnail_path)
+        async with blob_client:
+            await blob_client.upload_blob(b"some data")
+
+        melding = await attachment.awaitable_attrs.melding
+
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, attachment_id=attachment.id),
+            params={"token": "supersecuretoken", "type": "thumbnail"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        assert response.text == "some data"
+
 
 class TestMeldingListAttachments:
     ROUTE_NAME: Final[str] = "melding:attachments"
