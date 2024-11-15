@@ -47,7 +47,6 @@ from meldingen.models import (
     Melding,
     Question,
     StaticForm,
-    StaticFormTypeEnum,
     User,
 )
 from meldingen.repositories import (

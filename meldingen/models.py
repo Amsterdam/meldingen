@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from typing import Any, Final, Optional, Union
 
-from geoalchemy2 import Geometry, WKBElement
+from geoalchemy2 import Geometry
 from meldingen_core.models import Answer as BaseAnswer
 from meldingen_core.models import Attachment as BaseAttachment
 from meldingen_core.models import Classification as BaseClassification
