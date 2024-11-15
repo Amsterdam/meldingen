@@ -46,7 +46,6 @@ async def test_database(anyio_backend: str, db_engine: AsyncEngine) -> None:
     async with db_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
     async with db_engine.begin() as conn:
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
         await conn.run_sync(BaseDBModel.metadata.create_all)
 
 

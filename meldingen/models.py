@@ -48,7 +48,7 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
         back_populates="melding",
         default_factory=list,
     )
-    geo_location: Mapped[WKBElement | None] = mapped_column(
+    geo_location: Mapped[Geometry | None] = mapped_column(
         Geometry(geometry_type="GEOMETRY", srid=4326), default=None  # WGS84
     )
 

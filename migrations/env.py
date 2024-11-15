@@ -65,23 +65,6 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def _include_object(
-    obj: SchemaItem,
-    name: str | None = None,
-    type_: str = "",
-    reflected: bool = False,
-    compare_to: SchemaItem | None = None,
-) -> bool:
-    """Determine whether to include an object based on its attributes.
-
-    The 'spatial_refs_sys' table is needed for postgis so Alembic should not drop this table
-
-    """
-    if type_ == "table" and name == "spatial_ref_sys":
-        return False
-    return True
-
-
 def do_run_migrations(connection: Connection) -> None:
     context.configure(
         connection=connection,
