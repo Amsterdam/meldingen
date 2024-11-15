@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
-from sqlalchemy import NullPool
+from sqlalchemy import NullPool, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.compiler import DDLCompiler
@@ -46,6 +46,7 @@ async def test_database(anyio_backend: str, db_engine: AsyncEngine) -> None:
     async with db_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
     async with db_engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
         await conn.run_sync(BaseDBModel.metadata.create_all)
 
 

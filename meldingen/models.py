@@ -16,7 +16,7 @@ from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum, Foreign
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
-
+from geoalchemy2 import Geometry, WKBElement
 
 class BaseDBModel(MappedAsDataclass, DeclarativeBase):
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
@@ -46,6 +46,13 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
         cascade="save-update, merge, delete, delete-orphan",
         back_populates="melding",
         default_factory=list,
+    )
+    geo_location: Mapped[WKBElement | None] = mapped_column(
+        Geometry(
+            geometry_type="GEOMETRY",
+            srid=4326 # WGS84
+        )
+        , default=None
     )
 
 
