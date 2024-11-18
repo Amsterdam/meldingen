@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_404_NOT_FOUND
 
-from meldingen.actions import StaticFormListAction, StaticFormRetrieveByTypeAction, StaticFormUpdateAction
+from meldingen.actions import StaticFormListAction, StaticFormRetrieveAction, StaticFormUpdateAction
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
@@ -12,10 +12,9 @@ from meldingen.dependencies import (
     static_form_list_action,
     static_form_output_factory,
     static_form_repository,
-    static_form_retrieve_by_type_action,
+    static_form_retrieve_action,
     static_form_update_action,
 )
-from meldingen.models import StaticFormTypeEnum
 from meldingen.output_schemas import StaticFormOutput
 from meldingen.repositories import StaticFormRepository
 from meldingen.schema_factories import StaticFormOutputFactory
@@ -32,22 +31,22 @@ async def _add_content_range_header(
     await ContentRangeHeaderAdder(repo, "StaticForm")(response, pagination)
 
 
-@router.get("/{form_type}", name="static-form:retrieve-by-type", responses={**not_found_response})
+@router.get("/{static_form_id}", name="static-form:retrieve", responses={**not_found_response})
 async def retrieve_static_form(
-    form_type: Annotated[StaticFormTypeEnum, Path(description="The type of the static form.")],
-    action: Annotated[StaticFormRetrieveByTypeAction, Depends(static_form_retrieve_by_type_action)],
+    static_form_id: Annotated[int, Path(description="The id of the static form.", ge=1)],
+    action: Annotated[StaticFormRetrieveAction, Depends(static_form_retrieve_action)],
     produce_output_model: Annotated[StaticFormOutputFactory, Depends(static_form_output_factory)],
 ) -> StaticFormOutput:
-    try:
-        db_form = await action(form_type)
-    except NotFoundException:
+    db_form = await action(static_form_id)
+
+    if db_form is None:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return await produce_output_model(db_form)
 
 
 @router.put(
-    "/{form_type}",
+    "/{static_form_id}",
     name="static-form:update",
     responses={
         **unauthorized_response,
@@ -56,12 +55,12 @@ async def retrieve_static_form(
     dependencies=[Depends(authenticate_user)],
 )
 async def update_static_form(
-    form_type: Annotated[StaticFormTypeEnum, Path(description="The type of the static form.")],
+    static_form_id: Annotated[int, Path(description="The id of the static form.", ge=1)],
     form_input: StaticFormInput,
     action: Annotated[StaticFormUpdateAction, Depends(static_form_update_action)],
     produce_output_model: Annotated[StaticFormOutputFactory, Depends(static_form_output_factory)],
 ) -> StaticFormOutput:
-    db_form = await action(form_type, form_input)
+    db_form = await action(static_form_id, form_input)
 
     return await produce_output_model(db_form)
 

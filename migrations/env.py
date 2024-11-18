@@ -3,6 +3,7 @@ from logging.config import fileConfig
 
 import alembic_postgresql_enum
 from alembic import context
+from geoalchemy2 import alembic_helpers
 from sqlalchemy import Connection, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlalchemy.sql.schema import SchemaItem
@@ -55,27 +56,13 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=alembic_helpers.include_object,
+        process_revision_directives=alembic_helpers.writer,
+        render_item=alembic_helpers.render_item,
     )
 
     with context.begin_transaction():
         context.run_migrations()
-
-
-def _include_object(
-    obj: SchemaItem,
-    name: str | None = None,
-    type_: str = "",
-    reflected: bool = False,
-    compare_to: SchemaItem | None = None,
-) -> bool:
-    """Determine whether to include an object based on its attributes.
-
-    The 'spatial_refs_sys' table is needed for postgis so Alembic should not drop this table
-
-    """
-    if type_ == "table" and name == "spatial_ref_sys":
-        return False
-    return True
 
 
 def do_run_migrations(connection: Connection) -> None:
@@ -85,7 +72,9 @@ def do_run_migrations(connection: Connection) -> None:
         compare_type=True,
         compare_server_default=True,
         include_schemas=True,
-        include_object=_include_object,
+        include_object=alembic_helpers.include_object,
+        process_revision_directives=alembic_helpers.writer,
+        render_item=alembic_helpers.render_item,
     )
 
     with context.begin_transaction():

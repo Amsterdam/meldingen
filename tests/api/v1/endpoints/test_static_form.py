@@ -19,14 +19,13 @@ class BaseStaticFormTest(BaseFormTest):
         assert data.get("question") is None
 
 
-class TestStaticFormRetrieveByType(BaseStaticFormTest):
-    ROUTE_NAME: Final[str] = "static-form:retrieve-by-type"
+class TestStaticFormRetrieve(BaseStaticFormTest):
+    ROUTE_NAME: Final[str] = "static-form:retrieve"
     METHOD: Final[str] = "GET"
 
     @pytest.mark.anyio
-    async def test_retrieve_primary_form(self, app: FastAPI, client: AsyncClient, primary_form: StaticForm) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_type=StaticFormTypeEnum.primary))
-
+    async def test_retrieve_by_id(self, app: FastAPI, client: AsyncClient, primary_form: StaticForm) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, static_form_id=primary_form.id))
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
@@ -51,8 +50,8 @@ class TestStaticFormRetrieveByType(BaseStaticFormTest):
         assert component.max_char_count == data_component.get("maxCharCount")
 
     @pytest.mark.anyio
-    async def test_retrieve_primary_form_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_type=StaticFormTypeEnum.primary))
+    async def test_retrieve_by_id_does_not_exists(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, static_form_id=99999))
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
@@ -63,7 +62,7 @@ class TestStaticFormRetrieveByType(BaseStaticFormTest):
 class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
     ROUTE_NAME: Final[str] = "static-form:update"
     METHOD: Final[str] = "PUT"
-    PATH_PARAMS: dict[str, Any] = {"form_type": StaticFormTypeEnum.primary}
+    PATH_PARAMS: dict[str, Any] = {"static_form_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -109,7 +108,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert primary_form.title != new_data["title"]
         assert primary_form.display != new_data["display"]
 
-        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_type=primary_form.type), json=new_data)
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, static_form_id=primary_form.id), json=new_data)
 
         assert response.status_code == HTTP_200_OK
 
@@ -257,7 +256,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             ],
         }
 
-        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_type=primary_form.type), json=data)
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, static_form_id=primary_form.id), json=data)
 
         assert response.status_code == HTTP_200_OK
 
@@ -298,7 +297,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert primary_form.title != new_data["title"]
         assert primary_form.display != new_data["display"]
 
-        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_type=primary_form.type), json=new_data)
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, static_form_id=primary_form.id), json=new_data)
 
         assert response.status_code == HTTP_200_OK
 
@@ -352,9 +351,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                 }
             ],
         }
-        response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, form_type=StaticFormTypeEnum.primary), json=new_data
-        )
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, static_form_id=9999), json=new_data)
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
@@ -419,7 +416,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             ],
         }
 
-        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_type=primary_form.type), json=new_data)
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, static_form_id=primary_form.id), json=new_data)
 
         assert response.status_code == HTTP_200_OK
 
@@ -458,7 +455,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             ],
         }
 
-        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_type=primary_form.type), json=data)
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, static_form_id=primary_form.id), json=data)
 
         assert response.status_code == HTTP_200_OK
 

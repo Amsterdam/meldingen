@@ -3,6 +3,7 @@ from typing import Annotated, AsyncIterator
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
+from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
@@ -61,7 +62,7 @@ from meldingen.dependencies import (
     melding_upload_attachment_action,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
-from meldingen.models import Attachment, Melding, User
+from meldingen.models import Attachment, Melding
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas import (
     AnswerInput,
@@ -411,13 +412,20 @@ async def upload_attachment(
     },
 )
 async def download_attachment(
+    action: Annotated[DownloadAttachmentAction, Depends(melding_download_attachment_action)],
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[DownloadAttachmentAction, Depends(melding_download_attachment_action)],
+    _type: Annotated[
+        AttachmentTypes,
+        Query(
+            alias="type",
+            description="The type of the attachment to download.",
+        ),
+    ] = AttachmentTypes.ORIGINAL,
 ) -> StreamingResponse:
     try:
-        iterator = await action(melding_id, attachment_id, token)
+        iterator = await action(melding_id, attachment_id, token, _type)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
