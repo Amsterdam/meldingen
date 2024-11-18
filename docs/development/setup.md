@@ -39,6 +39,8 @@ This will launch the following containers:
 - **meldingen**: The Meldingen API.
 - **database**: PostgreSQL database for storing application data.
 - **keycloak**: Keycloak, an Identity Provider for authentication.
+- **azurite**: File storage
+- **imgproxy**: Image generation / thumbnails etc.
 - **docs**: Documentation service.
 
 Once the containers are running, you can access the Meldingen API at 
@@ -46,19 +48,22 @@ Once the containers are running, you can access the Meldingen API at
 are available at [http://localhost:8000/docs](http://localhost:8000/docs), 
 and this documentation can be found at [http://localhost:8001/](http://localhost:8001/).
 
-
 ## Authentication and authorization
-Meldingen authenticates users through an external OpenID Connect  provider. The 
-application performs a match through the `email` field to retrieve the user. The 
-user needs to exist in the database.
 
-First let's create the user in the database by running the following command:
+Docker Compose automatically runs a script to add new users to the database.
 
-```bash
-docker-compose run --rm meldingen python main.py users add user@example.com
-```
+### Login
+You can test authorization pressing the "authorize" button on [the docs page](http://localhost:8000/docs).
 
-## Keycloak
+The client ID is: ```meldingen```
+
+Leave the client secret empty.
+
+Afterwards you get forwarded to a keycloak login.
+
+The username is ```user@example.com``` and the password ```password```
+
+### Keycloak
 
 The Docker Compose file includes a Keycloak setup to serve as the Identity 
 Provider for Meldingen.
