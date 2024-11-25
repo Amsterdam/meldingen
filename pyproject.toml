@@ -21,7 +21,7 @@ httpx = {extras = ["http2"], version = "^0.27.2"}
 maykin-json-logic-py = "^0.13.0"
 meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
-pydantic = {extras = ["email"], version = "^2.9.2"}
+pydantic = {extras = ["email"], version = "^2.10.1"}
 pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git"}
 pydantic-media-type = {git = "https://github.com/Amsterdam/pydantic-media-type.git"}
 pydantic-settings = "^2.6.1"
