@@ -49,6 +49,11 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
 
+  dex:
+    image: dexidp/dex:v2.41.1-alpine
+    ports:
+      - "5556:5556"
+
   docs:
     image: amsterdam/meldingen
     ports:
