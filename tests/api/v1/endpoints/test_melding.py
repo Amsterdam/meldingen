@@ -1800,3 +1800,121 @@ class TestMeldingDeleteAttachmentAction:
 
         async with blob_client:
             assert await blob_client.exists() == False
+
+
+class TestAddLocationToMeldingAction:
+    ROUTE_NAME: Final[str] = "melding:add-location"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_add_location_to_melding(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "supersecuretoken"},
+            json=geojson,
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("geo_location").get("type") == geojson["type"]
+        assert body.get("geo_location").get("geometry").get("type") == geojson["geometry"]["type"]
+        assert body.get("geo_location").get("geometry").get("coordinates") == geojson["geometry"]["coordinates"]
+
+    @pytest.mark.anyio
+    async def test_add_location_to_melding_melding_not_found(
+        self, app: FastAPI, client: AsyncClient, geojson: dict[str, Any]
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=123),
+            params={"token": "test"},
+            json=geojson,
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_add_location_to_melding_token_missing(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json=geojson,
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+
+        assert len(detail) == 1
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["query", "token"]
+        assert detail[0].get("msg") == "Field required"
+
+    @pytest.mark.anyio
+    async def test_add_location_to_melding_unauthorized_token_invalid(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "supersecuretoken"},
+            json=geojson,
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
+        indirect=True,
+    )
+    async def test_add_location_to_melding_unauthorized_token_expired(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "supersecuretoken"},
+            json=geojson,
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "geojson_geometry"],
+        [
+            (
+                "De restafvalcontainer is vol.",
+                MeldingStates.ATTACHMENTS_ADDED,
+                "supersecrettoken",
+                {
+                    "type": "Polygon",
+                    "coordinates": [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]]],
+                },
+            )
+        ],
+        indirect=True,
+    )
+    async def test_add_location_wrong_geometry_type(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+            json=geojson,
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+
+        assert len(detail) == 6
+        assert detail[0].get("msg") == "Input should be 'Point'"

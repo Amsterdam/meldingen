@@ -1,18 +1,10 @@
 from datetime import datetime
 from typing import Annotated, Any, Union
 
+from geojson_pydantic import Feature as GeoJsonPydanticFeature
+from geojson_pydantic import Point
 from meldingen_core.models import Classification, User
-from pydantic import (
-    AfterValidator,
-    AliasGenerator,
-    BaseModel,
-    ConfigDict,
-    Discriminator,
-    EmailStr,
-    Field,
-    Tag,
-    model_serializer,
-)
+from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
@@ -24,6 +16,9 @@ class BaseOutputModel(BaseModel):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+class GeoJson(GeoJsonPydanticFeature[Point, dict[str, Any] | BaseModel]): ...
 
 
 class ClassificationInput(BaseModel, Classification):
@@ -42,6 +37,7 @@ class MeldingOutput(BaseOutputModel):
     text: str
     state: str
     classification: int | None = Field(default=None)
+    geo_location: GeoJson | None = Field(default=None)
 
 
 class MeldingCreateOutput(MeldingOutput):

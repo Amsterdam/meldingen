@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -378,3 +379,25 @@ async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -
     await db_session.refresh(melding)
 
     return melding
+
+
+@pytest.fixture
+async def geojson_geometry(request: FixtureRequest) -> dict[str, Any] | None:
+    if hasattr(request, "param"):
+        return dict(request.param)
+
+    return None
+
+
+@pytest.fixture
+async def geojson(geojson_geometry: dict[str, Any]) -> dict[str, Any]:
+    if geojson_geometry is not None:
+        geometry = geojson_geometry
+    else:
+        geometry = {"type": "Point", "coordinates": [52.3680605, 4.897092]}
+
+    return {
+        "type": "Feature",
+        "geometry": geometry,
+        "properties": {},
+    }
