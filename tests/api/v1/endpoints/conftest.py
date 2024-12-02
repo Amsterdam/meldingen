@@ -377,3 +377,12 @@ async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -
     await db_session.refresh(melding)
 
     return melding
+
+
+@pytest.fixture
+async def geojson() -> dict:
+    return {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [52.3680605, 4.897092]},
+        "properties": {"name": "Gemeentehuis Amsterdam"},
+    }

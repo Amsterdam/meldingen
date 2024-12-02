@@ -3,6 +3,7 @@ from typing import Annotated, AsyncIterator
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
+from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
@@ -29,6 +30,7 @@ from starlette.status import (
 )
 
 from meldingen.actions import (
+    AddLocationToMeldingAction,
     AnswerCreateAction,
     DeleteAttachmentAction,
     DownloadAttachmentAction,
@@ -48,6 +50,7 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
     melding_add_attachments_action,
+    melding_add_location_action,
     melding_answer_create_action,
     melding_answer_questions_action,
     melding_complete_action,
@@ -58,6 +61,7 @@ from meldingen.dependencies import (
     melding_list_attachments_action,
     melding_process_action,
     melding_repository,
+    melding_responder,
     melding_retrieve_action,
     melding_submit_location_action,
     melding_update_action,
@@ -66,12 +70,14 @@ from meldingen.dependencies import (
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Attachment, Melding
 from meldingen.repositories import MeldingRepository
+from meldingen.responders import MeldingResponder
 from meldingen.schemas import (
     AnswerInput,
     AnswerOutput,
     AttachmentOutput,
     MeldingCreateOutput,
     MeldingInput,
+    MeldingLocationInput,
     MeldingOutput,
 )
 
@@ -79,7 +85,10 @@ router = APIRouter()
 logger = structlog.get_logger()
 
 
-def _hydrate_output(melding: Melding) -> MeldingOutput:
+# TODO overal vervangen met Melding Responder?
+def _hydrate_output(
+    melding: Melding,
+) -> MeldingOutput:
     return MeldingOutput(
         id=melding.id,
         text=melding.text,
@@ -506,3 +515,27 @@ async def delete_attachment(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+
+@router.post(
+    "/{melding_id}/location",
+    name="melding:add-location",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def add_location_to_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    location: MeldingLocationInput,
+    action: Annotated[AddLocationToMeldingAction, Depends(melding_add_location_action)],
+    respond: Annotated[MeldingResponder, Depends(melding_responder)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id, token, location)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+    except ValueError as e:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
+
+    return respond(melding)

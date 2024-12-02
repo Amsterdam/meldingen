@@ -1,6 +1,7 @@
 from typing import Any, Collection, Sequence, TypeVar
 
 from fastapi import HTTPException
+from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from meldingen_core import SortingDirection
 from meldingen_core.actions.attachment import DeleteAttachmentAction as BaseDeleteAttachmentAction
 from meldingen_core.actions.attachment import DownloadAttachmentAction as BaseDownloadAttachmentAction
@@ -27,6 +28,7 @@ from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_
 
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
+from meldingen.location import MeldingLocationIngestor
 from meldingen.models import (
     Answer,
     Attachment,
@@ -59,7 +61,14 @@ from meldingen.repositories import (
     QuestionRepository,
     StaticFormRepository,
 )
-from meldingen.schemas import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, StaticFormInput
+from meldingen.schemas import (
+    AnswerInput,
+    FormComponent,
+    FormInput,
+    FormPanelComponentInput,
+    MeldingLocationInput,
+    StaticFormInput,
+)
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
@@ -515,3 +524,23 @@ class ListAttachmentsAction(BaseListAttachmentsAction[Attachment, Attachment, Me
 
 
 class DeleteAttachmentAction(BaseDeleteAttachmentAction[Attachment, Attachment, Melding, Melding]): ...
+
+
+class AddLocationToMeldingAction:
+    _verify_token: TokenVerifier[Melding, Melding]
+    _ingest_location: MeldingLocationIngestor
+
+    def __init__(
+        self,
+        token_verifier: TokenVerifier[Melding, Melding],
+        location_ingestor: MeldingLocationIngestor,
+    ) -> None:
+        self._verify_token = token_verifier
+        self._ingest_location = location_ingestor
+
+    async def __call__(self, melding_id: int, token: str, location: MeldingLocationInput) -> Melding:
+        melding = await self._verify_token(melding_id, token)
+
+        melding = await self._ingest_location(melding, location)
+
+        return melding
