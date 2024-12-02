@@ -84,7 +84,7 @@ class GeoJSONToShapeTransformer:
             case "Point":
                 return self._generate_point(*geojson.root.geometry.coordinates)
             case "Polygon":
-                return self._generate_polygon(*geojson.root.geometry.coordinates[0])
+                return self._generate_polygon(*geojson.root.geometry.coordinates)
             case _:
                 raise ValueError("Invalid GeoJSON type")
 

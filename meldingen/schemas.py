@@ -228,50 +228,45 @@ class AttachmentOutput(BaseOutputModel):
     original_filename: str
 
 
-# TODO move to core?
-# class Coordinate(BaseModel):
-#     latitude: Annotated[float, Field(ge=-90, le=90)]
-#     longitude: Annotated[float, Field(ge=-180, le=180)]
-#
-#
-# Latitude = Annotated[float, Field(ge=-90, le=90)]
-# Longitude = Annotated[float, Field(ge=-180, le=180)]
-#
-# Point = tuple[Longitude, Latitude]
-# Polygon = list[Point]
-#
-#
-# class GeometryTypes(enum.StrEnum):
-#     point = "Point"
-#     polygon = "Polygon"
-#
-#
-# class Geometry(BaseModel):
-#     type: GeometryTypes
-#     coordinates: Union[Point, Polygon]
-#
-# class LocationInput(BaseModel):
-#     geometry: Geometry
-
+# TODO wont show second example
+geojson_examples = {
+    "examples": [
+        {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [52.3680605, 4.897092]},
+            "properties": {"name": "Gemeentehuis Amsterdam"},
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "areaCode": 362,
+                "areaName": "Amstelveen"
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                     [
+                         [4.81875, 52.32556],
+                         [4.85592, 52.33032],
+                         [4.85676, 52.32141],
+                         [4.90905, 52.31883],
+                         [4.90109, 52.29616],
+                         [4.87891, 52.27924],
+                         [4.88234, 52.26404],
+                         [4.8543, 52.24188],
+                         [4.79455, 52.26085],
+                         [4.82386, 52.28994],
+                         [4.80988, 52.30578],
+                         [4.81875, 52.32556]
+                     ]
+                ]
+            }
+        }
+    ]
+}
 
 class MeldingLocationInput(
     RootModel[Union[GeoJsonPydanticFeature[Point, Optional[dict]], GeoJsonPydanticFeature[Polygon, Optional[dict]]]]
 ):
 
-    class Config:
-        json_schema_extra = {
-            "examples": [
-                {
-                    "type": "Feature",
-                    "geometry": {"type": "Point", "coordinates": [52.3680605, 4.897092]},
-                    "properties": {"name": "Gemeentehuis Amsterdam"},
-                },
-                {
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Polygon",
-                        "coordinates": [
-                            [
-                }
-            ]
-        }
+    model_config = ConfigDict(json_schema_extra=geojson_examples)
