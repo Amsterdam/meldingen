@@ -24,6 +24,7 @@ from plugfs.filesystem import Adapter, Filesystem
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions import (
+    AddLocationToMeldingAction,
     AnswerCreateAction,
     ClassificationCreateAction,
     ClassificationDeleteAction,
@@ -67,6 +68,16 @@ from meldingen.image import (
     ThumbnailGeneratorTask,
 )
 from meldingen.jsonlogic import JSONLogicValidator
+from meldingen.location import (
+    GeoJSONToShapeTransformer,
+    LocationOutputTransformer,
+    MeldingLocationIngestor,
+    ShapePointFactory,
+    ShapePolygonFactory,
+    ShapeToGeoJSONTransformer,
+    ShapeToWKBTransformer,
+    WKBToShapeTransformer,
+)
 from meldingen.models import Melding
 from meldingen.repositories import (
     AnswerRepository,
@@ -79,6 +90,7 @@ from meldingen.repositories import (
     StaticFormRepository,
     UserRepository,
 )
+from meldingen.responders import MeldingResponder
 from meldingen.schema_factories import (
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
@@ -463,6 +475,61 @@ def melding_delete_attachment_action(
     filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> DeleteAttachmentAction:
     return DeleteAttachmentAction(token_verifier, attachment_repository, filesystem)
+
+
+def shape_point_factory() -> ShapePointFactory:
+    return ShapePointFactory()
+
+
+def shape_polygon_factory() -> ShapePolygonFactory:
+    return ShapePolygonFactory()
+
+
+def geojson_to_shape_transformer(
+    shape_point_factory: Annotated[ShapePointFactory, Depends(shape_point_factory)],
+    shape_polygon_factory: Annotated[ShapePolygonFactory, Depends(shape_polygon_factory)],
+) -> GeoJSONToShapeTransformer:
+    return GeoJSONToShapeTransformer(shape_point_factory, shape_polygon_factory)
+
+
+def shape_to_wkb_transformer() -> ShapeToWKBTransformer:
+    return ShapeToWKBTransformer()
+
+
+def wkb_to_shape_transformer() -> WKBToShapeTransformer:
+    return WKBToShapeTransformer()
+
+
+def shape_to_geojson_transformer() -> ShapeToGeoJSONTransformer:
+    return ShapeToGeoJSONTransformer()
+
+
+def location_ingestor(
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    geojson_to_shape_transformer: Annotated[GeoJSONToShapeTransformer, Depends(geojson_to_shape_transformer)],
+    shape_to_wkb_transformer: Annotated[ShapeToWKBTransformer, Depends(shape_to_wkb_transformer)],
+) -> MeldingLocationIngestor:
+    return MeldingLocationIngestor(melding_repository, geojson_to_shape_transformer, shape_to_wkb_transformer)
+
+
+def location_output_transformer(
+    wkb_to_shape_transformer: Annotated[WKBToShapeTransformer, Depends(wkb_to_shape_transformer)],
+    shape_to_geojson_transformer: Annotated[ShapeToGeoJSONTransformer, Depends(shape_to_geojson_transformer)],
+) -> LocationOutputTransformer:
+    return LocationOutputTransformer(wkb_to_shape_transformer, shape_to_geojson_transformer)
+
+
+def melding_add_location_action(
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    location_ingestor: Annotated[MeldingLocationIngestor, Depends(location_ingestor)],
+) -> AddLocationToMeldingAction:
+    return AddLocationToMeldingAction(token_verifier, location_ingestor)
+
+
+def melding_responder(
+    location_output_transformer: Annotated[LocationOutputTransformer, Depends(location_output_transformer)]
+) -> MeldingResponder:
+    return MeldingResponder(location_output_transformer)
 
 
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:

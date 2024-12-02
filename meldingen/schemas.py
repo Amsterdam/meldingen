@@ -1,6 +1,9 @@
+import enum
 from datetime import datetime
-from typing import Annotated, Any, Union
+from typing import Annotated, Any, Optional, Union
 
+from geojson_pydantic import Feature as GeoJsonPydanticFeature
+from geojson_pydantic import Point, Polygon
 from meldingen_core.models import Classification, User
 from pydantic import (
     AfterValidator,
@@ -10,8 +13,8 @@ from pydantic import (
     Discriminator,
     EmailStr,
     Field,
-    Tag,
-    model_serializer,
+    RootModel,
+    Tag
 )
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
@@ -42,6 +45,7 @@ class MeldingOutput(BaseOutputModel):
     text: str
     state: str
     classification: int | None = Field(default=None)
+    geo_location: dict | None = None
 
 
 class MeldingCreateOutput(MeldingOutput):
@@ -222,3 +226,52 @@ class AnswerOutput(BaseOutputModel): ...
 
 class AttachmentOutput(BaseOutputModel):
     original_filename: str
+
+
+# TODO move to core?
+# class Coordinate(BaseModel):
+#     latitude: Annotated[float, Field(ge=-90, le=90)]
+#     longitude: Annotated[float, Field(ge=-180, le=180)]
+#
+#
+# Latitude = Annotated[float, Field(ge=-90, le=90)]
+# Longitude = Annotated[float, Field(ge=-180, le=180)]
+#
+# Point = tuple[Longitude, Latitude]
+# Polygon = list[Point]
+#
+#
+# class GeometryTypes(enum.StrEnum):
+#     point = "Point"
+#     polygon = "Polygon"
+#
+#
+# class Geometry(BaseModel):
+#     type: GeometryTypes
+#     coordinates: Union[Point, Polygon]
+#
+# class LocationInput(BaseModel):
+#     geometry: Geometry
+
+
+class MeldingLocationInput(
+    RootModel[Union[GeoJsonPydanticFeature[Point, Optional[dict]], GeoJsonPydanticFeature[Polygon, Optional[dict]]]]
+):
+
+    class Config:
+        json_schema_extra = {
+            "examples": [
+                {
+                    "type": "Feature",
+                    "geometry": {"type": "Point", "coordinates": [52.3680605, 4.897092]},
+                    "properties": {"name": "Gemeentehuis Amsterdam"},
+                },
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                }
+            ]
+        }
