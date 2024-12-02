@@ -56,7 +56,7 @@ def melding_token(request: FixtureRequest) -> str | None:
 @pytest.fixture
 def melding_geo_location(request: FixtureRequest) -> Geometry | None:
     if hasattr(request, "param"):
-        return Geometry(request.param)
+        return Geometry(request.param, srid=4326)
 
     return None
 
