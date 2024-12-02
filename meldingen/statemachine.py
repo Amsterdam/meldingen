@@ -10,6 +10,11 @@ class HasClassification(BaseGuard[Melding]):
         return obj.classification is not None
 
 
+class HasLocation(BaseGuard[Melding]):
+    async def __call__(self, obj: Melding) -> bool:
+        return obj.geo_location is not None
+
+
 # transitions
 class Process(BaseTransition[Melding]):
     @property
@@ -58,6 +63,25 @@ class AddAttachments(BaseTransition[Melding]):
     @property
     def to_state(self) -> str:
         return MeldingStates.ATTACHMENTS_ADDED
+
+
+class SubmitLocation(BaseTransition[Melding]):
+    _guards: list[BaseGuard[Melding]]
+
+    def __init__(self, guards: list[BaseGuard[Melding]]):
+        self._guards = guards
+
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.ATTACHMENTS_ADDED]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.LOCATION_SUBMITTED
+
+    @property
+    def guards(self) -> list[BaseGuard[Melding]]:
+        return self._guards
 
 
 class Complete(BaseTransition[Melding]):

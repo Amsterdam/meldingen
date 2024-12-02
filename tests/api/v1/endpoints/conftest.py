@@ -53,6 +53,14 @@ def melding_token(request: FixtureRequest) -> str | None:
 
 
 @pytest.fixture
+def melding_geo_location(request: FixtureRequest) -> str | None:
+    if hasattr(request, "param"):
+        return str(request.param)
+
+    return None
+
+
+@pytest.fixture
 def melding_token_expires(request: FixtureRequest) -> datetime | None:
     if hasattr(request, "param"):
         timedelta_adapter = TypeAdapter(timedelta)
@@ -68,6 +76,7 @@ async def melding(
     melding_state: str | None,
     melding_token: str | None,
     melding_token_expires: datetime | None,
+    melding_geo_location: str | None,
 ) -> Melding:
     melding = Melding(text=melding_text)
     if melding_state is not None:
@@ -78,6 +87,9 @@ async def melding(
 
     if melding_token_expires is not None:
         melding.token_expires = melding_token_expires
+
+    if melding_geo_location is not None:
+        melding.geo_location = melding_geo_location
 
     db_session.add(melding)
     await db_session.commit()

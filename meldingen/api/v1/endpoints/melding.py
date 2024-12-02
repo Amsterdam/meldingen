@@ -10,13 +10,14 @@ from meldingen_core.actions.melding import (
     MeldingCompleteAction,
     MeldingCreateAction,
     MeldingProcessAction,
+    MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
 from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
-from mp_fsm.statemachine import WrongStateException
+from mp_fsm.statemachine import GuardException, WrongStateException
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -58,6 +59,7 @@ from meldingen.dependencies import (
     melding_process_action,
     melding_repository,
     melding_retrieve_action,
+    melding_submit_location_action,
     melding_update_action,
     melding_upload_attachment_action,
 )
@@ -231,6 +233,35 @@ async def add_attachments(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return _hydrate_output(melding)
+
+
+@router.put(
+    "/{melding_id}/submit_location",
+    name="melding:submit-location",
+    responses={
+        **transition_not_allowed,
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+)
+async def submit_location(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[MeldingSubmitLocationAction[Melding, Melding], Depends(melding_submit_location_action)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+    except GuardException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Location must be added before submitting")
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
