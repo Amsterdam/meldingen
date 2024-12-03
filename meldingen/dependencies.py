@@ -12,6 +12,7 @@ from meldingen_core.actions.melding import (
     MeldingCompleteAction,
     MeldingCreateAction,
     MeldingProcessAction,
+    MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
 from meldingen_core.classification import Classifier
@@ -98,13 +99,16 @@ from meldingen.schema_factories import (
     ValidateAdder,
 )
 from meldingen.statemachine import (
+    AddAttachments,
     AnswerQuestions,
     Classify,
     Complete,
     HasClassification,
+    HasLocation,
     MeldingStateMachine,
     MpFsmMeldingStateMachine,
     Process,
+    SubmitLocation,
 )
 from meldingen.token import UrlSafeTokenGenerator
 from meldingen.validators import MediaTypeIntegrityValidator, MediaTypeValidator
@@ -211,6 +215,8 @@ def melding_state_machine() -> MeldingStateMachine:
             {
                 MeldingTransitions.CLASSIFY: Classify([HasClassification()]),
                 MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions(),
+                MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
+                MeldingTransitions.SUBMIT_LOCATION: SubmitLocation([HasLocation()]),
                 MeldingTransitions.PROCESS: Process(),
                 MeldingTransitions.COMPLETE: Complete(),
             }
@@ -267,6 +273,14 @@ def melding_process_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingProcessAction[Melding, Melding]:
     return MeldingProcessAction(state_machine, repository)
+
+
+def melding_submit_location_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+) -> MeldingSubmitLocationAction[Melding, Melding]:
+    return MeldingSubmitLocationAction(state_machine, repository, token_verifier)
 
 
 def melding_complete_action(
