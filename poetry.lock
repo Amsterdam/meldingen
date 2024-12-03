@@ -1743,8 +1743,8 @@ structlog = "^24.1.0"
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "554947a"
-resolved_reference = "554947a05bf90118cab10f39fc14aa3e3ca71616"
+reference = "HEAD"
+resolved_reference = "82a3b8c6c0538dea4d8a113c3aaf49e687b3e598"
 
 [[package]]
 name = "mergedeep"
@@ -3584,4 +3584,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "53afc0c6c0256040dd555c3d69ab7b4ced766450fe02120990289618e179ac8f"
+content-hash = "702e21a58bf6a01c838ee998756fb2c3ff4484d256c5a133217366ee2013038e"
