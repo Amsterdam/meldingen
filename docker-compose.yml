@@ -1,6 +1,6 @@
 services:
   meldingen:
-    image: amsterdam/meldingen
+    image: ${REGISTRY:-localhost:5000}/${REPOSITORY:-signalen/meldingen-backend}:${VERSION:-latest}
     build:
       context: .
       args:
@@ -37,7 +37,6 @@ services:
       retries: 3
 
   keycloak:
-    image: amsterdam/meldingen-keycloak
     build:
       context: docker/keycloak
     command: ["/opt/keycloak/bin/kc.sh", "start-dev", "--http-port", "8002"]
@@ -50,7 +49,7 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin
 
   docs:
-    image: amsterdam/meldingen
+    image: ${REGISTRY:-localhost:5000}/${REPOSITORY:-signalen/meldingen-backend}:${VERSION:-latest}
     ports:
       - "8001:8000"
     volumes:
