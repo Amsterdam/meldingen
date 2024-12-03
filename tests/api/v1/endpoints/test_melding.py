@@ -5,7 +5,6 @@ from uuid import uuid4
 import pytest
 from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
-from geoalchemy2 import WKTElement
 from httpx import AsyncClient
 from meldingen_core import SortingDirection
 from meldingen_core.statemachine import MeldingStates
@@ -564,7 +563,7 @@ class TestMeldingSubmitLocation:
                 "De restafvalcontainer is vol.",
                 MeldingStates.ATTACHMENTS_ADDED,
                 "supersecrettoken",
-                WKTElement("POINT(52.3680 4.8970)"),
+                "POINT(52.3680 4.8970)",
             )
         ],
         indirect=True,
