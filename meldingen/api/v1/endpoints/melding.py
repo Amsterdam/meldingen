@@ -3,7 +3,6 @@ from typing import Annotated, AsyncIterator
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
-from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
@@ -59,9 +58,9 @@ from meldingen.dependencies import (
     melding_download_attachment_action,
     melding_list_action,
     melding_list_attachments_action,
+    melding_output_factory,
     melding_process_action,
     melding_repository,
-    melding_responder,
     melding_retrieve_action,
     melding_submit_location_action,
     melding_update_action,
@@ -70,14 +69,14 @@ from meldingen.dependencies import (
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Attachment, Melding
 from meldingen.repositories import MeldingRepository
-from meldingen.responders import MeldingResponder
+from meldingen.schema_factories import MeldingOutputFactory
 from meldingen.schemas import (
     AnswerInput,
     AnswerOutput,
     AttachmentOutput,
+    GeoJson,
     MeldingCreateOutput,
     MeldingInput,
-    MeldingLocationInput,
     MeldingOutput,
 )
 
@@ -137,6 +136,7 @@ async def list_meldingen(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[MeldingListAction, Depends(melding_list_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> list[MeldingOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -146,7 +146,7 @@ async def list_meldingen(
     )
     output = []
     for melding in meldingen:
-        output.append(_hydrate_output(melding))
+        output.append(produce_output(melding))
 
     return output
 
@@ -160,13 +160,14 @@ async def list_meldingen(
 async def retrieve_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[MeldingRetrieveAction, Depends(melding_retrieve_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     melding = await action(pk=melding_id)
 
     if not melding:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.patch(
@@ -180,6 +181,7 @@ async def update_melding(
     token: Annotated[str, Query(description="The token of the melding.")],
     melding_input: MeldingInput,
     action: Annotated[MeldingUpdateAction[Melding, Melding], Depends(melding_update_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(pk=melding_id, values=melding_input.model_dump(), token=token)
@@ -191,7 +193,7 @@ async def update_melding(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.put(
@@ -208,6 +210,7 @@ async def answer_questions(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingAnswerQuestionsAction[Melding, Melding], Depends(melding_answer_questions_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id, token)
@@ -218,7 +221,7 @@ async def answer_questions(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.put(
@@ -235,6 +238,7 @@ async def add_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingAddAttachmentsAction[Melding, Melding], Depends(melding_add_attachments_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id, token)
@@ -245,7 +249,7 @@ async def add_attachments(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.put(
@@ -291,6 +295,7 @@ async def submit_location(
 async def process_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[MeldingProcessAction[Melding, Melding], Depends(melding_process_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id)
@@ -299,7 +304,7 @@ async def process_melding(
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.put(
@@ -316,6 +321,7 @@ async def process_melding(
 async def complete_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[MeldingCompleteAction[Melding, Melding], Depends(melding_complete_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id)
@@ -324,7 +330,7 @@ async def complete_melding(
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.post(
@@ -525,10 +531,11 @@ async def delete_attachment(
 async def add_location_to_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    location: MeldingLocationInput,
+    location: GeoJson,
     action: Annotated[AddLocationToMeldingAction, Depends(melding_add_location_action)],
-    respond: Annotated[MeldingResponder, Depends(melding_responder)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
+
     try:
         melding = await action(melding_id, token, location)
     except NotFoundException:
@@ -538,4 +545,4 @@ async def add_location_to_melding(
     except ValueError as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e))
 
-    return respond(melding)
+    return produce_output(melding)

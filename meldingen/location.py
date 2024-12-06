@@ -1,90 +1,43 @@
 import json
-from typing import Tuple
 
 from geoalchemy2.elements import WKBElement
 from geoalchemy2.shape import from_shape, to_shape
-from shapely import Geometry, Point, Polygon, to_geojson
+from geojson_pydantic import Point as GeoJsonPoint
+from shapely import Geometry, Point, to_geojson
 
 from meldingen.models import Melding
 from meldingen.repositories import MeldingRepository
-from meldingen.schemas import MeldingLocationInput
+from meldingen.schemas import GeoJson
 
 
-class MeldingLocationIngestor:
-    """
-    This class describes the ingestion flow of a location of a Melding.
-    It will take in a geojson object and convert it to a shape.
-    The shape object can be used for further validation and processing.
-    Eventually the shape will be converted to a WKB element which is stored in the database.
-    """
+class GeoJsonFeatureFactory:
 
-    _repository: MeldingRepository
-    _geojson_to_shape: "GeoJSONToShapeTransformer"
-    _shape_to_wkb: "ShapeToWKBTransformer"
-
-    def __init__(
-        self,
-        melding_repository: MeldingRepository,
-        geojson_to_shape_transformer: "GeoJSONToShapeTransformer",
-        shape_to_wkb_transformer: "ShapeToWKBTransformer",
-    ):
-        self._repository = melding_repository
-        self._geojson_to_shape_transformer = geojson_to_shape_transformer
-        self._shape_to_wkb_transformer = shape_to_wkb_transformer
-
-    async def __call__(self, melding: Melding, geojson: MeldingLocationInput) -> Melding:
-        shape = self._geojson_to_shape_transformer(geojson)
-        wkb_element = self._shape_to_wkb_transformer(shape)
-
-        melding.geo_location = wkb_element
-        await self._repository.save(melding)
-
-        return melding
+    def __call__(self, geometry: GeoJsonPoint) -> GeoJson:
+        return GeoJson(
+            type="Feature",
+            geometry=geometry,
+            properties={},
+        )
 
 
-class LocationOutputTransformer:
-    """
-    This class describes the response flow of a location of a Melding.
-    It will take in a WKB element and convert it to a shape.
-    Eventually the shape will be converted to a geojson object which is returned to the client.
-    """
+class ShapePointFactory:
 
-    _wkb_to_shape: "WKBToShapeTransformer"
-    _shape_to_geojson: "ShapeToGeoJSONTransformer"
-
-    def __init__(
-        self,
-        wkb_to_shape_transformer: "WKBToShapeTransformer",
-        shape_to_geojson_transformer: "ShapeToGeoJSONTransformer",
-    ):
-        self._wkb_to_shape_transformer = wkb_to_shape_transformer
-        self._shape_to_geojson_transformer = shape_to_geojson_transformer
-
-    def __call__(self, geo_location: WKBElement | None) -> dict | None:
-        if geo_location is None:
-            return geo_location
-
-        shape = self._wkb_to_shape_transformer(geo_location)
-        geojson = self._shape_to_geojson_transformer(shape)
-
-        return geojson
+    def __call__(self, lat: float, long: float) -> Point:
+        return Point(lat, long)
 
 
 class GeoJSONToShapeTransformer:
-    _generate_point: "ShapePointFactory"
-    _generate_polygon: "ShapePolygonFactory"
+    _generate_point: ShapePointFactory
 
-    def __init__(self, point_factory: "ShapePointFactory", polygon_factory: "ShapePolygonFactory"):
+    def __init__(self, point_factory: ShapePointFactory) -> None:
         self._generate_point = point_factory
-        self._generate_polygon = polygon_factory
 
-    def __call__(self, geojson: MeldingLocationInput) -> Geometry:
-        print(geojson)
-        match geojson.root.geometry.type:
+    def __call__(self, geojson: GeoJson) -> Geometry:
+        assert geojson.geometry is not None
+
+        match geojson.geometry.type:
             case "Point":
-                return self._generate_point(*geojson.root.geometry.coordinates)
-            case "Polygon":
-                return self._generate_polygon(*geojson.root.geometry.coordinates)
+                return self._generate_point(*geojson.geometry.coordinates)
             case _:
                 raise ValueError("Invalid GeoJSON type")
 
@@ -107,30 +60,87 @@ class GeoJSONToWKBTransformer:
         self._geojson_to_shape = geojson_to_shape
         self._shape_to_wkb = shape_to_wkb
 
-    def __call__(self, geojson: MeldingLocationInput) -> WKBElement:
+    def __call__(self, geojson: GeoJson) -> WKBElement:
         shape = self._geojson_to_shape(geojson)
         return self._shape_to_wkb(shape)
 
 
 class ShapeToGeoJSONTransformer:
+    _transform_to_geojson: GeoJsonFeatureFactory
 
-    def __call__(self, shape: Geometry) -> dict:
-        return json.loads(to_geojson(shape))
+    def __init__(self, geojson_factory: GeoJsonFeatureFactory) -> None:
+        self._transform_to_geojson = geojson_factory
+
+    def __call__(self, shape: Geometry) -> GeoJson:
+        geometry = json.loads(to_geojson(shape))
+
+        return self._transform_to_geojson(geometry=geometry)
 
 
 class WKBToShapeTransformer:
 
     def __call__(self, wkb_element: WKBElement) -> Geometry:
-        return to_shape(wkb_element)
+        shape = to_shape(wkb_element)
+        assert isinstance(shape, Geometry)
+        return shape
 
 
-class ShapePointFactory:
+class MeldingLocationIngestor:
+    """
+    This class describes the ingestion flow of a location of a Melding.
+    It will take in a geojson object and convert it to a shape.
+    The shape object can be used for further validation and processing.
+    Eventually the shape will be converted to a WKB element which is stored in the database.
+    """
 
-    def __call__(self, lat: float, long: float) -> Point:
-        return Point(lat, long)
+    _repository: MeldingRepository
+    _geojson_to_shape: GeoJSONToShapeTransformer
+    _shape_to_wkb: ShapeToWKBTransformer
+
+    def __init__(
+        self,
+        melding_repository: MeldingRepository,
+        geojson_to_shape_transformer: GeoJSONToShapeTransformer,
+        shape_to_wkb_transformer: ShapeToWKBTransformer,
+    ) -> None:
+        self._repository = melding_repository
+        self._geojson_to_shape_transformer = geojson_to_shape_transformer
+        self._shape_to_wkb_transformer = shape_to_wkb_transformer
+
+    async def __call__(self, melding: Melding, geojson: GeoJson) -> Melding:
+        shape = self._geojson_to_shape_transformer(geojson)
+        wkb_element = self._shape_to_wkb_transformer(shape)
+        assert isinstance(wkb_element, WKBElement)
+
+        melding.geo_location = wkb_element
+        await self._repository.save(melding)
+
+        return melding
 
 
-class ShapePolygonFactory:
+class LocationOutputTransformer:
+    """
+    This class describes the response flow of a location of a Melding.
+    It will take in a WKB element and convert it to a shape.
+    Eventually the shape will be converted to a geojson object which is returned to the client.
+    """
 
-    def __call__(self, points: list[Tuple[float, float]]) -> Polygon:
-        return Polygon(points)
+    _wkb_to_shape: WKBToShapeTransformer
+    _shape_to_geojson: ShapeToGeoJSONTransformer
+
+    def __init__(
+        self,
+        wkb_to_shape_transformer: WKBToShapeTransformer,
+        shape_to_geojson_transformer: ShapeToGeoJSONTransformer,
+    ) -> None:
+        self._wkb_to_shape_transformer = wkb_to_shape_transformer
+        self._shape_to_geojson_transformer = shape_to_geojson_transformer
+
+    def __call__(self, geo_location: WKBElement | None) -> GeoJson | None:
+        if geo_location is None:
+            return geo_location
+
+        shape = self._wkb_to_shape_transformer(geo_location)
+        geojson = self._shape_to_geojson_transformer(shape)
+
+        return geojson

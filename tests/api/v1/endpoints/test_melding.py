@@ -1805,8 +1805,6 @@ class TestMeldingDeleteAttachmentAction:
 class TestAddLocationToMeldingAction:
     ROUTE_NAME: Final[str] = "melding:add-location"
 
-
-    # TODO add polygon?
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
@@ -1825,9 +1823,9 @@ class TestAddLocationToMeldingAction:
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("geo_location").get("type") == geojson["geometry"]["type"]
-        assert body.get("geo_location").get("coordinates")[0] == geojson["geometry"]["coordinates"][0]
-        assert body.get("geo_location").get("coordinates")[1] == geojson["geometry"]["coordinates"][1]
+        assert body.get("geo_location").get("type") == geojson["type"]
+        assert body.get("geo_location").get("geometry").get("type") == geojson["geometry"]["type"]
+        assert body.get("geo_location").get("geometry").get("coordinates") == geojson["geometry"]["coordinates"]
 
     @pytest.mark.anyio
     async def test_add_location_to_melding_melding_not_found(

@@ -69,11 +69,11 @@ from meldingen.image import (
 )
 from meldingen.jsonlogic import JSONLogicValidator
 from meldingen.location import (
+    GeoJsonFeatureFactory,
     GeoJSONToShapeTransformer,
     LocationOutputTransformer,
     MeldingLocationIngestor,
     ShapePointFactory,
-    ShapePolygonFactory,
     ShapeToGeoJSONTransformer,
     ShapeToWKBTransformer,
     WKBToShapeTransformer,
@@ -90,7 +90,6 @@ from meldingen.repositories import (
     StaticFormRepository,
     UserRepository,
 )
-from meldingen.responders import MeldingResponder
 from meldingen.schema_factories import (
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
@@ -101,6 +100,7 @@ from meldingen.schema_factories import (
     FormSelectComponentOutputFactory,
     FormTextAreaComponentOutputFactory,
     FormTextFieldInputComponentOutputFactory,
+    MeldingOutputFactory,
     StaticFormCheckboxComponentOutputFactory,
     StaticFormComponentOutputFactory,
     StaticFormOutputFactory,
@@ -481,15 +481,14 @@ def shape_point_factory() -> ShapePointFactory:
     return ShapePointFactory()
 
 
-def shape_polygon_factory() -> ShapePolygonFactory:
-    return ShapePolygonFactory()
+def geo_json_feature_factory() -> GeoJsonFeatureFactory:
+    return GeoJsonFeatureFactory()
 
 
 def geojson_to_shape_transformer(
     shape_point_factory: Annotated[ShapePointFactory, Depends(shape_point_factory)],
-    shape_polygon_factory: Annotated[ShapePolygonFactory, Depends(shape_polygon_factory)],
 ) -> GeoJSONToShapeTransformer:
-    return GeoJSONToShapeTransformer(shape_point_factory, shape_polygon_factory)
+    return GeoJSONToShapeTransformer(shape_point_factory)
 
 
 def shape_to_wkb_transformer() -> ShapeToWKBTransformer:
@@ -500,8 +499,10 @@ def wkb_to_shape_transformer() -> WKBToShapeTransformer:
     return WKBToShapeTransformer()
 
 
-def shape_to_geojson_transformer() -> ShapeToGeoJSONTransformer:
-    return ShapeToGeoJSONTransformer()
+def shape_to_geojson_transformer(
+    geojson_factory: Annotated[GeoJsonFeatureFactory, Depends(geo_json_feature_factory)]
+) -> ShapeToGeoJSONTransformer:
+    return ShapeToGeoJSONTransformer(geojson_factory)
 
 
 def location_ingestor(
@@ -526,10 +527,10 @@ def melding_add_location_action(
     return AddLocationToMeldingAction(token_verifier, location_ingestor)
 
 
-def melding_responder(
+def melding_output_factory(
     location_output_transformer: Annotated[LocationOutputTransformer, Depends(location_output_transformer)]
-) -> MeldingResponder:
-    return MeldingResponder(location_output_transformer)
+) -> MeldingOutputFactory:
+    return MeldingOutputFactory(location_output_transformer)
 
 
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:

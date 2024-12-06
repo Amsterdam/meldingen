@@ -61,14 +61,7 @@ from meldingen.repositories import (
     QuestionRepository,
     StaticFormRepository,
 )
-from meldingen.schemas import (
-    AnswerInput,
-    FormComponent,
-    FormInput,
-    FormPanelComponentInput,
-    MeldingLocationInput,
-    StaticFormInput,
-)
+from meldingen.schemas import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, GeoJson, StaticFormInput
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
@@ -538,7 +531,7 @@ class AddLocationToMeldingAction:
         self._verify_token = token_verifier
         self._ingest_location = location_ingestor
 
-    async def __call__(self, melding_id: int, token: str, location: MeldingLocationInput) -> Melding:
+    async def __call__(self, melding_id: int, token: str, location: GeoJson) -> Melding:
         melding = await self._verify_token(melding_id, token)
 
         melding = await self._ingest_location(melding, location)

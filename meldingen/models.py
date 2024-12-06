@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from typing import Any, Final, Optional, Union
 
-from geoalchemy2 import Geometry
+from geoalchemy2 import Geometry, WKBElement
 from meldingen_core.models import Answer as BaseAnswer
 from meldingen_core.models import Attachment as BaseAttachment
 from meldingen_core.models import Classification as BaseClassification
@@ -48,7 +48,7 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
         back_populates="melding",
         default_factory=list,
     )
-    geo_location: Mapped[Geometry | None] = mapped_column(
+    geo_location: Mapped[WKBElement | None] = mapped_column(
         Geometry(geometry_type="GEOMETRY", srid=4326), default=None  # WGS84
     )
 

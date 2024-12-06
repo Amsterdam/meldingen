@@ -1,21 +1,10 @@
-import enum
 from datetime import datetime
 from typing import Annotated, Any, Optional, Union
 
 from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from geojson_pydantic import Point, Polygon
 from meldingen_core.models import Classification, User
-from pydantic import (
-    AfterValidator,
-    AliasGenerator,
-    BaseModel,
-    ConfigDict,
-    Discriminator,
-    EmailStr,
-    Field,
-    RootModel,
-    Tag
-)
+from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
@@ -27,6 +16,9 @@ class BaseOutputModel(BaseModel):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+class GeoJson(GeoJsonPydanticFeature[Point, Optional[dict[str, Any]]]): ...
 
 
 class ClassificationInput(BaseModel, Classification):
@@ -45,7 +37,7 @@ class MeldingOutput(BaseOutputModel):
     text: str
     state: str
     classification: int | None = Field(default=None)
-    geo_location: dict | None = None
+    geo_location: GeoJson | None = Field(default=None)
 
 
 class MeldingCreateOutput(MeldingOutput):
@@ -226,47 +218,3 @@ class AnswerOutput(BaseOutputModel): ...
 
 class AttachmentOutput(BaseOutputModel):
     original_filename: str
-
-
-# TODO wont show second example
-geojson_examples = {
-    "examples": [
-        {
-            "type": "Feature",
-            "geometry": {"type": "Point", "coordinates": [52.3680605, 4.897092]},
-            "properties": {"name": "Gemeentehuis Amsterdam"},
-        },
-        {
-            "type": "Feature",
-            "properties": {
-                "areaCode": 362,
-                "areaName": "Amstelveen"
-            },
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [
-                     [
-                         [4.81875, 52.32556],
-                         [4.85592, 52.33032],
-                         [4.85676, 52.32141],
-                         [4.90905, 52.31883],
-                         [4.90109, 52.29616],
-                         [4.87891, 52.27924],
-                         [4.88234, 52.26404],
-                         [4.8543, 52.24188],
-                         [4.79455, 52.26085],
-                         [4.82386, 52.28994],
-                         [4.80988, 52.30578],
-                         [4.81875, 52.32556]
-                     ]
-                ]
-            }
-        }
-    ]
-}
-
-class MeldingLocationInput(
-    RootModel[Union[GeoJsonPydanticFeature[Point, Optional[dict]], GeoJsonPydanticFeature[Polygon, Optional[dict]]]]
-):
-
-    model_config = ConfigDict(json_schema_extra=geojson_examples)
