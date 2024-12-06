@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
+from geoalchemy2 import WKBElement
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
 from sqlalchemy import select
@@ -53,9 +55,9 @@ def melding_token(request: FixtureRequest) -> str | None:
 
 
 @pytest.fixture
-def melding_geo_location(request: FixtureRequest) -> str | None:
+def melding_geo_location(request: FixtureRequest) -> WKBElement | None:
     if hasattr(request, "param"):
-        return str(request.param)
+        return WKBElement(request.param)
 
     return None
 
@@ -76,7 +78,7 @@ async def melding(
     melding_state: str | None,
     melding_token: str | None,
     melding_token_expires: datetime | None,
-    melding_geo_location: str | None,
+    melding_geo_location: WKBElement | None,
 ) -> Melding:
     melding = Melding(text=melding_text)
     if melding_state is not None:
@@ -381,7 +383,7 @@ async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -
 
 
 @pytest.fixture
-async def geojson() -> dict:
+async def geojson() -> dict[str, Any]:
     return {
         "type": "Feature",
         "geometry": {"type": "Point", "coordinates": [52.3680605, 4.897092]},

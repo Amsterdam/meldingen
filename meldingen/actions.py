@@ -533,7 +533,6 @@ class AddLocationToMeldingAction:
 
     async def __call__(self, melding_id: int, token: str, location: GeoJson) -> Melding:
         melding = await self._verify_token(melding_id, token)
-
         melding = await self._ingest_location(melding, location)
 
         return melding

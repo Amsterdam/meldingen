@@ -519,9 +519,9 @@ class MeldingOutputFactory:
 
     def __call__(self, melding: Melding) -> MeldingOutput:
         if melding.geo_location is None:
-            geojson_location = None
+            geojson = None
         else:
-            geojson_location = self.transform_location(melding.geo_location)
+            geojson = self.transform_location(melding.geo_location)
 
         return MeldingOutput(
             id=melding.id,
@@ -530,5 +530,5 @@ class MeldingOutputFactory:
             classification=melding.classification_id,
             created_at=melding.created_at,
             updated_at=melding.updated_at,
-            geo_location=geojson_location,
+            geo_location=geojson,
         )
