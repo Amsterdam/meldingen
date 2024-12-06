@@ -84,20 +84,6 @@ router = APIRouter()
 logger = structlog.get_logger()
 
 
-# TODO overal vervangen met Melding Responder?
-def _hydrate_output(
-    melding: Melding,
-) -> MeldingOutput:
-    return MeldingOutput(
-        id=melding.id,
-        text=melding.text,
-        state=melding.state,
-        classification=melding.classification_id,
-        created_at=melding.created_at,
-        updated_at=melding.updated_at,
-    )
-
-
 @router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
 async def create_melding(
     melding_input: MeldingInput,
@@ -266,6 +252,7 @@ async def submit_location(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingSubmitLocationAction[Melding, Melding], Depends(melding_submit_location_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id, token)
@@ -278,7 +265,7 @@ async def submit_location(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.put(
