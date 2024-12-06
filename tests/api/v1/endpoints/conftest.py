@@ -4,7 +4,6 @@ from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
-from geoalchemy2 import WKBElement
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
 from sqlalchemy import select
@@ -55,9 +54,9 @@ def melding_token(request: FixtureRequest) -> str | None:
 
 
 @pytest.fixture
-def melding_geo_location(request: FixtureRequest) -> WKBElement | None:
+def melding_geo_location(request: FixtureRequest) -> str | None:
     if hasattr(request, "param"):
-        return WKBElement(request.param)
+        return str(request.param)
 
     return None
 
@@ -78,7 +77,7 @@ async def melding(
     melding_state: str | None,
     melding_token: str | None,
     melding_token_expires: datetime | None,
-    melding_geo_location: WKBElement | None,
+    melding_geo_location: str | None,
 ) -> Melding:
     melding = Melding(text=melding_text)
     if melding_state is not None:

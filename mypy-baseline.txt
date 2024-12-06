@@ -45,5 +45,6 @@ migrations/env.py:0: error: Argument 1 to "async_engine_from_config" has incompa
 meldingen/schemas.py:0: error: Type argument "dict[str, Any] | None" of "Feature" must be a subtype of "dict[str, Any] | BaseModel"  [type-var]
 tests/api/v1/endpoints/test_form.py:0: error: Need type annotation for "new_data"  [var-annotated]
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (expression has type "datetime", variable has type "SQLCoreOperations[DateTime | None] | DateTime | None")  [assignment]
+tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (expression has type "str", variable has type "SQLCoreOperations[WKBElement | None] | WKBElement | None")  [assignment]
 tests/conftest.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
 tests/conftest.py:0: error: Call to untyped function "visit_drop_table" in typed context  [no-untyped-call]
