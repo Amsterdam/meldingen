@@ -33,7 +33,7 @@ def test_component_discriminator_dict(value: Any, match_value: Any) -> None:
 
 
 def test_component_discriminator_panel() -> None:
-    result = component_discriminator(FormPanelComponentInput(label="abc", key="abc", components=[]))
+    result = component_discriminator(FormPanelComponentInput(title="title", label="abc", key="abc", components=[]))
 
     assert result == FormIoComponentTypeEnum.panel
 
