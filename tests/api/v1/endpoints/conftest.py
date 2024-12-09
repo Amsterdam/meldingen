@@ -225,6 +225,7 @@ async def form_with_classification(db_session: AsyncSession, form_title: str, js
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
     panel = FormIoPanelComponent(
+        title="Panel 1",
         label="Page 1",
         key="page1",
         input=False,
