@@ -26,22 +26,6 @@ class ShapePointFactory:
         return Point(lat, long)
 
 
-class GeoJSONToShapeTransformer:
-    _generate_point: ShapePointFactory
-
-    def __init__(self, point_factory: ShapePointFactory) -> None:
-        self._generate_point = point_factory
-
-    def __call__(self, geojson: GeoJson) -> Geometry:
-        assert geojson.geometry is not None
-
-        match geojson.geometry.type:
-            case "Point":
-                return self._generate_point(*geojson.geometry.coordinates)
-            case _:
-                raise ValueError("Invalid GeoJSON type")
-
-
 class ShapeToWKBTransformer:
     _spatial_ref_id: int
 
@@ -50,19 +34,6 @@ class ShapeToWKBTransformer:
 
     def __call__(self, shape: Geometry) -> WKBElement:
         return from_shape(shape, self._spatial_ref_id)
-
-
-class GeoJSONToWKBTransformer:
-    _geojson_to_shape: GeoJSONToShapeTransformer
-    _shape_to_wkb: ShapeToWKBTransformer
-
-    def __init__(self, geojson_to_shape: GeoJSONToShapeTransformer, shape_to_wkb: ShapeToWKBTransformer):
-        self._geojson_to_shape = geojson_to_shape
-        self._shape_to_wkb = shape_to_wkb
-
-    def __call__(self, geojson: GeoJson) -> WKBElement:
-        shape = self._geojson_to_shape(geojson)
-        return self._shape_to_wkb(shape)
 
 
 class ShapeToGeoJSONTransformer:
@@ -94,21 +65,24 @@ class MeldingLocationIngestor:
     """
 
     _repository: MeldingRepository
-    _geojson_to_shape: GeoJSONToShapeTransformer
+    _geojson_to_shapely_point: ShapePointFactory
     _shape_to_wkb: ShapeToWKBTransformer
 
     def __init__(
         self,
         melding_repository: MeldingRepository,
-        geojson_to_shape_transformer: GeoJSONToShapeTransformer,
+        shape_point_factory: ShapePointFactory,
         shape_to_wkb_transformer: ShapeToWKBTransformer,
     ) -> None:
         self._repository = melding_repository
-        self._geojson_to_shape_transformer = geojson_to_shape_transformer
+        self._geojson_to_shapely_point = shape_point_factory
         self._shape_to_wkb_transformer = shape_to_wkb_transformer
 
     async def __call__(self, melding: Melding, geojson: GeoJson) -> Melding:
-        shape = self._geojson_to_shape_transformer(geojson)
+        if geojson.geometry is None:
+            return melding
+
+        shape = self._geojson_to_shapely_point(*geojson.geometry.coordinates)
         wkb_element = self._shape_to_wkb_transformer(shape)
         assert isinstance(wkb_element, WKBElement)
 

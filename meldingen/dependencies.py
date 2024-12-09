@@ -1,5 +1,6 @@
 import logging
 from functools import lru_cache
+from turtle import Shape
 from typing import Annotated, AsyncIterator
 
 from azure.storage.blob.aio import ContainerClient
@@ -70,7 +71,6 @@ from meldingen.image import (
 from meldingen.jsonlogic import JSONLogicValidator
 from meldingen.location import (
     GeoJsonFeatureFactory,
-    GeoJSONToShapeTransformer,
     LocationOutputTransformer,
     MeldingLocationIngestor,
     ShapePointFactory,
@@ -485,12 +485,6 @@ def geo_json_feature_factory() -> GeoJsonFeatureFactory:
     return GeoJsonFeatureFactory()
 
 
-def geojson_to_shape_transformer(
-    shape_point_factory: Annotated[ShapePointFactory, Depends(shape_point_factory)],
-) -> GeoJSONToShapeTransformer:
-    return GeoJSONToShapeTransformer(shape_point_factory)
-
-
 def shape_to_wkb_transformer() -> ShapeToWKBTransformer:
     return ShapeToWKBTransformer()
 
@@ -507,10 +501,10 @@ def shape_to_geojson_transformer(
 
 def location_ingestor(
     melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    geojson_to_shape_transformer: Annotated[GeoJSONToShapeTransformer, Depends(geojson_to_shape_transformer)],
+    shape_point_factory: Annotated[ShapePointFactory, Depends(shape_point_factory)],
     shape_to_wkb_transformer: Annotated[ShapeToWKBTransformer, Depends(shape_to_wkb_transformer)],
 ) -> MeldingLocationIngestor:
-    return MeldingLocationIngestor(melding_repository, geojson_to_shape_transformer, shape_to_wkb_transformer)
+    return MeldingLocationIngestor(melding_repository, shape_point_factory, shape_to_wkb_transformer)
 
 
 def location_output_transformer(

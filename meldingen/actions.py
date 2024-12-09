@@ -1,7 +1,6 @@
 from typing import Any, Collection, Sequence, TypeVar
 
 from fastapi import HTTPException
-from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from meldingen_core import SortingDirection
 from meldingen_core.actions.attachment import DeleteAttachmentAction as BaseDeleteAttachmentAction
 from meldingen_core.actions.attachment import DownloadAttachmentAction as BaseDownloadAttachmentAction
