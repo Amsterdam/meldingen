@@ -50,6 +50,7 @@ class BaseFormTest:
                 await self._assert_component(component_data, component)
 
     async def _assert_panel_component(self, data: dict[str, Any], component: FormIoPanelComponent) -> None:
+        assert data.get("title") == component.title
         assert data.get("label") == component.label
         assert data.get("key") == component.key
         assert data.get("type") == component.type
@@ -438,6 +439,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "maxCharCount": None,
                 },
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -487,6 +489,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "display": "wizard",
             "components": [
                 {
+                    "title": "Panel 1 title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -509,6 +512,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 2 title",
                     "label": "panel-2",
                     "key": "panel",
                     "type": "panel",
@@ -529,6 +533,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 3 title",
                     "label": "panel-3",
                     "key": "panel",
                     "type": "panel",
@@ -557,6 +562,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 4 title",
                     "label": "panel-4",
                     "key": "panel",
                     "type": "panel",
@@ -581,6 +587,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 5 title",
                     "label": "panel-5",
                     "key": "panel",
                     "type": "panel",
@@ -839,12 +846,14 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "display": "form",
             "components": [
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
                     "input": False,
                     "components": [
                         {
+                            "title": "Panel 2 title",
                             "label": "panel-2",
                             "key": "panel",
                             "type": "panel",
@@ -916,6 +925,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -983,6 +993,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "display": "form",
             "components": [
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": FormIoComponentTypeEnum.panel,
@@ -1022,6 +1033,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert len(components) == 1
 
         panel = components[0]
+        assert panel.get("title") == "Panel title"
         assert panel.get("label") == "panel-1"
         assert panel.get("key") == "panel"
         assert panel.get("type") == FormIoComponentTypeEnum.panel
@@ -1078,6 +1090,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                     "maxCharCount": None,
                 },
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -1130,6 +1143,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert first_component_validate.get("required") is False
 
         second_component: dict[str, Any] = components[1]
+        assert second_component.get("title") == "Panel title"
         assert second_component.get("label") == "panel-1"
         assert second_component.get("key") == "panel"
         assert second_component.get("type") == "panel"
@@ -1157,6 +1171,7 @@ class TestFormCreate(BaseUnauthorizedTest):
             "display": "form",
             "components": [
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -1179,6 +1194,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                     ],
                 },
                 {
+                    "title": "Panel 2 title",
                     "label": "panel-2",
                     "key": "panel",
                     "type": "panel",
@@ -1199,6 +1215,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                     ],
                 },
                 {
+                    "title": "Panel 3 title",
                     "label": "panel-3",
                     "key": "panel",
                     "type": "panel",
@@ -1227,6 +1244,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                     ],
                 },
                 {
+                    "title": "Panel 4 title",
                     "label": "panel-4",
                     "key": "panel",
                     "type": "panel",
@@ -1251,6 +1269,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                     ],
                 },
                 {
+                    "title": "Panel 5 title",
                     "label": "panel-5",
                     "key": "panel",
                     "type": "panel",
@@ -1300,6 +1319,7 @@ class TestFormCreate(BaseUnauthorizedTest):
             "display": "form",
             "components": [
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -1340,6 +1360,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert len(components) == 1
 
         panel: dict[str, Any] = components[0]
+        assert panel.get("title") == "Panel title"
         assert panel.get("label") == "panel-1"
         assert panel.get("key") == "panel"
         assert panel.get("type") == "panel"
@@ -1365,6 +1386,7 @@ class TestFormCreate(BaseUnauthorizedTest):
             "display": "form",
             "components": [
                 {
+                    "title": "Panel 1 title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": FormIoComponentTypeEnum.panel,
@@ -1404,6 +1426,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert len(components) == 1
 
         panel = components[0]
+        assert panel.get("title") == "Panel 1 title"
         assert panel.get("label") == "panel-1"
         assert panel.get("key") == "panel"
         assert panel.get("type") == FormIoComponentTypeEnum.panel
@@ -1537,6 +1560,7 @@ class TestFormCreate(BaseUnauthorizedTest):
             "display": "form",
             "components": [
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -1600,6 +1624,7 @@ class TestFormCreate(BaseUnauthorizedTest):
             "display": "form",
             "components": [
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
