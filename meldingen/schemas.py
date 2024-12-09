@@ -128,6 +128,7 @@ class FormPanelComponentInput(BaseModel):
     model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
 
     label: Annotated[str, Field(min_length=3)]
+    title: Annotated[str, Field(min_length=3)]
 
     key: Annotated[str, Field(min_length=3)]
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.panel)]

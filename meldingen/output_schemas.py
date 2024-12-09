@@ -54,6 +54,7 @@ class FormOutput(SimpleFormOutput):
 class BaseFormPanelComponentOutput(BaseModel):
     model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))
 
+    title: str
     label: str
 
     key: str
