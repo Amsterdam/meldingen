@@ -251,7 +251,7 @@ class StaticFormComponentOutputFactory:
         children_output = await self.__call__(children)
 
         return StaticFormPanelComponentOutput(
-            title=component.title,
+            title=await component.awaitable_attrs.title,
             label=component.label,
             description=component.description,
             key=component.key,
