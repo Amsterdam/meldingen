@@ -141,11 +141,15 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
 
 
 class FormIoPanelComponent(FormIoComponent):
+    __table_args__ = {"extend_existing": True}
+
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_identity": FormIoComponentTypeEnum.panel,
         }
+
+    title: Mapped[str] = mapped_column(String(), default=None, nullable=True)
 
     components: Mapped[OrderingList[FormIoComponent]] = relationship(
         cascade="save-update, merge, delete, delete-orphan",
