@@ -18,6 +18,7 @@ meldingen/models.py:0: error: Incompatible types in assignment (expression has t
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
+meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Form" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Classification | None]", base class "Form" defined the type as "meldingen_core.models.Classification")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[list[meldingen.models.Question]]", base class "Form" defined the type as "list[meldingen_core.models.Question]")  [assignment]
