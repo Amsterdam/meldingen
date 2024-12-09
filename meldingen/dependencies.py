@@ -1,6 +1,5 @@
 import logging
 from functools import lru_cache
-from turtle import Shape
 from typing import Annotated, AsyncIterator
 
 from azure.storage.blob.aio import ContainerClient
