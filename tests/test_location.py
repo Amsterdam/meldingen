@@ -21,7 +21,7 @@ from meldingen.schemas import GeoJson
 
 
 @pytest.mark.anyio
-async def test_geojson_feature_factory():
+async def test_geojson_feature_factory() -> None:
     factory = GeoJsonFeatureFactory()
     point = GeoJsonPoint(type="Point", coordinates=[52.3680605, 4.897092])
     feature = factory(point)
@@ -32,7 +32,7 @@ async def test_geojson_feature_factory():
 
 
 @pytest.mark.anyio
-async def test_shape_point_factory():
+async def test_shape_point_factory() -> None:
     factory = ShapePointFactory()
     point = factory(52.3680605, 4.897092)
 
@@ -42,7 +42,7 @@ async def test_shape_point_factory():
 
 
 @pytest.mark.anyio
-async def test_geojson_to_shape_transformer():
+async def test_geojson_to_shape_transformer() -> None:
     point_factory = ShapePointFactory()
     transform = GeoJSONToShapeTransformer(point_factory)
     geojson = GeoJson(
@@ -57,7 +57,7 @@ async def test_geojson_to_shape_transformer():
 
 
 @pytest.mark.anyio
-async def test_shape_to_wkb_transformer():
+async def test_shape_to_wkb_transformer() -> None:
     transform = ShapeToWKBTransformer()
     shape = ShapelyPoint(52.3680605, 4.897092)
     wkb_element = transform(shape)
@@ -66,7 +66,7 @@ async def test_shape_to_wkb_transformer():
 
 
 @pytest.mark.anyio
-async def test_geojson_to_wkb_transformer():
+async def test_geojson_to_wkb_transformer() -> None:
     geojson_to_shape = GeoJSONToShapeTransformer(ShapePointFactory())
     shape_to_wkb = ShapeToWKBTransformer()
     transform = GeoJSONToWKBTransformer(geojson_to_shape, shape_to_wkb)
@@ -82,19 +82,20 @@ async def test_geojson_to_wkb_transformer():
 
 
 @pytest.mark.anyio
-def test_shape_to_geojson_transformer():
+def test_shape_to_geojson_transformer() -> None:
     geojson_factory = GeoJsonFeatureFactory()
     transform = ShapeToGeoJSONTransformer(geojson_factory)
     shape = ShapelyPoint(52.3680605, 4.897092)
     geojson = transform(shape)
 
     assert isinstance(geojson, GeoJson)
+    assert geojson.geometry is not None
     assert geojson.geometry.type == "Point"
     assert geojson.geometry.coordinates == Position2D(longitude=52.3680605, latitude=4.897092)
 
 
 @pytest.mark.anyio
-async def test_melding_location_ingestor():
+async def test_melding_location_ingestor() -> None:
     melding = Mock(Melding)
     melding_repository = AsyncMock(MeldingRepository)
     point_factory = ShapePointFactory()

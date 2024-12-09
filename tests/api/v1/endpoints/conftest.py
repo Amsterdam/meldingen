@@ -390,7 +390,7 @@ async def geojson_geometry(request: FixtureRequest) -> dict[str, Any] | None:
 
 
 @pytest.fixture
-async def geojson(geojson_geometry) -> dict[str, Any]:
+async def geojson(geojson_geometry: dict[str, Any]) -> dict[str, Any]:
     if geojson_geometry is not None:
         geometry = geojson_geometry
     else:

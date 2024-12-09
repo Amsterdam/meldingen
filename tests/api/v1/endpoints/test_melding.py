@@ -1903,7 +1903,7 @@ class TestAddLocationToMeldingAction:
         indirect=True,
     )
     async def test_add_location_wrong_geometry_type(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict
+        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
