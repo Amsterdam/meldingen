@@ -251,6 +251,7 @@ class StaticFormComponentOutputFactory:
         children_output = await self.__call__(children)
 
         return StaticFormPanelComponentOutput(
+            title=component.title,
             label=component.label,
             description=component.description,
             key=component.key,
@@ -476,6 +477,7 @@ class FormComponentOutputFactory:
         children_output = await self.__call__(children)
 
         return FormPanelComponentOutput(
+            title=component.title,
             label=component.label,
             description=component.description,
             key=component.key,
