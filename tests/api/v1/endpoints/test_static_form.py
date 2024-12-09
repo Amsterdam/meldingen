@@ -86,6 +86,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "display": "wizard",
             "components": [
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel-1",
                     "type": "panel",
@@ -136,6 +137,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "display": "wizard",
             "components": [
                 {
+                    "title": "Panel 1 title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -158,6 +160,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 2 title",
                     "label": "panel-2",
                     "key": "panel",
                     "type": "panel",
@@ -178,6 +181,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 3 title",
                     "label": "panel-3",
                     "key": "panel",
                     "type": "panel",
@@ -206,6 +210,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 4 title",
                     "label": "panel-4",
                     "key": "panel",
                     "type": "panel",
@@ -230,6 +235,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 5 title",
                     "label": "panel-5",
                     "key": "panel",
                     "type": "panel",
@@ -333,6 +339,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "display": "wizard",
             "components": [
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel-1",
                     "type": "panel",
@@ -385,6 +392,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
