@@ -382,9 +382,22 @@ async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -
 
 
 @pytest.fixture
-async def geojson() -> dict[str, Any]:
+async def geojson_geometry(request: FixtureRequest) -> dict[str, Any] | None:
+    if hasattr(request, "param"):
+        return dict(request.param)
+
+    return None
+
+
+@pytest.fixture
+async def geojson(geojson_geometry) -> dict[str, Any]:
+    if geojson_geometry is not None:
+        geometry = geojson_geometry
+    else:
+        geometry = {"type": "Point", "coordinates": [52.3680605, 4.897092]}
+
     return {
         "type": "Feature",
-        "geometry": {"type": "Point", "coordinates": [52.3680605, 4.897092]},
-        "properties": {"name": "Gemeentehuis Amsterdam"},
+        "geometry": geometry,
+        "properties": {},
     }

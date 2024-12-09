@@ -1886,3 +1886,35 @@ class TestAddLocationToMeldingAction:
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "geojson_geometry"],
+        [
+            (
+                "De restafvalcontainer is vol.",
+                MeldingStates.ATTACHMENTS_ADDED,
+                "supersecrettoken",
+                {
+                    "type": "Polygon",
+                    "coordinates": [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]]],
+                },
+            )
+        ],
+        indirect=True,
+    )
+    async def test_add_location_wrong_geometry_type(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+            json=geojson,
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+
+        assert len(detail) == 6
+        assert detail[0].get("msg") == "Input should be 'Point'"
