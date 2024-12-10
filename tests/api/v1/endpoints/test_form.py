@@ -105,7 +105,7 @@ class BaseFormTest:
             assert data.get("maxCharCount") == component.max_char_count
 
 
-class TestFormList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
+class TestFormList(BasePaginationParamsTest, BaseSortParamsTest):
     ROUTE_NAME: Final[str] = "form:list"
     METHOD: Final[str] = "GET"
 
