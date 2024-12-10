@@ -45,7 +45,7 @@ async def _add_content_range_header(
     "/",
     name="form:list",
     responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
+    dependencies=[Depends(_add_content_range_header)],
 )
 async def list_form(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
