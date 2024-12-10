@@ -18,7 +18,7 @@ class BaseOutputModel(BaseModel):
     updated_at: datetime
 
 
-class GeoJson(GeoJsonPydanticFeature[Point, Optional[dict[str, Any]]]): ...
+class GeoJson(GeoJsonPydanticFeature[Point, dict[str, Any] | BaseModel]): ...
 
 
 class ClassificationInput(BaseModel, Classification):
