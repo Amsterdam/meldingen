@@ -86,7 +86,3 @@ omit = [
   "meldingen/dependencies.py",
   "meldingen/database.py",
 ]
-data_file = "/tmp/.coverage"
-
-[tool.pytest.ini_options]
-cache_dir = "/tmp/.pytest_cache"
