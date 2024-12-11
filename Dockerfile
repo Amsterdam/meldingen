@@ -4,7 +4,9 @@ WORKDIR /opt/meldingen
 
 RUN set -eux; \
     apt update -yq; \
-    apt install curl -yq
+    apt install -yq \
+      curl \
+      libmagic1
 
 # Add user
 RUN groupadd --gid 1000 meldingen && useradd --uid 1000 --gid 1000 --system meldingen
