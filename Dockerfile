@@ -1,6 +1,10 @@
-FROM python:3.12
+FROM python:3.12-slim-bookworm
 
 WORKDIR /opt/meldingen
+
+RUN set -eux; \
+    apt update -yq; \
+    apt install curl -yq
 
 # Add user
 RUN groupadd --gid 1000 meldingen && useradd --uid 1000 --gid 1000 --system meldingen
@@ -12,6 +16,11 @@ RUN set eux; \
     ln -s /opt/poetry/bin/poetry; \
     poetry config virtualenvs.create false; \
     poetry self add poetry-sort
+
+RUN set -eux; \
+    apt remove curl -yq; \
+    apt autoremove -yq; \
+    apt clean
 
 COPY ./pyproject.toml ./poetry.lock /opt/meldingen/
 
