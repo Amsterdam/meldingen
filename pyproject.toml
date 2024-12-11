@@ -86,3 +86,4 @@ omit = [
   "meldingen/dependencies.py",
   "meldingen/database.py",
 ]
+data_file = "/tmp/.coverage"
