@@ -2,6 +2,9 @@ FROM python:3.12
 
 WORKDIR /opt/meldingen
 
+# Add user
+RUN useradd -r meldingen
+
 # Install Poetry
 RUN set eux; \
     curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python; \
@@ -31,6 +34,8 @@ RUN set -eux; \
     fi
 
 ENV PYTHONPATH=/opt/meldingen
+
+USER meldingen
 
 ENTRYPOINT ["/opt/meldingen/meldingen-entrypoint.sh"]
 CMD ["fastapi", "run", "/opt/meldingen/meldingen/main.py"]
