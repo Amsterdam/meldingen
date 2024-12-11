@@ -3,7 +3,7 @@ FROM python:3.12
 WORKDIR /opt/meldingen
 
 # Add user
-RUN useradd -r meldingen -u 1000
+RUN groupadd --gid 1000 meldingen && useradd --uid 1000 --gid 1000 --system meldingen
 
 # Install Poetry
 RUN set eux; \
