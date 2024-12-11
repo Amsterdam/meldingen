@@ -6,7 +6,8 @@ RUN set -eux; \
     apt update -yq; \
     apt install -yq \
       curl \
-      libmagic1
+      libmagic1 \
+      media-types
 
 # Add user
 RUN groupadd --gid 1000 meldingen && useradd --uid 1000 --gid 1000 --system meldingen
