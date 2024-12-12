@@ -18,8 +18,7 @@ from meldingen.repositories import MeldingRepository
 from meldingen.schemas import GeoJson
 
 
-@pytest.mark.anyio
-async def test_geojson_feature_factory() -> None:
+def test_geojson_feature_factory() -> None:
     factory = GeoJsonFeatureFactory()
     point = GeoJsonPoint(type="Point", coordinates=[52.3680605, 4.897092])
     feature = factory(point)
@@ -29,8 +28,7 @@ async def test_geojson_feature_factory() -> None:
     assert feature.properties == {}
 
 
-@pytest.mark.anyio
-async def test_shape_point_factory() -> None:
+def test_shape_point_factory() -> None:
     factory = ShapePointFactory()
     point = factory(52.3680605, 4.897092)
 
@@ -39,8 +37,7 @@ async def test_shape_point_factory() -> None:
     assert point.y == 4.897092
 
 
-@pytest.mark.anyio
-async def test_shape_to_wkb_transformer() -> None:
+def test_shape_to_wkb_transformer() -> None:
     transform = ShapeToWKBTransformer()
     shape = ShapelyPoint(52.3680605, 4.897092)
     wkb_element = transform(shape)
@@ -48,7 +45,6 @@ async def test_shape_to_wkb_transformer() -> None:
     assert isinstance(wkb_element, WKBElement)
 
 
-@pytest.mark.anyio
 def test_shape_to_geojson_transformer() -> None:
     geojson_factory = GeoJsonFeatureFactory()
     transform = ShapeToGeoJSONTransformer(geojson_factory)
@@ -67,11 +63,10 @@ async def test_melding_location_ingestor() -> None:
     melding_repository = AsyncMock(MeldingRepository)
     point_factory = ShapePointFactory()
     shape_to_wkb = ShapeToWKBTransformer()
-    ingestor = MeldingLocationIngestor(melding_repository, point_factory, shape_to_wkb)
-
     geojson = GeoJson(type="Feature", geometry={"type": "Point", "coordinates": [52.3680605, 4.897092]}, properties={})
 
-    await ingestor(melding, geojson)
+    ingest = MeldingLocationIngestor(melding_repository, point_factory, shape_to_wkb)
+    await ingest(melding, geojson)
 
     assert melding.geo_location is not None
     melding_repository.save.assert_awaited_once_with(melding)

@@ -513,15 +513,16 @@ class FormOutputFactory:
 
 
 class MeldingOutputFactory:
+    _transform_location: LocationOutputTransformer
 
     def __init__(self, location_transformer: LocationOutputTransformer):
-        self.transform_location = location_transformer
+        self._transform_location = location_transformer
 
     def __call__(self, melding: Melding) -> MeldingOutput:
         if melding.geo_location is None:
             geojson = None
         else:
-            geojson = self.transform_location(melding.geo_location)
+            geojson = self._transform_location(melding.geo_location)
 
         return MeldingOutput(
             id=melding.id,

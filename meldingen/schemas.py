@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Annotated, Any, Optional, Union
+from typing import Annotated, Any, Union
 
 from geojson_pydantic import Feature as GeoJsonPydanticFeature
-from geojson_pydantic import Point, Polygon
+from geojson_pydantic import Point
 from meldingen_core.models import Classification, User
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
