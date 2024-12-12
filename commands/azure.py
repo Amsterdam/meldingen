@@ -17,6 +17,7 @@ async def async_create_container() -> None:
         else:
             print("[yellow]Warning[/yellow] Azure storage blobs container already exists!")
 
+
 @app.command()
 def create_container() -> None:
     asyncio.run(async_create_container())
