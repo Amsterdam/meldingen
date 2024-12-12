@@ -100,6 +100,7 @@ from meldingen.schema_factories import (
     FormTextAreaComponentOutputFactory,
     FormTextFieldInputComponentOutputFactory,
     MeldingOutputFactory,
+    SimpleStaticFormOutputFactory,
     StaticFormCheckboxComponentOutputFactory,
     StaticFormComponentOutputFactory,
     StaticFormOutputFactory,
@@ -613,6 +614,10 @@ def static_form_component_output_factory(
         radio_factory,
         select_factory,
     )
+
+
+def simple_static_form_output_factory() -> SimpleStaticFormOutputFactory:
+    return SimpleStaticFormOutputFactory()
 
 
 def static_form_output_factory(
