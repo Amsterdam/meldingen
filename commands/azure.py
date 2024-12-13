@@ -10,9 +10,12 @@ app = typer.Typer()
 
 async def async_create_container() -> None:
     async for client in azure_container_client():
-        await client.create_container()
+        if not await client.exists():
+            await client.create_container()
 
-    print("[green]Success[/green] Azure storage blobs container created!")
+            print("[green]Success[/green] Azure storage blobs container created!")
+        else:
+            print("[yellow]Warning[/yellow] Azure storage blobs container already exists!")
 
 
 @app.command()
