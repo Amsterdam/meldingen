@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
-from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_404_NOT_FOUND
 
 from meldingen.actions import StaticFormListAction, StaticFormRetrieveAction, StaticFormUpdateAction
@@ -9,15 +8,16 @@ from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortP
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
+    simple_static_form_output_factory,
     static_form_list_action,
     static_form_output_factory,
     static_form_repository,
     static_form_retrieve_action,
     static_form_update_action,
 )
-from meldingen.output_schemas import StaticFormOutput
+from meldingen.output_schemas import SimpleStaticFormOutput, StaticFormOutput
 from meldingen.repositories import StaticFormRepository
-from meldingen.schema_factories import StaticFormOutputFactory
+from meldingen.schema_factories import SimpleStaticFormOutputFactory, StaticFormOutputFactory
 from meldingen.schemas import StaticFormInput
 
 router = APIRouter()
@@ -73,10 +73,10 @@ async def update_static_form(
 )
 async def list_static_forms(
     action: Annotated[StaticFormListAction, Depends(static_form_list_action)],
-    produce_output_model: Annotated[StaticFormOutputFactory, Depends(static_form_output_factory)],
+    produce_output_model: Annotated[SimpleStaticFormOutputFactory, Depends(simple_static_form_output_factory)],
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
-) -> list[StaticFormOutput]:
+) -> list[SimpleStaticFormOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 

@@ -320,9 +320,10 @@ async def primary_form(db_session: AsyncSession) -> StaticForm:
 async def static_forms(db_session: AsyncSession) -> list[StaticForm]:
     static_forms = []
     for form_type in StaticFormTypeEnum:
+        title = form_type.capitalize()
         form = StaticForm(
             type=StaticFormTypeEnum[form_type],
-            title=f"{form_type}",
+            title=f"{title}",
             display=FormIoFormDisplayEnum.form,
         )
 

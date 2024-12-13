@@ -28,6 +28,7 @@ from meldingen.output_schemas import (
     FormSelectComponentOutput,
     FormTextAreaComponentOutput,
     FormTextFieldInputComponentOutput,
+    SimpleStaticFormOutput,
     StaticFormCheckboxComponentOutput,
     StaticFormOutput,
     StaticFormPanelComponentOutput,
@@ -280,6 +281,18 @@ class StaticFormOutputFactory:
             title=static_form.title,
             display=static_form.display,
             components=await self._components(components),
+            created_at=static_form.created_at,
+            updated_at=static_form.updated_at,
+        )
+
+
+class SimpleStaticFormOutputFactory:
+    async def __call__(self, static_form: StaticForm) -> SimpleStaticFormOutput:
+        return SimpleStaticFormOutput(
+            id=static_form.id,
+            type=str(static_form.type),
+            title=static_form.title,
+            display=static_form.display,
             created_at=static_form.created_at,
             updated_at=static_form.updated_at,
         )
