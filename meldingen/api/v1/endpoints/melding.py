@@ -29,6 +29,7 @@ from starlette.status import (
 )
 
 from meldingen.actions import (
+    AddLocationToMeldingAction,
     AnswerCreateAction,
     DeleteAttachmentAction,
     DownloadAttachmentAction,
@@ -48,6 +49,7 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
     melding_add_attachments_action,
+    melding_add_location_action,
     melding_answer_create_action,
     melding_answer_questions_action,
     melding_complete_action,
@@ -56,6 +58,7 @@ from meldingen.dependencies import (
     melding_download_attachment_action,
     melding_list_action,
     melding_list_attachments_action,
+    melding_output_factory,
     melding_process_action,
     melding_repository,
     melding_retrieve_action,
@@ -66,10 +69,12 @@ from meldingen.dependencies import (
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Attachment, Melding
 from meldingen.repositories import MeldingRepository
+from meldingen.schema_factories import MeldingOutputFactory
 from meldingen.schemas import (
     AnswerInput,
     AnswerOutput,
     AttachmentOutput,
+    GeoJson,
     MeldingCreateOutput,
     MeldingInput,
     MeldingOutput,
@@ -77,17 +82,6 @@ from meldingen.schemas import (
 
 router = APIRouter()
 logger = structlog.get_logger()
-
-
-def _hydrate_output(melding: Melding) -> MeldingOutput:
-    return MeldingOutput(
-        id=melding.id,
-        text=melding.text,
-        state=melding.state,
-        classification=melding.classification_id,
-        created_at=melding.created_at,
-        updated_at=melding.updated_at,
-    )
 
 
 @router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
@@ -128,6 +122,7 @@ async def list_meldingen(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[MeldingListAction, Depends(melding_list_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> list[MeldingOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -137,7 +132,7 @@ async def list_meldingen(
     )
     output = []
     for melding in meldingen:
-        output.append(_hydrate_output(melding))
+        output.append(produce_output(melding))
 
     return output
 
@@ -151,13 +146,14 @@ async def list_meldingen(
 async def retrieve_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[MeldingRetrieveAction, Depends(melding_retrieve_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     melding = await action(pk=melding_id)
 
     if not melding:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.patch(
@@ -171,6 +167,7 @@ async def update_melding(
     token: Annotated[str, Query(description="The token of the melding.")],
     melding_input: MeldingInput,
     action: Annotated[MeldingUpdateAction[Melding, Melding], Depends(melding_update_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(pk=melding_id, values=melding_input.model_dump(), token=token)
@@ -182,7 +179,7 @@ async def update_melding(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.put(
@@ -199,6 +196,7 @@ async def answer_questions(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingAnswerQuestionsAction[Melding, Melding], Depends(melding_answer_questions_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id, token)
@@ -209,7 +207,7 @@ async def answer_questions(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.put(
@@ -226,6 +224,7 @@ async def add_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingAddAttachmentsAction[Melding, Melding], Depends(melding_add_attachments_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id, token)
@@ -236,7 +235,7 @@ async def add_attachments(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.put(
@@ -253,6 +252,7 @@ async def submit_location(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingSubmitLocationAction[Melding, Melding], Depends(melding_submit_location_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id, token)
@@ -265,7 +265,7 @@ async def submit_location(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.put(
@@ -282,6 +282,7 @@ async def submit_location(
 async def process_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[MeldingProcessAction[Melding, Melding], Depends(melding_process_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id)
@@ -290,7 +291,7 @@ async def process_melding(
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.put(
@@ -307,6 +308,7 @@ async def process_melding(
 async def complete_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[MeldingCompleteAction[Melding, Melding], Depends(melding_complete_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id)
@@ -315,7 +317,7 @@ async def complete_melding(
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
-    return _hydrate_output(melding)
+    return produce_output(melding)
 
 
 @router.post(
@@ -506,3 +508,26 @@ async def delete_attachment(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+
+@router.post(
+    "/{melding_id}/location",
+    name="melding:add-location",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def add_location_to_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    location: GeoJson,
+    action: Annotated[AddLocationToMeldingAction, Depends(melding_add_location_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+
+    try:
+        melding = await action(melding_id, token, location)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return produce_output(melding)
