@@ -27,7 +27,7 @@ pydantic-media-type = {git = "https://github.com/Amsterdam/pydantic-media-type.g
 pydantic-settings = "^2.7.0"
 pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 python-magic = "^0.4.27"
-python-multipart = "^0.0.19"
+python-multipart = "^0.0.20"
 shapely = "^2.0.6"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.35"}
 structlog = "^24.1.0"
