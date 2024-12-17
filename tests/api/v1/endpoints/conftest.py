@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -225,6 +226,7 @@ async def form_with_classification(db_session: AsyncSession, form_title: str, js
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
     panel = FormIoPanelComponent(
+        title="Panel 1",
         label="Page 1",
         key="page1",
         input=False,
@@ -318,9 +320,10 @@ async def primary_form(db_session: AsyncSession) -> StaticForm:
 async def static_forms(db_session: AsyncSession) -> list[StaticForm]:
     static_forms = []
     for form_type in StaticFormTypeEnum:
+        title = form_type.capitalize()
         form = StaticForm(
             type=StaticFormTypeEnum[form_type],
-            title=f"{form_type}",
+            title=f"{title}",
             display=FormIoFormDisplayEnum.form,
         )
 
@@ -377,3 +380,25 @@ async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -
     await db_session.refresh(melding)
 
     return melding
+
+
+@pytest.fixture
+async def geojson_geometry(request: FixtureRequest) -> dict[str, Any] | None:
+    if hasattr(request, "param"):
+        return dict(request.param)
+
+    return None
+
+
+@pytest.fixture
+async def geojson(geojson_geometry: dict[str, Any]) -> dict[str, Any]:
+    if geojson_geometry is not None:
+        geometry = geojson_geometry
+    else:
+        geometry = {"type": "Point", "coordinates": [52.3680605, 4.897092]}
+
+    return {
+        "type": "Feature",
+        "geometry": geometry,
+        "properties": {},
+    }

@@ -86,6 +86,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "display": "wizard",
             "components": [
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel-1",
                     "type": "panel",
@@ -136,6 +137,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "display": "wizard",
             "components": [
                 {
+                    "title": "Panel 1 title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -158,6 +160,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 2 title",
                     "label": "panel-2",
                     "key": "panel",
                     "type": "panel",
@@ -178,6 +181,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 3 title",
                     "label": "panel-3",
                     "key": "panel",
                     "type": "panel",
@@ -206,6 +210,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 4 title",
                     "label": "panel-4",
                     "key": "panel",
                     "type": "panel",
@@ -230,6 +235,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel 5 title",
                     "label": "panel-5",
                     "key": "panel",
                     "type": "panel",
@@ -333,6 +339,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             "display": "wizard",
             "components": [
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel-1",
                     "type": "panel",
@@ -385,6 +392,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     ],
                 },
                 {
+                    "title": "Panel title",
                     "label": "panel-1",
                     "key": "panel",
                     "type": "panel",
@@ -489,7 +497,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             i = i + 1
 
 
-class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
+class TestStaticFormList(BaseStaticFormTest):
     ROUTE_NAME: Final[str] = "static-form:list"
     METHOD: Final[str] = "GET"
 
@@ -508,13 +516,6 @@ class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
 
             assert form.get("title") == fixture_form.title
             assert form.get("display") == fixture_form.display
-
-            fixture_component = fixture_form.components[0]
-            data_component = form.get("components")[0]
-
-            assert fixture_component.label == data_component.get("label")
-            assert fixture_component.key == data_component.get("key")
-            assert fixture_component.type == data.component.get("type")
 
             assert response.headers.get("content-range") == "StaticForm 0-49/4"
 
@@ -566,20 +567,20 @@ class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
                 "type",
                 SortingDirection.ASC,
                 [
-                    {"type": "attachments", "title": "Attachments"},
-                    {"type": "contact", "title": "Contact"},
-                    {"type": "location", "title": "Location"},
                     {"type": "primary", "title": "Primary"},
+                    {"type": "attachments", "title": "Attachments"},
+                    {"type": "location", "title": "Location"},
+                    {"type": "contact", "title": "Contact"},
                 ],
             ),
             (
                 "type",
                 SortingDirection.DESC,
                 [
-                    {"type": "primary", "title": "Primary"},
-                    {"type": "location", "title": "Location"},
                     {"type": "contact", "title": "Contact"},
+                    {"type": "location", "title": "Location"},
                     {"type": "attachments", "title": "Attachments"},
+                    {"type": "primary", "title": "Primary"},
                 ],
             ),
         ],
@@ -593,7 +594,9 @@ class TestStaticFormList(BaseStaticFormTest, BaseUnauthorizedTest):
         direction: SortingDirection,
         expected: list[dict[str, Any]],
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, params={"sort": f"{attribute}:{direction}"}))
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
+        )
 
         assert response.status_code == HTTP_200_OK
         data = response.json()

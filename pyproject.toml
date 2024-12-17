@@ -17,17 +17,18 @@ asyncpg = "^0.30.0"
 fastapi = {extras = ["standard"], version = "^0.115.5"}
 geoalchemy2 = "^0.16.0"
 geojson-pydantic = "^1.1.1"
-httpx = {extras = ["http2"], version = "^0.27.2"}
+httpx = {extras = ["http2"], version = "^0.28.1"}
 maykin-json-logic-py = "^0.13.0"
 meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
-pydantic = {extras = ["email"], version = "^2.9.2"}
+pydantic = {extras = ["email"], version = "^2.10.2"}
 pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git"}
 pydantic-media-type = {git = "https://github.com/Amsterdam/pydantic-media-type.git"}
-pydantic-settings = "^2.6.1"
+pydantic-settings = "^2.7.0"
 pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 python-magic = "^0.4.27"
-python-multipart = "^0.0.17"
+python-multipart = "^0.0.20"
+shapely = "^2.0.6"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.35"}
 structlog = "^24.1.0"
 
@@ -36,7 +37,7 @@ asgi-lifespan = "^2.1.0"
 black = "^24.10.0"
 isort = "^5.13.2"
 mkdocs-literate-nav = "^0.6.1"
-mkdocs-material = "^9.5.43"
+mkdocs-material = "^9.5.49"
 mkdocstrings = {version = "^0.27.0", extras = ["python"]}
 mypy = "^1.12.1"
 mypy-baseline = "^0.7.1"
@@ -44,7 +45,8 @@ pre-commit = "^4.0.0"
 pytest = "^8.3.3"
 pytest-alembic = "^0.11.1"
 pytest-cov = "^6.0.0"
-typer = {extras = ["all"], version = "^0.13.1"}
+typer = {extras = ["all"], version = "^0.15.1"}
+types-shapely = "^2.0.0.20241112"
 
 [build-system]
 requires = ["poetry-core"]

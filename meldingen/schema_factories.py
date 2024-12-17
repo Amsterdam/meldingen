@@ -1,5 +1,6 @@
 from typing import Union
 
+from meldingen.location import LocationOutputTransformer
 from meldingen.models import (
     BaseFormIoValuesComponent,
     Form,
@@ -12,6 +13,7 @@ from meldingen.models import (
     FormIoSelectComponentData,
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
+    Melding,
     StaticForm,
 )
 from meldingen.output_schemas import (
@@ -26,6 +28,7 @@ from meldingen.output_schemas import (
     FormSelectComponentOutput,
     FormTextAreaComponentOutput,
     FormTextFieldInputComponentOutput,
+    SimpleStaticFormOutput,
     StaticFormCheckboxComponentOutput,
     StaticFormOutput,
     StaticFormPanelComponentOutput,
@@ -34,6 +37,7 @@ from meldingen.output_schemas import (
     StaticFormTextAreaComponentOutput,
     StaticFormTextFieldInputComponentOutput,
 )
+from meldingen.schemas import GeoJson, MeldingOutput
 
 
 class ValidateAdder:
@@ -251,6 +255,7 @@ class StaticFormComponentOutputFactory:
         children_output = await self.__call__(children)
 
         return StaticFormPanelComponentOutput(
+            title=await component.awaitable_attrs.title,
             label=component.label,
             description=component.description,
             key=component.key,
@@ -276,6 +281,18 @@ class StaticFormOutputFactory:
             title=static_form.title,
             display=static_form.display,
             components=await self._components(components),
+            created_at=static_form.created_at,
+            updated_at=static_form.updated_at,
+        )
+
+
+class SimpleStaticFormOutputFactory:
+    async def __call__(self, static_form: StaticForm) -> SimpleStaticFormOutput:
+        return SimpleStaticFormOutput(
+            id=static_form.id,
+            type=str(static_form.type),
+            title=static_form.title,
+            display=static_form.display,
             created_at=static_form.created_at,
             updated_at=static_form.updated_at,
         )
@@ -476,6 +493,7 @@ class FormComponentOutputFactory:
         children_output = await self.__call__(children)
 
         return FormPanelComponentOutput(
+            title=await component.awaitable_attrs.title,
             label=component.label,
             description=component.description,
             key=component.key,
@@ -504,4 +522,27 @@ class FormOutputFactory:
             components=await self._components(components),
             created_at=form.created_at,
             updated_at=form.updated_at,
+        )
+
+
+class MeldingOutputFactory:
+    _transform_location: LocationOutputTransformer
+
+    def __init__(self, location_transformer: LocationOutputTransformer):
+        self._transform_location = location_transformer
+
+    def __call__(self, melding: Melding) -> MeldingOutput:
+        if melding.geo_location is None:
+            geojson = None
+        else:
+            geojson = self._transform_location(melding.geo_location)
+
+        return MeldingOutput(
+            id=melding.id,
+            text=melding.text,
+            state=melding.state,
+            classification=melding.classification_id,
+            created_at=melding.created_at,
+            updated_at=melding.updated_at,
+            geo_location=geojson,
         )

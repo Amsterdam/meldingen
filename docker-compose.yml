@@ -30,6 +30,7 @@ services:
       - "54321:5432"
     volumes:
       - "./docker/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d"
+      - "pgdata:/var/lib/postgresql/data"
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "meldingen", "-U", "meldingen" ]
       interval: 10s
@@ -58,13 +59,15 @@ services:
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite:latest
-    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --debug /var/log/azurite.log
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --debug /var/log/azurite.log -l /opt/azurite/data
     ports:
       - "10000:10000"
     healthcheck:
       test: nc 127.0.0.1 10000 -z
       interval: 1s
       retries: 30
+    volumes:
+      - azurite:/opt/azurite/data
 
   imgproxy:
     image: darthsim/imgproxy
@@ -81,3 +84,7 @@ services:
       IMGPROXY_BASE_URL: abs://meldingencontainer/
     healthcheck:
       test: ["CMD", "imgproxy", "health"]
+
+volumes:
+    pgdata: ~
+    azurite: ~
