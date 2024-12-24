@@ -16,7 +16,7 @@ asgi-correlation-id = "^4.3.4"
 asyncpg = "^0.30.0"
 fastapi = {extras = ["standard"], version = "^0.115.5"}
 geoalchemy2 = "^0.16.0"
-geojson-pydantic = "^1.1.1"
+geojson-pydantic = "^1.2.0"
 httpx = {extras = ["http2"], version = "^0.28.1"}
 maykin-json-logic-py = "^0.13.0"
 meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
