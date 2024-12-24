@@ -80,12 +80,12 @@ class Group(BaseDBModel):
 class FormIoComponentTypeEnum(enum.StrEnum):
     """The value of the type field"""
 
-    panel: Final[str] = "panel"
-    text_area: Final[str] = "textarea"
-    text_field: Final[str] = "textfield"
-    checkbox: Final[str] = "selectboxes"
-    radio: Final[str] = "radio"
-    select: Final[str] = "select"
+    panel = "panel"
+    text_area = "textarea"
+    text_field = "textfield"
+    checkbox = "selectboxes"
+    radio = "radio"
+    select = "select"
 
 
 class FormIoComponent(AsyncAttrs, BaseDBModel):
@@ -294,9 +294,9 @@ class FormIoFormDisplayEnum(enum.StrEnum):
     - pdf
     """
 
-    form: Final[str] = "form"
-    wizard: Final[str] = "wizard"
-    pdf: Final[str] = "pdf"
+    form = "form"
+    wizard = "wizard"
+    pdf = "pdf"
 
 
 class Form(AsyncAttrs, BaseDBModel, BaseForm):
@@ -324,10 +324,10 @@ class Form(AsyncAttrs, BaseDBModel, BaseForm):
 
 
 class StaticFormTypeEnum(enum.StrEnum):
-    primary: Final[str] = "primary"
-    attachments: Final[str] = "attachments"
-    location: Final[str] = "location"
-    contact: Final[str] = "contact"
+    primary = "primary"
+    attachments = "attachments"
+    location = "location"
+    contact = "contact"
 
 
 class StaticForm(AsyncAttrs, BaseDBModel):
