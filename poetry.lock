@@ -1191,13 +1191,13 @@ shapely = ["Shapely (>=1.7)"]
 
 [[package]]
 name = "geojson-pydantic"
-version = "1.1.2"
+version = "1.2.0"
 description = "Pydantic data models for the GeoJSON spec."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "geojson_pydantic-1.1.2-py3-none-any.whl", hash = "sha256:2488736307c1717469419110b31413277fc1095eb2137592d5417e6100268d0f"},
-    {file = "geojson_pydantic-1.1.2.tar.gz", hash = "sha256:be3b686e059dad95caff1ea411f020333b2c6182d87fcc4f69d1cbde2cca2c09"},
+    {file = "geojson_pydantic-1.2.0-py3-none-any.whl", hash = "sha256:30f469d05f7f73dcac5f995579209d1ae74a148c0724018fa9492675e05eebf6"},
+    {file = "geojson_pydantic-1.2.0.tar.gz", hash = "sha256:eb5c61d3106a28bc71c936ef4cb44f36025db314059217063fee87d82e50cc81"},
 ]
 
 [package.dependencies]
@@ -3723,4 +3723,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "88c4de9b56e84bcda0cbafa71b49fdf7dbe773be2b982240bd8817b389c1bea1"
+content-hash = "17748be193a461a058fda8ad40501ada7dab9c3c6f193055b2fe2ebc28cc1999"
