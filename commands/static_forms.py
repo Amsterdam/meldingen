@@ -71,8 +71,9 @@ async def generate_primary_form_component() -> FormIoTextAreaComponent:
         auto_expand=True,
         max_char_count=1000,
         jsonlogic=None,
-        required=False
+        required=False,
     )
+
 
 @app.command()
 def create() -> None:
