@@ -14,6 +14,7 @@ from meldingen_core.actions.classification import ClassificationDeleteAction as 
 from meldingen_core.actions.classification import ClassificationListAction as BaseClassificationListAction
 from meldingen_core.actions.classification import ClassificationRetrieveAction as BaseClassificationRetrieveAction
 from meldingen_core.actions.classification import ClassificationUpdateAction as BaseClassificationUpdateAction
+from meldingen_core.actions.melding import MeldingAddContactAction as BaseMeldingAddContactAction
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
 from meldingen_core.actions.user import UserCreateAction as BaseUserCreateAction
@@ -535,3 +536,6 @@ class AddLocationToMeldingAction:
         melding = await self._ingest_location(melding, location)
 
         return melding
+
+
+class AddContactToMeldingAction(BaseMeldingAddContactAction[Melding, Melding]): ...

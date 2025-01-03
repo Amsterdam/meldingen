@@ -6,8 +6,10 @@ from geojson_pydantic import Point
 from meldingen_core.models import Classification, User
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
+from pydantic_extra_types.phone_numbers import PhoneNumber as PydanticPhoneNumber
 from pydantic_jsonlogic import JSONLogic
 
+from meldingen.config import settings
 from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
 from meldingen.validators import create_non_match_validator
 
@@ -19,6 +21,22 @@ class BaseOutputModel(BaseModel):
 
 
 class GeoJson(GeoJsonPydanticFeature[Point, dict[str, Any] | BaseModel]): ...
+
+
+class PhoneNumber(PydanticPhoneNumber):
+    default_region_code = settings.phone_number_default_region_code
+    phone_format = settings.phone_number_format
+
+    # If format is E164 and region code is NL
+    # It will accept:
+    # 06 12345678
+    # 020 1234567
+    # +31 6 12345678
+    # +31 20 1234567
+
+    # Will return:
+    # +31612345678
+    # +31201234567
 
 
 class ClassificationInput(BaseModel, Classification):
@@ -38,10 +56,23 @@ class MeldingOutput(BaseOutputModel):
     state: str
     classification: int | None = Field(default=None)
     geo_location: GeoJson | None = Field(default=None)
+    email: EmailStr | None = Field(default=None)
+    phone: PhoneNumber | None = Field(default=None)
 
 
 class MeldingCreateOutput(MeldingOutput):
     token: str
+
+
+#
+# # +31 6 12345678
+# # +31 20 1234567
+# PhoneNumber.phone_format = "E164"
+
+
+class MeldingContactInput(BaseModel):
+    email: EmailStr | None = Field(default=None)
+    phone: PhoneNumber | None = Field(default=None)
 
 
 class UserCreateInput(BaseModel, User):
