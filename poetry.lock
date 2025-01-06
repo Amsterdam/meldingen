@@ -171,13 +171,13 @@ tz = ["backports.zoneinfo"]
 
 [[package]]
 name = "alembic-postgresql-enum"
-version = "1.4.0"
+version = "1.5.0"
 description = "Alembic autogenerate support for creation, alteration and deletion of enums"
 optional = false
 python-versions = "<4.0,>=3.7"
 files = [
-    {file = "alembic_postgresql_enum-1.4.0-py3-none-any.whl", hash = "sha256:c9eb20cb594085a48175aabcc5ffb448e6abfcc3f34cd9d03a1b7d5cc35457b8"},
-    {file = "alembic_postgresql_enum-1.4.0.tar.gz", hash = "sha256:fb0af50059891bf3fb9638d4c32a61b4eee116c302a90e0c74ed3f5f396153f4"},
+    {file = "alembic_postgresql_enum-1.5.0-py3-none-any.whl", hash = "sha256:84e4da63b8849af5f06e966ba2b32678813d8cc1841fb17c37b73155358cdb9b"},
+    {file = "alembic_postgresql_enum-1.5.0.tar.gz", hash = "sha256:4917dbd99e3ced777169301b2bc294dd6927668867e7017b27d090d0cbf0c876"},
 ]
 
 [package.dependencies]
@@ -3723,4 +3723,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "42d4fde63b839780f764d47371521940ae13b8fb24beade259cd72eaf62c6205"
+content-hash = "468bff8a955ade1e89e64e5efc0a78948f3b295802f7f621f83ed7eb0a396839"
