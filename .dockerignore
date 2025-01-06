@@ -4,7 +4,6 @@ __pycache__
 .github/
 .mypy_cache/
 .pytest_cache/
-README.md
 Dockerfile
 docker
 docker-compose.yml
