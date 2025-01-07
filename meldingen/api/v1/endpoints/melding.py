@@ -548,10 +548,10 @@ async def add_contact_to_melding(
     action: Annotated[AddContactToMeldingAction, Depends(melding_add_contact_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
-    data = contact_details.model_dump(by_alias=True)
+    phone, email = contact_details.phone, contact_details.email
 
     try:
-        melding = await action(melding_id, data, token)
+        melding = await action(melding_id, phone, email, token)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
