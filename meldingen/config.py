@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     thumbnail_height: int = 150
 
     # Phone number format
-    phone_number_format: str = "E164"  # International
+    phone_number_format: str = "E164"  # International ITU standard
     phone_number_default_region_code: str = "NL"
 
 

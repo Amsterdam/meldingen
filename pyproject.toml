@@ -19,7 +19,7 @@ geoalchemy2 = "^0.16.0"
 geojson-pydantic = "^1.2.0"
 httpx = {extras = ["http2"], version = "^0.28.1"}
 maykin-json-logic-py = "^0.13.0"
-meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git", rev="36afaf4"}
+meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git", rev="2271951"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
 phonenumbers = "^8.13.52"
 pydantic = {extras = ["email"], version = "^2.10.4"}
