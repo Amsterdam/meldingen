@@ -17,7 +17,7 @@ docker compose run --rm --user=root meldingen poetry add {dependency}
 For example, to add the pydantic dependency:
 
 ```bash
-docker-compose run --rm --user=root meldingen poetry add pydantic
+docker compose run --rm --user=root meldingen poetry add pydantic
 ```
 
 This command installs the specified dependency into the project.
@@ -33,7 +33,7 @@ purposes, an additional parameter `-G dev` should be included. For instance,
 to add a development dependency such as pytest, use the following command:
 
 ```bash
-docker-compose run --rm --user=root meldingen poetry add -G dev pytest
+docker compose run --rm --user=root meldingen poetry add -G dev pytest
 ```
 
 Including `-G dev` ensures that the dependency is added as a development 
@@ -45,7 +45,7 @@ To update existing dependencies to their latest compatible versions, use the
 following command:
 
 ```bash
-docker-compose run --rm --user=root meldingen poetry update
+docker compose run --rm --user=root meldingen poetry update
 ```
 
 This command updates all dependencies to their latest compatible versions based 
