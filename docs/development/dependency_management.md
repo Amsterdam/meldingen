@@ -11,16 +11,20 @@ For more detailed information about Poetry take a look at the [official Poetry d
 To add a new dependency, execute the following command:
 
 ```bash
-docker-compose run --rm meldingen poetry add {dependency}
+docker compose run --rm --user=root meldingen poetry add {dependency}
 ```
 
 For example, to add the pydantic dependency:
 
 ```bash
-docker-compose run --rm meldingen poetry add pydantic
+docker compose run --rm --user=root meldingen poetry add pydantic
 ```
 
 This command installs the specified dependency into the project.
+
+### Rootless Docker
+Because the container is running rootless and Poetry needs to make changes
+to the filesystem, we need to execute our commands as the root user.
 
 ## Development, Linting, and Testing Dependencies
 
@@ -29,7 +33,7 @@ purposes, an additional parameter `-G dev` should be included. For instance,
 to add a development dependency such as pytest, use the following command:
 
 ```bash
-docker-compose run --rm meldingen poetry add -G dev pytest
+docker compose run --rm --user=root meldingen poetry add -G dev pytest
 ```
 
 Including `-G dev` ensures that the dependency is added as a development 
@@ -41,7 +45,7 @@ To update existing dependencies to their latest compatible versions, use the
 following command:
 
 ```bash
-docker-compose run --rm meldingen poetry update
+docker compose run --rm --user=root meldingen poetry update
 ```
 
 This command updates all dependencies to their latest compatible versions based 
