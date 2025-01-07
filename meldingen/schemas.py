@@ -64,12 +64,6 @@ class MeldingCreateOutput(MeldingOutput):
     token: str
 
 
-#
-# # +31 6 12345678
-# # +31 20 1234567
-# PhoneNumber.phone_format = "E164"
-
-
 class MeldingContactInput(BaseModel):
     email: EmailStr | None = Field(default=None)
     phone: PhoneNumber | None = Field(default=None)
