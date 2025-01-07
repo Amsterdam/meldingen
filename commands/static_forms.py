@@ -68,7 +68,7 @@ async def generate_primary_form_component() -> FormIoTextAreaComponent:
         key="primary",
         type=FormIoComponentTypeEnum.text_area,
         input=True,
-        auto_expand=True,
+        auto_expand=False,
         max_char_count=1000,
         jsonlogic=None,
         required=True,
