@@ -22,6 +22,8 @@ meldingen/models.py:0: error: Incompatible types in assignment (expression has t
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str | None]", base class "Melding" defined the type as "str | None")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[DateTime | None]", base class "Melding" defined the type as "datetime | None")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[list[meldingen.models.Attachment]]", base class "Melding" defined the type as "list[meldingen_core.models.Attachment]")  [assignment]
+meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str | None]", base class "Melding" defined the type as "str | None")  [assignment]
+meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str | None]", base class "Melding" defined the type as "str | None")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "User" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "User" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]

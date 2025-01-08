@@ -29,6 +29,7 @@ from starlette.status import (
 )
 
 from meldingen.actions import (
+    AddContactToMeldingAction,
     AddLocationToMeldingAction,
     AnswerCreateAction,
     DeleteAttachmentAction,
@@ -49,6 +50,7 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
     melding_add_attachments_action,
+    melding_add_contact_action,
     melding_add_location_action,
     melding_answer_create_action,
     melding_answer_questions_action,
@@ -75,6 +77,7 @@ from meldingen.schemas import (
     AnswerOutput,
     AttachmentOutput,
     GeoJson,
+    MeldingContactInput,
     MeldingCreateOutput,
     MeldingInput,
     MeldingOutput,
@@ -512,7 +515,7 @@ async def delete_attachment(
 
 @router.post(
     "/{melding_id}/location",
-    name="melding:add-location",
+    name="melding:location-add",
     responses={**not_found_response, **unauthorized_response},
 )
 async def add_location_to_melding(
@@ -525,6 +528,30 @@ async def add_location_to_melding(
 
     try:
         melding = await action(melding_id, token, location)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return produce_output(melding)
+
+
+@router.post(
+    "/{melding_id}/contact",
+    name="melding:contact-add",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def add_contact_to_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    contact_details: MeldingContactInput,
+    action: Annotated[AddContactToMeldingAction, Depends(melding_add_contact_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    phone, email = contact_details.phone, contact_details.email
+
+    try:
+        melding = await action(melding_id, phone, email, token)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:

@@ -1803,7 +1803,7 @@ class TestMeldingDeleteAttachmentAction:
 
 
 class TestAddLocationToMeldingAction:
-    ROUTE_NAME: Final[str] = "melding:add-location"
+    ROUTE_NAME: Final[str] = "melding:location-add"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1918,3 +1918,51 @@ class TestAddLocationToMeldingAction:
 
         assert len(detail) == 6
         assert detail[0].get("msg") == "Input should be 'Point'"
+
+
+class TestMeldingAddContactAction:
+    ROUTE_NAME: Final[str] = "melding:contact-add"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "email", "phone"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "user@example.com", "+31612345678")],
+    )
+    async def test_add_contact(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, email: str, phone: str
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "supersecuretoken"},
+            json={"email": email, "phone": phone},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        data = response.json()
+        assert data.get("email") == email
+        assert data.get("phone") == phone
+
+    @pytest.mark.anyio
+    async def test_add_contact_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=999),
+            params={"token": "nonexistingtoken"},
+            json={"email": "user@example.com", "phone": "+31612345678"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_add_contact_incorrect_token(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "incorrecttoken"},
+            json={"email": "user@example.com", "phone": "+31612345678"},
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED

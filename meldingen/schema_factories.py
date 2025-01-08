@@ -545,4 +545,6 @@ class MeldingOutputFactory:
             created_at=melding.created_at,
             updated_at=melding.updated_at,
             geo_location=geojson,
+            email=melding.email,
+            phone=melding.phone,
         )
