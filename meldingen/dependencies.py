@@ -24,7 +24,7 @@ from plugfs.filesystem import Adapter, Filesystem
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions import (
-    AddContactToMeldingAction,
+    AddContactInfoToMeldingAction,
     AddLocationToMeldingAction,
     AnswerCreateAction,
     ClassificationCreateAction,
@@ -268,8 +268,8 @@ def melding_update_action(
 def melding_add_contact_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
-) -> AddContactToMeldingAction:
-    return AddContactToMeldingAction(repository, token_verifier)
+) -> AddContactInfoToMeldingAction:
+    return AddContactInfoToMeldingAction(repository, token_verifier)
 
 
 def melding_answer_questions_action(

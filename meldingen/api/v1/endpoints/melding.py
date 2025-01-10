@@ -29,7 +29,7 @@ from starlette.status import (
 )
 
 from meldingen.actions import (
-    AddContactToMeldingAction,
+    AddContactInfoToMeldingAction,
     AddLocationToMeldingAction,
     AnswerCreateAction,
     DeleteAttachmentAction,
@@ -538,7 +538,7 @@ async def add_contact_to_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     contact_details: MeldingContactInput,
-    action: Annotated[AddContactToMeldingAction, Depends(melding_add_contact_action)],
+    action: Annotated[AddContactInfoToMeldingAction, Depends(melding_add_contact_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     phone, email = contact_details.phone, contact_details.email
