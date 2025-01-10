@@ -71,9 +71,10 @@ from meldingen.dependencies import (
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Attachment, Melding
 from meldingen.repositories import MeldingRepository
-from meldingen.schemas.input import AnswerInput, GeoJsonInput, MeldingContactInput, MeldingInput
+from meldingen.schemas.input import AnswerInput, MeldingContactInput, MeldingInput
 from meldingen.schemas.output import AnswerOutput, AttachmentOutput, MeldingCreateOutput, MeldingOutput
 from meldingen.schemas.output_factories import MeldingOutputFactory
+from meldingen.schemas.types import GeoJson
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -513,7 +514,7 @@ async def delete_attachment(
 async def add_location_to_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    location: GeoJsonInput,
+    location: GeoJson,
     action: Annotated[AddLocationToMeldingAction, Depends(melding_add_location_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:

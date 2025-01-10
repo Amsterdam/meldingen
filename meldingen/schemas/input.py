@@ -184,6 +184,3 @@ class FormSelectComponentInput(FormComponentInput):
 
 class AnswerInput(BaseModel):
     text: str = Field(min_length=1)
-
-
-class GeoJsonInput(GeoJson): ...

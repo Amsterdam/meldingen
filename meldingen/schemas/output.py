@@ -5,7 +5,6 @@ from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
-from meldingen.models import Classification
 from meldingen.schemas.types import GeoJson, PhoneNumber
 
 ### Form.io ###
