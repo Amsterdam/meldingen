@@ -16,7 +16,7 @@ from meldingen.models import (
     Melding,
     StaticForm,
 )
-from meldingen.output_schemas import (
+from meldingen.schemas.output import (
     BaseFormComponentOutput,
     FormCheckboxComponentOutput,
     FormComponentOutputValidate,
@@ -28,6 +28,7 @@ from meldingen.output_schemas import (
     FormSelectComponentOutput,
     FormTextAreaComponentOutput,
     FormTextFieldInputComponentOutput,
+    MeldingOutput,
     SimpleStaticFormOutput,
     StaticFormCheckboxComponentOutput,
     StaticFormOutput,
@@ -37,7 +38,6 @@ from meldingen.output_schemas import (
     StaticFormTextAreaComponentOutput,
     StaticFormTextFieldInputComponentOutput,
 )
-from meldingen.schemas import GeoJson, MeldingOutput
 
 
 class ValidateAdder:

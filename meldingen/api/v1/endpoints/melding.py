@@ -71,17 +71,10 @@ from meldingen.dependencies import (
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.models import Attachment, Melding
 from meldingen.repositories import MeldingRepository
-from meldingen.schema_factories import MeldingOutputFactory
-from meldingen.schemas import (
-    AnswerInput,
-    AnswerOutput,
-    AttachmentOutput,
-    GeoJson,
-    MeldingContactInput,
-    MeldingCreateOutput,
-    MeldingInput,
-    MeldingOutput,
-)
+from meldingen.schemas.input import AnswerInput, MeldingContactInput, MeldingInput
+from meldingen.schemas.output import AnswerOutput, AttachmentOutput, MeldingCreateOutput, MeldingOutput
+from meldingen.schemas.output_factories import MeldingOutputFactory
+from meldingen.schemas.types import GeoJson
 
 router = APIRouter()
 logger = structlog.get_logger()

@@ -18,7 +18,8 @@ from meldingen.dependencies import (
 )
 from meldingen.models import User
 from meldingen.repositories import UserRepository
-from meldingen.schemas import UserCreateInput, UserOutput, UserUpdateInput
+from meldingen.schemas.input import UserCreateInput, UserUpdateInput
+from meldingen.schemas.output import UserOutput
 
 router = APIRouter()
 

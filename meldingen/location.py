@@ -7,7 +7,7 @@ from shapely import Geometry, Point, to_geojson
 
 from meldingen.models import Melding
 from meldingen.repositories import MeldingRepository
-from meldingen.schemas import GeoJson
+from meldingen.schemas.types import GeoJson
 
 
 class GeoJsonFeatureFactory:

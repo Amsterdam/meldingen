@@ -61,7 +61,8 @@ from meldingen.repositories import (
     QuestionRepository,
     StaticFormRepository,
 )
-from meldingen.schemas import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, GeoJson, StaticFormInput
+from meldingen.schemas.input import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, StaticFormInput
+from meldingen.schemas.types import GeoJson
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
