@@ -84,6 +84,16 @@ class SubmitLocation(BaseTransition[Melding]):
         return self._guards
 
 
+class AddContactInfo(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.LOCATION_SUBMITTED]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.CONTACT_INFO_ADDED
+
+
 class Complete(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:

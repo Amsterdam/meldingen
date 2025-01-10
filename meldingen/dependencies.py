@@ -114,6 +114,7 @@ from meldingen.schemas.output_factories import (
 )
 from meldingen.statemachine import (
     AddAttachments,
+    AddContactInfo,
     AnswerQuestions,
     Classify,
     Complete,
@@ -231,6 +232,7 @@ def melding_state_machine() -> MeldingStateMachine:
                 MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions(),
                 MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
                 MeldingTransitions.SUBMIT_LOCATION: SubmitLocation([HasLocation()]),
+                MeldingTransitions.ADD_CONTACT_INFO: AddContactInfo(),
                 MeldingTransitions.PROCESS: Process(),
                 MeldingTransitions.COMPLETE: Complete(),
             }
