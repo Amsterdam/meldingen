@@ -10,6 +10,7 @@ from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
     MeldingCreateAction,
     MeldingProcessAction,
     MeldingSubmitLocationAction,
@@ -24,7 +25,7 @@ from plugfs.filesystem import Adapter, Filesystem
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions import (
-    AddContactToMeldingAction,
+    AddContactInfoToMeldingAction,
     AddLocationToMeldingAction,
     AnswerCreateAction,
     ClassificationCreateAction,
@@ -113,6 +114,7 @@ from meldingen.schemas.output_factories import (
 )
 from meldingen.statemachine import (
     AddAttachments,
+    AddContactInfo,
     AnswerQuestions,
     Classify,
     Complete,
@@ -230,6 +232,7 @@ def melding_state_machine() -> MeldingStateMachine:
                 MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions(),
                 MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
                 MeldingTransitions.SUBMIT_LOCATION: SubmitLocation([HasLocation()]),
+                MeldingTransitions.ADD_CONTACT_INFO: AddContactInfo(),
                 MeldingTransitions.PROCESS: Process(),
                 MeldingTransitions.COMPLETE: Complete(),
             }
@@ -268,8 +271,8 @@ def melding_update_action(
 def melding_add_contact_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
-) -> AddContactToMeldingAction:
-    return AddContactToMeldingAction(repository, token_verifier)
+) -> AddContactInfoToMeldingAction:
+    return AddContactInfoToMeldingAction(repository, token_verifier)
 
 
 def melding_answer_questions_action(
@@ -533,6 +536,14 @@ def melding_output_factory(
     location_output_transformer: Annotated[LocationOutputTransformer, Depends(location_output_transformer)]
 ) -> MeldingOutputFactory:
     return MeldingOutputFactory(location_output_transformer)
+
+
+def melding_contact_info_added_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+) -> MeldingContactInfoAddedAction[Melding, Melding]:
+    return MeldingContactInfoAddedAction(state_machine, repository, token_verifier)
 
 
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:

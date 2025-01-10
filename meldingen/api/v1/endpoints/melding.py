@@ -8,6 +8,7 @@ from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
     MeldingCreateAction,
     MeldingProcessAction,
     MeldingSubmitLocationAction,
@@ -29,7 +30,7 @@ from starlette.status import (
 )
 
 from meldingen.actions import (
-    AddContactToMeldingAction,
+    AddContactInfoToMeldingAction,
     AddLocationToMeldingAction,
     AnswerCreateAction,
     DeleteAttachmentAction,
@@ -55,6 +56,7 @@ from meldingen.dependencies import (
     melding_answer_create_action,
     melding_answer_questions_action,
     melding_complete_action,
+    melding_contact_info_added_action,
     melding_create_action,
     melding_delete_attachment_action,
     melding_download_attachment_action,
@@ -538,7 +540,7 @@ async def add_contact_to_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     contact_details: MeldingContactInput,
-    action: Annotated[AddContactToMeldingAction, Depends(melding_add_contact_action)],
+    action: Annotated[AddContactInfoToMeldingAction, Depends(melding_add_contact_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     phone, email = contact_details.phone, contact_details.email
@@ -547,6 +549,34 @@ async def add_contact_to_melding(
         melding = await action(melding_id, phone, email, token)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return produce_output(melding)
+
+
+@router.put(
+    "/{melding_id}/add_contact_info",
+    name="melding:add-contact-info",
+    responses={
+        **transition_not_allowed,
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+)
+async def add_contact_info(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[MeldingContactInfoAddedAction[Melding, Melding], Depends(melding_contact_info_added_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
