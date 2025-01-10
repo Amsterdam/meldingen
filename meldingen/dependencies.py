@@ -540,7 +540,7 @@ def melding_contact_info_added_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
-) -> MeldingContactInfoAddedAction:
+) -> MeldingContactInfoAddedAction[Melding, Melding]:
     return MeldingContactInfoAddedAction(state_machine, repository, token_verifier)
 
 
