@@ -1926,10 +1926,14 @@ class TestMeldingAddContactAction:
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "email", "phone"],
-        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "user@example.com", "+31612345678")],
+        [
+            ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "melder@example.com", "+31612345678"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", None, "+31612345678"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "melder@example.com", None),
+        ],
     )
     async def test_add_contact(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, email: str, phone: str
+        self, app: FastAPI, client: AsyncClient, melding: Melding, email: str | None, phone: str | None
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
