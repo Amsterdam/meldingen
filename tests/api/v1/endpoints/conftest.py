@@ -71,6 +71,22 @@ def melding_token_expires(request: FixtureRequest) -> datetime | None:
 
 
 @pytest.fixture
+def melding_email(request: FixtureRequest) -> str | None:
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
+def melding_phone(request: FixtureRequest) -> str | None:
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
 async def melding(
     db_session: AsyncSession,
     melding_text: str,
@@ -78,6 +94,8 @@ async def melding(
     melding_token: str | None,
     melding_token_expires: datetime | None,
     melding_geo_location: str | None,
+    melding_email: str | None,
+    melding_phone: str | None,
 ) -> Melding:
     melding = Melding(text=melding_text)
     if melding_state is not None:
@@ -91,6 +109,9 @@ async def melding(
 
     if melding_geo_location is not None:
         melding.geo_location = melding_geo_location
+
+    melding.email = melding_email
+    melding.phone = melding_phone
 
     db_session.add(melding)
     await db_session.commit()
