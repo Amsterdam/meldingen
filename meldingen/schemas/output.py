@@ -1,19 +1,43 @@
 from datetime import datetime
 from typing import Annotated, Union
 
-from pydantic import AliasGenerator, BaseModel, ConfigDict, Field
+from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
+
+from meldingen.models import Classification
+from meldingen.schemas.types import GeoJson, PhoneNumber
 
 ### Form.io ###
 
 
-class BaseFormOutput(BaseModel):
+class BaseOutputModel(BaseModel):
     id: int
-    title: str
-    display: str
     created_at: datetime
     updated_at: datetime
+
+
+class BaseFormOutput(BaseOutputModel):
+    title: str
+    display: str
+
+
+class MeldingOutput(BaseOutputModel):
+    text: str
+    state: str
+    classification: int | None = Field(default=None)
+    geo_location: GeoJson | None = Field(default=None)
+    email: EmailStr | None = Field(default=None)
+    phone: PhoneNumber | None = Field(default=None)
+
+
+class MeldingCreateOutput(MeldingOutput):
+    token: str
+
+
+class ClassificationOutput(BaseOutputModel):
+    name: str
+    form: int | None = None
 
 
 class SimpleStaticFormOutput(BaseFormOutput):
@@ -158,3 +182,15 @@ class FormRadioComponentOutput(StaticFormRadioComponentOutput):
 
 class FormSelectComponentOutput(StaticFormSelectComponentOutput):
     question: int
+
+
+class AnswerOutput(BaseOutputModel): ...
+
+
+class AttachmentOutput(BaseOutputModel):
+    original_filename: str
+
+
+class UserOutput(BaseOutputModel):
+    email: str
+    username: str

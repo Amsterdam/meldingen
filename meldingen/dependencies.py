@@ -90,7 +90,7 @@ from meldingen.repositories import (
     StaticFormRepository,
     UserRepository,
 )
-from meldingen.schema_factories import (
+from meldingen.schemas.output_factories import (
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
     FormComponentValueOutputFactory,

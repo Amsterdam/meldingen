@@ -24,7 +24,8 @@ from meldingen.dependencies import (
 )
 from meldingen.models import Classification
 from meldingen.repositories import ClassificationRepository
-from meldingen.schemas import ClassificationInput, ClassificationOutput
+from meldingen.schemas.input import ClassificationInput
+from meldingen.schemas.output import ClassificationOutput
 
 router = APIRouter()
 

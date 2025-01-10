@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 
 from meldingen.models import FormIoComponentTypeEnum
-from meldingen.schemas import (
+from meldingen.schemas.input import (
     FormCheckboxComponentInput,
     FormPanelComponentInput,
     FormRadioComponentInput,

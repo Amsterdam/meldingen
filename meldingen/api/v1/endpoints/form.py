@@ -25,10 +25,10 @@ from meldingen.dependencies import (
     form_retrieve_by_classification_action,
     form_update_action,
 )
-from meldingen.output_schemas import FormOutput, SimpleFormOutput
 from meldingen.repositories import FormRepository
-from meldingen.schema_factories import FormOutputFactory
-from meldingen.schemas import FormInput
+from meldingen.schemas.input import FormInput
+from meldingen.schemas.output import FormOutput, SimpleFormOutput
+from meldingen.schemas.output_factories import FormOutputFactory
 
 router = APIRouter()
 

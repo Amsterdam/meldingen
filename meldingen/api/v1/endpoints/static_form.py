@@ -15,10 +15,10 @@ from meldingen.dependencies import (
     static_form_retrieve_action,
     static_form_update_action,
 )
-from meldingen.output_schemas import SimpleStaticFormOutput, StaticFormOutput
 from meldingen.repositories import StaticFormRepository
-from meldingen.schema_factories import SimpleStaticFormOutputFactory, StaticFormOutputFactory
-from meldingen.schemas import StaticFormInput
+from meldingen.schemas.input import StaticFormInput
+from meldingen.schemas.output import SimpleStaticFormOutput, StaticFormOutput
+from meldingen.schemas.output_factories import SimpleStaticFormOutputFactory, StaticFormOutputFactory
 
 router = APIRouter()
 

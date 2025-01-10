@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from meldingen.dependencies import database_engine, database_session, database_session_manager
 from meldingen.models import User
 from meldingen.repositories import GroupRepository, UserRepository
-from meldingen.schemas import UserCreateInput
+from meldingen.schemas.input import UserCreateInput
 
 app = typer.Typer()
 
