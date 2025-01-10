@@ -2028,7 +2028,7 @@ class TestMeldingContactInfoAdded:
 
         body = response.json()
 
-        assert body.get("state") == MeldingStates.LOCATION_SUBMITTED
+        assert body.get("state") == MeldingStates.CONTACT_INFO_ADDED
         assert body.get("created_at") == melding.created_at.isoformat()
         assert body.get("updated_at") == melding.updated_at.isoformat()
 
