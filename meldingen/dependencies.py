@@ -10,6 +10,7 @@ from meldingen_core.actions.melding import (
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
     MeldingCreateAction,
     MeldingProcessAction,
     MeldingSubmitLocationAction,
@@ -533,6 +534,14 @@ def melding_output_factory(
     location_output_transformer: Annotated[LocationOutputTransformer, Depends(location_output_transformer)]
 ) -> MeldingOutputFactory:
     return MeldingOutputFactory(location_output_transformer)
+
+
+def melding_contact_info_added_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+) -> MeldingContactInfoAddedAction:
+    return MeldingContactInfoAddedAction(state_machine, repository, token_verifier)
 
 
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:
