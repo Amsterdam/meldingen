@@ -72,7 +72,7 @@ def melding_token_expires(request: FixtureRequest) -> datetime | None:
 
 @pytest.fixture
 def melding_email(request: FixtureRequest) -> str | None:
-    if hasattr(request, "param"):
+    if hasattr(request, "param") and request.param is not None:
         return str(request.param)
     else:
         return None
@@ -80,7 +80,7 @@ def melding_email(request: FixtureRequest) -> str | None:
 
 @pytest.fixture
 def melding_phone(request: FixtureRequest) -> str | None:
-    if hasattr(request, "param"):
+    if hasattr(request, "param") and request.param is not None:
         return str(request.param)
     else:
         return None
