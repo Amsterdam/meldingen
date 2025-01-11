@@ -19,6 +19,8 @@ services:
         condition: service_healthy
     volumes:
       - ".:/opt/meldingen"
+    networks:
+      - meldingen_network
 
   database:
     image: postgis/postgis:16-3.4-alpine
@@ -36,6 +38,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - meldingen_network
 
   keycloak:
     build:
@@ -48,6 +52,8 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+    networks:
+      - meldingen_network
 
   docs:
     image: ${REGISTRY:-localhost:5000}/${REPOSITORY:-signalen/meldingen-backend}:${VERSION:-latest}
@@ -56,6 +62,8 @@ services:
     volumes:
       - ".:/opt/meldingen"
     entrypoint: mkdocs serve -f /opt/meldingen/mkdocs.yml --dev-addr=0.0.0.0:8000
+    networks:
+      - meldingen_network
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite:latest
@@ -68,6 +76,8 @@ services:
       retries: 30
     volumes:
       - azurite:/opt/azurite/data
+    networks:
+      - meldingen_network
 
   imgproxy:
     image: darthsim/imgproxy
@@ -84,7 +94,12 @@ services:
       IMGPROXY_BASE_URL: abs://meldingencontainer/
     healthcheck:
       test: ["CMD", "imgproxy", "health"]
-
+    networks:
+      - meldingen_network
 volumes:
     pgdata: ~
     azurite: ~
+networks:
+  meldingen_network:
+    name: meldingen_network
+    driver: bridge
