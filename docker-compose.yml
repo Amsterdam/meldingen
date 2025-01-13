@@ -92,6 +92,9 @@ services:
       IMGPROXY_ABS_ENDPOINT: http://azurite:10000/devstoreaccount1
       IMGPROXY_LOG_LEVEL: debug
       IMGPROXY_BASE_URL: abs://meldingencontainer/
+      IMGPROXY_OPEN_TELEMETRY_ENABLE: "true"
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     healthcheck:
       test: ["CMD", "imgproxy", "health"]
     networks:
