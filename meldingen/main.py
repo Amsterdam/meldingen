@@ -87,10 +87,10 @@ def get_application() -> FastAPI:
 
 app = get_application()
 
-# Opentelemetry
-resource = Resource(attributes={SERVICE_NAME: "meldingen"})
+# OpenTelemetry
+resource = Resource(attributes={SERVICE_NAME: settings.opentelemetry_service_name})
 tracer_provider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="http://jaeger:4317"))
+processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=str(settings.opentelemetry_collector_receiver_endpoint)))
 tracer_provider.add_span_processor(processor)
 trace.set_tracer_provider(tracer_provider)
 FastAPIInstrumentor.instrument_app(app, tracer_provider=tracer_provider)

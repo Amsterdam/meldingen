@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     phone_number_format: str = "E164"  # International ITU standard
     phone_number_default_region_code: str = "NL"
 
+    # OpenTelemetry
+    opentelemetry_service_name: str = "meldingen"
+    opentelemetry_collector_receiver_endpoint: HttpUrl
 
 # Create an instance of the Settings model
 settings = Settings()
