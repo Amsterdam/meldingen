@@ -22,6 +22,7 @@ from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -135,8 +136,18 @@ from meldingen.token import UrlSafeTokenGenerator
 from meldingen.validators import MediaTypeIntegrityValidator, MediaTypeValidator
 
 
+def tracer_provider() -> TracerProvider:
+    resource = Resource(attributes={SERVICE_NAME: settings.opentelemetry_service_name})
+    tracer_provider = TracerProvider(resource=resource)
+    processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=str(settings.opentelemetry_collector_receiver_endpoint)))
+    tracer_provider.add_span_processor(processor)
+    trace.set_tracer_provider(tracer_provider)
+
+    return tracer_provider
+
+
 @lru_cache
-def database_engine() -> AsyncEngine:
+def database_engine(tracer_provider: Annotated[TracerProvider, Depends(tracer_provider)]) -> AsyncEngine:
     echo: bool | str = False
     match settings.log_level:  # pragma: no cover
         case logging.INFO:
@@ -146,11 +157,6 @@ def database_engine() -> AsyncEngine:
 
     engine = create_async_engine(str(settings.database_dsn), echo=echo)
 
-    resource = Resource(attributes={SERVICE_NAME: settings.opentelemetry_service_name})
-    tracer_provider = TracerProvider(resource=resource)
-    processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=str(settings.opentelemetry_collector_receiver_endpoint)))
-    tracer_provider.add_span_processor(processor)
-    trace.set_tracer_provider(tracer_provider)
     SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine, tracer_provider=tracer_provider)
 
     return engine
@@ -387,8 +393,12 @@ def img_proxy_signature_generator() -> IMGProxySignatureGenerator:
     return IMGProxySignatureGenerator(settings.imgproxy_key, settings.imgproxy_salt)
 
 
-def http_client() -> AsyncClient:
-    return AsyncClient()
+def http_client(tracer_provider: Annotated[TracerProvider, Depends(tracer_provider)]) -> AsyncClient:
+    client = AsyncClient()
+
+    HTTPXClientInstrumentor.instrument_client(client=client, tracer_provider=tracer_provider)
+
+    return client
 
 
 def img_proxy_image_optimizer_url_generator(
