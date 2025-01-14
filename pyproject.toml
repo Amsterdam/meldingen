@@ -21,6 +21,9 @@ httpx = {extras = ["http2"], version = "^0.28.1"}
 maykin-json-logic-py = "^0.13.0"
 meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
+opentelemetry-exporter-otlp-proto-grpc = "^1.29.0"
+opentelemetry-instrumentation-fastapi = "^0.50b0"
+opentelemetry-instrumentation-sqlalchemy = "^0.50b0"
 phonenumbers = "^8.13.52"
 pydantic = {extras = ["email"], version = "^2.10.5"}
 pydantic-extra-types = "^2.10.1"

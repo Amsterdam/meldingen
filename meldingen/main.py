@@ -4,6 +4,12 @@ from typing import Awaitable, Callable
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
@@ -80,6 +86,14 @@ def get_application() -> FastAPI:
 
 
 app = get_application()
+
+# OpenTelemetry
+resource = Resource(attributes={SERVICE_NAME: settings.opentelemetry_service_name})
+tracer_provider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=str(settings.opentelemetry_collector_receiver_endpoint)))
+tracer_provider.add_span_processor(processor)
+trace.set_tracer_provider(tracer_provider)
+FastAPIInstrumentor.instrument_app(app, tracer_provider=tracer_provider)
 
 setup_logging()
 logger = structlog.get_logger()
