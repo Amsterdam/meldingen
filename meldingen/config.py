@@ -64,5 +64,6 @@ class Settings(BaseSettings):
     opentelemetry_service_name: str = "meldingen"
     opentelemetry_collector_receiver_endpoint: HttpUrl
 
+
 # Create an instance of the Settings model
 settings = Settings()
