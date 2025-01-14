@@ -103,8 +103,11 @@ services:
   jaeger:
     image: jaegertracing/jaeger:2.2.0
     ports:
+      # ui
       - "16686:16686"
+      # grpc
       - "4317:4317"
+      # http
       - "4318:4318"
     environment:
       - LOG_LEVEL=debug
