@@ -89,6 +89,8 @@ app = get_application()
 
 # OpenTelemetry
 resource = Resource(attributes={SERVICE_NAME: settings.opentelemetry_service_name})
+# There can be only one tracer provider, and it cannot be changed after this, it will automatically be used
+# by all instrumentation
 tracer_provider = TracerProvider(resource=resource)
 processor = BatchSpanProcessor(OTLPSpanExporter())
 tracer_provider.add_span_processor(processor)
