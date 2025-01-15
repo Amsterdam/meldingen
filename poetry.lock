@@ -1269,6 +1269,18 @@ docs = ["mkdocs", "mkdocs-material", "pygments"]
 test = ["pytest", "pytest-cov", "shapely"]
 
 [[package]]
+name = "gherkin-official"
+version = "29.0.0"
+description = "Gherkin parser (official, by Cucumber team)"
+optional = false
+python-versions = "*"
+groups = ["dev"]
+files = [
+    {file = "gherkin_official-29.0.0-py3-none-any.whl", hash = "sha256:26967b0d537a302119066742669e0e8b663e632769330be675457ae993e1d1bc"},
+    {file = "gherkin_official-29.0.0.tar.gz", hash = "sha256:dbea32561158f02280d7579d179b019160d072ce083197625e2f80a6776bb9eb"},
+]
+
+[[package]]
 name = "ghp-import"
 version = "2.1.0"
 description = "Copy your docs directly to the gh-pages branch."
@@ -2636,6 +2648,39 @@ dev = ["pytest", "tox"]
 lint = ["black"]
 
 [[package]]
+name = "parse"
+version = "1.20.2"
+description = "parse() is the opposite of format()"
+optional = false
+python-versions = "*"
+groups = ["dev"]
+files = [
+    {file = "parse-1.20.2-py2.py3-none-any.whl", hash = "sha256:967095588cb802add9177d0c0b6133b5ba33b1ea9007ca800e526f42a85af558"},
+    {file = "parse-1.20.2.tar.gz", hash = "sha256:b41d604d16503c79d81af5165155c0b20f6c8d6c559efa66b4b695c3e5a0a0ce"},
+]
+
+[[package]]
+name = "parse-type"
+version = "0.6.4"
+description = "Simplifies to build parse types based on the parse module"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,>=2.7"
+groups = ["dev"]
+files = [
+    {file = "parse_type-0.6.4-py2.py3-none-any.whl", hash = "sha256:83d41144a82d6b8541127bf212dd76c7f01baff680b498ce8a4d052a7a5bce4c"},
+    {file = "parse_type-0.6.4.tar.gz", hash = "sha256:5e1ec10440b000c3f818006033372939e693a9ec0176f446d9303e4db88489a6"},
+]
+
+[package.dependencies]
+parse = {version = ">=1.18.0", markers = "python_version >= \"3.0\""}
+six = ">=1.15"
+
+[package.extras]
+develop = ["build (>=0.5.1)", "coverage (>=4.4)", "pylint", "pytest (<5.0)", "pytest (>=5.0)", "pytest-cov", "pytest-html (>=1.19.0)", "ruff", "setuptools", "setuptools-scm", "tox (>=2.8,<4.0)", "twine (>=1.13.0)", "virtualenv (<20.22.0)", "virtualenv (>=20.0.0)", "wheel"]
+docs = ["Sphinx (>=1.6)", "sphinx-bootstrap-theme (>=0.6.0)"]
+testing = ["pytest (<5.0)", "pytest (>=5.0)", "pytest-html (>=1.19.0)"]
+
+[[package]]
 name = "pathspec"
 version = "0.12.1"
 description = "Utility library for gitignore style pattern matching of file paths."
@@ -3255,6 +3300,27 @@ files = [
 alembic = "*"
 pytest = ">=6.0"
 sqlalchemy = "*"
+
+[[package]]
+name = "pytest-bdd"
+version = "8.1.0"
+description = "BDD for pytest"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "pytest_bdd-8.1.0-py3-none-any.whl", hash = "sha256:2124051e71a05ad7db15296e39013593f72ebf96796e1b023a40e5453c47e5fb"},
+    {file = "pytest_bdd-8.1.0.tar.gz", hash = "sha256:ef0896c5cd58816dc49810e8ff1d632f4a12019fb3e49959b2d349ffc1c9bfb5"},
+]
+
+[package.dependencies]
+gherkin-official = ">=29.0.0,<30.0.0"
+Mako = "*"
+packaging = "*"
+parse = "*"
+parse-type = "*"
+pytest = ">=7.0.0"
+typing-extensions = "*"
 
 [[package]]
 name = "pytest-cov"
@@ -4370,4 +4436,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "5b8f7faccc7d32dad43fda28282272fa2723f94cc7d7aedac40f3aa045282ea6"
+content-hash = "047cdc5d650edcf5e7f0c1d2075820223891162668db8c0e495a9d45bb4f66c8"
