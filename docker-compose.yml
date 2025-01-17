@@ -94,9 +94,18 @@ services:
       IMGPROXY_BASE_URL: abs://meldingencontainer/
       IMGPROXY_OPEN_TELEMETRY_ENABLE: "true"
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     healthcheck:
       test: ["CMD", "imgproxy", "health"]
+    networks:
+      - meldingen_network
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    ports:
+      - "4317:4317"
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
     networks:
       - meldingen_network
 
@@ -106,9 +115,7 @@ services:
       # ui
       - "16686:16686"
       # grpc
-      - "4317:4317"
-      # http
-      - "4318:4318"
+      - "14317:4317"
     environment:
       - LOG_LEVEL=debug
     networks:
