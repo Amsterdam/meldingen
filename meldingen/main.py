@@ -66,9 +66,12 @@ trace.set_tracer_provider(tracer_provider)
 
 FastAPIInstrumentor.instrument_app(app)
 
-logger_provider = LoggerProvider()
+logger_provider = LoggerProvider(resource=resource)
 logger_provider.add_log_record_processor(BatchLogRecordProcessor(OTLPLogExporter()))
 set_logger_provider(logger_provider)
+
+logging_handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
+
 logger = logging.getLogger()
-logger.addHandler(LoggingHandler())
-logger.setLevel(logging.NOTSET)
+logger.addHandler(logging_handler)
+logger.setLevel(settings.log_level)
