@@ -25,7 +25,7 @@ opentelemetry-exporter-otlp-proto-grpc = "^1.29.0"
 opentelemetry-instrumentation-fastapi = "^0.50b0"
 opentelemetry-instrumentation-httpx = "^0.50b0"
 opentelemetry-instrumentation-sqlalchemy = "^0.50b0"
-phonenumbers = "^8.13.52"
+phonenumbers = "^8.13.53"
 pydantic = {extras = ["email"], version = "^2.10.5"}
 pydantic-extra-types = "^2.10.2"
 pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git"}
