@@ -10,7 +10,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-alembic = "^1.14.0"
+alembic = "^1.14.1"
 alembic-postgresql-enum = "^1.5.0"
 asgi-correlation-id = "^4.3.4"
 asyncpg = "^0.30.0"
