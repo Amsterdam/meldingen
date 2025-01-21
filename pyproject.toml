@@ -27,7 +27,7 @@ opentelemetry-instrumentation-httpx = "^0.50b0"
 opentelemetry-instrumentation-sqlalchemy = "^0.50b0"
 phonenumbers = "^8.13.52"
 pydantic = {extras = ["email"], version = "^2.10.5"}
-pydantic-extra-types = "^2.10.1"
+pydantic-extra-types = "^2.10.2"
 pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git"}
 pydantic-media-type = {git = "https://github.com/Amsterdam/pydantic-media-type.git"}
 pydantic-settings = "^2.7.0"
