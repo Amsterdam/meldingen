@@ -81,6 +81,7 @@ from meldingen.schemas.types import GeoJson
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 @router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
 async def create_melding(
     melding_input: MeldingInput,
