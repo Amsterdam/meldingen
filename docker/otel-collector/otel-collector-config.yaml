@@ -5,12 +5,8 @@ receivers:
         endpoint: 0.0.0.0:4317
 
 exporters:
-  debug:
-    verbosity: detailed
-  otlp/jaeger:
-    endpoint: http://jaeger:4317
-    tls:
-      insecure: true
+  azuremonitor:
+    spaneventsenabled: true
 
 processors:
   batch:
@@ -23,8 +19,8 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [azuremonitor]
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug,otlp/jaeger]
+      exporters: [azuremonitor]
