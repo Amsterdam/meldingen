@@ -94,9 +94,23 @@ services:
       IMGPROXY_BASE_URL: abs://meldingencontainer/
       IMGPROXY_OPEN_TELEMETRY_ENABLE: "true"
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     healthcheck:
       test: ["CMD", "imgproxy", "health"]
+    networks:
+      - meldingen_network
+
+  otel-collector:
+    image: ${REGISTRY:-localhost:5000}/${REPOSITORY:-signalen/meldingen-otel-collector}:${VERSION:-latest}
+    build:
+      context: docker/otel-collector
+    ports:
+      - "4317:4317"
+    # To connect the collector to App Insights/Log Analytics, please specify the connection string
+    # environment:
+    #  APPLICATIONINSIGHTS_CONNECTION_STRING: InstrumentationKey=[redacted];IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=[redacted]
+    volumes:
+      - ./docker/otel-collector/otel-collector-config-dev.yaml:/etc/otelcol-contrib/config.yaml
     networks:
       - meldingen_network
 
@@ -106,9 +120,7 @@ services:
       # ui
       - "16686:16686"
       # grpc
-      - "4317:4317"
-      # http
-      - "4318:4318"
+      - "14317:4317"
     environment:
       - LOG_LEVEL=debug
     networks:

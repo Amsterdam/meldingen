@@ -1,6 +1,6 @@
+import logging
 from typing import Annotated, AsyncIterator
 
-import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from meldingen_core.actions.attachment import AttachmentTypes
@@ -79,7 +79,7 @@ from meldingen.schemas.output_factories import MeldingOutputFactory
 from meldingen.schemas.types import GeoJson
 
 router = APIRouter()
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
