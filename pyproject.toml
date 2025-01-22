@@ -14,6 +14,7 @@ alembic = "^1.14.1"
 alembic-postgresql-enum = "^1.5.0"
 asgi-correlation-id = "^4.3.4"
 asyncpg = "^0.30.0"
+azure-storage-blob = "^12.24.0"
 fastapi = {extras = ["standard"], version = "^0.115.5"}
 geoalchemy2 = "^0.17.0"
 geojson-pydantic = "^1.2.0"
