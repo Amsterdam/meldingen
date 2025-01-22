@@ -6,6 +6,7 @@ from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs._internal.export import BatchLogRecordProcessor
@@ -75,3 +76,5 @@ logging_handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_pr
 logger = logging.getLogger()
 logger.addHandler(logging_handler)
 logger.setLevel(settings.log_level)
+
+AioHttpClientInstrumentor().instrument()
