@@ -19,7 +19,7 @@ geoalchemy2 = "^0.17.0"
 geojson-pydantic = "^1.2.0"
 httpx = {extras = ["http2"], version = "^0.28.1"}
 maykin-json-logic-py = "^0.13.0"
-meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
+meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core", rev = "feat/malware-scanning"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
 opentelemetry-exporter-otlp-proto-grpc = "^1.29.0"
 opentelemetry-instrumentation-aiohttp-client = "^0.50b0"
