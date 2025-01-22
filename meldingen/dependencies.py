@@ -18,6 +18,7 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.classification import Classifier
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
+from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
@@ -81,6 +82,7 @@ from meldingen.location import (
     ShapeToWKBTransformer,
     WKBToShapeTransformer,
 )
+from meldingen.malware import AzureDefenderForStorageMalwareScanner
 from meldingen.models import Melding
 from meldingen.repositories import (
     AnswerRepository,
@@ -442,13 +444,19 @@ def thumbnail_generator_task(
     return ThumbnailGeneratorTask(thumbnail_generator, attachment_repository)
 
 
+def malware_scanner() -> BaseMalwareScanner:
+    return AzureDefenderForStorageMalwareScanner()
+
+
 def attachment_ingestor(
+    scanner: Annotated[BaseMalwareScanner, Depends(malware_scanner)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
     background_task_manager: BackgroundTasks,
     optimizer_task: Annotated[ImageOptimizerTask, Depends(image_optimizer_task)],
     thumbnail_task: Annotated[ThumbnailGeneratorTask, Depends(thumbnail_generator_task)],
 ) -> Ingestor:
     return Ingestor(
+        scanner,
         filesystem,
         background_task_manager,
         optimizer_task,

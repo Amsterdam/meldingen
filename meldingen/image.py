@@ -8,6 +8,7 @@ from uuid import uuid4
 from fastapi import BackgroundTasks
 from httpx import AsyncClient
 from meldingen_core.image import BaseImageOptimizer, BaseIngestor, BaseThumbnailGenerator
+from meldingen_core.malware import BaseMalwareScanner
 from plugfs.filesystem import Filesystem
 from starlette.status import HTTP_200_OK
 
@@ -160,12 +161,15 @@ class Ingestor(BaseIngestor[Attachment]):
 
     def __init__(
         self,
+        scanner: BaseMalwareScanner,
         filesystem: Filesystem,
         background_task_manager: BackgroundTasks,
         image_optimizer_task: ImageOptimizerTask,
         thumbnail_generator_task: ThumbnailGeneratorTask,
         base_directory: str,
     ):
+        super().__init__(scanner)
+
         self._filesystem = filesystem
         self._background_task_manager = background_task_manager
         self._image_optimizer_task = image_optimizer_task
@@ -178,6 +182,8 @@ class Ingestor(BaseIngestor[Attachment]):
 
         await self._filesystem.makedirs(path)
         await self._filesystem.write_iterator(attachment.file_path, data)
+
+        await self._scan_for_malware(attachment.file_path)
 
         self._background_task_manager.add_task(self._image_optimizer_task, attachment=attachment)
         self._background_task_manager.add_task(self._thumbnail_generator_task, attachment=attachment)

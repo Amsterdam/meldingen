@@ -5,6 +5,7 @@ import pytest
 from fastapi import BackgroundTasks
 from httpx import AsyncClient, Response
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
+from meldingen_core.malware import BaseMalwareScanner
 from plugfs.filesystem import Filesystem
 
 from meldingen.image import (
@@ -171,7 +172,7 @@ async def test_ingestor() -> None:
     optimizer_task = Mock(ImageOptimizerTask)
     thumbnail_task = Mock(ThumbnailGeneratorTask)
     attachment = Attachment(original_filename="image.jpg", melding=Mock(Melding))
-    ingest = Ingestor(filesystem, task_manager, optimizer_task, thumbnail_task, "/tmp")
+    ingest = Ingestor(AsyncMock(BaseMalwareScanner), filesystem, task_manager, optimizer_task, thumbnail_task, "/tmp")
 
     async def iterate() -> AsyncIterator[bytes]:
         for chunk in [b"Hello", b"World", b"!", b"!", b"!", b"!"]:
