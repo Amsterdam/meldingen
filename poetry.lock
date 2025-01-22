@@ -1936,7 +1936,7 @@ plugfs = {git = "https://github.com/amsterdam/plugfs"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core"
 reference = "feat/malware-scanning"
-resolved_reference = "82386eb8924d4b511007c7f2d24e8f59682aa53d"
+resolved_reference = "1fc0ab55de30784ae5b93ebf58f5674b57a3888c"
 
 [[package]]
 name = "mergedeep"
