@@ -2,6 +2,7 @@ from importlib import metadata
 from typing import Awaitable, Callable
 
 import structlog
+import uvicorn
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from opentelemetry import trace
@@ -100,3 +101,6 @@ FastAPIInstrumentor.instrument_app(app)
 
 setup_logging()
 logger = structlog.get_logger()
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
