@@ -2,6 +2,7 @@ import contextlib
 from typing import AsyncGenerator, AsyncIterator, Callable
 from unittest.mock import AsyncMock
 
+import anyio
 import pytest
 from asgi_lifespan import LifespanManager
 from azure.core.exceptions import ResourceNotFoundError
@@ -11,6 +12,7 @@ from httpx import ASGITransport, AsyncClient
 from meldingen_core.malware import BaseMalwareScanner
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
+from pytest_bdd import given
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
@@ -104,7 +106,7 @@ async def users(db_session: AsyncSession) -> list[User]:
 
 
 @pytest.fixture
-async def app() -> FastAPI:
+def app() -> FastAPI:
     return get_application()
 
 
@@ -112,7 +114,7 @@ async def app() -> FastAPI:
 async def client(app: FastAPI, test_database: None) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(
-            transport=ASGITransport(app=app, raise_app_exceptions=False),
+            transport=ASGITransport(app=app, raise_app_exceptions=True),
             base_url="http://testserver",
             headers={"Content-Type": "application/json"},
         ) as client:
@@ -163,9 +165,9 @@ class DatabaseSessionManager(BaseDatabaseSessionManager):
 def db_manager(db_engine: AsyncEngine) -> DatabaseSessionManager:
     return DatabaseSessionManager(db_engine)
 
-
 @pytest.fixture(autouse=True)
 def database_session_manager_override(app: FastAPI) -> None:
+    print('inside override')
     def db_manager_override() -> Callable[..., DatabaseSessionManager]:
         return db_manager
 
@@ -186,6 +188,7 @@ async def db_session(db_manager: DatabaseSessionManager) -> AsyncIterator[AsyncS
 
 @pytest.fixture(autouse=True)
 async def session_override(app: FastAPI, db_session: AsyncSession) -> None:
+    print('inside session override')
     async def get_db_session_override() -> AsyncIterator[AsyncSession]:
         yield db_session
 

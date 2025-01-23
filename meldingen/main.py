@@ -1,5 +1,6 @@
 import logging
 
+import uvicorn
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from opentelemetry import trace
@@ -78,3 +79,6 @@ logger.addHandler(logging_handler)
 logger.setLevel(settings.log_level)
 
 AioHttpClientInstrumentor().instrument()
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
