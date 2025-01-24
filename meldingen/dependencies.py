@@ -351,11 +351,9 @@ def melding_answer_create_action(
 
 async def azure_container_client() -> AsyncIterator[ContainerClient]:
     client = ContainerClient.from_connection_string(
-        f"DefaultEndpointsProtocol=http;AccountName={settings.azure_account_name};"
-        f"AccountKey={settings.azure_account_key};"
-        f"BlobEndpoint={str(settings.azure_storage_url)}{settings.azure_account_name};",
-        settings.azure_container,
+        settings.azure_storage_connection_string, settings.azure_storage_container
     )
+
     async with client:
         yield client
 
@@ -444,8 +442,12 @@ def thumbnail_generator_task(
     return ThumbnailGeneratorTask(thumbnail_generator, attachment_repository)
 
 
-def malware_scanner() -> BaseMalwareScanner:
-    return AzureDefenderForStorageMalwareScanner()
+def malware_scanner(
+    container_client: Annotated[ContainerClient, Depends(azure_container_client)],
+) -> BaseMalwareScanner:
+    return AzureDefenderForStorageMalwareScanner(
+        container_client, settings.azure_malware_scanner_tries, settings.azure_malware_scanner_sleep_time
+    )
 
 
 def attachment_ingestor(
