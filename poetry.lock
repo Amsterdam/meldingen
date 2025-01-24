@@ -1934,9 +1934,9 @@ plugfs = {git = "https://github.com/amsterdam/plugfs"}
 
 [package.source]
 type = "git"
-url = "https://github.com/Amsterdam/meldingen-core"
-reference = "feat/malware-scanning"
-resolved_reference = "1fc0ab55de30784ae5b93ebf58f5674b57a3888c"
+url = "https://github.com/Amsterdam/meldingen-core.git"
+reference = "HEAD"
+resolved_reference = "4ae53db22cd47c0c4ded1534da5ace4727b44d24"
 
 [[package]]
 name = "mergedeep"
@@ -4439,4 +4439,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "0bbddeda7cb53f29cc4e68ee88f0ec0a276d0828035b8fe32a4d868c904ebce6"
+content-hash = "60e2b1ff5195772bad84a5a068b3cd81ce5cb4781ca0ae4f23e14e7090b9a1b3"
