@@ -187,11 +187,9 @@ async def session_override(app: FastAPI, db_session: AsyncSession) -> None:
 @pytest.fixture
 async def container_client() -> AsyncIterator[ContainerClient]:
     client = ContainerClient.from_connection_string(
-        f"DefaultEndpointsProtocol=http;AccountName={settings.azure_account_name};"
-        f"AccountKey={settings.azure_account_key};"
-        f"BlobEndpoint={str(settings.azure_storage_url)}{settings.azure_account_name};",
-        "meldingencontainer",
+        settings.azure_storage_connection_string, settings.azure_storage_container
     )
+
     async with client:
         try:
             await client.delete_container()
