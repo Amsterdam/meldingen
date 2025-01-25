@@ -88,11 +88,10 @@ async def create_melding(
     action: Annotated[MeldingCreateAction[Melding, Melding], Depends(melding_create_action)],
 ) -> MeldingCreateOutput:
 
-    print('inside create-melding')
     melding = Melding(**melding_input.model_dump())
 
     await action(melding)
-    print('after action')
+
     return MeldingCreateOutput(
         id=melding.id,
         text=melding.text,
