@@ -27,7 +27,7 @@ def given_i_am_on_the_melding_form() -> dict[str,str]:
 
 @when('I submit my problem to the primary form')
 @async_to_sync
-async def when_i_submit_the_primary_form(app, client: AsyncClient, problem: dict[str, str], melding) -> None:
+async def when_i_submit_the_primary_form(app, client: AsyncClient, problem: dict[str, str]) -> None:
     response = await client.post(app.url_path_for('melding:create'), json=problem)
     print(response)
     melding = response.json()

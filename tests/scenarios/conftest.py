@@ -42,31 +42,3 @@ def async_to_sync(step):
     return run_step
 
 
-def db_engine_override(db_engine) -> Callable[..., AsyncEngine]:
-    return db_engine
-
-def db_manager_override(db_manager) -> Callable[..., DatabaseSessionManager]:
-    return db_manager
-
-@async_to_sync
-async def get_db_session_override(db_session) -> AsyncIterator[AsyncSession]:
-    yield db_session
-
-@async_to_sync
-async def pytest_bdd_before_scenario(request, feature, scenario):
-    print(f"Starting scenario: {scenario.name}")
-
-    app = request.getfixturevalue("app")
-    app.dependency_overrides[database_engine] = db_engine_override
-    app.dependency_overrides[database_session_manager] = db_manager_override
-    app.dependency_overrides[database_session] = get_db_session_override
-
-
-@pytest.fixture
-async def db_session(db_manager: DatabaseSessionManager) -> AsyncIterator[AsyncSession]:
-     with db_manager.session() as session:
-        try:
-            session.begin()
-            yield session
-        finally:
-            session.rollback()
