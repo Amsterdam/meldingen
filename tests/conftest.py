@@ -12,7 +12,6 @@ from httpx import ASGITransport, AsyncClient
 from meldingen_core.malware import BaseMalwareScanner
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
-from pytest_bdd import given
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
@@ -151,7 +150,7 @@ class DatabaseSessionManager(BaseDatabaseSessionManager):
             await connection.close()
 
 
-@pytest.fixture()
+@pytest.fixture
 def db_manager(db_engine: AsyncEngine) -> DatabaseSessionManager:
     return DatabaseSessionManager(db_engine)
 
