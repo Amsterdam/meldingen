@@ -1,5 +1,6 @@
 import contextlib
 from typing import AsyncGenerator, AsyncIterator, Callable
+from unittest.mock import AsyncMock
 
 import pytest
 from asgi_lifespan import LifespanManager
@@ -7,6 +8,7 @@ from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from meldingen_core.malware import BaseMalwareScanner
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy import NullPool
@@ -17,7 +19,13 @@ from sqlalchemy.sql.ddl import DropTable
 
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager as BaseDatabaseSessionManager
-from meldingen.dependencies import azure_container_client, database_engine, database_session, database_session_manager
+from meldingen.dependencies import (
+    azure_container_client,
+    database_engine,
+    database_session,
+    database_session_manager,
+    malware_scanner,
+)
 from meldingen.main import get_application
 from meldingen.models import BaseDBModel, User
 
@@ -209,6 +217,16 @@ def azure_container_client_override(app: FastAPI, container_client: ContainerCli
     # In some case a coroutine is passed here instead of an FastAPI object, causing the test to fail
     if isinstance(app, FastAPI):
         app.dependency_overrides[azure_container_client] = get_azure_container_client
+
+
+@pytest.fixture
+def malware_scanner_override(app: FastAPI) -> None:
+    scanner = AsyncMock(BaseMalwareScanner)
+
+    def test_malware_scanner() -> BaseMalwareScanner:
+        return scanner
+
+    app.dependency_overrides[malware_scanner] = test_malware_scanner
 
 
 @pytest.fixture(scope="session")
