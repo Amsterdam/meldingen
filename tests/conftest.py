@@ -166,8 +166,9 @@ async def db_session(db_manager: DatabaseSessionManager) -> AsyncIterator[AsyncS
 
 
 @pytest.fixture(autouse=True)
-async def override_dependencies(app: FastAPI, db_engine: AsyncEngine, db_manager: DatabaseSessionManager,
-                                db_session: AsyncSession):
+async def override_dependencies(
+    app: FastAPI, db_engine: AsyncEngine, db_manager: DatabaseSessionManager, db_session: AsyncSession
+):
 
     async def db_session_override() -> AsyncIterator[AsyncSession]:
         yield db_session
@@ -178,11 +179,13 @@ async def override_dependencies(app: FastAPI, db_engine: AsyncEngine, db_manager
     def db_manager_override() -> DatabaseSessionManager:
         return db_manager
 
-    app.dependency_overrides.update({
-        database_session: db_session_override,
-        database_engine: db_engine_override,
-        database_session_manager: db_manager_override
-    })
+    app.dependency_overrides.update(
+        {
+            database_session: db_session_override,
+            database_engine: db_engine_override,
+            database_session_manager: db_manager_override,
+        }
+    )
 
     yield
 
