@@ -7,6 +7,7 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
 from meldingen_core import SortingDirection
+from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.statemachine import MeldingStates
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
@@ -1112,6 +1113,7 @@ class TestMeldingUploadAttachment:
         melding: Melding,
         db_session: AsyncSession,
         container_client: ContainerClient,
+        malware_scanner_override: BaseMalwareScanner,
         filename: str,
     ) -> None:
         response = await client.post(

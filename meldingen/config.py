@@ -47,10 +47,10 @@ class Settings(BaseSettings):
     imgproxy_base_url: str
 
     # azure storage blobs
-    azure_account_name: str
-    azure_account_key: str
-    azure_storage_url: HttpUrl
-    azure_container: str
+    azure_storage_container: str
+    azure_storage_connection_string: str
+    azure_malware_scanner_tries: int = 5
+    azure_malware_scanner_sleep_time: float = 1.0
 
     # thumbnail
     thumbnail_width: int = 150
