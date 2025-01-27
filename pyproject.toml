@@ -42,7 +42,7 @@ sqlalchemy = {extras = ["asyncio"], version = "^2.0.37"}
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2.1.0"
 black = "^24.10.0"
-isort = "^5.13.2"
+isort = "^6.0.0"
 mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.5.50"
 mkdocstrings = {version = "^0.27.0", extras = ["python"]}
