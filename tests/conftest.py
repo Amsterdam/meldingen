@@ -1,8 +1,7 @@
 import contextlib
-from typing import AsyncGenerator, AsyncIterator, Callable
+from typing import AsyncGenerator, AsyncIterator
 from unittest.mock import AsyncMock
 
-import anyio
 import pytest
 from asgi_lifespan import LifespanManager
 from azure.core.exceptions import ResourceNotFoundError
