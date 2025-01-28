@@ -9,7 +9,7 @@ from tests.scenarios.conftest import async_to_sync
 
 @given(parsers.parse("there is a classification {name:l}"), target_fixture="classification")
 @async_to_sync
-async def there_is_a_classification(name: str, db_session: AsyncIterator[AsyncSession]) -> Classification:
+async def there_is_a_classification(name: str, db_session: AsyncSession) -> Classification:
     classification = Classification(name=name)
 
     db_session.add(classification)
