@@ -1,9 +1,10 @@
-from typing import Final, Any
+from typing import Any, Final
 
 from fastapi import FastAPI
 from httpx import AsyncClient
-from pytest_bdd import when, parsers, then
+from pytest_bdd import parsers, then, when
 
+from meldingen.models import Classification
 from tests.scenarios.conftest import async_to_sync
 
 ROUTE_NAME_CREATE: Final[str] = "melding:create"
@@ -18,6 +19,9 @@ async def create_melding_with_text(text: str, app: FastAPI, client: AsyncClient)
     return response.json()
 
 
-@then(parsers.parse('the melding should be classified as "{classification:l}"'))
-def the_melding_should_be_classified_as(create_melding_response_body: dict[str, Any], classification: str) -> None:
-    assert create_melding_response_body.get("classification") == classification
+@then(parsers.parse('the melding should be classified as "{classification_name:l}"'))
+def the_melding_should_be_classified_as(
+    classification: Classification, create_melding_response_body: dict[str, Any], classification_name: str
+) -> None:
+    assert classification.name == classification_name
+    assert create_melding_response_body.get("classification") == classification.id
