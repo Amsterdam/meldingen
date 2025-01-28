@@ -7,7 +7,7 @@ from meldingen.models import Classification
 from tests.scenarios.conftest import async_to_sync
 
 
-@given(parsers.parse("there is a classification {name:l}"))
+@given(parsers.parse("there is a classification {name:l}"), target_fixture="classification")
 @async_to_sync
 async def there_is_a_classification(name: str, db_session: AsyncIterator[AsyncSession]) -> Classification:
     classification = Classification(name=name)
