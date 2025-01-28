@@ -1,13 +1,9 @@
-import pytest
 from pytest_bdd import scenario
 
-from tests.scenarios.context.create_melding import *  # noqa
+from tests.scenarios.context.classification import *  # noqa
+from tests.scenarios.context.melding import *  # noqa
 
 
-@scenario(
-    "create_melding.feature",
-    "Create a melding",
-)
-@pytest.mark.anyio
+@scenario("create_melding.feature", "Create melding")
 def test_create_melding() -> None:
     pass
