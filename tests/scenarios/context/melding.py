@@ -12,11 +12,14 @@ ROUTE_NAME_CREATE: Final[str] = "melding:create"
 
 @when(parsers.parse('I create a melding with text "{text:l}"'), target_fixture="create_melding_response_body")
 @async_to_sync
-async def create_melding_with_text(text: str, app: FastAPI, client: AsyncClient) -> None:
+async def create_melding_with_text(text: str, app: FastAPI, client: AsyncClient) -> dict[str, Any]:
     response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"text": text})
     assert response.status_code == 201
 
-    return response.json()
+    body = response.json()
+    assert isinstance(body, dict)
+
+    return body
 
 
 @then(parsers.parse('the melding should be classified as "{classification_name:l}"'))
