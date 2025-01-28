@@ -1,15 +1,18 @@
 import asyncio
 import functools
+from typing import Any, Callable
+
+from mypy_extensions import KwArg, VarArg
 
 
-def async_to_sync(step):
+def async_step(step: Callable[[VarArg(Any), KwArg(Any)], Any]) -> Callable[[VarArg(Any), KwArg(Any)], Any]:
     """
     pytest-bdd doesn't offer a native way to run async steps, so we need to convert them to sync.
     https://github.com/pytest-dev/pytest-bdd/issues/223
     """
 
     @functools.wraps(step)
-    def run_step(*args, **kwargs):
+    def run_step(*args: list[Any], **kwargs: dict[Any, Any]) -> Any:
         try:
             """
             It is advised to use the following function to get the current loop.
