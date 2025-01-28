@@ -87,7 +87,6 @@ async def create_melding(
     melding_input: MeldingInput,
     action: Annotated[MeldingCreateAction[Melding, Melding], Depends(melding_create_action)],
 ) -> MeldingCreateOutput:
-
     melding = Melding(**melding_input.model_dump())
 
     await action(melding)
