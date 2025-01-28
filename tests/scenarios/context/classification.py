@@ -1,5 +1,3 @@
-from typing import AsyncIterator
-
 from pytest_bdd import given, parsers
 from sqlalchemy.ext.asyncio import AsyncSession
 
