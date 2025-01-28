@@ -79,6 +79,3 @@ logger.addHandler(logging_handler)
 logger.setLevel(settings.log_level)
 
 AioHttpClientInstrumentor().instrument()
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
