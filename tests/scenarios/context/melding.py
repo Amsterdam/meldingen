@@ -25,3 +25,8 @@ def the_melding_should_be_classified_as(
 ) -> None:
     assert classification.name == classification_name
     assert create_melding_response_body.get("classification") == classification.id
+
+
+@then(parsers.parse('the state of the melding should be "{state:l}"'))
+def the_state_of_the_melding_should_be(state: str, create_melding_response_body: dict[str, Any]) -> None:
+    assert state == create_melding_response_body.get("state")

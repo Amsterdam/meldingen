@@ -7,3 +7,4 @@ Feature: Melding Form
         Given there is a classification test
         When I create a melding with text "test"
         Then the melding should be classified as "test"
+        And the state of the melding should be "classified"
