@@ -19,7 +19,6 @@ def async_step(step: Callable[[VarArg(Any), KwArg(Any)], Any]) -> Callable[[VarA
             However this doesn't seem to find the current loop in the test environment.
             """
             event_loop = asyncio.get_running_loop()
-            print("got event loop from get_running_loop")
         except RuntimeError:
             """
             We therefore fallback to this older function.
@@ -29,7 +28,6 @@ def async_step(step: Callable[[VarArg(Any), KwArg(Any)], Any]) -> Callable[[VarA
             https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.get_event_loop
             """
             event_loop = asyncio.get_event_loop_policy().get_event_loop()
-            print("got event loop from get_event_loop")
         return event_loop.run_until_complete(step(*args, **kwargs))
 
     return run_step
