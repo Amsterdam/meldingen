@@ -1,6 +1,5 @@
 import logging
 
-import uvicorn
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from opentelemetry import trace
