@@ -5,5 +5,5 @@ from tests.scenarios.context.melding import *  # noqa
 
 
 @scenario("create_melding.feature", "Create melding")
-def test_create_melding(anyio_backend: str) -> None:
+def test_create_melding(anyio_backend: str, test_database: None) -> None:
     pass
