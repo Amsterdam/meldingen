@@ -1,5 +1,5 @@
 import contextlib
-from typing import AsyncGenerator, AsyncIterator, Callable
+from typing import AsyncGenerator, AsyncIterator
 from unittest.mock import AsyncMock
 
 import pytest
@@ -104,7 +104,7 @@ async def users(db_session: AsyncSession) -> list[User]:
 
 
 @pytest.fixture
-async def app() -> FastAPI:
+def app() -> FastAPI:
     return get_application()
 
 
@@ -122,16 +122,6 @@ async def client(app: FastAPI, test_database: None) -> AsyncGenerator[AsyncClien
 @pytest.fixture(scope="session")
 def db_engine() -> AsyncEngine:
     return create_async_engine(TEST_DATABASE_URL, echo="debug", poolclass=NullPool)
-
-
-@pytest.fixture(autouse=True)
-def database_engine_override(app: FastAPI) -> None:
-    def db_engine_override() -> Callable[..., AsyncEngine]:
-        return db_engine
-
-    # In some case a coroutine is passed here instead of an FastAPI object, causing the test to fail
-    if isinstance(app, FastAPI):
-        app.dependency_overrides[database_engine] = db_engine_override
 
 
 class DatabaseSessionManager(BaseDatabaseSessionManager):
@@ -164,16 +154,6 @@ def db_manager(db_engine: AsyncEngine) -> DatabaseSessionManager:
     return DatabaseSessionManager(db_engine)
 
 
-@pytest.fixture(autouse=True)
-def database_session_manager_override(app: FastAPI) -> None:
-    def db_manager_override() -> Callable[..., DatabaseSessionManager]:
-        return db_manager
-
-    # In some case a coroutine is passed here instead of an FastAPI object, causing the test to fail
-    if isinstance(app, FastAPI):
-        app.dependency_overrides[database_session_manager] = db_manager_override
-
-
 @pytest.fixture
 async def db_session(db_manager: DatabaseSessionManager) -> AsyncIterator[AsyncSession]:
     async with db_manager.session() as session:
@@ -185,11 +165,30 @@ async def db_session(db_manager: DatabaseSessionManager) -> AsyncIterator[AsyncS
 
 
 @pytest.fixture(autouse=True)
-async def session_override(app: FastAPI, db_session: AsyncSession) -> None:
-    async def get_db_session_override() -> AsyncIterator[AsyncSession]:
+async def override_dependencies(
+    app: FastAPI, db_engine: AsyncEngine, db_manager: DatabaseSessionManager, db_session: AsyncSession
+) -> AsyncIterator[None]:
+
+    async def db_session_override() -> AsyncIterator[AsyncSession]:
         yield db_session
 
-    app.dependency_overrides[database_session] = get_db_session_override
+    def db_engine_override() -> AsyncEngine:
+        return db_engine
+
+    def db_manager_override() -> DatabaseSessionManager:
+        return db_manager
+
+    app.dependency_overrides.update(
+        {
+            database_session: db_session_override,
+            database_engine: db_engine_override,
+            database_session_manager: db_manager_override,
+        }
+    )
+
+    yield
+
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture

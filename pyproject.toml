@@ -96,3 +96,6 @@ omit = [
   "meldingen/dependencies.py",
   "meldingen/database.py",
 ]
+
+[tool.pytest.ini_options]
+bdd_features_base_dir = "tests/scenarios/features"
