@@ -14,4 +14,6 @@ Feature: Melding Form
         And the form contains a panel
         And the panel contains a text area component with the question "question"
         When I retrieve the additional questions through my classification
-        And I answer the additional questions with the text "text"
+        And answer the additional questions with the text "text"
+        And finish answering the additional questions by going to the next step
+        Then the melding should be in the state "questions_answered"

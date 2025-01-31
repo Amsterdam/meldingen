@@ -28,7 +28,7 @@ async def create_melding_with_text(text: str, app: FastAPI, client: AsyncClient)
 )
 def the_melding_should_be_classified_as(
     classification: Classification, create_melding_response_body: dict[str, Any], classification_name: str
-) -> None:
+) -> int:
     assert classification.name == classification_name
     assert create_melding_response_body.get("classification") == classification.id
 
@@ -41,14 +41,16 @@ def the_state_of_the_melding_should_be(state: str, create_melding_response_body:
 
 
 @then("the melding should contain a token", target_fixture="melding_token")
-def the_melding_should_contain_a_token(create_melding_response_body: dict[str, Any]) -> None:
-    assert create_melding_response_body.get("token") is not None
+def the_melding_should_contain_a_token(create_melding_response_body: dict[str, Any]) -> str:
+    token = create_melding_response_body.get("token")
+    assert isinstance(token, str)
 
-    return create_melding_response_body.get("token")
+    return token
 
 
 @then("the melding should have an id", target_fixture="melding_id")
-def the_melding_should_have_an_id(create_melding_response_body: dict[str, Any]) -> None:
-    assert create_melding_response_body.get("id") is not None
+def the_melding_should_have_an_id(create_melding_response_body: dict[str, Any]) -> int:
+    melding_id = create_melding_response_body.get("id")
+    assert isinstance(melding_id, int)
 
-    return create_melding_response_body.get("id")
+    return melding_id
