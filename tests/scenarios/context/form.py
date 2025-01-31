@@ -38,9 +38,7 @@ async def there_is_a_form_for_this_classification(db_session: AsyncSession, clas
 
 @given("the form contains a panel", target_fixture="form_panel")
 @async_step
-async def the_additional_form_contains_a_panel(
-    db_session: AsyncSession, form: Form
-) -> FormIoPanelComponent:
+async def the_additional_form_contains_a_panel(db_session: AsyncSession, form: Form) -> FormIoPanelComponent:
 
     panel = FormIoPanelComponent(
         title="Describe the situation more clearly",
