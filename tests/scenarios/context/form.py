@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from pytest_bdd import given, parsers, then, when
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 from meldingen.models import (
     Classification,
@@ -101,7 +102,7 @@ async def retrieve_additional_questions_through_classification(
             ROUTE_RETRIEVE_ADDITIONAL_QUESTIONS, classification_id=create_melding_response_body.get("classification")
         )
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
 
     body = response.json()
     assert isinstance(body, dict)
@@ -127,7 +128,7 @@ async def answer_additional_questions(
         json={"text": text},
     )
 
-    assert response.status_code == 201
+    assert response.status_code == HTTP_201_CREATED
 
 
 @when(
@@ -146,7 +147,7 @@ async def finish_answering_additional_questions(
         params={"token": melding_token},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     body = response.json()
     assert isinstance(body, dict)
 

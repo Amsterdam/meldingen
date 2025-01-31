@@ -3,6 +3,7 @@ from typing import Any, Final
 from fastapi import FastAPI
 from httpx import AsyncClient
 from pytest_bdd import parsers, then, when
+from starlette.status import HTTP_201_CREATED
 
 from meldingen.models import Classification
 from tests.scenarios.conftest import async_step
@@ -14,7 +15,7 @@ ROUTE_NAME_CREATE: Final[str] = "melding:create"
 @async_step
 async def create_melding_with_text(text: str, app: FastAPI, client: AsyncClient) -> dict[str, Any]:
     response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"text": text})
-    assert response.status_code == 201
+    assert response.status_code == HTTP_201_CREATED
 
     body = response.json()
     assert isinstance(body, dict)
