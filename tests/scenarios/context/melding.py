@@ -22,14 +22,33 @@ async def create_melding_with_text(text: str, app: FastAPI, client: AsyncClient)
     return body
 
 
-@then(parsers.parse('the melding should be classified as "{classification_name:l}"'))
+@then(
+    parsers.parse('the melding should be classified as "{classification_name:l}"'),
+    target_fixture="melding_classification_id",
+)
 def the_melding_should_be_classified_as(
     classification: Classification, create_melding_response_body: dict[str, Any], classification_name: str
 ) -> None:
     assert classification.name == classification_name
     assert create_melding_response_body.get("classification") == classification.id
 
+    return classification.id
+
 
 @then(parsers.parse('the state of the melding should be "{state:l}"'))
 def the_state_of_the_melding_should_be(state: str, create_melding_response_body: dict[str, Any]) -> None:
     assert state == create_melding_response_body.get("state")
+
+
+@then("the melding should contain a token", target_fixture="melding_token")
+def the_melding_should_contain_a_token(create_melding_response_body: dict[str, Any]) -> None:
+    assert create_melding_response_body.get("token") is not None
+
+    return create_melding_response_body.get("token")
+
+
+@then("the melding should have an id", target_fixture="melding_id")
+def the_melding_should_have_an_id(create_melding_response_body: dict[str, Any]) -> None:
+    assert create_melding_response_body.get("id") is not None
+
+    return create_melding_response_body.get("id")
