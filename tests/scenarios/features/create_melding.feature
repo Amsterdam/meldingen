@@ -4,12 +4,14 @@ Feature: Melding Form
     In order to have my issue resolved by the municipality
 
     Scenario: Create melding
+        # Initial melding and classification
         Given there is a classification test
         When I create a melding with text "test"
         Then the melding should be classified as "test"
         And the melding should have an id
         And the state of the melding should be "classified"
         And the melding should contain a token
+        # Additional questions
         Given there is a form for additional questions
         And the form contains a panel
         And the panel contains a text area component with the question "question"
@@ -17,3 +19,13 @@ Feature: Melding Form
         And answer the additional questions with the text "text"
         And finish answering the additional questions by going to the next step
         Then the melding should be in the state "questions_answered"
+        # Attachments
+        Given I have a file "amsterdam-logo.jpg" that I want to attach to the melding
+        And it is in my file system
+        When I upload the file
+        Then the upload response should include data about my file as attachment
+        When I check the attachments of my melding
+        Then there should be 1 attachments
+        And the attachments should contain my file
+        When I am finished with adding attachments
+        Then the melding state should be "attachments_added"
