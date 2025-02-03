@@ -25,6 +25,7 @@ async def i_supply_the_location_as_geojson_to_my_melding(
 ) -> dict[str, Any]:
     response = await client.post(
         app.url_path_for(ROUTE_NAME_LOCATION_ADD, melding_id=my_melding["id"]), params={"token": token}, json=geojson
+
     )
     assert response.status_code == HTTP_200_OK
 
