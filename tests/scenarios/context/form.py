@@ -115,16 +115,16 @@ async def retrieve_additional_questions_through_classification(
 async def answer_additional_questions(
     client: AsyncClient,
     app: FastAPI,
-    melding_id: int,
-    melding_token: str,
+    create_melding_response_body: dict[str, Any],
     additional_questions: dict[str, Any],
     text: str,
 ) -> None:
+    melding_id, token = create_melding_response_body['id'], create_melding_response_body['token']
     question_id = additional_questions["components"][0]["components"][0]["question"]
 
     response = await client.post(
         app.url_path_for(ROUTE_ANSWER_QUESTION, melding_id=melding_id, question_id=question_id),
-        params={"token": melding_token},
+        params={"token": token},
         json={"text": text},
     )
 
@@ -139,12 +139,13 @@ async def answer_additional_questions(
 async def finish_answering_additional_questions(
     client: AsyncClient,
     app: FastAPI,
-    melding_id: int,
-    melding_token: str,
+    create_melding_response_body: dict[str, Any],
 ) -> dict[str, Any]:
+    melding_id, token = create_melding_response_body['id'], create_melding_response_body['token']
+
     response = await client.put(
         app.url_path_for(ROUTE_FINISH_ANSWERING_QUESTIONS, melding_id=melding_id),
-        params={"token": melding_token},
+        params={"token": token},
     )
 
     assert response.status_code == HTTP_200_OK

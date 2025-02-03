@@ -38,15 +38,16 @@ def it_is_in_my_filesystem(filename: str) -> str:
 async def upload_the_file(
     app: FastAPI,
     client: AsyncClient,
-    malware_scanner_override: Callable[[FastAPI], Any],
+    malware_scanner_override: None,
     filepath: str,
     filename: str,
-    melding_id: int,
-    melding_token: str,
+    create_melding_response_body: dict[str, Any]
 ) -> dict[str, Any]:
+    melding_id, token = create_melding_response_body['id'], create_melding_response_body['token']
+
     response = await client.post(
         app.url_path_for(ROUTE_ADD_ATTACHMENTS, melding_id=melding_id),
-        params={"token": melding_token},
+        params={"token": token},
         files={
             "file": open(
                 filepath,
@@ -79,11 +80,13 @@ def the_upload_response_should_include_data_about_my_file(
 @when("I check the attachments of my melding", target_fixture="melding_attachments")
 @async_step
 async def i_check_the_attachments_of_my_melding(
-    app: FastAPI, client: AsyncClient, melding_id: int, melding_token: str
+    app: FastAPI, client: AsyncClient, create_melding_response_body: dict[str, Any]
 ) -> list[dict[str, Any]]:
+    melding_id, token = create_melding_response_body['id'], create_melding_response_body['token']
+
     response = await client.get(
         app.url_path_for(ROUTE_MELDING_LIST_ATTACHMENTS, melding_id=melding_id),
-        params={"token": melding_token},
+        params={"token": token},
     )
 
     assert response.status_code == HTTP_200_OK
@@ -111,11 +114,13 @@ def the_attachments_should_contain_my_file(
 @when("I am finished with adding attachments", target_fixture="melding_after_uploading_attachments")
 @async_step
 async def i_have_finished_uploading_my_files(
-    app: FastAPI, client: AsyncClient, melding_id: int, melding_token: str
+    app: FastAPI, client: AsyncClient, create_melding_response_body: dict[str, Any]
 ) -> dict[str, Any]:
+    melding = create_melding_response_body
+
     response = await client.put(
-        app.url_path_for(ROUTE_FINISH_UPLOADING_ATTACHMENTS, melding_id=melding_id),
-        params={"token": melding_token},
+        app.url_path_for(ROUTE_FINISH_UPLOADING_ATTACHMENTS, melding_id=melding['id']),
+        params={"token": melding['token']},
     )
 
     assert response.status_code == HTTP_200_OK
