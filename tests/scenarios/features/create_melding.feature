@@ -7,4 +7,13 @@ Feature: Melding Form
         Given there is a classification test
         When I create a melding with text "test"
         Then the melding should be classified as "test"
+        And the melding should have an id
         And the state of the melding should be "classified"
+        And the melding should contain a token
+        Given there is a form for additional questions
+        And the form contains a panel
+        And the panel contains a text area component with the question "question"
+        When I retrieve the additional questions through my classification
+        And answer the additional questions with the text "text"
+        And finish answering the additional questions by going to the next step
+        Then the melding should be in the state "questions_answered"
