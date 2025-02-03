@@ -119,7 +119,7 @@ async def answer_additional_questions(
     additional_questions: dict[str, Any],
     text: str,
 ) -> None:
-    melding_id, token = create_melding_response_body['id'], create_melding_response_body['token']
+    melding_id, token = create_melding_response_body["id"], create_melding_response_body["token"]
     question_id = additional_questions["components"][0]["components"][0]["question"]
 
     response = await client.post(
@@ -141,7 +141,7 @@ async def finish_answering_additional_questions(
     app: FastAPI,
     create_melding_response_body: dict[str, Any],
 ) -> dict[str, Any]:
-    melding_id, token = create_melding_response_body['id'], create_melding_response_body['token']
+    melding_id, token = create_melding_response_body["id"], create_melding_response_body["token"]
 
     response = await client.put(
         app.url_path_for(ROUTE_FINISH_ANSWERING_QUESTIONS, melding_id=melding_id),

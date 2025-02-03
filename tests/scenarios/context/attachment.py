@@ -41,9 +41,9 @@ async def upload_the_file(
     malware_scanner_override: None,
     filepath: str,
     filename: str,
-    create_melding_response_body: dict[str, Any]
+    create_melding_response_body: dict[str, Any],
 ) -> dict[str, Any]:
-    melding_id, token = create_melding_response_body['id'], create_melding_response_body['token']
+    melding_id, token = create_melding_response_body["id"], create_melding_response_body["token"]
 
     response = await client.post(
         app.url_path_for(ROUTE_ADD_ATTACHMENTS, melding_id=melding_id),
@@ -82,7 +82,7 @@ def the_upload_response_should_include_data_about_my_file(
 async def i_check_the_attachments_of_my_melding(
     app: FastAPI, client: AsyncClient, create_melding_response_body: dict[str, Any]
 ) -> list[dict[str, Any]]:
-    melding_id, token = create_melding_response_body['id'], create_melding_response_body['token']
+    melding_id, token = create_melding_response_body["id"], create_melding_response_body["token"]
 
     response = await client.get(
         app.url_path_for(ROUTE_MELDING_LIST_ATTACHMENTS, melding_id=melding_id),
@@ -119,8 +119,8 @@ async def i_have_finished_uploading_my_files(
     melding = create_melding_response_body
 
     response = await client.put(
-        app.url_path_for(ROUTE_FINISH_UPLOADING_ATTACHMENTS, melding_id=melding['id']),
-        params={"token": melding['token']},
+        app.url_path_for(ROUTE_FINISH_UPLOADING_ATTACHMENTS, melding_id=melding["id"]),
+        params={"token": melding["token"]},
     )
 
     assert response.status_code == HTTP_200_OK
