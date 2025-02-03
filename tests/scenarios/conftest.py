@@ -3,7 +3,7 @@ import functools
 from typing import Any, Callable
 
 from mypy_extensions import KwArg, VarArg
-from pytest_bdd import then, parsers
+from pytest_bdd import parsers, then
 
 
 def async_step(step: Callable[[VarArg(Any), KwArg(Any)], Any]) -> Callable[[VarArg(Any), KwArg(Any)], Any]:
