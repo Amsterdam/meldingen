@@ -1,5 +1,5 @@
 from os import path
-from typing import Any, Callable, Final, List
+from typing import Any, Final
 
 from fastapi import FastAPI
 from httpx import AsyncClient
