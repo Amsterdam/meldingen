@@ -1,3 +1,4 @@
+from abc import ABCMeta, abstractmethod
 from os import path
 from typing import Any, Final
 from uuid import uuid4
@@ -305,13 +306,22 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert body.get("detail") == "Not Found"
 
 
-class TestMeldingUpdate:
-    ROUTE_NAME: Final[str] = "melding:update"
+class BaseTokenAuthenticationTest(metaclass=ABCMeta):
+    @abstractmethod
+    def get_route_name(self) -> str: ...
+
+    @abstractmethod
+    def get_method(self) -> str: ...
+
+    # def get_path_params(self) -> dict[str, Any]:
+    #     return {"melding_id": 1}
 
     @pytest.mark.anyio
-    async def test_update_token_missing(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1), json={"text": "classification_name"}
+    async def test_token_missing(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=1),
+            json={"text": "classification_name"},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -325,19 +335,10 @@ class TestMeldingUpdate:
         assert detail[0].get("msg") == "Field required"
 
     @pytest.mark.anyio
-    async def test_update_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": ""}, json={"text": "classification_name"}
-        )
-
-        assert response.status_code == HTTP_404_NOT_FOUND
-
-    @pytest.mark.anyio
-    async def test_update_melding_unauthorized_token_invalid(
-        self, app: FastAPI, client: AsyncClient, melding: Melding
-    ) -> None:
-        response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+    async def test_token_invalid(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
             params={"token": ""},
             json={"text": "classification_name"},
         )
@@ -350,16 +351,33 @@ class TestMeldingUpdate:
         [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
         indirect=True,
     )
-    async def test_update_melding_unauthorized_token_expired(
-        self, app: FastAPI, client: AsyncClient, melding: Melding
-    ) -> None:
-        response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+    async def test_token_expired(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
             params={"token": "supersecuretoken"},
             json={"text": "classification_name"},
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+class TestMeldingUpdate(BaseTokenAuthenticationTest):
+    ROUTE_NAME: Final[str] = "melding:update"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return "PATCH"
+
+    @pytest.mark.anyio
+    async def test_update_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": ""}, json={"text": "classification_name"}
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
