@@ -426,8 +426,14 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         assert body.get("updated_at") == melding.updated_at.isoformat()
 
 
-class TestMeldingAnswerQuestions:
+class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:answer_questions"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return "PUT"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -455,27 +461,6 @@ class TestMeldingAnswerQuestions:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
-
-    @pytest.mark.anyio
-    async def test_answer_questions_token_invalid(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
-        response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id), params={"token": "supersecrettoken"}
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-    @pytest.mark.anyio
-    @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
-        [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken", "PT1H")],
-        indirect=True,
-    )
-    async def test_answer_questions_token_expired(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
-        response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id), params={"token": "supersecrettoken"}
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
