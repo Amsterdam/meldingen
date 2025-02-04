@@ -35,3 +35,8 @@ def the_melding_should_be_classified_as(
 def the_melding_should_contain_a_token(my_melding: dict[str, Any]) -> str:
     assert isinstance(my_melding["token"], str)
     return my_melding["token"]
+
+
+@then(parsers.parse('the state of the melding should be "{state:w}"'))
+def the_state_of_the_melding_should_be(my_melding: dict[str, Any], state: str) -> None:
+    assert state == my_melding.get("state")

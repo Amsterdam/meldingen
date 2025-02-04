@@ -1,6 +1,5 @@
 from pytest_bdd import scenario
 
-from tests.scenarios.conftest import *  # noqa
 from tests.scenarios.context.attachment import *  # noqa
 from tests.scenarios.context.classification import *  # noqa
 from tests.scenarios.context.form import *  # noqa

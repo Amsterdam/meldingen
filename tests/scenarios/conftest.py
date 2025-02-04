@@ -3,7 +3,6 @@ import functools
 from typing import Any, Callable
 
 from mypy_extensions import KwArg, VarArg
-from pytest_bdd import parsers, then
 
 
 def async_step(step: Callable[[VarArg(Any), KwArg(Any)], Any]) -> Callable[[VarArg(Any), KwArg(Any)], Any]:
@@ -32,8 +31,3 @@ def async_step(step: Callable[[VarArg(Any), KwArg(Any)], Any]) -> Callable[[VarA
         return event_loop.run_until_complete(step(*args, **kwargs))
 
     return run_step
-
-
-@then(parsers.parse('the state of the melding should be "{state:w}"'))
-def the_state_of_the_melding_should_be(my_melding: dict[str, Any], state: str) -> None:
-    assert state == my_melding.get("state")
