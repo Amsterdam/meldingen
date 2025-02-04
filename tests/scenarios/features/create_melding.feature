@@ -17,7 +17,7 @@ Feature: Melding Form
         When I retrieve the additional questions through my classification
         And answer the additional questions with the text "text"
         And finish answering the additional questions by going to the next step
-        Then the melding should be in the state "questions_answered"
+        Then the state of the melding should be "questions_answered"
         # Attachments
         Given I have a file "amsterdam-logo.jpg" that I want to attach to the melding
         And it is in my file system
@@ -27,10 +27,10 @@ Feature: Melding Form
         Then there should be 1 attachments
         And the attachments should contain my file
         When I am finished with adding attachments
-        Then the melding state should be "attachments_added"
+        Then the state of the melding should be "attachments_added"
         # Location
         Given I know the latitude 52.3680605 and longitude 4.897092 values of my melding
         When I add the location as geojson to my melding
         Then the location should be attached to the melding
         When I finalize submitting the location to my melding
-        Then I expect the state of my melding to be "location_submitted"
+        Then the state of the melding should be "location_submitted"

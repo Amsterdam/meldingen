@@ -2,7 +2,7 @@ from typing import Any, Final
 
 from fastapi import FastAPI
 from httpx import AsyncClient
-from pytest_bdd import given, parsers, then, when
+from pytest_bdd import given, parsers, when
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
@@ -95,12 +95,10 @@ async def the_additional_form_contains_a_text_area_component(
 async def retrieve_additional_questions_through_classification(
     client: AsyncClient,
     app: FastAPI,
-    create_melding_response_body: dict[str, Any],
+    my_melding: dict[str, Any],
 ) -> dict[str, Any]:
     response = await client.get(
-        app.url_path_for(
-            ROUTE_RETRIEVE_ADDITIONAL_QUESTIONS, classification_id=create_melding_response_body.get("classification")
-        )
+        app.url_path_for(ROUTE_RETRIEVE_ADDITIONAL_QUESTIONS, classification_id=my_melding.get("classification"))
     )
     assert response.status_code == HTTP_200_OK
 
@@ -115,15 +113,15 @@ async def retrieve_additional_questions_through_classification(
 async def answer_additional_questions(
     client: AsyncClient,
     app: FastAPI,
-    create_melding_response_body: dict[str, Any],
+    my_melding: dict[str, Any],
+    token: str,
     additional_questions: dict[str, Any],
     text: str,
 ) -> None:
-    melding_id, token = create_melding_response_body["id"], create_melding_response_body["token"]
     question_id = additional_questions["components"][0]["components"][0]["question"]
 
     response = await client.post(
-        app.url_path_for(ROUTE_ANSWER_QUESTION, melding_id=melding_id, question_id=question_id),
+        app.url_path_for(ROUTE_ANSWER_QUESTION, melding_id=my_melding["id"], question_id=question_id),
         params={"token": token},
         json={"text": text},
     )
@@ -133,18 +131,14 @@ async def answer_additional_questions(
 
 @when(
     "finish answering the additional questions by going to the next step",
-    target_fixture="melding_after_answering_additional_questions",
+    target_fixture="my_melding",
 )
 @async_step
 async def finish_answering_additional_questions(
-    client: AsyncClient,
-    app: FastAPI,
-    create_melding_response_body: dict[str, Any],
+    client: AsyncClient, app: FastAPI, my_melding: dict[str, Any], token: str
 ) -> dict[str, Any]:
-    melding_id, token = create_melding_response_body["id"], create_melding_response_body["token"]
-
     response = await client.put(
-        app.url_path_for(ROUTE_FINISH_ANSWERING_QUESTIONS, melding_id=melding_id),
+        app.url_path_for(ROUTE_FINISH_ANSWERING_QUESTIONS, melding_id=my_melding["id"]),
         params={"token": token},
     )
 
@@ -153,13 +147,3 @@ async def finish_answering_additional_questions(
     assert isinstance(body, dict)
 
     return body
-
-
-@then(parsers.parse('the melding should be in the state "{state:w}"'))
-def the_melding_should_be_in_the_state(
-    client: AsyncClient,
-    app: FastAPI,
-    melding_after_answering_additional_questions: dict[str, Any],
-    state: str,
-) -> None:
-    assert melding_after_answering_additional_questions.get("state") == state

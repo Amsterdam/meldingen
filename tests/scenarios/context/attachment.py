@@ -41,12 +41,11 @@ async def upload_the_file(
     malware_scanner_override: None,
     filepath: str,
     filename: str,
-    create_melding_response_body: dict[str, Any],
+    my_melding: dict[str, Any],
+    token: str,
 ) -> dict[str, Any]:
-    melding_id, token = create_melding_response_body["id"], create_melding_response_body["token"]
-
     response = await client.post(
-        app.url_path_for(ROUTE_ADD_ATTACHMENTS, melding_id=melding_id),
+        app.url_path_for(ROUTE_ADD_ATTACHMENTS, melding_id=my_melding["id"]),
         params={"token": token},
         files={
             "file": open(
@@ -80,12 +79,10 @@ def the_upload_response_should_include_data_about_my_file(
 @when("I check the attachments of my melding", target_fixture="melding_attachments")
 @async_step
 async def i_check_the_attachments_of_my_melding(
-    app: FastAPI, client: AsyncClient, create_melding_response_body: dict[str, Any]
+    app: FastAPI, client: AsyncClient, my_melding: dict[str, Any], token: str
 ) -> list[dict[str, Any]]:
-    melding_id, token = create_melding_response_body["id"], create_melding_response_body["token"]
-
     response = await client.get(
-        app.url_path_for(ROUTE_MELDING_LIST_ATTACHMENTS, melding_id=melding_id),
+        app.url_path_for(ROUTE_MELDING_LIST_ATTACHMENTS, melding_id=my_melding["id"]),
         params={"token": token},
     )
 
@@ -111,16 +108,15 @@ def the_attachments_should_contain_my_file(
     assert attachment["id"] == attachment_id
 
 
-@when("I am finished with adding attachments", target_fixture="melding_after_uploading_attachments")
+@when("I am finished with adding attachments", target_fixture="my_melding")
 @async_step
 async def i_have_finished_uploading_my_files(
-    app: FastAPI, client: AsyncClient, create_melding_response_body: dict[str, Any]
+    app: FastAPI, client: AsyncClient, my_melding: dict[str, Any], token: str
 ) -> dict[str, Any]:
-    melding = create_melding_response_body
 
     response = await client.put(
-        app.url_path_for(ROUTE_FINISH_UPLOADING_ATTACHMENTS, melding_id=melding["id"]),
-        params={"token": melding["token"]},
+        app.url_path_for(ROUTE_FINISH_UPLOADING_ATTACHMENTS, melding_id=my_melding["id"]),
+        params={"token": token},
     )
 
     assert response.status_code == HTTP_200_OK
@@ -128,8 +124,3 @@ async def i_have_finished_uploading_my_files(
     assert isinstance(body, dict)
 
     return body
-
-
-@then(parsers.parse('the melding state should be "{state:w}"'))
-def i_expect_the_melding_state_to_be(melding_after_uploading_attachments: dict[str, Any], state: str) -> None:
-    assert melding_after_uploading_attachments["state"] == state
