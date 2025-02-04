@@ -480,12 +480,12 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         assert body.get("detail") == "Transition not allowed from current state"
 
 
-class TestMeldingAddAttachments(BaseUnauthorizedTest):
+class TestMeldingAddAttachments(BaseTokenAuthenticationTest):
     def get_route_name(self) -> str:
         return "melding:add-attachments"
 
-    def get_path_params(self) -> dict[str, Any]:
-        return {"melding_id": 1}
+    def get_method(self) -> str:
+        return "PUT"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -513,27 +513,6 @@ class TestMeldingAddAttachments(BaseUnauthorizedTest):
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
-
-    @pytest.mark.anyio
-    async def test_add_attachments_token_invalid(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
-        response = await client.put(
-            app.url_path_for(self.get_route_name(), melding_id=melding.id), params={"token": "supersecrettoken"}
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-    @pytest.mark.anyio
-    @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
-        [("De restafvalcontainer is vol.", MeldingStates.QUESTIONS_ANSWERED, "supersecrettoken", "PT1H")],
-        indirect=True,
-    )
-    async def test_add_attachments_token_expired(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
-        response = await client.put(
-            app.url_path_for(self.get_route_name(), melding_id=melding.id), params={"token": "supersecrettoken"}
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
