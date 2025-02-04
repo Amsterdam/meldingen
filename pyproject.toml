@@ -1,43 +1,45 @@
-[tool.poetry]
+[project]
 name = "meldingen"
 version = "0.1.0"
 description = "The main meldingen project which includes the framework bindings."
 authors = [
-  "Youri Westerman <y.westerman@amsterdam.nl>",
-  "David van Buiten <d.van.buiten@amsterdam.nl>"
+    {name = "Youri Westerman",email = "y.westerman@amsterdam.nl"},
+    {name = "David van Buiten",email = "d.van.buiten@amsterdam.nl"},
 ]
 readme = "README.md"
+requires-python = "^3.12"
 
-[tool.poetry.dependencies]
-python = "^3.12"
-alembic = "^1.14.1"
-alembic-postgresql-enum = "^1.5.0"
-asgi-correlation-id = "^4.3.4"
-asyncpg = "^0.30.0"
-azure-storage-blob = "^12.24.1"
-fastapi = {extras = ["standard"], version = "^0.115.7"}
-geoalchemy2 = "^0.17.0"
-geojson-pydantic = "^1.2.0"
-httpx = {extras = ["http2"], version = "^0.28.1"}
-maykin-json-logic-py = "^0.13.0"
-meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git"}
-mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
-opentelemetry-exporter-otlp-proto-grpc = "^1.29.0"
-opentelemetry-instrumentation-aiohttp-client = "^0.50b0"
-opentelemetry-instrumentation-fastapi = "^0.50b0"
-opentelemetry-instrumentation-httpx = "^0.50b0"
-opentelemetry-instrumentation-sqlalchemy = "^0.50b0"
-phonenumbers = "^8.13.53"
-pydantic = {extras = ["email"], version = "^2.10.6"}
-pydantic-extra-types = "^2.10.2"
-pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git"}
-pydantic-media-type = {git = "https://github.com/Amsterdam/pydantic-media-type.git"}
-pydantic-settings = "^2.7.0"
-pyjwt = {extras = ["crypto"], version = "^2.10.1"}
-python-magic = "^0.4.27"
-python-multipart = "^0.0.20"
-shapely = "^2.0.6"
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.37"}
+dependencies = [
+    "alembic (>=1.14.1,<2.0.0)",
+    "alembic-postgresql-enum (>=1.5.0,<2.0.0)",
+    "asgi-correlation-id (>=4.3.4,<5.0.0)",
+    "asyncpg (>=0.30.0,<1.0.0)",
+    "azure-storage-blob (>=12.24.1,<13.0.0)",
+    "fastapi[standard] (>=0.115.7,<1.0.0)",
+    "geoalchemy2 (>=0.17.0,<1.0.0)",
+    "geojson-pydantic (>=1.2.0,<2.0.0)",
+    "httpx[http2] (>=0.28.1,<1.0.0)",
+    "maykin-json-logic-py (>=0.13.0,<1.0.0)",
+    "meldingen-core @ git+https://github.com/Amsterdam/meldingen-core.git",
+    "mp-fsm @ git+https://github.com/Amsterdam/mp-fsm.git",
+    "opentelemetry-exporter-otlp-proto-grpc (>=1.29.0,<2.0.0)",
+    "opentelemetry-instrumentation-aiohttp-client (>=0.50b0,<0.51)",
+    "opentelemetry-instrumentation-aiohttp-client (>=0.50b0,<0.51)",
+    "opentelemetry-instrumentation-fastapi (>=0.50b0,<0.51)",
+    "opentelemetry-instrumentation-httpx (>=0.50b0,<0.51)",
+    "opentelemetry-instrumentation-sqlalchemy (>=0.50b0,<0.51)",
+    "phonenumbers (>=8.13.53,<9.0.0)",
+    "pydantic-extra-types (>=2.10.2,<3.0.0)",
+    "pydantic-jsonlogic @ git+https://github.com/Amsterdam/pydantic-jsonlogic.git",
+    "pydantic-media-type @ git+https://github.com/Amsterdam/pydantic-media-type.git",
+    "pydantic-settings (>=2.7.0,<3.0.0)",
+    "pydantic[email] (>=2.10.6,<3.0.0)",
+    "pyjwt[crypto] (>=2.10.1,<3.0.0)",
+    "python-magic (>=0.4.27,<1.0.0)",
+    "python-multipart (>=0.0.20,<1.0.0)",
+    "shapely (>=2.0.6,<3.0.0)",
+    "sqlalchemy[asyncio] (>=2.0.37,<3.0.0)"
+]
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2.1.0"
