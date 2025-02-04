@@ -22,7 +22,7 @@ def i_have_a_phone_number_and_an_email_address(phone_number: str, email: str) ->
 @when("I add the contact information to my melding", target_fixture="my_melding")
 @async_step
 async def i_add_the_contact_information_to_my_melding(
-    my_melding: dict[str, Any], token: str, contact_info: dict[str, str], app: FastAPI, client: AsyncClient
+    app: FastAPI, client: AsyncClient, my_melding: dict[str, Any], token: str, contact_info: dict[str, str]
 ) -> dict[str, Any]:
     response = await client.post(
         app.url_path_for(ROUTE_CONTACT_INFO_ADD, melding_id=my_melding["id"]),
@@ -46,7 +46,7 @@ def the_melding_contains_my_contact_information(contact_info: dict[str, Any], my
 @when("I finalize adding my contact info by proceeding to the next step", target_fixture="my_melding")
 @async_step
 async def i_finalize_submitting_the_contact_info_to_my_melding(
-    my_melding: dict[str, Any], token: str, app: FastAPI, client: AsyncClient
+    app: FastAPI, client: AsyncClient, my_melding: dict[str, Any], token: str
 ) -> dict[str, Any]:
     response = await client.put(
         app.url_path_for(ROUTE_FINALIZE_CONTACT_INFO_ADD, melding_id=my_melding["id"]), params={"token": token}
