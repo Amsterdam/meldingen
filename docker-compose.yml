@@ -17,6 +17,8 @@ services:
         condition: service_healthy
       imgproxy:
         condition: service_healthy
+      otel-collector:
+        condition: service_started
     volumes:
       - ".:/opt/meldingen"
     networks:
