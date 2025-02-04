@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from os import path
-from typing import Any, Final
+from typing import Any, Final, override
 from uuid import uuid4
 
 import pytest
@@ -313,15 +313,15 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
     @abstractmethod
     def get_method(self) -> str: ...
 
-    # def get_path_params(self) -> dict[str, Any]:
-    #     return {"melding_id": 1}
+    def get_json(self) -> dict[str, Any] | None:
+        return None
 
     @pytest.mark.anyio
     async def test_token_missing(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=1),
-            json={"text": "classification_name"},
+            json=self.get_json(),
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -340,7 +340,7 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding.id),
             params={"token": ""},
-            json={"text": "classification_name"},
+            json=self.get_json(),
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -371,10 +371,14 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
     def get_method(self) -> str:
         return "PATCH"
 
+    @override
+    def get_json(self) -> dict[str, Any] | None:
+        return {"text": "classification_name"}
+
     @pytest.mark.anyio
     async def test_update_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": ""}, json={"text": "classification_name"}
+            app.url_path_for(self.ROUTE_NAME, melding_id=1), params={"token": ""}, json=self.get_json()
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
@@ -391,7 +395,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecuretoken"},
-            json={"text": "classification_name"},
+            json=self.get_json(),
         )
 
         assert response.status_code == HTTP_500_INTERNAL_SERVER_ERROR
@@ -408,7 +412,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecuretoken"},
-            json={"text": "classification_name"},
+            json=self.get_json(),
         )
 
         assert response.status_code == HTTP_200_OK
