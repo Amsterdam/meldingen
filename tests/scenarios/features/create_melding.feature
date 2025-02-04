@@ -34,3 +34,9 @@ Feature: Melding Form
         Then the location should be attached to the melding
         When I finalize submitting the location to my melding
         Then the state of the melding should be "location_submitted"
+        # Contact information
+        Given I have a phone number "+31612345678" and an email address "test@example.com"
+        When I add the contact information to my melding
+        Then the melding contains my contact information
+        When I finalize adding my contact info by proceeding to the next step
+        Then the state of the melding should be "contact_info_added"
