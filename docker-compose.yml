@@ -106,6 +106,8 @@ services:
     image: ${REGISTRY:-localhost:5000}/${REPOSITORY:-signalen/meldingen-otel-collector}:${VERSION:-latest}
     build:
       context: docker/otel-collector
+    depends_on:
+      - jaeger
     ports:
       - "4317:4317"
     # To connect the collector to App Insights/Log Analytics, please specify the connection string
