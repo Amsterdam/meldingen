@@ -1874,8 +1874,18 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
         assert detail[0].get("msg") == "Input should be 'Point'"
 
 
-class TestMeldingAddContactAction:
+class TestMeldingAddContactAction(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:contact-add"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return "POST"
+
+    @override
+    def get_json(self) -> dict[str, Any] | None:
+        return {"email": "user@example.com", "phone": "+31612345678"}
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1909,21 +1919,6 @@ class TestMeldingAddContactAction:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
-
-    @pytest.mark.anyio
-    @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_token"],
-        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
-        indirect=True,
-    )
-    async def test_add_contact_incorrect_token(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
-        response = await client.post(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
-            params={"token": "incorrecttoken"},
-            json={"email": "user@example.com", "phone": "+31612345678"},
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
 
 
 class TestMeldingContactInfoAdded:
