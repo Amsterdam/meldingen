@@ -1921,15 +1921,12 @@ class TestMeldingAddContactAction(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_404_NOT_FOUND
 
 
-class TestMeldingContactInfoAdded:
+class TestMeldingContactInfoAdded(BaseTokenAuthenticationTest):
     def get_route_name(self) -> str:
         return "melding:add-contact-info"
 
     def get_method(self) -> str:
         return "PUT"
-
-    def get_path_params(self) -> dict[str, Any]:
-        return {"melding_id": 1}
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1990,13 +1987,3 @@ class TestMeldingContactInfoAdded:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
-
-    @pytest.mark.anyio
-    async def test_contact_info_added_token_invalid(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
-        response = await client.request(
-            self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding.id),
-            params={"token": "supersecrettoken"},
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
