@@ -356,7 +356,7 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding.id),
             params={"token": "supersecuretoken"},
-            json={"text": "classification_name"},
+            json=self.get_json(),
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -1811,8 +1811,22 @@ class TestMeldingDeleteAttachmentAction:
             assert await blob_client.exists() == False
 
 
-class TestAddLocationToMeldingAction:
+class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:location-add"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return "POST"
+
+    @override
+    def get_json(self) -> dict[str, Any] | None:
+        return {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [52.3680605, 4.897092]},
+            "properties": {},
+        }
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1847,54 +1861,6 @@ class TestAddLocationToMeldingAction:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
-
-    @pytest.mark.anyio
-    async def test_add_location_to_melding_token_missing(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
-    ) -> None:
-        response = await client.post(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
-            json=geojson,
-        )
-
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
-
-        body = response.json()
-        detail = body.get("detail")
-
-        assert len(detail) == 1
-        assert detail[0].get("type") == "missing"
-        assert detail[0].get("loc") == ["query", "token"]
-        assert detail[0].get("msg") == "Field required"
-
-    @pytest.mark.anyio
-    async def test_add_location_to_melding_unauthorized_token_invalid(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
-    ) -> None:
-        response = await client.post(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
-            params={"token": "supersecuretoken"},
-            json=geojson,
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-    @pytest.mark.anyio
-    @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
-        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
-        indirect=True,
-    )
-    async def test_add_location_to_melding_unauthorized_token_expired(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
-    ) -> None:
-        response = await client.post(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
-            params={"token": "supersecuretoken"},
-            json=geojson,
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
 
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "geojson_geometry"],
