@@ -1931,13 +1931,13 @@ files = []
 develop = false
 
 [package.dependencies]
-plugfs = {git = "https://github.com/amsterdam/plugfs"}
+plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "HEAD"
-resolved_reference = "c9aa77ff3ae3c15a353825e5cbc44eb4897e6517"
+resolved_reference = "8fd917767897e52e715ba261f52b854831617cd2"
 
 [[package]]
 name = "mergedeep"
@@ -2075,25 +2075,24 @@ files = [
 
 [[package]]
 name = "mkdocstrings"
-version = "0.27.0"
+version = "0.28.0"
 description = "Automatic documentation from sources, for MkDocs."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "mkdocstrings-0.27.0-py3-none-any.whl", hash = "sha256:6ceaa7ea830770959b55a16203ac63da24badd71325b96af950e59fd37366332"},
-    {file = "mkdocstrings-0.27.0.tar.gz", hash = "sha256:16adca6d6b0a1f9e0c07ff0b02ced8e16f228a9d65a37c063ec4c14d7b76a657"},
+    {file = "mkdocstrings-0.28.0-py3-none-any.whl", hash = "sha256:84cf3dc910614781fe0fee46ce8006fde7df6cc7cca2e3f799895fb8a9170b39"},
+    {file = "mkdocstrings-0.28.0.tar.gz", hash = "sha256:df20afef1eafe36ba466ae20732509ecb74237653a585f5061937e54b553b4e0"},
 ]
 
 [package.dependencies]
-click = ">=7.0"
 Jinja2 = ">=2.11.1"
 Markdown = ">=3.6"
 MarkupSafe = ">=1.1"
 mkdocs = ">=1.4"
-mkdocs-autorefs = ">=1.2"
+mkdocs-autorefs = ">=1.3"
+mkdocs-get-deps = ">=0.2"
 mkdocstrings-python = {version = ">=0.5.2", optional = true, markers = "extra == \"python\""}
-platformdirs = ">=2.2"
 pymdown-extensions = ">=6.3"
 
 [package.extras]
@@ -2103,27 +2102,27 @@ python-legacy = ["mkdocstrings-python-legacy (>=0.2.1)"]
 
 [[package]]
 name = "mkdocstrings-python"
-version = "1.13.0"
+version = "1.14.3"
 description = "A Python handler for mkdocstrings."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "mkdocstrings_python-1.13.0-py3-none-any.whl", hash = "sha256:b88bbb207bab4086434743849f8e796788b373bd32e7bfefbf8560ac45d88f97"},
-    {file = "mkdocstrings_python-1.13.0.tar.gz", hash = "sha256:2dbd5757e8375b9720e81db16f52f1856bf59905428fd7ef88005d1370e2f64c"},
+    {file = "mkdocstrings_python-1.14.3-py3-none-any.whl", hash = "sha256:3e229c5df01b89f43d1765def9755378036d7ad00c4a7723c83722719fd76007"},
+    {file = "mkdocstrings_python-1.14.3.tar.gz", hash = "sha256:46598ed3656f15c363f7892f9241c4bb40e140aced7d78864bb81457e295774e"},
 ]
 
 [package.dependencies]
 griffe = ">=0.49"
 mkdocs-autorefs = ">=1.2"
-mkdocstrings = ">=0.26"
+mkdocstrings = ">=0.28"
 
 [[package]]
 name = "mp-fsm"
 version = "0.1.0"
 description = ""
 optional = false
-python-versions = "^3.12"
+python-versions = ">=3.12"
 groups = ["main"]
 files = []
 develop = false
@@ -2132,7 +2131,7 @@ develop = false
 type = "git"
 url = "https://github.com/Amsterdam/mp-fsm.git"
 reference = "HEAD"
-resolved_reference = "7087af31aef7097fb241bc1831dab6349a618c79"
+resolved_reference = "d3faf15941687ce894a1a7513c0c5c52b3fca737"
 
 [[package]]
 name = "multidict"
@@ -2748,21 +2747,21 @@ name = "plugfs"
 version = "0.1.0"
 description = ""
 optional = false
-python-versions = "^3.12"
+python-versions = ">=3.12"
 groups = ["main"]
 files = []
 develop = false
 
 [package.dependencies]
-aiofiles = "^24.1.0"
-aiohttp = {version = "^3.11.11", extras = ["speedups"]}
-azure-storage-blob = "^12.24.1"
+aiofiles = ">=24.1.0,<25.0.0"
+aiohttp = {version = ">=3.11.11,<4.0.0", extras = ["speedups"]}
+azure-storage-blob = ">=12.24.1,<13.0.0"
 
 [package.source]
 type = "git"
-url = "https://github.com/amsterdam/plugfs"
+url = "https://github.com/Amsterdam/plugfs.git"
 reference = "HEAD"
-resolved_reference = "c916b0d7710017bef6b4f57989f9843fa8f02d04"
+resolved_reference = "39cfc3402c1aceccb0be1ba41bf344389d59a9f0"
 
 [[package]]
 name = "pluggy"
@@ -3182,13 +3181,13 @@ files = []
 develop = false
 
 [package.dependencies]
-pydantic = "^2.10.6"
+pydantic = ">=2.10.6,<3.0.0"
 
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/pydantic-jsonlogic.git"
 reference = "HEAD"
-resolved_reference = "47c23a0fe74e4b3f9f0b77077db5f5789295a206"
+resolved_reference = "6e8f36e992e53fd40e039f22bf81fe3b03dc5886"
 
 [[package]]
 name = "pydantic-media-type"
@@ -3201,13 +3200,13 @@ files = []
 develop = false
 
 [package.dependencies]
-pydantic = "^2.10.6"
+pydantic = ">=2.10.6,<3.0.0"
 
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/pydantic-media-type.git"
 reference = "HEAD"
-resolved_reference = "4701ccd5d899902944d0efc78f6e4685e61abd08"
+resolved_reference = "18e6721a801ee33440885f00833a88193229836f"
 
 [[package]]
 name = "pydantic-settings"
@@ -3821,7 +3820,7 @@ files = [
 
 [package.dependencies]
 greenlet = [
-    {version = "!=0.4.17", markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"},
+    {version = "!=0.4.17", optional = true, markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") or extra == \"asyncio\""},
     {version = "!=0.4.17", optional = true, markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") or extra == \"asyncio\""},
 ]
 typing-extensions = ">=4.6.0"
@@ -4447,4 +4446,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "462c573180d4b32bb56ae093c6ca817c8f5018d16ec6e675b2626dfc32ba4a3a"
+content-hash = "05be40edb0dbc14fc5c2675b79c41d6ea36fde8153ad3e618388d7f6e7319708"
