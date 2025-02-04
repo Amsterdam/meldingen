@@ -1578,8 +1578,14 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
         assert response.text == "some data"
 
 
-class TestMeldingListAttachments:
+class TestMeldingListAttachments(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:attachments"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return "GET"
 
     @pytest.mark.anyio
     async def test_list_attachments_not_found(self, app: FastAPI, client: AsyncClient) -> None:
@@ -1589,29 +1595,6 @@ class TestMeldingListAttachments:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
-
-    @pytest.mark.anyio
-    async def test_list_attachments_unauthorized_token_invalid(
-        self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding
-    ) -> None:
-        response = await client.get(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_attachments.id),
-            params={"token": "supersecuretoken"},
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-    @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token", "melding_token_expires"], [("supersecuretoken", "PT1H")], indirect=True)
-    async def test_list_attachments_unauthorized_token_expired(
-        self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding
-    ) -> None:
-        response = await client.get(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_attachments.id),
-            params={"token": "supersecuretoken"},
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
