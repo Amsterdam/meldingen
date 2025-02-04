@@ -154,7 +154,7 @@ def database_session_manager(engine: Annotated[AsyncEngine, Depends(database_eng
 
 
 async def database_session(
-    sessionmanager: Annotated[DatabaseSessionManager, Depends(database_session_manager)]
+    sessionmanager: Annotated[DatabaseSessionManager, Depends(database_session_manager)],
 ) -> AsyncIterator[AsyncSession]:
     async with sessionmanager.session() as session:
         yield session
@@ -165,31 +165,31 @@ def classification_repository(session: Annotated[AsyncSession, Depends(database_
 
 
 def classification_create_action(
-    repository: Annotated[ClassificationRepository, Depends(classification_repository)]
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> ClassificationCreateAction:
     return ClassificationCreateAction(repository)
 
 
 def classification_retrieve_action(
-    repository: Annotated[ClassificationRepository, Depends(classification_repository)]
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> ClassificationRetrieveAction:
     return ClassificationRetrieveAction(repository)
 
 
 def classification_list_action(
-    repository: Annotated[ClassificationRepository, Depends(classification_repository)]
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> ClassificationListAction:
     return ClassificationListAction(repository)
 
 
 def classification_delete_action(
-    repository: Annotated[ClassificationRepository, Depends(classification_repository)]
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> ClassificationDeleteAction:
     return ClassificationDeleteAction(repository)
 
 
 def classification_update_action(
-    repository: Annotated[ClassificationRepository, Depends(classification_repository)]
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> ClassificationUpdateAction:
     return ClassificationUpdateAction(repository)
 
@@ -223,7 +223,7 @@ def token_generator() -> BaseTokenGenerator:
 
 
 def token_verifier(
-    repository: Annotated[MeldingRepository, Depends(melding_repository)]
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> TokenVerifier[Melding, Melding]:
     return TokenVerifier(repository)
 
@@ -258,7 +258,7 @@ def melding_create_action(
 
 
 def melding_retrieve_action(
-    repository: Annotated[MeldingRepository, Depends(melding_repository)]
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingRetrieveAction:
     return MeldingRetrieveAction(repository)
 
@@ -326,7 +326,7 @@ def jsonlogic_validator() -> JSONLogicValidator:
 
 
 def form_io_question_component_repository(
-    session: Annotated[AsyncSession, Depends(database_session)]
+    session: Annotated[AsyncSession, Depends(database_session)],
 ) -> FormIoQuestionComponentRepository:
     return FormIoQuestionComponentRepository(session)
 
@@ -401,7 +401,7 @@ def img_proxy_image_optimizer_processor(
 
 
 def image_optimizer(
-    processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_image_optimizer_processor)]
+    processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_image_optimizer_processor)],
 ) -> BaseImageOptimizer:
     return IMGProxyImageOptimizer(processor)
 
@@ -430,7 +430,7 @@ def img_proxy_thumbnail_processor(
 
 
 def thumbnail_generator(
-    processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_thumbnail_processor)]
+    processor: Annotated[IMGProxyImageProcessor, Depends(img_proxy_thumbnail_processor)],
 ) -> BaseThumbnailGenerator:
     return IMGProxyThumbnailGenerator(processor)
 
@@ -525,7 +525,7 @@ def wkb_to_shape_transformer() -> WKBToShapeTransformer:
 
 
 def shape_to_geojson_transformer(
-    geojson_factory: Annotated[GeoJsonFeatureFactory, Depends(geo_json_feature_factory)]
+    geojson_factory: Annotated[GeoJsonFeatureFactory, Depends(geo_json_feature_factory)],
 ) -> ShapeToGeoJSONTransformer:
     return ShapeToGeoJSONTransformer(geojson_factory)
 
@@ -553,7 +553,7 @@ def melding_add_location_action(
 
 
 def melding_output_factory(
-    location_output_transformer: Annotated[LocationOutputTransformer, Depends(location_output_transformer)]
+    location_output_transformer: Annotated[LocationOutputTransformer, Depends(location_output_transformer)],
 ) -> MeldingOutputFactory:
     return MeldingOutputFactory(location_output_transformer)
 
@@ -571,7 +571,7 @@ def form_component_value_output_factory() -> FormComponentValueOutputFactory:
 
 
 def form_select_component_data_output_factory(
-    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)]
+    factory: Annotated[FormComponentValueOutputFactory, Depends(form_component_value_output_factory)],
 ) -> FormSelectComponentDataOutputFactory:
     return FormSelectComponentDataOutputFactory(factory)
 
@@ -581,19 +581,19 @@ def static_form_repository(session: Annotated[AsyncSession, Depends(database_ses
 
 
 def static_form_retrieve_action(
-    repository: Annotated[StaticFormRepository, Depends(static_form_repository)]
+    repository: Annotated[StaticFormRepository, Depends(static_form_repository)],
 ) -> StaticFormRetrieveAction:
     return StaticFormRetrieveAction(repository)
 
 
 def static_form_update_action(
-    repository: Annotated[StaticFormRepository, Depends(static_form_repository)]
+    repository: Annotated[StaticFormRepository, Depends(static_form_repository)],
 ) -> StaticFormUpdateAction:
     return StaticFormUpdateAction(repository)
 
 
 def static_form_list_action(
-    repository: Annotated[StaticFormRepository, Depends(static_form_repository)]
+    repository: Annotated[StaticFormRepository, Depends(static_form_repository)],
 ) -> StaticFormListAction:
     return StaticFormListAction(repository)
 
@@ -603,13 +603,13 @@ def validate_adder() -> ValidateAdder:
 
 
 def static_form_text_area_output_factory(
-    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)]
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> StaticFormTextAreaComponentOutputFactory:
     return StaticFormTextAreaComponentOutputFactory(_validate_adder)
 
 
 def static_form_text_field_output_factory(
-    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)]
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> StaticFormTextFieldInputComponentOutputFactory:
     return StaticFormTextFieldInputComponentOutputFactory(_validate_adder)
 
@@ -660,7 +660,7 @@ def simple_static_form_output_factory() -> SimpleStaticFormOutputFactory:
 
 
 def static_form_output_factory(
-    factory: Annotated[StaticFormComponentOutputFactory, Depends(static_form_component_output_factory)]
+    factory: Annotated[StaticFormComponentOutputFactory, Depends(static_form_component_output_factory)],
 ) -> StaticFormOutputFactory:
     return StaticFormOutputFactory(factory)
 
@@ -670,13 +670,13 @@ def form_repository(session: Annotated[AsyncSession, Depends(database_session)])
 
 
 def form_text_area_output_factory(
-    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)]
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> FormTextAreaComponentOutputFactory:
     return FormTextAreaComponentOutputFactory(_validate_adder)
 
 
 def form_text_field_input_factory(
-    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)]
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> FormTextFieldInputComponentOutputFactory:
     return FormTextFieldInputComponentOutputFactory(_validate_adder)
 
@@ -719,7 +719,7 @@ def form_component_output_factory(
 
 
 def form_output_factory(
-    factory: Annotated[FormComponentOutputFactory, Depends(form_component_output_factory)]
+    factory: Annotated[FormComponentOutputFactory, Depends(form_component_output_factory)],
 ) -> FormOutputFactory:
     return FormOutputFactory(factory)
 
@@ -741,7 +741,7 @@ def form_retrieve_action(repository: Annotated[FormRepository, Depends(form_repo
 
 
 def form_retrieve_by_classification_action(
-    repository: Annotated[FormRepository, Depends(form_repository)]
+    repository: Annotated[FormRepository, Depends(form_repository)],
 ) -> FormRetrieveByClassificationAction:
     return FormRetrieveByClassificationAction(repository)
 
