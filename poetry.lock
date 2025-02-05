@@ -1935,8 +1935,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "8fd917767897e52e715ba261f52b854831617cd2"
+reference = "feat/list-questions-and-answers-per-melding"
+resolved_reference = "2d1ce5431f795a83aab574d3969dd684530eeaa7"
 
 [[package]]
 name = "mergedeep"
@@ -4445,4 +4445,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "0d5c7dce2a03cab0b31ffeaec8798592301f17fb26bfed6e43334b6d9eacd9c1"
+content-hash = "65cee6bf414b9051a3ff73b35436f65e1041571372bcb564ff4a138d90b34324"
