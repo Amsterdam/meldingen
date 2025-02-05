@@ -65,10 +65,9 @@ from meldingen.schemas.input import AnswerInput, FormComponent, FormInput, FormP
 from meldingen.schemas.types import GeoJson
 
 T = TypeVar("T")
-T_co = TypeVar("T_co", covariant=True)
 
 
-class BaseListAction(BaseCoreListAction[T, T_co]):
+class BaseListAction(BaseCoreListAction[T]):
     async def __call__(
         self,
         *,
@@ -76,7 +75,7 @@ class BaseListAction(BaseCoreListAction[T, T_co]):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-    ) -> Collection[T_co]:
+    ) -> Sequence[T]:
         try:
             return await super().__call__(
                 limit=limit, offset=offset, sort_attribute_name=sort_attribute_name, sort_direction=sort_direction
@@ -88,45 +87,43 @@ class BaseListAction(BaseCoreListAction[T, T_co]):
             )
 
 
-class UserCreateAction(BaseUserCreateAction[User, User]): ...
+class UserCreateAction(BaseUserCreateAction[User]): ...
 
 
-class UserListAction(BaseUserListAction[User, User], BaseListAction[User, User]): ...
+class UserListAction(BaseUserListAction[User], BaseListAction[User]): ...
 
 
-class UserRetrieveAction(BaseUserRetrieveAction[User, User]): ...
+class UserRetrieveAction(BaseUserRetrieveAction[User]): ...
 
 
-class UserUpdateAction(BaseUserUpdateAction[User, User]): ...
+class UserUpdateAction(BaseUserUpdateAction[User]): ...
 
 
-class UserDeleteAction(BaseUserDeleteAction[User, User]): ...
+class UserDeleteAction(BaseUserDeleteAction[User]): ...
 
 
-class MeldingListAction(BaseMeldingListAction[Melding, Melding], BaseListAction[Melding, Melding]): ...
+class MeldingListAction(BaseMeldingListAction[Melding], BaseListAction[Melding]): ...
 
 
-class MeldingRetrieveAction(BaseMeldingRetrieveAction[Melding, Melding]): ...
+class MeldingRetrieveAction(BaseMeldingRetrieveAction[Melding]): ...
 
 
-class ClassificationListAction(
-    BaseClassificationListAction[Classification, Classification], BaseListAction[Classification, Classification]
-): ...
+class ClassificationListAction(BaseClassificationListAction[Classification], BaseListAction[Classification]): ...
 
 
-class ClassificationCreateAction(BaseClassificationCreateAction[Classification, Classification]): ...
+class ClassificationCreateAction(BaseClassificationCreateAction[Classification]): ...
 
 
-class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classification, Classification]): ...
+class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classification]): ...
 
 
-class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, Classification]): ...
+class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification]): ...
 
 
-class ClassificationDeleteAction(BaseClassificationDeleteAction[Classification, Classification]): ...
+class ClassificationDeleteAction(BaseClassificationDeleteAction[Classification]): ...
 
 
-class BaseFormCreateUpdateAction(BaseCRUDAction[Form, Form]):
+class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
     _repository: FormRepository
     _question_repository: QuestionRepository
 
@@ -268,13 +265,13 @@ class FormCreateAction(BaseFormCreateUpdateAction):
         return form
 
 
-class FormListAction(BaseListAction[Form, Form]): ...
+class FormListAction(BaseListAction[Form]): ...
 
 
-class FormRetrieveAction(BaseRetrieveAction[Form, Form]): ...
+class FormRetrieveAction(BaseRetrieveAction[Form]): ...
 
 
-class FormDeleteAction(BaseDeleteAction[Form, Form]): ...
+class FormDeleteAction(BaseDeleteAction[Form]): ...
 
 
 class FormUpdateAction(BaseFormCreateUpdateAction):
@@ -321,7 +318,7 @@ class FormUpdateAction(BaseFormCreateUpdateAction):
         return obj
 
 
-class FormRetrieveByClassificationAction(BaseCRUDAction[Form, Form]):
+class FormRetrieveByClassificationAction(BaseCRUDAction[Form]):
     _repository: FormRepository
 
     async def __call__(self, classification_id: int) -> Form:
@@ -331,8 +328,8 @@ class FormRetrieveByClassificationAction(BaseCRUDAction[Form, Form]):
             raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
 
-class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
-    _token_verifier: TokenVerifier[Melding, Melding]
+class AnswerCreateAction(BaseCRUDAction[Answer]):
+    _token_verifier: TokenVerifier[Melding]
     _melding_repository: MeldingRepository
     _question_repository: QuestionRepository
     _component_repository: FormIoQuestionComponentRepository
@@ -341,7 +338,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
     def __init__(
         self,
         repository: AnswerRepository,
-        token_verifier: TokenVerifier[Melding, Melding],
+        token_verifier: TokenVerifier[Melding],
         melding_repository: MeldingRepository,
         question_repository: QuestionRepository,
         component_repository: FormIoQuestionComponentRepository,
@@ -398,7 +395,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer, Answer]):
         return answer
 
 
-class StaticFormRetrieveAction(BaseCRUDAction[StaticForm, StaticForm]):
+class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]):
     _repository: StaticFormRepository
 
     def __init__(self, repository: StaticFormRepository):
@@ -408,7 +405,7 @@ class StaticFormRetrieveAction(BaseCRUDAction[StaticForm, StaticForm]):
         return await self._repository.retrieve(static_form_id)
 
 
-class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
+class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
     _repository: StaticFormRepository
 
     async def _create_component_values(
@@ -505,28 +502,28 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm, StaticForm]):
         return obj
 
 
-class StaticFormListAction(BaseListAction[StaticForm, StaticForm]): ...
+class StaticFormListAction(BaseListAction[StaticForm]): ...
 
 
-class UploadAttachmentAction(BaseUploadAttachmentAction[Attachment, Attachment, Melding, Melding]): ...
+class UploadAttachmentAction(BaseUploadAttachmentAction[Attachment, Melding]): ...
 
 
-class DownloadAttachmentAction(BaseDownloadAttachmentAction[Attachment, Attachment, Melding, Melding]): ...
+class DownloadAttachmentAction(BaseDownloadAttachmentAction[Attachment, Melding]): ...
 
 
-class ListAttachmentsAction(BaseListAttachmentsAction[Attachment, Attachment, Melding, Melding]): ...
+class ListAttachmentsAction(BaseListAttachmentsAction[Attachment, Melding]): ...
 
 
-class DeleteAttachmentAction(BaseDeleteAttachmentAction[Attachment, Attachment, Melding, Melding]): ...
+class DeleteAttachmentAction(BaseDeleteAttachmentAction[Attachment, Melding]): ...
 
 
 class AddLocationToMeldingAction:
-    _verify_token: TokenVerifier[Melding, Melding]
+    _verify_token: TokenVerifier[Melding]
     _ingest_location: MeldingLocationIngestor
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[Melding, Melding],
+        token_verifier: TokenVerifier[Melding],
         location_ingestor: MeldingLocationIngestor,
     ) -> None:
         self._verify_token = token_verifier
@@ -539,4 +536,4 @@ class AddLocationToMeldingAction:
         return melding
 
 
-class AddContactInfoToMeldingAction(BaseMeldingAddContactInfoAction[Melding, Melding]): ...
+class AddContactInfoToMeldingAction(BaseMeldingAddContactInfoAction[Melding]): ...

@@ -94,7 +94,7 @@ logger = logging.getLogger(__name__)
 @router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
 async def create_melding(
     melding_input: MeldingInput,
-    action: Annotated[MeldingCreateAction[Melding, Melding], Depends(melding_create_action)],
+    action: Annotated[MeldingCreateAction[Melding], Depends(melding_create_action)],
 ) -> MeldingCreateOutput:
     melding = Melding(**melding_input.model_dump())
 
@@ -173,7 +173,7 @@ async def update_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     melding_input: MeldingInput,
-    action: Annotated[MeldingUpdateAction[Melding, Melding], Depends(melding_update_action)],
+    action: Annotated[MeldingUpdateAction[Melding], Depends(melding_update_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
@@ -202,7 +202,7 @@ async def update_melding(
 async def answer_questions(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[MeldingAnswerQuestionsAction[Melding, Melding], Depends(melding_answer_questions_action)],
+    action: Annotated[MeldingAnswerQuestionsAction[Melding], Depends(melding_answer_questions_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
@@ -230,7 +230,7 @@ async def answer_questions(
 async def add_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[MeldingAddAttachmentsAction[Melding, Melding], Depends(melding_add_attachments_action)],
+    action: Annotated[MeldingAddAttachmentsAction[Melding], Depends(melding_add_attachments_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
@@ -258,7 +258,7 @@ async def add_attachments(
 async def submit_location(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[MeldingSubmitLocationAction[Melding, Melding], Depends(melding_submit_location_action)],
+    action: Annotated[MeldingSubmitLocationAction[Melding], Depends(melding_submit_location_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
@@ -288,7 +288,7 @@ async def submit_location(
 )
 async def process_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    action: Annotated[MeldingProcessAction[Melding, Melding], Depends(melding_process_action)],
+    action: Annotated[MeldingProcessAction[Melding], Depends(melding_process_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
@@ -314,7 +314,7 @@ async def process_melding(
 )
 async def complete_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    action: Annotated[MeldingCompleteAction[Melding, Melding], Depends(melding_complete_action)],
+    action: Annotated[MeldingCompleteAction[Melding], Depends(melding_complete_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
@@ -577,7 +577,7 @@ async def add_contact_to_melding(
 async def add_contact_info(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[MeldingContactInfoAddedAction[Melding, Melding], Depends(melding_contact_info_added_action)],
+    action: Annotated[MeldingContactInfoAddedAction[Melding], Depends(melding_contact_info_added_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:

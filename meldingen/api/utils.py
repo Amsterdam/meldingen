@@ -44,14 +44,13 @@ def sort_param(sort: Annotated[str, Query()] = f'["id","{SortingDirection.ASC}"]
 
 
 T = TypeVar("T", bound=BaseDBModel)
-T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
 
 
-class ContentRangeHeaderAdder(Generic[T, T_co]):
-    _repository: BaseSQLAlchemyRepository[T, T_co]
+class ContentRangeHeaderAdder(Generic[T]):
+    _repository: BaseSQLAlchemyRepository[T]
     _identifier: str
 
-    def __init__(self, repository: BaseSQLAlchemyRepository[T, T_co], identifier: str) -> None:
+    def __init__(self, repository: BaseSQLAlchemyRepository[T], identifier: str) -> None:
         self._repository = repository
         self._identifier = identifier
 
