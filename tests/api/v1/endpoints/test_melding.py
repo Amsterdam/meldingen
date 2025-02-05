@@ -1879,3 +1879,66 @@ class TestMeldingContactInfoAdded(BaseTokenAuthenticationTest):
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+
+class TestMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
+    def get_route_name(self) -> str:
+        return "melding:answers"
+
+    def get_method(self) -> str:
+        return "GET"
+
+    @pytest.mark.anyio
+    async def test_list_answers_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=999),
+            params={"token": "nonexistingtoken"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_list_answers_melding_without_answers(
+        self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": melding.token},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert isinstance(body, list)
+        assert len(body) == 0
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_list_answers(self, app: FastAPI, client: AsyncClient, melding_with_answers: Melding) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_answers.id),
+            params={"token": melding_with_answers.token},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert isinstance(body, list)
+        assert len(body) == 10
+
+        answer = body[0]
+        assert answer.get("id") > 0
+        assert answer.get("text") == "Answer 0"
+        assert answer.get("created_at") is not None
+        assert answer.get("updated_at") is not None
+
+        question = answer.get("question")
+        assert question is not None
+        assert question.get("id") > 0
+        assert question.get("text") == "Question 0"
+        assert question.get("created_at") is not None
+        assert question.get("updated_at") is not None
