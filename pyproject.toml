@@ -7,7 +7,7 @@ authors = [
     {name = "David van Buiten",email = "d.van.buiten@amsterdam.nl"},
 ]
 readme = "README.md"
-requires-python = "^3.12"
+requires-python = "^3.13"
 
 dependencies = [
     "alembic (>=1.14.1,<2.0.0)",
