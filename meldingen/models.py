@@ -357,7 +357,7 @@ class Question(AsyncAttrs, BaseDBModel, BaseQuestion):
     form: Mapped[Form | None] = relationship(default=None)
 
 
-class Answer(BaseDBModel, BaseAnswer):
+class Answer(AsyncAttrs, BaseDBModel, BaseAnswer):
     text: Mapped[str] = mapped_column(String())
 
     question_id: Mapped[int] = mapped_column(ForeignKey("question.id"), init=False)
