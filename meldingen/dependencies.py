@@ -12,6 +12,7 @@ from meldingen_core.actions.melding import (
     MeldingCompleteAction,
     MeldingContactInfoAddedAction,
     MeldingCreateAction,
+    MeldingListQuestionsAnswersAction,
     MeldingProcessAction,
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
@@ -83,7 +84,7 @@ from meldingen.location import (
     WKBToShapeTransformer,
 )
 from meldingen.malware import AzureDefenderForStorageMalwareScanner
-from meldingen.models import Melding
+from meldingen.models import Answer, Melding
 from meldingen.repositories import (
     AnswerRepository,
     AttachmentRepository,
@@ -347,6 +348,13 @@ def melding_answer_create_action(
         component_repository,
         jsonlogic_validator,
     )
+
+
+def melding_list_questions_and_answers_action(
+    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
+) -> MeldingListQuestionsAnswersAction[Melding, Melding, Answer, Answer]:
+    return MeldingListQuestionsAnswersAction(token_verifier, answer_repository)
 
 
 async def azure_container_client() -> AsyncIterator[ContainerClient]:
