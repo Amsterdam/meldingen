@@ -6,13 +6,18 @@ migrations/versions/f00d6c808e2d_add_other_static_form_types.py:0: error: Module
 migrations/versions/f00d6c808e2d_add_other_static_form_types.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/cd7033b17112_update_form_component_types_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/cd7033b17112_update_form_component_types_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
-migrations/versions/102eaa13b8d8_add_select_component_type_to_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
-migrations/versions/102eaa13b8d8_add_select_component_type_to_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/a4c7c0e946d2_geolocation_column.py:0: error: Module has no attribute "add_geospatial_column"  [attr-defined]
 migrations/versions/a4c7c0e946d2_geolocation_column.py:0: error: Module has no attribute "create_geospatial_index"  [attr-defined]
 migrations/versions/a4c7c0e946d2_geolocation_column.py:0: error: Module has no attribute "drop_geospatial_index"  [attr-defined]
 migrations/versions/a4c7c0e946d2_geolocation_column.py:0: error: Module has no attribute "drop_geospatial_column"  [attr-defined]
+migrations/versions/102eaa13b8d8_add_select_component_type_to_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
+migrations/versions/102eaa13b8d8_add_select_component_type_to_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Classification" defined the type as "str")  [assignment]
+meldingen/models.py:0: error: Signature of "__replace__" incompatible with supertype "Melding"  [override]
+meldingen/models.py:0: note: Superclass:
+meldingen/models.py:0: note: def __replace__(*, text: str = ..., classification: Classification | None = ..., attachments: list[Attachment] = ..., token: str | None = ..., token_expires: datetime | None = ..., email: str | None = ..., phone: str | None = ...) -> Melding
+meldingen/models.py:0: note: Subclass:
+meldingen/models.py:0: note: def __replace__(*, text: SQLCoreOperations[str] | str = ..., classification: SQLCoreOperations[Classification | None] | Classification | None = ..., attachments: SQLCoreOperations[list[Attachment]] | list[Attachment] = ..., token: SQLCoreOperations[str | None] | str | None = ..., token_expires: SQLCoreOperations[DateTime | None] | DateTime | None = ..., email: SQLCoreOperations[str | None] | str | None = ..., phone: SQLCoreOperations[str | None] | str | None = ..., state: SQLCoreOperations[str] | str = ..., classification_id: SQLCoreOperations[int | None] | int | None = ..., geo_location: SQLCoreOperations[WKBElement | None] | WKBElement | None = ...) -> Melding
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Melding" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "StateAware" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Classification | None]", base class "Melding" defined the type as "meldingen_core.models.Classification | None")  [assignment]
@@ -27,14 +32,31 @@ meldingen/models.py:0: error: Incompatible types in assignment (expression has t
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
+meldingen/models.py:0: error: Signature of "__replace__" incompatible with supertype "Form"  [override]
+meldingen/models.py:0: note: Superclass:
+meldingen/models.py:0: note: def __replace__(*, title: str = ..., classification: Classification = ..., questions: list[Question] = ...) -> Form
+meldingen/models.py:0: note: Subclass:
+meldingen/models.py:0: note: def __replace__(*, title: SQLCoreOperations[str] | str = ..., classification: SQLCoreOperations[Classification | None] | Classification | None = ..., classification_id: SQLCoreOperations[int | None] | int | None = ..., display: SQLCoreOperations[str] | str = ..., components: SQLCoreOperations[OrderingList[FormIoComponent]] | OrderingList[FormIoComponent] = ...) -> Form
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Form" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Classification | None]", base class "Form" defined the type as "meldingen_core.models.Classification")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[list[meldingen.models.Question]]", base class "Form" defined the type as "list[meldingen_core.models.Question]")  [assignment]
+meldingen/models.py:0: error: Signature of "__replace__" incompatible with supertype "Question"  [override]
+meldingen/models.py:0: note: Superclass:
+meldingen/models.py:0: note: def __replace__(*, text: str = ..., form: Form = ...) -> Question
+meldingen/models.py:0: note: Subclass:
+meldingen/models.py:0: note: def __replace__(*, text: SQLCoreOperations[str] | str = ..., form: SQLCoreOperations[Form | None] | Form | None = ..., form_id: SQLCoreOperations[int | None] | int | None = ...) -> Question
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Question" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Form | None]", base class "Question" defined the type as "meldingen_core.models.Form")  [assignment]
+meldingen/models.py:0: error: Argument 2 of "__replace__" is incompatible with supertype "Answer"; supertype defines the argument type as "Question"  [override]
+meldingen/models.py:0: note: This violates the Liskov substitution principle
+meldingen/models.py:0: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#incompatible-overrides
+meldingen/models.py:0: error: Argument 3 of "__replace__" is incompatible with supertype "Answer"; supertype defines the argument type as "Melding"  [override]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Answer" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Question]", base class "Answer" defined the type as "meldingen_core.models.Question")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Melding]", base class "Answer" defined the type as "meldingen_core.models.Melding")  [assignment]
+meldingen/models.py:0: error: Argument 2 of "__replace__" is incompatible with supertype "Attachment"; supertype defines the argument type as "Melding"  [override]
+meldingen/models.py:0: note: This violates the Liskov substitution principle
+meldingen/models.py:0: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#incompatible-overrides
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Attachment" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Attachment" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Melding]", base class "Attachment" defined the type as "meldingen_core.models.Melding")  [assignment]
