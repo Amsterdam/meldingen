@@ -10,6 +10,7 @@ from meldingen_core.actions.melding import (
     MeldingCompleteAction,
     MeldingContactInfoAddedAction,
     MeldingCreateAction,
+    MeldingListQuestionsAnswersAction,
     MeldingProcessAction,
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
@@ -62,6 +63,7 @@ from meldingen.dependencies import (
     melding_download_attachment_action,
     melding_list_action,
     melding_list_attachments_action,
+    melding_list_questions_and_answers_action,
     melding_output_factory,
     melding_process_action,
     melding_repository,
@@ -71,10 +73,17 @@ from meldingen.dependencies import (
     melding_upload_attachment_action,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
-from meldingen.models import Attachment, Melding
+from meldingen.models import Answer, Attachment, Melding
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas.input import AnswerInput, MeldingContactInput, MeldingInput
-from meldingen.schemas.output import AnswerOutput, AttachmentOutput, MeldingCreateOutput, MeldingOutput
+from meldingen.schemas.output import (
+    AnswerOutput,
+    AnswerQuestionOutput,
+    AttachmentOutput,
+    MeldingCreateOutput,
+    MeldingOutput,
+    QuestionOutput,
+)
 from meldingen.schemas.output_factories import MeldingOutputFactory
 from meldingen.schemas.types import GeoJson
 
@@ -581,3 +590,47 @@ async def add_contact_info(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return produce_output(melding)
+
+
+@router.get(
+    "/{melding_id}/answers}",
+    name="melding:answers",
+    responses={
+        **not_found_response,
+        **unauthorized_response,
+    },
+)
+async def list_answers(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[
+        MeldingListQuestionsAnswersAction[Melding, Melding, Answer, Answer],
+        Depends(melding_list_questions_and_answers_action),
+    ],
+) -> list[AnswerQuestionOutput]:
+    try:
+        answers = await action(melding_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    output = []
+    for answer in answers:
+        question = await answer.awaitable_attrs.question
+        output.append(
+            AnswerQuestionOutput(
+                id=answer.id,
+                text=answer.text,
+                created_at=answer.created_at,
+                updated_at=answer.updated_at,
+                question=QuestionOutput(
+                    id=question.id,
+                    text=question.text,
+                    created_at=question.created_at,
+                    updated_at=question.updated_at,
+                ),
+            )
+        )
+
+    return output

@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Collection
-from typing import Any, TypeVar
+from typing import Any, Sequence, TypeVar
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
@@ -226,9 +226,17 @@ class FormIoQuestionComponentRepository(BaseSQLAlchemyRepository[FormIoQuestionC
             raise NotFoundException()
 
 
-class AnswerRepository(BaseSQLAlchemyRepository[Answer, Answer], BaseAnswerRepository):
+class AnswerRepository(BaseSQLAlchemyRepository[Answer, Answer], BaseAnswerRepository[Answer, Answer]):
     def get_model_type(self) -> type[Answer]:
         return Answer
+
+    async def find_by_melding(self, melding_id: int) -> Sequence[Answer]:
+        _type = self.get_model_type()
+        statement = select(_type).where(_type.melding_id == melding_id)
+
+        results = await self._session.execute(statement)
+
+        return results.scalars().unique().all()
 
 
 class AttachmentRepository(

@@ -186,6 +186,15 @@ class FormSelectComponentOutput(StaticFormSelectComponentOutput):
 class AnswerOutput(BaseOutputModel): ...
 
 
+class QuestionOutput(BaseOutputModel):
+    text: str
+
+
+class AnswerQuestionOutput(BaseOutputModel):
+    text: str
+    question: QuestionOutput
+
+
 class AttachmentOutput(BaseOutputModel):
     original_filename: str
 

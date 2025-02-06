@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from meldingen.authentication import authenticate_user
 from meldingen.models import (
+    Answer,
     Attachment,
     Classification,
     Form,
@@ -128,6 +129,16 @@ async def melding_with_classification(
     melding.classification = classification
 
     db_session.add(melding)
+    await db_session.commit()
+
+    return melding
+
+
+@pytest.fixture
+async def melding_with_answers(db_session: AsyncSession, melding: Melding) -> Melding:
+    for i in range(10):
+        db_session.add(Answer(text=f"Answer {i}", melding=melding, question=Question(text=f"Question {i}")))
+
     await db_session.commit()
 
     return melding
