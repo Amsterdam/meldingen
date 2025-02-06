@@ -1924,7 +1924,7 @@ name = "meldingen-core"
 version = "0.1.0"
 description = "Framework agnostic package containing the core code for the meldingen project."
 optional = false
-python-versions = "^3.12"
+python-versions = "^3.13"
 groups = ["main"]
 files = []
 develop = false
@@ -1935,8 +1935,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feat/list-questions-and-answers-per-melding"
-resolved_reference = "bc1b114ae395e5c89c9165924b5ef3b35d75c751"
+reference = "HEAD"
+resolved_reference = "f9b5bb9e47db7f3a895415104b982623050ee0ac"
 
 [[package]]
 name = "mergedeep"
@@ -3819,7 +3819,7 @@ files = [
 
 [package.dependencies]
 greenlet = [
-    {version = "!=0.4.17", markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"},
+    {version = "!=0.4.17", optional = true, markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") or extra == \"asyncio\""},
     {version = "!=0.4.17", optional = true, markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") or extra == \"asyncio\""},
 ]
 typing-extensions = ">=4.6.0"
@@ -4445,4 +4445,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "65cee6bf414b9051a3ff73b35436f65e1041571372bcb564ff4a138d90b34324"
+content-hash = "0d5c7dce2a03cab0b31ffeaec8798592301f17fb26bfed6e43334b6d9eacd9c1"
