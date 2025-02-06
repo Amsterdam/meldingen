@@ -14,7 +14,7 @@ from meldingen_core.repositories import (
     BaseRepository,
     BaseUserRepository,
 )
-from sqlalchemy import Select, desc, select
+from sqlalchemy import Select, delete, desc, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Relationship
@@ -31,7 +31,6 @@ from meldingen.models import (
     Melding,
     Question,
     StaticForm,
-    StaticFormTypeEnum,
     User,
 )
 
@@ -146,6 +145,16 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding, Melding], BaseMeldingR
 
     def get_model_type(self) -> type[Melding]:
         return Melding
+
+    async def delete_with_expired_token_and_in_states(self, states: Sequence[str]) -> Sequence[Melding]:
+        _type = self.get_model_type()
+
+        statement = delete(_type).where(_type.token_expires < func.now(), _type.state.in_(states)).returning(_type)
+
+        result = await self._session.execute(statement)
+        await self._session.commit()
+
+        return result.scalars().unique().all()
 
 
 class UserRepository(BaseSQLAlchemyRepository[User, User], BaseUserRepository):
