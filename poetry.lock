@@ -1935,8 +1935,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "d4bf769106111acb997bdc9b7dea8eadc3ec440b"
+reference = "feat/submit-melding-state-transition"
+resolved_reference = "d05420d6de83db5fdf23bdd9773fd1f2f8f468ba"
 
 [[package]]
 name = "mergedeep"
@@ -4439,4 +4439,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "0d5c7dce2a03cab0b31ffeaec8798592301f17fb26bfed6e43334b6d9eacd9c1"
+content-hash = "6cf0e72a37b7ee9de573696f35630cb99957583625e4520eb5ecc69d300eb516"
