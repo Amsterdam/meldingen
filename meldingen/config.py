@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     azure_storage_connection_string: str
     azure_malware_scanner_tries: int = 5
     azure_malware_scanner_sleep_time: float = 1.0
+    azure_malware_scanner_enabled: bool = False
 
     # thumbnail
     thumbnail_width: int = 150
