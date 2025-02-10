@@ -225,7 +225,7 @@ def token_generator() -> BaseTokenGenerator:
 
 def token_verifier(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-) -> TokenVerifier[Melding, Melding]:
+) -> TokenVerifier[Melding]:
     return TokenVerifier(repository)
 
 
@@ -254,7 +254,7 @@ def melding_create_action(
     classifier: Annotated[Classifier, Depends(classifier)],
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     token_generator: Annotated[BaseTokenGenerator, Depends(token_generator)],
-) -> MeldingCreateAction[Melding, Melding]:
+) -> MeldingCreateAction[Melding]:
     return MeldingCreateAction(repository, classifier, state_machine, token_generator, settings.token_duration)
 
 
@@ -270,16 +270,16 @@ def melding_list_action(repository: Annotated[MeldingRepository, Depends(melding
 
 def melding_update_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     classifier: Annotated[Classifier, Depends(classifier)],
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
-) -> MeldingUpdateAction[Melding, Melding]:
+) -> MeldingUpdateAction[Melding]:
     return MeldingUpdateAction(repository, token_verifier, classifier, state_machine)
 
 
 def melding_add_contact_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> AddContactInfoToMeldingAction:
     return AddContactInfoToMeldingAction(repository, token_verifier)
 
@@ -287,38 +287,38 @@ def melding_add_contact_action(
 def melding_answer_questions_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
-) -> MeldingAnswerQuestionsAction[Melding, Melding]:
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+) -> MeldingAnswerQuestionsAction[Melding]:
     return MeldingAnswerQuestionsAction(state_machine, repository, token_verifier)
 
 
 def melding_add_attachments_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
-) -> MeldingAddAttachmentsAction[Melding, Melding]:
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+) -> MeldingAddAttachmentsAction[Melding]:
     return MeldingAddAttachmentsAction(state_machine, repository, token_verifier)
 
 
 def melding_process_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-) -> MeldingProcessAction[Melding, Melding]:
+) -> MeldingProcessAction[Melding]:
     return MeldingProcessAction(state_machine, repository)
 
 
 def melding_submit_location_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
-) -> MeldingSubmitLocationAction[Melding, Melding]:
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+) -> MeldingSubmitLocationAction[Melding]:
     return MeldingSubmitLocationAction(state_machine, repository, token_verifier)
 
 
 def melding_complete_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-) -> MeldingCompleteAction[Melding, Melding]:
+) -> MeldingCompleteAction[Melding]:
     return MeldingCompleteAction(state_machine, repository)
 
 
@@ -334,7 +334,7 @@ def form_io_question_component_repository(
 
 def melding_answer_create_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
@@ -351,9 +351,9 @@ def melding_answer_create_action(
 
 
 def melding_list_questions_and_answers_action(
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
-) -> MeldingListQuestionsAnswersAction[Melding, Melding, Answer, Answer]:
+) -> MeldingListQuestionsAnswersAction[Melding, Answer]:
     return MeldingListQuestionsAnswersAction(token_verifier, answer_repository)
 
 
@@ -478,7 +478,7 @@ def attachment_ingestor(
 def melding_upload_attachment_action(
     factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
     repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     media_type_validator: Annotated[MediaTypeValidator, Depends(media_type_validator)],
     media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
     ingestor: Annotated[Ingestor, Depends(attachment_ingestor)],
@@ -494,7 +494,7 @@ def melding_upload_attachment_action(
 
 
 def melding_download_attachment_action(
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> DownloadAttachmentAction:
@@ -502,14 +502,14 @@ def melding_download_attachment_action(
 
 
 def melding_list_attachments_action(
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
 ) -> ListAttachmentsAction:
     return ListAttachmentsAction(token_verifier, attachment_repository)
 
 
 def melding_delete_attachment_action(
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> DeleteAttachmentAction:
@@ -554,7 +554,7 @@ def location_output_transformer(
 
 
 def melding_add_location_action(
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     location_ingestor: Annotated[MeldingLocationIngestor, Depends(location_ingestor)],
 ) -> AddLocationToMeldingAction:
     return AddLocationToMeldingAction(token_verifier, location_ingestor)
@@ -569,8 +569,8 @@ def melding_output_factory(
 def melding_contact_info_added_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding, Melding], Depends(token_verifier)],
-) -> MeldingContactInfoAddedAction[Melding, Melding]:
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+) -> MeldingContactInfoAddedAction[Melding]:
     return MeldingContactInfoAddedAction(state_machine, repository, token_verifier)
 
 

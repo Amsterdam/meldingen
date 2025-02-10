@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from collections.abc import Collection
-from typing import Any, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import Any, TypeVar
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
@@ -43,10 +43,9 @@ class AttributeNotFoundException(Exception):
 
 
 T = TypeVar("T", bound=BaseDBModel)
-T_co = TypeVar("T_co", bound=BaseDBModel, covariant=True)
 
 
-class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
+class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
     """Base repository for SqlAlchemy based repositories."""
 
     _session: AsyncSession
@@ -79,7 +78,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-    ) -> Collection[T_co]:
+    ) -> Sequence[T]:
         _type = self.get_model_type()
         statement = select(_type)
 
@@ -140,7 +139,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T, T_co], metaclass=ABCMeta):
         return statement
 
 
-class MeldingRepository(BaseSQLAlchemyRepository[Melding, Melding], BaseMeldingRepository[Melding, Melding]):
+class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository[Melding]):
     """Repository for Melding model."""
 
     def get_model_type(self) -> type[Melding]:
@@ -157,7 +156,7 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding, Melding], BaseMeldingR
         return result.scalars().unique().all()
 
 
-class UserRepository(BaseSQLAlchemyRepository[User, User], BaseUserRepository):
+class UserRepository(BaseSQLAlchemyRepository[User], BaseUserRepository):
     def get_model_type(self) -> type[User]:
         return User
 
@@ -169,7 +168,7 @@ class UserRepository(BaseSQLAlchemyRepository[User, User], BaseUserRepository):
         return results.scalars().unique().one()
 
 
-class GroupRepository(BaseSQLAlchemyRepository[Group, Group]):
+class GroupRepository(BaseSQLAlchemyRepository[Group]):
     def get_model_type(self) -> type[Group]:
         return Group
 
@@ -180,7 +179,7 @@ class GroupRepository(BaseSQLAlchemyRepository[Group, Group]):
         return results.scalars().one()
 
 
-class ClassificationRepository(BaseSQLAlchemyRepository[Classification, Classification], BaseClassificationRepository):
+class ClassificationRepository(BaseSQLAlchemyRepository[Classification], BaseClassificationRepository):
     def get_model_type(self) -> type[Classification]:
         return Classification
 
@@ -195,7 +194,7 @@ class ClassificationRepository(BaseSQLAlchemyRepository[Classification, Classifi
         return classification
 
 
-class FormRepository(BaseSQLAlchemyRepository[Form, Form], BaseFormRepository):
+class FormRepository(BaseSQLAlchemyRepository[Form], BaseFormRepository):
     def get_model_type(self) -> type[Form]:
         return Form
 
@@ -210,17 +209,17 @@ class FormRepository(BaseSQLAlchemyRepository[Form, Form], BaseFormRepository):
             raise NotFoundException()
 
 
-class StaticFormRepository(BaseSQLAlchemyRepository[StaticForm, StaticForm]):
+class StaticFormRepository(BaseSQLAlchemyRepository[StaticForm]):
     def get_model_type(self) -> type[StaticForm]:
         return StaticForm
 
 
-class QuestionRepository(BaseSQLAlchemyRepository[Question, Question], BaseQuestionRepository):
+class QuestionRepository(BaseSQLAlchemyRepository[Question], BaseQuestionRepository):
     def get_model_type(self) -> type[Question]:
         return Question
 
 
-class FormIoQuestionComponentRepository(BaseSQLAlchemyRepository[FormIoQuestionComponent, FormIoQuestionComponent]):
+class FormIoQuestionComponentRepository(BaseSQLAlchemyRepository[FormIoQuestionComponent]):
     def get_model_type(self) -> type[FormIoQuestionComponent]:
         return FormIoQuestionComponent
 
@@ -235,7 +234,7 @@ class FormIoQuestionComponentRepository(BaseSQLAlchemyRepository[FormIoQuestionC
             raise NotFoundException()
 
 
-class AnswerRepository(BaseSQLAlchemyRepository[Answer, Answer], BaseAnswerRepository[Answer, Answer]):
+class AnswerRepository(BaseSQLAlchemyRepository[Answer], BaseAnswerRepository[Answer]):
     def get_model_type(self) -> type[Answer]:
         return Answer
 
@@ -248,15 +247,13 @@ class AnswerRepository(BaseSQLAlchemyRepository[Answer, Answer], BaseAnswerRepos
         return results.scalars().unique().all()
 
 
-class AttachmentRepository(
-    BaseSQLAlchemyRepository[Attachment, Attachment], BaseAttachmentRepository[Attachment, Attachment]
-):
+class AttachmentRepository(BaseSQLAlchemyRepository[Attachment], BaseAttachmentRepository[Attachment]):
     """Repository for Attachment model."""
 
     def get_model_type(self) -> type[Attachment]:
         return Attachment
 
-    async def find_by_melding(self, melding_id: int) -> Collection[Attachment]:
+    async def find_by_melding(self, melding_id: int) -> Sequence[Attachment]:
         statement = select(Attachment).where(Attachment.melding_id == melding_id)
 
         result = await self._session.execute(statement)
