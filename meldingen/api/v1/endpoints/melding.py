@@ -37,6 +37,7 @@ from meldingen.actions import (
     DeleteAttachmentAction,
     DownloadAttachmentAction,
     ListAttachmentsAction,
+    MelderMeldingRetrieveAction,
     MeldingListAction,
     MeldingRetrieveAction,
     UploadAttachmentAction,
@@ -51,6 +52,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
+    melder_melding_retrieve_action,
     melding_add_attachments_action,
     melding_add_contact_action,
     melding_add_location_action,
@@ -159,6 +161,27 @@ async def retrieve_melding(
 
     if not melding:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    return produce_output(melding)
+
+
+@router.get(
+    "/{melding_id}/melder",
+    name="melding:retrieve_melder",
+    responses={**unauthorized_response, **not_found_response},
+)
+async def retrieve_melding_melder(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[MelderMeldingRetrieveAction, Depends(melder_melding_retrieve_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return produce_output(melding)
 

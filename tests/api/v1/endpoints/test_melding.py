@@ -286,13 +286,16 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_200_OK
 
-        data = response.json()
-        assert data.get("id") == melding.id
-        assert data.get("text") == melding.text
-        assert data.get("state") == MeldingStates.NEW
-        assert data.get("classification", "") is None
-        assert data.get("created_at") == melding.created_at.isoformat()
-        assert data.get("updated_at") == melding.updated_at.isoformat()
+        body = response.json()
+        assert body.get("id") == melding.id
+        assert body.get("text") == melding.text
+        assert body.get("state") == MeldingStates.NEW
+        assert body.get("classification", "") is None
+        assert body.get("geo_location", "") is None
+        assert body.get("email", "") is None
+        assert body.get("phone", "") is None
+        assert body.get("created_at") == melding.created_at.isoformat()
+        assert body.get("updated_at") == melding.updated_at.isoformat()
 
     @pytest.mark.anyio
     async def test_retrieve_melding_that_does_not_exist(
@@ -1942,3 +1945,34 @@ class TestMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         assert question.get("text") == "Question 0"
         assert question.get("created_at") is not None
         assert question.get("updated_at") is not None
+
+
+class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
+    def get_route_name(self) -> str:
+        return "melding:retrieve_melder"
+
+    def get_method(self) -> str:
+        return "GET"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("melding_token", ["supersecrettoken"])
+    async def test_retrieve_melding(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+        print("HELLO", melding.token)
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": melding.token},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") == melding.id
+        assert body.get("text") == melding.text
+        assert body.get("state") == MeldingStates.NEW
+        assert body.get("classification", "") is None
+        assert body.get("geo_location", "") is None
+        assert body.get("email", "") is None
+        assert body.get("phone", "") is None
+        assert body.get("created_at") == melding.created_at.isoformat()
+        assert body.get("updated_at") == melding.updated_at.isoformat()
