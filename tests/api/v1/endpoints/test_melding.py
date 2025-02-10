@@ -1957,7 +1957,6 @@ class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize("melding_token", ["supersecrettoken"])
     async def test_retrieve_melding(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
-        print("HELLO", melding.token)
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding.id),
