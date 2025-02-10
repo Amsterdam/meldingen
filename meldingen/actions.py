@@ -1,4 +1,4 @@
-from typing import Any, Collection, Sequence, TypeVar
+from typing import Any, Sequence, TypeVar
 
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
@@ -106,6 +106,16 @@ class MeldingListAction(BaseMeldingListAction[Melding], BaseListAction[Melding])
 
 
 class MeldingRetrieveAction(BaseMeldingRetrieveAction[Melding]): ...
+
+
+class MelderMeldingRetrieveAction:
+    _verify_token: TokenVerifier[Melding]
+
+    def __init__(self, token_verifier: TokenVerifier[Melding]):
+        self._verify_token = token_verifier
+
+    async def __call__(self, melding_id: int, token: str) -> Melding:
+        return await self._verify_token(melding_id, token)
 
 
 class ClassificationListAction(BaseClassificationListAction[Classification], BaseListAction[Classification]): ...
