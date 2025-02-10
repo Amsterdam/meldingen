@@ -604,7 +604,7 @@ async def list_answers(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[
-        MeldingListQuestionsAnswersAction[Melding, Melding, Answer, Answer],
+        MeldingListQuestionsAnswersAction[Melding, Answer],
         Depends(melding_list_questions_and_answers_action),
     ],
 ) -> list[AnswerQuestionOutput]:

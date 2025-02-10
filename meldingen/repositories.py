@@ -234,7 +234,7 @@ class FormIoQuestionComponentRepository(BaseSQLAlchemyRepository[FormIoQuestionC
             raise NotFoundException()
 
 
-class AnswerRepository(BaseSQLAlchemyRepository[Answer], BaseAnswerRepository):
+class AnswerRepository(BaseSQLAlchemyRepository[Answer], BaseAnswerRepository[Answer]):
     def get_model_type(self) -> type[Answer]:
         return Answer
 
