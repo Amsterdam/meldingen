@@ -83,7 +83,7 @@ from meldingen.location import (
     ShapeToWKBTransformer,
     WKBToShapeTransformer,
 )
-from meldingen.malware import AzureDefenderForStorageMalwareScanner
+from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwareScanner
 from meldingen.models import Answer, Melding
 from meldingen.repositories import (
     AnswerRepository,
@@ -453,9 +453,12 @@ def thumbnail_generator_task(
 def malware_scanner(
     container_client: Annotated[ContainerClient, Depends(azure_container_client)],
 ) -> BaseMalwareScanner:
-    return AzureDefenderForStorageMalwareScanner(
-        container_client, settings.azure_malware_scanner_tries, settings.azure_malware_scanner_sleep_time
-    )
+    if settings.azure_malware_scanner_enabled:
+        return AzureDefenderForStorageMalwareScanner(
+            container_client, settings.azure_malware_scanner_tries, settings.azure_malware_scanner_sleep_time
+        )
+
+    return DummyMalwareScanner()
 
 
 def attachment_ingestor(
