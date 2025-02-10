@@ -1,4 +1,4 @@
-from typing import Any, Collection, Sequence, TypeVar, override
+from typing import Any, Sequence, TypeVar
 
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
