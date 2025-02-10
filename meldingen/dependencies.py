@@ -46,6 +46,7 @@ from meldingen.actions import (
     FormRetrieveByClassificationAction,
     FormUpdateAction,
     ListAttachmentsAction,
+    MelderMeldingRetrieveAction,
     MeldingListAction,
     MeldingRetrieveAction,
     StaticFormListAction,
@@ -262,6 +263,12 @@ def melding_retrieve_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingRetrieveAction:
     return MeldingRetrieveAction(repository)
+
+
+def melder_melding_retrieve_action(
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+) -> MelderMeldingRetrieveAction:
+    return MelderMeldingRetrieveAction(token_verifier)
 
 
 def melding_list_action(repository: Annotated[MeldingRepository, Depends(melding_repository)]) -> MeldingListAction:
