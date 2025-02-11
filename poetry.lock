@@ -1935,8 +1935,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feat/submit-melding-state-transition"
-resolved_reference = "6277c6442216ee75738a038f54813fe32ce0bb94"
+reference = "HEAD"
+resolved_reference = "820c1f0866e2291e420982b83671de96839a006e"
 
 [[package]]
 name = "mergedeep"
@@ -3813,7 +3813,7 @@ files = [
 
 [package.dependencies]
 greenlet = [
-    {version = "!=0.4.17", markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"},
+    {version = "!=0.4.17", optional = true, markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") or extra == \"asyncio\""},
     {version = "!=0.4.17", optional = true, markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") or extra == \"asyncio\""},
 ]
 typing-extensions = ">=4.6.0"
@@ -4439,4 +4439,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "ecaa2a2978bd3bc22120cbc9a0d27e1b054ad02df700d96962bbb7b3801f843d"
+content-hash = "3ac4767c2e37456fae469b6204caf2c7c3c10112149796aeeb2a7b96b20abce0"
