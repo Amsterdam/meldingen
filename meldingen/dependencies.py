@@ -49,6 +49,7 @@ from meldingen.actions import (
     MelderMeldingRetrieveAction,
     MeldingListAction,
     MeldingRetrieveAction,
+    MeldingSubmitAction,
     StaticFormListAction,
     StaticFormRetrieveAction,
     StaticFormUpdateAction,
@@ -320,6 +321,14 @@ def melding_submit_location_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> MeldingSubmitLocationAction[Melding]:
     return MeldingSubmitLocationAction(state_machine, repository, token_verifier)
+
+
+def melding_submit_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+) -> MeldingSubmitAction:
+    return MeldingSubmitAction(state_machine, repository, token_verifier)
 
 
 def melding_complete_action(

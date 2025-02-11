@@ -17,6 +17,7 @@ from meldingen_core.actions.classification import ClassificationUpdateAction as 
 from meldingen_core.actions.melding import MeldingAddContactInfoAction as BaseMeldingAddContactInfoAction
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
+from meldingen_core.actions.melding import MeldingSubmitAction as BaseMeldingSubmitAction
 from meldingen_core.actions.user import UserCreateAction as BaseUserCreateAction
 from meldingen_core.actions.user import UserDeleteAction as BaseUserDeleteAction
 from meldingen_core.actions.user import UserListAction as BaseUserListAction
@@ -547,3 +548,6 @@ class AddLocationToMeldingAction:
 
 
 class AddContactInfoToMeldingAction(BaseMeldingAddContactInfoAction[Melding]): ...
+
+
+class MeldingSubmitAction(BaseMeldingSubmitAction[Melding]): ...
