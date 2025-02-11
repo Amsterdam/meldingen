@@ -1936,7 +1936,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "feat/submit-melding-state-transition"
-resolved_reference = "d05420d6de83db5fdf23bdd9773fd1f2f8f468ba"
+resolved_reference = "6277c6442216ee75738a038f54813fe32ce0bb94"
 
 [[package]]
 name = "mergedeep"
