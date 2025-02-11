@@ -130,6 +130,7 @@ from meldingen.statemachine import (
     MeldingStateMachine,
     MpFsmMeldingStateMachine,
     Process,
+    Submit,
     SubmitLocation,
 )
 from meldingen.token import UrlSafeTokenGenerator
@@ -244,6 +245,7 @@ def melding_state_machine() -> MeldingStateMachine:
                 MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
                 MeldingTransitions.SUBMIT_LOCATION: SubmitLocation([HasLocation()]),
                 MeldingTransitions.ADD_CONTACT_INFO: AddContactInfo(),
+                MeldingTransitions.SUBMIT: Submit(),
                 MeldingTransitions.PROCESS: Process(),
                 MeldingTransitions.COMPLETE: Complete(),
             }
