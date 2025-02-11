@@ -3813,7 +3813,7 @@ files = [
 
 [package.dependencies]
 greenlet = [
-    {version = "!=0.4.17", optional = true, markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") or extra == \"asyncio\""},
+    {version = "!=0.4.17", markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"},
     {version = "!=0.4.17", optional = true, markers = "python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") or extra == \"asyncio\""},
 ]
 typing-extensions = ">=4.6.0"
@@ -4439,4 +4439,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "6cf0e72a37b7ee9de573696f35630cb99957583625e4520eb5ecc69d300eb516"
+content-hash = "ecaa2a2978bd3bc22120cbc9a0d27e1b054ad02df700d96962bbb7b3801f843d"
