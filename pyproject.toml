@@ -24,7 +24,6 @@ dependencies = [
     "mp-fsm @ git+https://github.com/Amsterdam/mp-fsm.git",
     "opentelemetry-exporter-otlp-proto-grpc (>=1.29.0,<2.0.0)",
     "opentelemetry-instrumentation-aiohttp-client (>=0.50b0,<0.51)",
-    "opentelemetry-instrumentation-aiohttp-client (>=0.50b0,<0.51)",
     "opentelemetry-instrumentation-fastapi (>=0.50b0,<0.51)",
     "opentelemetry-instrumentation-httpx (>=0.50b0,<0.51)",
     "opentelemetry-instrumentation-sqlalchemy (>=0.50b0,<0.51)",

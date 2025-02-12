@@ -1975,3 +1975,54 @@ class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
         assert body.get("phone", "") is None
         assert body.get("created_at") == melding.created_at.isoformat()
         assert body.get("updated_at") == melding.updated_at.isoformat()
+
+
+class TestMeldingSubmit(BaseTokenAuthenticationTest):
+    def get_route_name(self) -> str:
+        return "melding:submit"
+
+    def get_method(self) -> str:
+        return "PUT"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_state", "melding_token"],
+        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken")],
+    )
+    async def test_submit_melding(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": melding.token},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("state") == MeldingStates.SUBMITTED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_state", "melding_token"],
+        [
+            (MeldingStates.NEW, "supersecrettoken"),
+            (MeldingStates.CLASSIFIED, "supersecrettoken"),
+            (MeldingStates.QUESTIONS_ANSWERED, "supersecrettoken"),
+            (MeldingStates.ATTACHMENTS_ADDED, "supersecrettoken"),
+            (MeldingStates.LOCATION_SUBMITTED, "supersecrettoken"),
+            (MeldingStates.SUBMITTED, "supersecrettoken"),
+            (MeldingStates.PROCESSING, "supersecrettoken"),
+            (MeldingStates.COMPLETED, "supersecrettoken"),
+        ],
+    )
+    async def test_submit_melding_wrong_from_state(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": melding.token},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        assert body.get("detail") == "Transition not allowed from current state"

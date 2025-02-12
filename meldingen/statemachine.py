@@ -16,16 +16,6 @@ class HasLocation(BaseGuard[Melding]):
 
 
 # transitions
-class Process(BaseTransition[Melding]):
-    @property
-    def from_states(self) -> list[str]:
-        return [MeldingStates.NEW]
-
-    @property
-    def to_state(self) -> str:
-        return MeldingStates.PROCESSING
-
-
 class Classify(BaseTransition[Melding]):
     _guards: list[BaseGuard[Melding]]
 
@@ -92,6 +82,26 @@ class AddContactInfo(BaseTransition[Melding]):
     @property
     def to_state(self) -> str:
         return MeldingStates.CONTACT_INFO_ADDED
+
+
+class Submit(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.CONTACT_INFO_ADDED]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.SUBMITTED
+
+
+class Process(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.NEW]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.PROCESSING
 
 
 class Complete(BaseTransition[Melding]):

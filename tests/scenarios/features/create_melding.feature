@@ -40,3 +40,6 @@ Feature: Melding Form
         Then the melding contains my contact information
         When I finalize adding my contact info by proceeding to the next step
         Then the state of the melding should be "contact_info_added"
+        # Submit
+        When I submit the melding
+        Then the state of the melding should be "submitted"

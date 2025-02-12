@@ -3,12 +3,13 @@ from typing import Any, Final
 from fastapi import FastAPI
 from httpx import AsyncClient
 from pytest_bdd import parsers, then, when
-from starlette.status import HTTP_201_CREATED
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 from meldingen.models import Classification
 from tests.scenarios.conftest import async_step
 
 ROUTE_NAME_CREATE: Final[str] = "melding:create"
+ROUTE_NAME_SUBMIT: Final[str] = "melding:submit"
 
 
 @when(parsers.parse('I create a melding with text "{text:l}"'), target_fixture="my_melding")
@@ -16,6 +17,22 @@ ROUTE_NAME_CREATE: Final[str] = "melding:create"
 async def create_melding_with_text(text: str, app: FastAPI, client: AsyncClient) -> dict[str, Any]:
     response = await client.post(app.url_path_for(ROUTE_NAME_CREATE), json={"text": text})
     assert response.status_code == HTTP_201_CREATED
+
+    body = response.json()
+    assert isinstance(body, dict)
+
+    return body
+
+
+@when(parsers.parse("I submit the melding"), target_fixture="my_melding")
+@async_step
+async def submit_melding(app: FastAPI, client: AsyncClient, token: str, my_melding: dict[str, Any]) -> dict[str, Any]:
+    response = await client.put(
+        app.url_path_for(ROUTE_NAME_SUBMIT, melding_id=my_melding.get("id")),
+        params={"token": token},
+    )
+
+    assert response.status_code == HTTP_200_OK
 
     body = response.json()
     assert isinstance(body, dict)
