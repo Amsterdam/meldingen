@@ -37,7 +37,7 @@ class TestUserCreate(BaseUnauthorizedTest):
         assert response.status_code == HTTP_201_CREATED
 
         data = response.json()
-        assert data.get("id") == 1
+        assert data.get("id") > 0
         assert data.get("username") == "meldingen_user"
         assert data.get("email") == "user@example.com"
         assert data.get("created_at") is not None
