@@ -3,10 +3,12 @@ from typing import AsyncGenerator, AsyncIterator
 from unittest.mock import AsyncMock
 
 import pytest
+from _pytest.tmpdir import TempPathFactory
 from asgi_lifespan import LifespanManager
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
+from filelock import FileLock
 from httpx import ASGITransport, AsyncClient
 from meldingen_core.malware import BaseMalwareScanner
 from pytest import FixtureRequest
@@ -49,12 +51,32 @@ def _compile_drop_table(element: DropTable, compiler: DDLCompiler) -> str:
     return compiler.visit_drop_table(element) + " CASCADE"
 
 
-@pytest.fixture(scope="session")
-async def test_database(anyio_backend: str, db_engine: AsyncEngine) -> None:
+async def setup_database(db_engine: AsyncEngine) -> None:
     async with db_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.drop_all)
     async with db_engine.begin() as conn:
         await conn.run_sync(BaseDBModel.metadata.create_all)
+
+
+@pytest.fixture(scope="session")
+async def test_database(
+    anyio_backend: str, db_engine: AsyncEngine, worker_id: str, tmp_path_factory: TempPathFactory
+) -> None:
+    """Based on example:
+    https://pytest-xdist.readthedocs.io/en/stable/how-to.html#making-session-scoped-fixtures-execute-only-once"""
+
+    if worker_id == "master":
+        await setup_database(db_engine)
+        return
+
+    root_tmp_dir = tmp_path_factory.getbasetemp().parent
+    file_path = root_tmp_dir / "test.db"
+    with FileLock(str(file_path) + ".lock"):
+        if file_path.is_file():
+            return
+
+        await setup_database(db_engine)
+        file_path.write_text("created")
 
 
 @pytest.fixture
@@ -191,21 +213,36 @@ async def override_dependencies(
     app.dependency_overrides.clear()
 
 
+async def init_storage(client: ContainerClient) -> None:
+    try:
+        await client.delete_container()
+    except ResourceNotFoundError:
+        """No need to delete the container if it does not exist."""
+
+    await client.create_container()
+
+
 @pytest.fixture
-async def container_client() -> AsyncIterator[ContainerClient]:
+async def container_client(tmp_path_factory: TempPathFactory, worker_id: str) -> AsyncIterator[ContainerClient]:
+    """Based on example:
+    https://pytest-xdist.readthedocs.io/en/stable/how-to.html#making-session-scoped-fixtures-execute-only-once"""
+
     client = ContainerClient.from_connection_string(
         settings.azure_storage_connection_string, settings.azure_storage_container
     )
 
     async with client:
-        try:
-            await client.delete_container()
-        except ResourceNotFoundError:
-            """No need to delete the container if it does not exist."""
+        if worker_id == "master":
+            await init_storage(client)
 
-        await client.create_container()
+        root_tmp_dir = tmp_path_factory.getbasetemp().parent
+        file_path = root_tmp_dir / "test.storage"
+        with FileLock(str(file_path) + ".lock"):
+            if not file_path.is_file():
+                await init_storage(client)
+                file_path.write_text("inited")
 
-        yield client
+            yield client
 
 
 @pytest.fixture(autouse=True)

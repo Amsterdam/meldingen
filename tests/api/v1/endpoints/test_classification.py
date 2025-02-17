@@ -34,7 +34,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert response.status_code == HTTP_201_CREATED
 
         data = response.json()
-        assert data.get("id") == 1
+        assert data.get("id") > 0
         assert data.get("name") == "bla"
         assert data.get("form", "") is None
         assert data.get("created_at") is not None

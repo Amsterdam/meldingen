@@ -36,7 +36,7 @@ class TestMeldingCreate:
         assert response.status_code == HTTP_201_CREATED
 
         data = response.json()
-        assert data.get("id") == 1
+        assert data.get("id") > 0
         assert data.get("text") == "This is a test melding."
         assert data.get("state") == MeldingStates.NEW
         assert data.get("classification", "") is None
@@ -1050,14 +1050,6 @@ class TestMeldingQuestionAnswer:
         assert data.get("detail") == "Not Found"
 
 
-async def assert_container_empty(container_client: ContainerClient) -> None:
-    count = 0
-    async for _ in container_client.list_blob_names():
-        count += 1
-
-    assert count == 0
-
-
 class TestMeldingUploadAttachment:
     ROUTE_NAME_CREATE: Final[str] = "melding:attachment"
 
@@ -1161,7 +1153,6 @@ class TestMeldingUploadAttachment:
 
         assert response.status_code == HTTP_413_REQUEST_ENTITY_TOO_LARGE
         assert response.json().get("detail") == "Allowed content size exceeded"
-        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1198,7 +1189,6 @@ class TestMeldingUploadAttachment:
         assert response.status_code == HTTP_400_BAD_REQUEST
         body = response.json()
         assert body.get("detail") == "Attachment not allowed"
-        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1238,7 +1228,10 @@ class TestMeldingUploadAttachment:
         assert response.status_code == HTTP_400_BAD_REQUEST
         body = response.json()
         assert body.get("detail") == "Media type of data does not match provided media type"
-        await assert_container_empty(container_client)
+
+        await db_session.refresh(melding)
+        attachments = await melding.awaitable_attrs.attachments
+        assert len(attachments) == 0
 
     @pytest.mark.anyio
     async def test_upload_attachment_melding_not_found(
@@ -1263,7 +1256,6 @@ class TestMeldingUploadAttachment:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
-        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1299,7 +1291,6 @@ class TestMeldingUploadAttachment:
         assert detail[0].get("type") == "missing"
         assert detail[0].get("loc") == ["query", "token"]
         assert detail[0].get("msg") == "Field required"
-        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
     async def test_upload_attachment_unauthorized_token_invalid(
@@ -1324,7 +1315,6 @@ class TestMeldingUploadAttachment:
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
-        await assert_container_empty(container_client)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1354,7 +1344,6 @@ class TestMeldingUploadAttachment:
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
-        await assert_container_empty(container_client)
 
 
 class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
@@ -1682,7 +1671,7 @@ class TestMeldingDeleteAttachmentAction(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_200_OK
 
         async with blob_client:
-            assert await blob_client.exists() == False
+            assert await blob_client.exists() is False
 
 
 class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
