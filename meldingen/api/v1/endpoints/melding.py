@@ -646,7 +646,7 @@ async def add_contact_info(
 
 
 @router.get(
-    "/{melding_id}/answers}",
+    "/{melding_id}/answers",
     name="melding:answers",
     responses={
         **not_found_response,
