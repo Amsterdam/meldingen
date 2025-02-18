@@ -5,7 +5,7 @@ from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
 from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
-from meldingen.schemas.types import GeoJson, PhoneNumber
+from meldingen.schemas.types import PhoneNumber
 from meldingen.validators import create_non_match_validator
 
 
