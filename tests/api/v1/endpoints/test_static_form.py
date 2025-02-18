@@ -517,7 +517,7 @@ class TestStaticFormList(BaseStaticFormTest):
             assert form.get("title") == fixture_form.title
             assert form.get("display") == fixture_form.display
 
-            assert response.headers.get("content-range") == "StaticForm 0-49/4"
+            assert response.headers.get("content-range") == "StaticForm 0-49/3"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -529,7 +529,6 @@ class TestStaticFormList(BaseStaticFormTest):
                 [
                     {"type": "attachments", "title": "Attachments"},
                     {"type": "contact", "title": "Contact"},
-                    {"type": "location", "title": "Location"},
                     {"type": "primary", "title": "Primary"},
                 ],
             ),
@@ -538,7 +537,6 @@ class TestStaticFormList(BaseStaticFormTest):
                 SortingDirection.DESC,
                 [
                     {"type": "primary", "title": "Primary"},
-                    {"type": "location", "title": "Location"},
                     {"type": "contact", "title": "Contact"},
                     {"type": "attachments", "title": "Attachments"},
                 ],
@@ -549,7 +547,6 @@ class TestStaticFormList(BaseStaticFormTest):
                 [
                     {"type": "primary", "title": "Primary"},
                     {"type": "attachments", "title": "Attachments"},
-                    {"type": "location", "title": "Location"},
                     {"type": "contact", "title": "Contact"},
                 ],
             ),
@@ -558,7 +555,6 @@ class TestStaticFormList(BaseStaticFormTest):
                 SortingDirection.DESC,
                 [
                     {"type": "contact", "title": "Contact"},
-                    {"type": "location", "title": "Location"},
                     {"type": "attachments", "title": "Attachments"},
                     {"type": "primary", "title": "Primary"},
                 ],
@@ -569,7 +565,6 @@ class TestStaticFormList(BaseStaticFormTest):
                 [
                     {"type": "primary", "title": "Primary"},
                     {"type": "attachments", "title": "Attachments"},
-                    {"type": "location", "title": "Location"},
                     {"type": "contact", "title": "Contact"},
                 ],
             ),
@@ -578,7 +573,6 @@ class TestStaticFormList(BaseStaticFormTest):
                 SortingDirection.DESC,
                 [
                     {"type": "contact", "title": "Contact"},
-                    {"type": "location", "title": "Location"},
                     {"type": "attachments", "title": "Attachments"},
                     {"type": "primary", "title": "Primary"},
                 ],
@@ -602,7 +596,7 @@ class TestStaticFormList(BaseStaticFormTest):
         data = response.json()
 
         assert len(data) == len(static_forms)
-        assert response.headers.get("content-range") == "StaticForm 0-49/4"
+        assert response.headers.get("content-range") == "StaticForm 0-49/3"
 
         for i in range(len(expected)):
             assert data[i].get("type") == expected[i].get("type")
