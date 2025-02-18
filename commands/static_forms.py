@@ -5,7 +5,6 @@ from rich import print
 
 from meldingen.dependencies import database_engine, database_session, database_session_manager
 from meldingen.models import (
-    FormIoComponentTypeEnum,
     FormIoFormDisplayEnum,
     FormIoTextAreaComponent,
     StaticForm,
@@ -16,63 +15,102 @@ from meldingen.repositories import StaticFormRepository
 app = typer.Typer()
 
 
+async def create_primary_form(static_form_repository: StaticFormRepository) -> None:
+    form = StaticForm(
+        type=StaticFormTypeEnum.primary,
+        title=StaticFormTypeEnum.primary.capitalize(),
+        display=FormIoFormDisplayEnum.form,
+    )
+    form.components.append(
+        FormIoTextAreaComponent(
+            label="Wat wilt u melden?",
+            description="Typ hieronder geen telefoonnummer en e-mailadres in. We vragen dit later in dit formulier.",
+            key="primary",
+            input=True,
+            auto_expand=False,
+            max_char_count=1000,
+            jsonlogic=None,
+            required=True,
+        )
+    )
+
+    await static_form_repository.save(form)
+    print("[green]Success[/green] - The primary form has been created")
+
+
+async def create_attachments_form(static_form_repository: StaticFormRepository) -> None:
+    form = StaticForm(
+        type=StaticFormTypeEnum.attachments,
+        title=StaticFormTypeEnum.attachments.capitalize(),
+        display=FormIoFormDisplayEnum.form,
+    )
+    form.components.append(
+        FormIoTextAreaComponent(
+            label="Heeft u een foto om toe te voegen?",
+            description="Voeg een foto toe om de situatie te verduidelijken. "
+            "Verwijder alle persoonsgegevens van u en derden.\n\n"
+            "- U kunt maximaal drie bestanden tegelijk toevoegen.\n"
+            "- Toegestane bestandtypes: jpg, jpeg en png.\n"
+            "- Een bestand mag maximaal 20 MB groot zijn.",
+            key="file-upload",
+            input=True,
+            auto_expand=False,
+            max_char_count=255,
+            required=False,
+        )
+    )
+
+    await static_form_repository.save(form)
+    print("[green]Success[/green] - The attachments form has been created")
+
+
+async def create_contact_form(static_form_repository: StaticFormRepository) -> None:
+    form = StaticForm(
+        type=StaticFormTypeEnum.contact,
+        title=StaticFormTypeEnum.contact.capitalize(),
+        display=FormIoFormDisplayEnum.form,
+    )
+    form.components.append(
+        FormIoTextAreaComponent(
+            label="Wat is uw e-mailadres?",
+            description="",
+            key="email-input",
+            input=True,
+            auto_expand=False,
+            max_char_count=255,
+            required=False,
+        )
+    )
+    form.components.append(
+        FormIoTextAreaComponent(
+            label="Wat is uw e-mailadres?",
+            description="",
+            key="tel-input",
+            input=True,
+            auto_expand=False,
+            max_char_count=255,
+            required=False,
+        )
+    )
+
+    await static_form_repository.save(form)
+    print("[green]Success[/green] - The contact form has been created")
+
+
 async def async_create_static_forms() -> None:
     async for session in database_session(database_session_manager(database_engine())):
         static_form_repository = StaticFormRepository(session)
         current_forms = await static_form_repository.list()
         current_form_types = [form.type for form in current_forms]
 
-        for form_type in StaticFormTypeEnum:
-            """
-            Generate all forms based on form_type.
-            Needs to be done more precise later.
-            """
+        if StaticFormTypeEnum.primary not in current_form_types:
+            await create_primary_form(static_form_repository)
 
-            if form_type in current_form_types:
-                print(f"[red]Warning[/red] - The {form_type} form already exists")
-                continue
+        if StaticFormTypeEnum.attachments not in current_form_types:
+            await create_attachments_form(static_form_repository)
 
-            label = form_type.capitalize()
-
-            form = StaticForm(
-                type=StaticFormTypeEnum[form_type],
-                title=f"{label}",
-                display=FormIoFormDisplayEnum.form,
-            )
-
-            if form_type == StaticFormTypeEnum.primary:
-                component = await generate_primary_form_component()
-            else:
-                component = FormIoTextAreaComponent(
-                    label=f"{label}",
-                    description="",
-                    key=f"{form_type}",
-                    type=FormIoComponentTypeEnum.text_area,
-                    input=True,
-                    auto_expand=True,
-                    max_char_count=255,
-                )
-
-            components = await form.awaitable_attrs.components
-            components.append(component)
-
-            await static_form_repository.save(form)
-
-            print(f"[green]Success[/green] - The {form_type} form has been created")
-
-
-async def generate_primary_form_component() -> FormIoTextAreaComponent:
-    return FormIoTextAreaComponent(
-        label="Wat wilt u melden?",
-        description="Typ hieronder geen telefoonnummer en e-mailadres in. We vragen dit later in dit formulier.",
-        key="primary",
-        type=FormIoComponentTypeEnum.text_area,
-        input=True,
-        auto_expand=False,
-        max_char_count=1000,
-        jsonlogic=None,
-        required=True,
-    )
+        if StaticFormTypeEnum.contact not in current_form_types:
+            await create_contact_form(static_form_repository)
 
 
 @app.command()

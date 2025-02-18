@@ -328,7 +328,6 @@ class Form(AsyncAttrs, BaseDBModel, BaseForm):
 class StaticFormTypeEnum(enum.StrEnum):
     primary = "primary"
     attachments = "attachments"
-    location = "location"
     contact = "contact"
 
 
