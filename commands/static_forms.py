@@ -83,7 +83,7 @@ async def create_contact_form(static_form_repository: StaticFormRepository) -> N
     )
     form.components.append(
         FormIoTextAreaComponent(
-            label="Wat is uw e-mailadres?",
+            label="Wat is uw telefoonnummer?",
             description="",
             key="tel-input",
             input=True,
