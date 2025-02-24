@@ -171,7 +171,7 @@ class FormIoQuestionComponent(FormIoComponent):
 
     @declared_attr
     def question(self) -> Mapped[Union["Question", None]]:
-        return relationship("Question", default=None)
+        return relationship("Question", back_populates="component", default=None)
 
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:
@@ -354,6 +354,8 @@ class Question(AsyncAttrs, BaseDBModel, BaseQuestion):
 
     form_id: Mapped[int | None] = mapped_column(ForeignKey("form.id", ondelete="SET NULL"), default=None)
     form: Mapped[Form | None] = relationship(default=None)
+
+    component: Mapped[FormIoQuestionComponent | None] = relationship(default=None)
 
 
 class Answer(AsyncAttrs, BaseDBModel, BaseAnswer):
