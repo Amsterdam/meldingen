@@ -1919,8 +1919,16 @@ class TestMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
+
         assert isinstance(body, list)
         assert len(body) == 10
+
+        question_ids = []
+        for answer_output in body:
+            question = answer_output.get("question")
+            question_ids.append(question.get("id"))
+
+        assert sorted(question_ids) == question_ids
 
         answer = body[0]
         assert answer.get("id") > 0

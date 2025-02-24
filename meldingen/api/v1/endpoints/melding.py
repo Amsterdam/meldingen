@@ -67,6 +67,7 @@ from meldingen.dependencies import (
     melding_list_action,
     melding_list_attachments_action,
     melding_list_questions_and_answers_action,
+    melding_list_questions_and_answers_output_factory,
     melding_output_factory,
     melding_process_action,
     melding_repository,
@@ -88,7 +89,7 @@ from meldingen.schemas.output import (
     MeldingOutput,
     QuestionOutput,
 )
-from meldingen.schemas.output_factories import MeldingOutputFactory
+from meldingen.schemas.output_factories import AnswerListOutputFactory, MeldingOutputFactory
 from meldingen.schemas.types import GeoJson
 
 router = APIRouter()
@@ -660,6 +661,7 @@ async def list_answers(
         MeldingListQuestionsAnswersAction[Melding, Answer],
         Depends(melding_list_questions_and_answers_action),
     ],
+    produce_output: Annotated[AnswerListOutputFactory, Depends(melding_list_questions_and_answers_output_factory)],
 ) -> list[AnswerQuestionOutput]:
     try:
         answers = await action(melding_id, token)
@@ -668,22 +670,4 @@ async def list_answers(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    output = []
-    for answer in answers:
-        question = await answer.awaitable_attrs.question
-        output.append(
-            AnswerQuestionOutput(
-                id=answer.id,
-                text=answer.text,
-                created_at=answer.created_at,
-                updated_at=answer.updated_at,
-                question=QuestionOutput(
-                    id=question.id,
-                    text=question.text,
-                    created_at=question.created_at,
-                    updated_at=question.updated_at,
-                ),
-            )
-        )
-
-    return output
+    return await produce_output(answers)
