@@ -1,7 +1,9 @@
+from collections.abc import Sequence
 from typing import Union
 
 from meldingen.location import LocationOutputTransformer
 from meldingen.models import (
+    Answer,
     BaseFormIoValuesComponent,
     Form,
     FormIoCheckBoxComponent,
@@ -17,6 +19,7 @@ from meldingen.models import (
     StaticForm,
 )
 from meldingen.schemas.output import (
+    AnswerQuestionOutput,
     BaseFormComponentOutput,
     FormCheckboxComponentOutput,
     FormComponentOutputValidate,
@@ -29,6 +32,7 @@ from meldingen.schemas.output import (
     FormTextAreaComponentOutput,
     FormTextFieldInputComponentOutput,
     MeldingOutput,
+    QuestionOutput,
     SimpleStaticFormOutput,
     StaticFormCheckboxComponentOutput,
     StaticFormOutput,
@@ -548,3 +552,29 @@ class MeldingOutputFactory:
             email=melding.email,
             phone=melding.phone,
         )
+
+
+class AnswerListOutputFactory:
+    async def __call__(self, answers: Sequence[Answer]) -> list[AnswerQuestionOutput]:
+        flattened = {}
+        for answer in answers:
+            question = await answer.awaitable_attrs.question
+            component = await question.awaitable_attrs.component
+            panel = await component.awaitable_attrs.parent
+
+            flattened[int(f"{panel.position}00000{component.position}")] = AnswerQuestionOutput(
+                id=answer.id,
+                text=answer.text,
+                created_at=answer.created_at,
+                updated_at=answer.updated_at,
+                question=QuestionOutput(
+                    id=question.id,
+                    text=question.text,
+                    created_at=question.created_at,
+                    updated_at=question.updated_at,
+                ),
+            )
+
+        _sorted = dict(sorted(flattened.items()))
+
+        return [*_sorted.values()]
