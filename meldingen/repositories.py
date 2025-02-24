@@ -240,13 +240,7 @@ class AnswerRepository(BaseSQLAlchemyRepository[Answer], BaseAnswerRepository[An
 
     async def find_by_melding(self, melding_id: int) -> Sequence[Answer]:
         _type = self.get_model_type()
-        statement = (
-            select(_type)
-            .join(Question)
-            .join(FormIoQuestionComponent)
-            .where(_type.melding_id == melding_id)
-            .order_by(FormIoQuestionComponent.position.asc())
-        )
+        statement = select(_type).where(_type.melding_id == melding_id)
 
         results = await self._session.execute(statement)
 
