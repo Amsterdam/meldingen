@@ -6,7 +6,8 @@ permissions:
 
 jobs:
   run_tests:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: large-runners
     steps:
       # https://github.com/actions/checkout
       - uses: actions/checkout@v4
@@ -31,4 +32,4 @@ jobs:
         run: docker compose run --rm meldingen pytest --test-alembic -m alembic
 
       - name: Run tests
-        run: docker compose run --rm -e COVERAGE_FILE=/tmp/.coverage meldingen pytest --cov --cov-fail-under=95 -n4 -v
+        run: docker compose run --rm -e COVERAGE_FILE=/tmp/.coverage meldingen pytest --cov --cov-fail-under=95 -n auto -v
