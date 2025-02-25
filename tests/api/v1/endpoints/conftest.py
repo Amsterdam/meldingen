@@ -136,18 +136,32 @@ async def melding_with_classification(
 
 @pytest.fixture
 async def melding_with_answers(db_session: AsyncSession, melding: Melding) -> Melding:
+    form = Form(title="Form")
+    questions = []
     for i in range(10):
         question = Question(text=f"Question {i}")
+        questions.append(question)
+        panel = FormIoPanelComponent(label=f"Panel {i}", key=f"Panel Key {i}", type="panel")
+        component = FormIoTextAreaComponent(label=f"Component {i}", key=f"Key {i}")
+        component.question = question
+        component.parent = panel
+
+        form.components.append(panel)
+
+    form.components.reorder()
+    db_session.add(form)
+
+    await db_session.commit()
+
+    numbers = [6, 3, 2, 9, 7, 1, 8, 4, 5, 0]
+    for i in numbers:
         db_session.add(
             Answer(
                 text=f"Answer {i}",
                 melding=melding,
-                question=question,
+                question=questions[i],
             )
         )
-        component = FormIoTextAreaComponent(label=f"Component {i}", key=f"Key {i}")
-        component.question = question
-        db_session.add(component)
 
     await db_session.commit()
 

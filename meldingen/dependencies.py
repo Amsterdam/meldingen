@@ -99,6 +99,7 @@ from meldingen.repositories import (
     UserRepository,
 )
 from meldingen.schemas.output_factories import (
+    AnswerListOutputFactory,
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
     FormComponentValueOutputFactory,
@@ -593,6 +594,10 @@ def melding_contact_info_added_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> MeldingContactInfoAddedAction[Melding]:
     return MeldingContactInfoAddedAction(state_machine, repository, token_verifier)
+
+
+def melding_list_questions_and_answers_output_factory() -> AnswerListOutputFactory:
+    return AnswerListOutputFactory()
 
 
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:
