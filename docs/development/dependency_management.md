@@ -53,3 +53,9 @@ on the constraints defined in the `pyproject.toml` file.
 
 By following these instructions, you can manage dependencies effectively using 
 Poetry within the Docker environment of the Meldingen application.
+
+To check which dependencies are outdated, you can use the following command:
+
+```bash
+docker compose run --rm --user=root meldingen poetry show --outdated
+```
