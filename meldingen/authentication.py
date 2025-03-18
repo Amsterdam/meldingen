@@ -54,7 +54,9 @@ async def authenticate_user(
             algorithms=["RS256"],
             audience=settings.auth_audience,
             issuer=settings.issuer_url,
-            require=["exp", "aud", "iss", "email"],
+            options={
+                "require": ["exp", "aud", "iss", "email"]
+            }
         )
     except (ExpiredSignatureError, InvalidIssuerError, InvalidAudienceError):
         raise InvalidTokenException()
