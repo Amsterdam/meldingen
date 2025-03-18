@@ -56,7 +56,7 @@ async def test_get_user_token_invalid_audience(app: FastAPI) -> None:
 
 
 @pytest.mark.anyio
-async def test_get_user_token_missing_claim(app: FastAPI):
+async def test_get_user_token_missing_claim(app: FastAPI) -> None:
     py_jwt_mock = Mock(PyJWT)
     py_jwt_mock.decode.side_effect = MissingRequiredClaimError(claim="email")
 
