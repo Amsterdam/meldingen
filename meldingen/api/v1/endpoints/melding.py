@@ -87,7 +87,6 @@ from meldingen.schemas.output import (
     AttachmentOutput,
     MeldingCreateOutput,
     MeldingOutput,
-    QuestionOutput,
 )
 from meldingen.schemas.output_factories import AnswerListOutputFactory, MeldingOutputFactory
 from meldingen.schemas.types import GeoJson

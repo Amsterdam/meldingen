@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     jwks_url: str
     auth_url: str
     token_url: str
+    issuer_url: str
+    auth_audience: str
 
     # CORS
     cors_allow_origins: list[str]
