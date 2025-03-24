@@ -1,4 +1,3 @@
-from meldingen_core.repositories import BaseAnswerRepository, BaseFormRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
 from mp_fsm.statemachine import BaseGuard, BaseStateMachine, BaseTransition
 
@@ -22,7 +21,6 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
     _form_repository: FormRepository
 
     def __init__(self, answer_repository: AnswerRepository, form_repository: FormRepository) -> None:
-        super().__init__()
         self._answer_repository = answer_repository
         self._form_repository = form_repository
 
