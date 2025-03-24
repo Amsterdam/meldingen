@@ -1,7 +1,9 @@
+from meldingen_core.repositories import BaseAnswerRepository, BaseFormRepository
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
 from mp_fsm.statemachine import BaseGuard, BaseStateMachine, BaseTransition
 
-from meldingen.models import Melding
+from meldingen.models import Answer, Form, Melding
+from meldingen.repositories import AnswerRepository, FormRepository
 
 
 # guards
@@ -13,6 +15,31 @@ class HasClassification(BaseGuard[Melding]):
 class HasLocation(BaseGuard[Melding]):
     async def __call__(self, obj: Melding) -> bool:
         return obj.geo_location is not None
+
+
+class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
+    _answer_repository: AnswerRepository
+    _form_repository: FormRepository
+
+    def __init__(self, answer_repository, form_repository) -> None:
+        super().__init__()
+        self._answer_repository = answer_repository
+        self._form_repository = form_repository
+
+    async def __call__(self, obj: Melding) -> bool:
+        answers = await self._answer_repository.find_by_melding(obj.id)
+        form = await self._form_repository.find_by_classification_id(obj.classification_id)
+        questions = await form.awaitable_attrs.questions
+
+        answered_question_ids = [answer.question_id for answer in answers]
+
+        for question in questions:
+            component = await question.awaitable_attrs.component
+
+            if component is not None and component.required is True and question.id not in answered_question_ids:
+                return False
+
+        return True
 
 
 # transitions
@@ -36,6 +63,11 @@ class Classify(BaseTransition[Melding]):
 
 
 class AnswerQuestions(BaseTransition[Melding]):
+    _guards: list[BaseGuard[Melding]]
+
+    def __init__(self, guards: list[BaseGuard[Melding]]):
+        self._guards = guards
+
     @property
     def from_states(self) -> list[str]:
         return [MeldingStates.CLASSIFIED]
@@ -43,6 +75,10 @@ class AnswerQuestions(BaseTransition[Melding]):
     @property
     def to_state(self) -> str:
         return MeldingStates.QUESTIONS_ANSWERED
+
+    @property
+    def guards(self) -> list[BaseGuard[Melding]]:
+        return self._guards
 
 
 class AddAttachments(BaseTransition[Melding]):

@@ -443,13 +443,16 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_token"],
-        [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken")],
+        ["melding_text", "melding_state", "melding_token", "classification_name"],
+        [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken", "test_classification")],
         indirect=True,
     )
-    async def test_answer_questions(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+    async def test_answer_questions(
+        self, app: FastAPI, client: AsyncClient, melding_with_classification: Melding, form_with_classification: Form
+    ) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id), params={"token": "supersecrettoken"}
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification.id),
+            params={"token": "supersecrettoken"},
         )
 
         assert response.status_code == HTTP_200_OK
@@ -457,8 +460,33 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
-        assert body.get("created_at") == melding.created_at.isoformat()
-        assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("created_at") == melding_with_classification.created_at.isoformat()
+        assert body.get("updated_at") == melding_with_classification.updated_at.isoformat()
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name", "is_required"],
+        [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken", "test_classification", True)],
+        indirect=True,
+    )
+    async def test_answer_questions_with_required_answered(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_answers: Melding,
+    ) -> None:
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_answers.id), params={"token": "supersecrettoken"}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
+        assert body.get("created_at") == melding_with_answers.created_at.isoformat()
+        assert body.get("updated_at") == melding_with_answers.updated_at.isoformat()
 
     @pytest.mark.anyio
     async def test_answer_questions_not_found(self, app: FastAPI, client: AsyncClient) -> None:
@@ -484,6 +512,53 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("detail") == "Transition not allowed from current state"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "is_required", "classification_name"],
+        [
+            (
+                "De restafvalcontainer is vol.",
+                MeldingStates.CLASSIFIED,
+                "supersecrettoken",
+                True,
+                "test_classification",
+            )
+        ],
+        indirect=["is_required", "classification_name"],
+    )
+    async def test_answer_questions_without_answering_required_questions(
+        self, app: FastAPI, client: AsyncClient, melding_with_classification: Melding, form_with_classification: Form
+    ) -> None:
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification.id),
+            params={"token": "supersecrettoken"},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+
+        assert body.get("detail") == "All required questions must be answered first"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name", "is_required"],
+        [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken", "test_classification", True)],
+        indirect=True,
+    )
+    async def test_answer_questions_with_some_required_answered(
+        self, app: FastAPI, client: AsyncClient, melding_with_answers: Melding, form_with_classification: Form
+    ) -> None:
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_answers.id), params={"token": "supersecrettoken"}
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+
+        assert body.get("detail") == "All required questions must be answered first"
 
 
 class TestMeldingAddAttachments(BaseTokenAuthenticationTest):

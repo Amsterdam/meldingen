@@ -353,6 +353,8 @@ class Question(AsyncAttrs, BaseDBModel, BaseQuestion):
     text: Mapped[str] = mapped_column(String())
 
     form_id: Mapped[int | None] = mapped_column(ForeignKey("form.id", ondelete="SET NULL"), default=None)
+
+    # TODO back_populates hier toevoegen?
     form: Mapped[Form | None] = relationship(default=None)
 
     component: Mapped[FormIoQuestionComponent | None] = relationship(default=None)

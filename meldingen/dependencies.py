@@ -126,6 +126,7 @@ from meldingen.statemachine import (
     AnswerQuestions,
     Classify,
     Complete,
+    HasAnsweredRequiredQuestions,
     HasClassification,
     HasLocation,
     MeldingStateMachine,
@@ -215,6 +216,10 @@ def question_repository(session: Annotated[AsyncSession, Depends(database_sessio
     return QuestionRepository(session)
 
 
+def form_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> FormRepository:
+    return FormRepository(session)
+
+
 def attachment_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> AttachmentRepository:
     return AttachmentRepository(session)
 
@@ -237,12 +242,21 @@ def attachment_factory() -> AttachmentFactory:
     return AttachmentFactory()
 
 
-def melding_state_machine() -> MeldingStateMachine:
+def has_answered_required_questions(
+    answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
+    form_repository: Annotated[FormRepository, Depends(form_repository)],
+) -> HasAnsweredRequiredQuestions:
+    return HasAnsweredRequiredQuestions(answer_repository, form_repository)
+
+
+def melding_state_machine(
+    additional_question_guard: Annotated[HasAnsweredRequiredQuestions, Depends(has_answered_required_questions)],
+) -> MeldingStateMachine:
     return MeldingStateMachine(
         MpFsmMeldingStateMachine(
             {
                 MeldingTransitions.CLASSIFY: Classify([HasClassification()]),
-                MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions(),
+                MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions([additional_question_guard]),
                 MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
                 MeldingTransitions.SUBMIT_LOCATION: SubmitLocation([HasLocation()]),
                 MeldingTransitions.ADD_CONTACT_INFO: AddContactInfo(),
@@ -697,10 +711,6 @@ def static_form_output_factory(
     factory: Annotated[StaticFormComponentOutputFactory, Depends(static_form_component_output_factory)],
 ) -> StaticFormOutputFactory:
     return StaticFormOutputFactory(factory)
-
-
-def form_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> FormRepository:
-    return FormRepository(session)
 
 
 def form_text_area_output_factory(

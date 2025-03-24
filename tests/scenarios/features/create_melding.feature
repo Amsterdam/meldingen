@@ -5,7 +5,7 @@ Feature: Melding Form
 
     Background:
         Given there is a classification test
-        Given there is a form for additional questions
+        And there is a form for additional questions
         And the form contains a panel
         And the panel contains a text area component with the question "question"
 

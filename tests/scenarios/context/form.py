@@ -86,6 +86,7 @@ async def the_additional_form_contains_a_text_area_component(
     text_area_component.question = question
 
     db_session.add(text_area_component)
+    form.questions.append(question)
     await db_session.commit()
 
     return text_area_component

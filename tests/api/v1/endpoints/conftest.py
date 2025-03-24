@@ -135,8 +135,10 @@ async def melding_with_classification(
 
 
 @pytest.fixture
-async def melding_with_answers(db_session: AsyncSession, melding: Melding) -> Melding:
-    form = Form(title="Form")
+async def melding_with_answers(
+    db_session: AsyncSession, melding_with_classification: Melding, classification: Classification, is_required: bool
+) -> Melding:
+    form = Form(title="Form", classification=classification)
     questions = []
     for i in range(10):
         question = Question(text=f"Question {i}")
@@ -145,10 +147,12 @@ async def melding_with_answers(db_session: AsyncSession, melding: Melding) -> Me
         component = FormIoTextAreaComponent(label=f"Component {i}", key=f"Key {i}")
         component.question = question
         component.parent = panel
+        component.required = is_required
 
         form.components.append(panel)
 
     form.components.reorder()
+    form.questions = questions
     db_session.add(form)
 
     await db_session.commit()
@@ -158,14 +162,14 @@ async def melding_with_answers(db_session: AsyncSession, melding: Melding) -> Me
         db_session.add(
             Answer(
                 text=f"Answer {i}",
-                melding=melding,
+                melding=melding_with_classification,
                 question=questions[i],
             )
         )
 
     await db_session.commit()
 
-    return melding
+    return melding_with_classification
 
 
 @pytest.fixture
@@ -243,6 +247,14 @@ def form_title(request: FixtureRequest) -> str:
 
 
 @pytest.fixture
+def is_required(request: FixtureRequest) -> bool:
+    if hasattr(request, "param"):
+        return request.param
+    else:
+        return False
+
+
+@pytest.fixture
 async def form(db_session: AsyncSession, form_title: str) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
@@ -278,7 +290,9 @@ def jsonlogic(request: FixtureRequest) -> str | None:
 
 
 @pytest.fixture
-async def form_with_classification(db_session: AsyncSession, form_title: str, jsonlogic: str | None) -> Form:
+async def form_with_classification(
+    db_session: AsyncSession, form_title: str, jsonlogic: str | None, is_required: bool
+) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
     panel = FormIoPanelComponent(
@@ -298,6 +312,7 @@ async def form_with_classification(db_session: AsyncSession, form_title: str, js
         auto_expand=True,
         max_char_count=255,
         jsonlogic=jsonlogic,
+        required=is_required,
     )
 
     panel_components = await panel.awaitable_attrs.components
@@ -319,6 +334,7 @@ async def form_with_classification(db_session: AsyncSession, form_title: str, js
         db_session.add(classification)
 
     form.classification = classification
+    form.questions.append(question)
     db_session.add(form)
 
     await db_session.commit()
