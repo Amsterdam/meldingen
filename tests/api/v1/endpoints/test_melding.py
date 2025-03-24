@@ -548,10 +548,14 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         indirect=True,
     )
     async def test_answer_questions_with_some_required_answered(
-        self, app: FastAPI, client: AsyncClient, melding_with_answers: Melding, form_with_classification: Form
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_some_answers: Melding,
     ) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_answers.id), params={"token": "supersecrettoken"}
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_some_answers.id),
+            params={"token": "supersecrettoken"},
         )
 
         assert response.status_code == HTTP_400_BAD_REQUEST

@@ -135,9 +135,9 @@ async def melding_with_classification(
 
 
 @pytest.fixture
-async def melding_with_answers(
+async def form_with_multiple_questions(
     db_session: AsyncSession, melding_with_classification: Melding, classification: Classification, is_required: bool
-) -> Melding:
+) -> Form:
     form = Form(title="Form", classification=classification)
     questions = []
     for i in range(10):
@@ -157,7 +157,37 @@ async def melding_with_answers(
 
     await db_session.commit()
 
+    return form
+
+
+@pytest.fixture
+async def melding_with_answers(
+    db_session: AsyncSession, melding_with_classification: Melding, form_with_multiple_questions: Form
+) -> Melding:
+    questions = await form_with_multiple_questions.awaitable_attrs.questions
+
     numbers = [6, 3, 2, 9, 7, 1, 8, 4, 5, 0]
+    for i in numbers:
+        db_session.add(
+            Answer(
+                text=f"Answer {i}",
+                melding=melding_with_classification,
+                question=questions[i],
+            )
+        )
+
+    await db_session.commit()
+
+    return melding_with_classification
+
+
+@pytest.fixture
+async def melding_with_some_answers(
+    db_session: AsyncSession, melding_with_classification: Melding, form_with_multiple_questions: Form
+) -> Melding:
+    questions = await form_with_multiple_questions.awaitable_attrs.questions
+
+    numbers = [6, 3, 2, 9, 7]
     for i in numbers:
         db_session.add(
             Answer(
