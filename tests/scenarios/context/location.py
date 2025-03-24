@@ -1,9 +1,9 @@
 from typing import Any, Final
 
 from fastapi import FastAPI
-from httpx import AsyncClient
+from httpx import AsyncClient, Response
 from pytest_bdd import given, parsers, then, when
-from starlette.status import HTTP_200_OK
+from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from tests.scenarios.conftest import async_step
 
@@ -34,22 +34,28 @@ async def i_supply_the_location_as_geojson_to_my_melding(
     return body
 
 
-@then("the location should be attached to the melding")
-def the_location_should_be_attached_to_the_melding(geojson: dict[str, Any], my_melding: dict[str, Any]) -> None:
-    assert geojson == my_melding["geo_location"]
-
-
-@when("I finalize submitting the location to my melding", target_fixture="my_melding")
+@when("I finalize submitting the location to my melding", target_fixture="api_response")
 @async_step
 async def i_finalize_submitting_the_location_to_my_melding(
     my_melding: dict[str, Any], token: str, app: FastAPI, client: AsyncClient
-) -> dict[str, Any]:
+) -> Response:
     response = await client.put(
         app.url_path_for(ROUTE_NAME_LOCATION_FINALIZE, melding_id=my_melding["id"]), params={"token": token}
     )
-    assert response.status_code == HTTP_200_OK
 
-    body = response.json()
+    return response
+
+
+@then("the location should be attached to the melding")
+def then_location_should_be_attached_to_melding(my_melding: dict[str, Any], geojson: dict[str, Any]) -> None:
+    assert geojson == my_melding["geo_location"]
+
+
+@then("I should be told to submit my location first")
+def i_should_be_told_to_submit_location_first(api_response: Response) -> None:
+    assert api_response.status_code == HTTP_400_BAD_REQUEST
+
+    body = api_response.json()
     assert isinstance(body, dict)
 
-    return body
+    assert body.get("detail") == "Location must be added before submitting"
