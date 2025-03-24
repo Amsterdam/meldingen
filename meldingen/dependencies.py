@@ -250,13 +250,13 @@ def has_answered_required_questions(
 
 
 def melding_state_machine(
-    additional_question_guard: Annotated[HasAnsweredRequiredQuestions, Depends(has_answered_required_questions)],
+    has_answered_required_questions: Annotated[HasAnsweredRequiredQuestions, Depends(has_answered_required_questions)],
 ) -> MeldingStateMachine:
     return MeldingStateMachine(
         MpFsmMeldingStateMachine(
             {
                 MeldingTransitions.CLASSIFY: Classify([HasClassification()]),
-                MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions([additional_question_guard]),
+                MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions([has_answered_required_questions]),
                 MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
                 MeldingTransitions.SUBMIT_LOCATION: SubmitLocation([HasLocation()]),
                 MeldingTransitions.ADD_CONTACT_INFO: AddContactInfo(),
