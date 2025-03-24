@@ -1,10 +1,10 @@
 from typing import Any, Final
 
 from fastapi import FastAPI
-from httpx import AsyncClient
-from pytest_bdd import given, parsers, when
+from httpx import AsyncClient, Response
+from pytest_bdd import given, parsers, then, when
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from meldingen.models import (
     Classification,
@@ -80,11 +80,13 @@ async def the_additional_form_contains_a_text_area_component(
         max_char_count=255,
         description="Ask why",
         parent=form_panel,
+        required=True,
     )
 
     text_area_component.question = question
 
     db_session.add(text_area_component)
+    form.questions.append(question)
     await db_session.commit()
 
     return text_area_component
@@ -108,7 +110,7 @@ async def retrieve_additional_questions_through_classification(
     return body
 
 
-@when(parsers.parse('answer the additional questions with the text "{text:l}"'))
+@when(parsers.parse('I answer the additional questions with the text "{text:l}"'))
 @async_step
 async def answer_additional_questions(
     client: AsyncClient,
@@ -130,20 +132,28 @@ async def answer_additional_questions(
 
 
 @when(
-    "finish answering the additional questions by going to the next step",
-    target_fixture="my_melding",
+    "I finish answering the additional questions by going to the next step",
+    target_fixture="api_response",
 )
 @async_step
 async def finish_answering_additional_questions(
     client: AsyncClient, app: FastAPI, my_melding: dict[str, Any], token: str
-) -> dict[str, Any]:
+) -> Response:
     response = await client.put(
         app.url_path_for(ROUTE_FINISH_ANSWERING_QUESTIONS, melding_id=my_melding["id"]),
         params={"token": token},
     )
 
-    assert response.status_code == HTTP_200_OK
-    body = response.json()
+    return response
+
+
+@then("I should be told to answer the additional questions first")
+def i_should_be_told_to_answer_additional_questions(
+    client: AsyncClient, app: FastAPI, api_response: Response, token: str
+) -> dict[str, Any]:
+
+    assert api_response.status_code == HTTP_400_BAD_REQUEST
+    body = api_response.json()
     assert isinstance(body, dict)
 
     return body

@@ -3,21 +3,24 @@ Feature: Melding Form
     I want to be able to create a melding
     In order to have my issue resolved by the municipality
 
-    Scenario: Create melding
-        # Initial melding and classification
+    Background:
         Given there is a classification test
+        And there is a form for additional questions
+        And the form contains a panel
+        And the panel contains a text area component with the question "question"
+
+    Scenario: A melder successfully submits a melding
+        # Initial melding and classification
         When I create a melding with text "test"
         Then the melding should be classified as "test"
         And the state of the melding should be "classified"
         And the melding should contain a token
         # Additional questions
-        Given there is a form for additional questions
-        And the form contains a panel
-        And the panel contains a text area component with the question "question"
         When I retrieve the additional questions through my classification
-        And answer the additional questions with the text "text"
-        And finish answering the additional questions by going to the next step
-        Then the state of the melding should be "questions_answered"
+        And I answer the additional questions with the text "text"
+        And I finish answering the additional questions by going to the next step
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "questions_answered"
         # Attachments
         Given I have a file "amsterdam-logo.jpg" that I want to attach to the melding
         And it is in my file system
@@ -33,7 +36,8 @@ Feature: Melding Form
         When I add the location as geojson to my melding
         Then the location should be attached to the melding
         When I finalize submitting the location to my melding
-        Then the state of the melding should be "location_submitted"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "location_submitted"
         # Contact information
         Given I have a phone number "+31612345678" and an email address "test@example.com"
         When I add the contact information to my melding
@@ -43,3 +47,32 @@ Feature: Melding Form
         # Submit
         When I submit the melding
         Then the state of the melding should be "submitted"
+
+    Scenario: A melding can't be submitted if not all required additional questions are answered
+        # Initial melding and classification
+        When I create a melding with text "test"
+        Then the melding should be classified as "test"
+        And the state of the melding should be "classified"
+        And the melding should contain a token
+        # Additional questions
+        When I finish answering the additional questions by going to the next step
+        Then I should be told to answer the additional questions first
+
+    Scenario: A melding can't be submitted without a valid location
+        # Initial melding and classification
+        When I create a melding with text "test"
+        Then the melding should be classified as "test"
+        And the state of the melding should be "classified"
+        And the melding should contain a token
+        # Additional questions
+        When I retrieve the additional questions through my classification
+        And I answer the additional questions with the text "text"
+        And I finish answering the additional questions by going to the next step
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "questions_answered"
+        # Attachments
+        When I am finished with adding attachments
+        Then the state of the melding should be "attachments_added"
+        # Location
+        When I finalize submitting the location to my melding
+        Then I should be told to submit my location first

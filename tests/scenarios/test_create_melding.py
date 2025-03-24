@@ -8,6 +8,18 @@ from tests.scenarios.context.location import *  # noqa
 from tests.scenarios.context.melding import *  # noqa
 
 
-@scenario("create_melding.feature", "Create melding")
+@scenario("create_melding.feature", "A melder successfully submits a melding")
 def test_create_melding(anyio_backend: str, test_database: None) -> None:
+    pass
+
+
+@scenario("create_melding.feature", "A melding can't be submitted without a valid location")
+def test_cant_submit_melding_without_location(anyio_backend: str, test_database: None) -> None:
+    pass
+
+
+@scenario(
+    "create_melding.feature", "A melding can't be submitted if not all required additional questions are answered"
+)
+def test_must_answer_all_required_additional_questions(anyio_backend: str, test_database: None) -> None:
     pass

@@ -234,6 +234,8 @@ async def answer_questions(
         melding = await action(melding_id, token)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except GuardException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="All required questions must be answered first")
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
     except TokenException:
