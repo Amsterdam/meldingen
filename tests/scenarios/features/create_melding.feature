@@ -65,7 +65,9 @@ Feature: Melding Form
         And the state of the melding should be "classified"
         And the melding should contain a token
         # Additional questions
-        When I finish answering the additional questions by going to the next step
+        When I retrieve the additional questions through my classification
+        And I answer the additional questions with the text "text"
+        And I finish answering the additional questions by going to the next step
         Then I should receive a response with the current content of my melding
         And the state of the melding should be "questions_answered"
         # Attachments
