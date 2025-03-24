@@ -279,7 +279,7 @@ def form_title(request: FixtureRequest) -> str:
 @pytest.fixture
 def is_required(request: FixtureRequest) -> bool:
     if hasattr(request, "param"):
-        return request.param
+        return bool(request.param)
     else:
         return False
 

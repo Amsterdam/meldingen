@@ -21,12 +21,14 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
     _answer_repository: AnswerRepository
     _form_repository: FormRepository
 
-    def __init__(self, answer_repository, form_repository) -> None:
+    def __init__(self, answer_repository: AnswerRepository, form_repository: FormRepository) -> None:
         super().__init__()
         self._answer_repository = answer_repository
         self._form_repository = form_repository
 
     async def __call__(self, obj: Melding) -> bool:
+        assert obj.classification_id is not None
+
         answers = await self._answer_repository.find_by_melding(obj.id)
         form = await self._form_repository.find_by_classification_id(obj.classification_id)
         questions = await form.awaitable_attrs.questions
