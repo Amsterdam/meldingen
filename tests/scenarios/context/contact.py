@@ -8,7 +8,6 @@ from starlette.status import HTTP_200_OK
 from tests.scenarios.conftest import async_step
 
 ROUTE_CONTACT_INFO_ADD: Final[str] = "melding:contact-add"
-ROUTE_FINALIZE_CONTACT_INFO_ADD: Final[str] = "melding:add-contact-info"
 
 
 @given(
@@ -41,19 +40,3 @@ async def i_add_the_contact_information_to_my_melding(
 def the_melding_contains_my_contact_information(contact_info: dict[str, Any], my_melding: dict[str, Any]) -> None:
     assert contact_info["email"] == my_melding["email"]
     assert contact_info["phone"] == my_melding["phone"]
-
-
-@when("I finalize adding my contact info by proceeding to the next step", target_fixture="my_melding")
-@async_step
-async def i_finalize_submitting_the_contact_info_to_my_melding(
-    app: FastAPI, client: AsyncClient, my_melding: dict[str, Any], token: str
-) -> dict[str, Any]:
-    response = await client.put(
-        app.url_path_for(ROUTE_FINALIZE_CONTACT_INFO_ADD, melding_id=my_melding["id"]), params={"token": token}
-    )
-    assert response.status_code == HTTP_200_OK
-
-    body = response.json()
-    assert isinstance(body, dict)
-
-    return body

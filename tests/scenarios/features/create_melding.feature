@@ -18,7 +18,7 @@ Feature: Melding Form
         # Additional questions
         When I retrieve the additional questions through my classification
         And I answer the additional questions with the text "text"
-        And I finish answering the additional questions by going to the next step
+        And I finish my current step by completing "ANSWER_QUESTIONS"
         Then I should receive a response with the current content of my melding
         And the state of the melding should be "questions_answered"
         # Attachments
@@ -29,24 +29,27 @@ Feature: Melding Form
         When I check the attachments of my melding
         Then there should be 1 attachments
         And the attachments should contain my file
-        When I am finished with adding attachments
-        Then the state of the melding should be "attachments_added"
+        When I finish my current step by completing "ADD_ATTACHMENTS"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "attachments_added"
         # Location
         Given I know the latitude 52.3680605 and longitude 4.897092 values of my melding
         When I add the location as geojson to my melding
         Then the location should be attached to the melding
-        When I finalize submitting the location to my melding
+        When I finish my current step by completing "SUBMIT_LOCATION"
         Then I should receive a response with the current content of my melding
         And the state of the melding should be "location_submitted"
         # Contact information
         Given I have a phone number "+31612345678" and an email address "test@example.com"
         When I add the contact information to my melding
         Then the melding contains my contact information
-        When I finalize adding my contact info by proceeding to the next step
-        Then the state of the melding should be "contact_info_added"
+        When I finish my current step by completing "ADD_CONTACT_INFO"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "contact_info_added"
         # Submit
-        When I submit the melding
-        Then the state of the melding should be "submitted"
+        When I finish my current step by completing "SUBMIT"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "submitted"
 
     Scenario: A melding can't be submitted if not all required additional questions are answered
         # Initial melding and classification
@@ -55,7 +58,7 @@ Feature: Melding Form
         And the state of the melding should be "classified"
         And the melding should contain a token
         # Additional questions
-        When I finish answering the additional questions by going to the next step
+        When I finish my current step by completing "ANSWER_QUESTIONS"
         Then I should be told to answer the additional questions first
 
     Scenario: A melding can't be submitted without a valid location
@@ -67,12 +70,13 @@ Feature: Melding Form
         # Additional questions
         When I retrieve the additional questions through my classification
         And I answer the additional questions with the text "text"
-        And I finish answering the additional questions by going to the next step
+        When I finish my current step by completing "ANSWER_QUESTIONS"
         Then I should receive a response with the current content of my melding
         And the state of the melding should be "questions_answered"
         # Attachments
-        When I am finished with adding attachments
-        Then the state of the melding should be "attachments_added"
+        When I finish my current step by completing "ADD_ATTACHMENTS"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "attachments_added"
         # Location
-        When I finalize submitting the location to my melding
+        When I finish my current step by completing "SUBMIT_LOCATION"
         Then I should be told to submit my location first
