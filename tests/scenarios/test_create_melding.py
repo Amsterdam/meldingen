@@ -6,6 +6,7 @@ from tests.scenarios.context.contact import *  # noqa
 from tests.scenarios.context.form import *  # noqa
 from tests.scenarios.context.location import *  # noqa
 from tests.scenarios.context.melding import *  # noqa
+from tests.scenarios.context.statemachine import *  # noqa
 
 
 @scenario("create_melding.feature", "A melder successfully submits a melding")

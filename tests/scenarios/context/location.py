@@ -8,7 +8,6 @@ from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from tests.scenarios.conftest import async_step
 
 ROUTE_NAME_LOCATION_ADD: Final[str] = "melding:location-add"
-ROUTE_NAME_LOCATION_FINALIZE: Final[str] = "melding:submit-location"
 
 
 @given(

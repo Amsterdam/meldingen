@@ -19,7 +19,6 @@ from tests.scenarios.conftest import async_step
 
 ROUTE_RETRIEVE_ADDITIONAL_QUESTIONS: Final[str] = "form:classification"
 ROUTE_ANSWER_QUESTION: Final[str] = "melding:answer-question"
-ROUTE_FINISH_ANSWERING_QUESTIONS: Final[str] = "melding:answer_questions"
 
 
 @given("there is a form for additional questions", target_fixture="form")

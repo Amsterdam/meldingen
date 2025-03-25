@@ -8,7 +8,6 @@ from starlette.status import HTTP_200_OK
 from tests.scenarios.conftest import async_step
 
 ROUTE_CONTACT_INFO_ADD: Final[str] = "melding:contact-add"
-ROUTE_FINALIZE_CONTACT_INFO_ADD: Final[str] = "melding:add-contact-info"
 
 
 @given(
