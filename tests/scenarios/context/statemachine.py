@@ -33,7 +33,7 @@ async def finalize_current_step_and_proceeding_to(
     route = TRANSITION_TO_ROUTE_MAP.get(transition_enum, False)
     assert route
 
-    response = await client.put(app.url_path_for(route, melding_id=my_melding["id"]), params={"token": token})
+    response = await client.put(app.url_path_for(str(route), melding_id=my_melding["id"]), params={"token": token})
 
     return response
 
