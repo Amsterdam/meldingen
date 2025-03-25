@@ -105,21 +105,3 @@ def the_attachments_should_contain_my_file(
 
     assert attachment["original_filename"] == filename
     assert attachment["id"] == attachment_id
-
-
-@when("I am finished with adding attachments", target_fixture="my_melding")
-@async_step
-async def i_have_finished_uploading_my_files(
-    app: FastAPI, client: AsyncClient, my_melding: dict[str, Any], token: str
-) -> dict[str, Any]:
-
-    response = await client.put(
-        app.url_path_for(ROUTE_FINISH_UPLOADING_ATTACHMENTS, melding_id=my_melding["id"]),
-        params={"token": token},
-    )
-
-    assert response.status_code == HTTP_200_OK
-    body = response.json()
-    assert isinstance(body, dict)
-
-    return body

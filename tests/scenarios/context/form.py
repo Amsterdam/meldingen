@@ -1,10 +1,10 @@
 from typing import Any, Final
 
 from fastapi import FastAPI
-from httpx import AsyncClient, Response
-from pytest_bdd import given, parsers, then, when
+from httpx import AsyncClient
+from pytest_bdd import given, parsers, when
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 from meldingen.models import (
     Classification,
@@ -128,31 +128,3 @@ async def answer_additional_questions(
     )
 
     assert response.status_code == HTTP_201_CREATED
-
-
-@when(
-    "I finish answering the additional questions by going to the next step",
-    target_fixture="api_response",
-)
-@async_step
-async def finish_answering_additional_questions(
-    client: AsyncClient, app: FastAPI, my_melding: dict[str, Any], token: str
-) -> Response:
-    response = await client.put(
-        app.url_path_for(ROUTE_FINISH_ANSWERING_QUESTIONS, melding_id=my_melding["id"]),
-        params={"token": token},
-    )
-
-    return response
-
-
-@then("I should be told to answer the additional questions first")
-def i_should_be_told_to_answer_additional_questions(
-    client: AsyncClient, app: FastAPI, api_response: Response, token: str
-) -> dict[str, Any]:
-
-    assert api_response.status_code == HTTP_400_BAD_REQUEST
-    body = api_response.json()
-    assert isinstance(body, dict)
-
-    return body

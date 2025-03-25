@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient, Response
 from meldingen_core.statemachine import MeldingTransitions
 from pytest_bdd import parsers, then, when
+from starlette.status import HTTP_400_BAD_REQUEST
 
 from tests.scenarios.conftest import async_step
 
@@ -40,3 +41,25 @@ async def finalize_current_step_and_proceeding_to(
 @then(parsers.parse('the state of the melding should be "{state:w}"'))
 def the_state_of_the_melding_should_be(my_melding: dict[str, Any], state: str) -> None:
     assert state == my_melding.get("state")
+
+
+@then("I should be told to submit my location first")
+def i_should_be_told_to_submit_location_first(api_response: Response) -> None:
+    assert api_response.status_code == HTTP_400_BAD_REQUEST
+
+    body = api_response.json()
+    assert isinstance(body, dict)
+
+    assert body.get("detail") == "Location must be added before submitting"
+
+
+@then("I should be told to answer the additional questions first")
+def i_should_be_told_to_answer_additional_questions(
+    client: AsyncClient, app: FastAPI, api_response: Response, token: str
+) -> dict[str, Any]:
+
+    assert api_response.status_code == HTTP_400_BAD_REQUEST
+    body = api_response.json()
+    assert isinstance(body, dict)
+
+    return body

@@ -34,22 +34,6 @@ async def create_melding_with_text(text: str, app: FastAPI, client: AsyncClient)
     return body
 
 
-@when(parsers.parse("I submit the melding"), target_fixture="my_melding")
-@async_step
-async def submit_melding(app: FastAPI, client: AsyncClient, token: str, my_melding: dict[str, Any]) -> dict[str, Any]:
-    response = await client.put(
-        app.url_path_for(ROUTE_NAME_SUBMIT, melding_id=my_melding.get("id")),
-        params={"token": token},
-    )
-
-    assert response.status_code == HTTP_200_OK
-
-    body = response.json()
-    assert isinstance(body, dict)
-
-    return body
-
-
 @then(parsers.parse('the melding should be classified as "{classification_name:l}"'))
 def the_melding_should_be_classified_as(
     classification: Classification, my_melding: dict[str, Any], classification_name: str
