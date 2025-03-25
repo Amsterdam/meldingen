@@ -133,7 +133,7 @@ class Submit(BaseTransition[Melding]):
 class Process(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.NEW]
+        return [MeldingStates.SUBMITTED]
 
     @property
     def to_state(self) -> str:
@@ -143,7 +143,7 @@ class Process(BaseTransition[Melding]):
 class Complete(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.NEW, MeldingStates.PROCESSING]
+        return [MeldingStates.PROCESSING]
 
     @property
     def to_state(self) -> str:

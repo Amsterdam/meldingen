@@ -689,7 +689,9 @@ class TestMeldingProcess(BaseUnauthorizedTest):
         return {"melding_id": 1}
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.SUBMITTED)], indirect=True
+    )
     async def test_process_melding(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
         response = await client.request(
             self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
