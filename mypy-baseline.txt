@@ -16,7 +16,7 @@ migrations/versions/a4c7c0e946d2_geolocation_column.py:0: error: Module has no a
 migrations/versions/a4c7c0e946d2_geolocation_column.py:0: error: Module has no attribute "drop_geospatial_column"  [attr-defined]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Classification" defined the type as "str")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Melding" defined the type as "str")  [assignment]
-meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "StateAware" defined the type as "str")  [assignment]
+meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str]", base class "Melding" defined the type as "str | None")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[meldingen.models.Classification | None]", base class "Melding" defined the type as "meldingen_core.models.Classification | None")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str | None]", base class "Melding" defined the type as "str | None")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[DateTime | None]", base class "Melding" defined the type as "datetime | None")  [assignment]
