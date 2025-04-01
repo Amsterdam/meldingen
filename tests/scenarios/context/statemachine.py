@@ -56,10 +56,22 @@ def i_should_be_told_to_submit_location_first(api_response: Response) -> None:
 @then("I should be told to answer the additional questions first")
 def i_should_be_told_to_answer_additional_questions(
     client: AsyncClient, app: FastAPI, api_response: Response, token: str
-) -> dict[str, Any]:
+) -> None:
 
     assert api_response.status_code == HTTP_400_BAD_REQUEST
     body = api_response.json()
     assert isinstance(body, dict)
 
-    return body
+    assert body.get("detail") == "All required questions must be answered first"
+
+
+@then("I should be told that this transition is not allowed from the current state")
+def i_should_be_told_transition_not_allowed_from_current_state(
+    client: AsyncClient, app: FastAPI, api_response: Response, token: str
+) -> None:
+
+    assert api_response.status_code == HTTP_400_BAD_REQUEST
+    body = api_response.json()
+    assert isinstance(body, dict)
+
+    assert body.get("detail") == "Transition not allowed from current state"
