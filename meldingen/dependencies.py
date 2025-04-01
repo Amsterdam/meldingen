@@ -135,7 +135,7 @@ from meldingen.statemachine import (
     Submit,
     SubmitLocation,
 )
-from meldingen.token import UrlSafeTokenGenerator
+from meldingen.token import TokenInvalidator, UrlSafeTokenGenerator
 from meldingen.validators import MediaTypeIntegrityValidator, MediaTypeValidator
 
 
@@ -236,6 +236,10 @@ def token_verifier(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> TokenVerifier[Melding]:
     return TokenVerifier(repository)
+
+
+def token_invalidator() -> TokenInvalidator:
+    return TokenInvalidator()
 
 
 def attachment_factory() -> AttachmentFactory:
@@ -344,8 +348,9 @@ def melding_submit_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    token_invalidator: Annotated[TokenInvalidator, Depends(token_invalidator)],
 ) -> MeldingSubmitAction:
-    return MeldingSubmitAction(state_machine, repository, token_verifier)
+    return MeldingSubmitAction(repository, state_machine, token_verifier, token_invalidator)
 
 
 def melding_complete_action(
