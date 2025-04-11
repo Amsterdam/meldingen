@@ -35,9 +35,8 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
             return True
 
         answers = await self._answer_repository.find_by_melding(obj.id)
-        questions = await form.awaitable_attrs.questions
-
         answered_question_ids = [answer.question_id for answer in answers]
+        questions = await form.awaitable_attrs.questions
 
         for question in questions:
             component = await question.awaitable_attrs.component
