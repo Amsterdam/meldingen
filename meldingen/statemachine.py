@@ -1,3 +1,4 @@
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
 from mp_fsm.statemachine import BaseGuard, BaseStateMachine, BaseTransition
 
@@ -27,8 +28,13 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
     async def __call__(self, obj: Melding) -> bool:
         assert obj.classification_id is not None
 
+        try:
+            form = await self._form_repository.find_by_classification_id(obj.classification_id)
+        except NotFoundException:
+            # No form means no required questions
+            return True
+
         answers = await self._answer_repository.find_by_melding(obj.id)
-        form = await self._form_repository.find_by_classification_id(obj.classification_id)
         questions = await form.awaitable_attrs.questions
 
         answered_question_ids = [answer.question_id for answer in answers]

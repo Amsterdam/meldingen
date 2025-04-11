@@ -565,6 +565,31 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         assert body.get("detail") == "All required questions must be answered first"
 
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name"],
+        [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken", "test_classification")],
+        indirect=True,
+    )
+    async def test_answer_questions_with_no_form_for_classification(
+            self,
+            app: FastAPI,
+            client: AsyncClient,
+            melding_with_classification: Melding,
+    ) -> None:
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification.id), params={"token": "supersecrettoken"}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
+        assert body.get("created_at") == melding_with_classification.created_at.isoformat()
+        assert body.get("updated_at") == melding_with_classification.updated_at.isoformat()
+
+
 class TestMeldingAddAttachments(BaseTokenAuthenticationTest):
     def get_route_name(self) -> str:
         return "melding:add-attachments"
