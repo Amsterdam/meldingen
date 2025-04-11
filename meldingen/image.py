@@ -82,26 +82,33 @@ class IMGProxyThumbnailUrlGenerator(BaseIMGProxyUrlGenerator):
 class IMGProxyImageProcessor:
     _generate_url: BaseIMGProxyUrlGenerator
     _http_client: AsyncClient
-    _filesystem: Filesystem
 
-    def __init__(self, url_generator: BaseIMGProxyUrlGenerator, http_client: AsyncClient, filesystem: Filesystem):
+    def __init__(self, url_generator: BaseIMGProxyUrlGenerator, http_client: AsyncClient):
         self._generate_url = url_generator
         self._http_client = http_client
-        self._filesystem = filesystem
 
     async def __call__(self, image_path: str, suffix: str) -> str:
-        imgproxy_url = self._generate_url(image_path)
+        # TODO: Use a factory for this, FastAPI no longer supports using dependencies from context
+        #  managers in background tasks and this is not agnostic
+        from meldingen.dependencies import azure_container_client, filesystem, filesystem_adapter
 
-        file_path, _ = image_path.rsplit(".", 1)
-        processed_path = f"{file_path}-{suffix}.webp"
+        async for client in azure_container_client():
+            _filesystem = filesystem(filesystem_adapter(client))
 
-        async with self._http_client.stream("GET", imgproxy_url) as response:
-            if response.status_code != HTTP_200_OK:
-                raise ImageOptimizerException()
+            imgproxy_url = self._generate_url(image_path)
 
-            await self._filesystem.write_iterator(processed_path, response.aiter_bytes())
+            file_path, _ = image_path.rsplit(".", 1)
+            processed_path = f"{file_path}-{suffix}.webp"
 
-        return processed_path
+            async with self._http_client.stream("GET", imgproxy_url) as response:
+                if response.status_code != HTTP_200_OK:
+                    raise ImageOptimizerException()
+
+                await _filesystem.write_iterator(processed_path, response.aiter_bytes())
+
+            return processed_path
+
+        raise Exception("Failed to get container client!")
 
 
 class IMGProxyImageOptimizer(BaseImageOptimizer):

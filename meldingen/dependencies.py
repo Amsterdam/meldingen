@@ -441,9 +441,8 @@ def img_proxy_image_optimizer_url_generator(
 def img_proxy_image_optimizer_processor(
     url_generator: Annotated[IMGProxyImageOptimizerUrlGenerator, Depends(img_proxy_image_optimizer_url_generator)],
     http_client: Annotated[AsyncClient, Depends(http_client)],
-    filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> IMGProxyImageProcessor:
-    return IMGProxyImageProcessor(url_generator, http_client, filesystem)
+    return IMGProxyImageProcessor(url_generator, http_client)
 
 
 def image_optimizer(
@@ -470,9 +469,8 @@ def img_proxy_thumbnail_url_generator(
 def img_proxy_thumbnail_processor(
     url_generator: Annotated[IMGProxyThumbnailUrlGenerator, Depends(img_proxy_thumbnail_url_generator)],
     http_client: Annotated[AsyncClient, Depends(http_client)],
-    filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> IMGProxyImageProcessor:
-    return IMGProxyImageProcessor(url_generator, http_client, filesystem)
+    return IMGProxyImageProcessor(url_generator, http_client)
 
 
 def thumbnail_generator(
