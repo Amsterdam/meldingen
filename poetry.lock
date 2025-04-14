@@ -1981,7 +1981,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "feat/attachment-media-types"
-resolved_reference = "06898317f40df4b1794574933dfa47db54ccf018"
+resolved_reference = "7d4c7611081fb9968f29d5cd5ccb1d34c3c100e8"
 
 [[package]]
 name = "mergedeep"
