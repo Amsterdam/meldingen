@@ -131,7 +131,7 @@ async def test_imgproxy_thumbnail_generator() -> None:
 
 @pytest.mark.anyio
 async def test_image_optimizer_task() -> None:
-    attachment = Attachment(original_filename="image.jpg", melding=Mock(Melding))
+    attachment = Attachment(original_filename="image.jpg", original_media_type="image/png", melding=Mock(Melding))
     attachment.file_path = "/path/to/image.jpg"
 
     optimized_path = "/path/to/image-optimized.webp"
@@ -148,7 +148,7 @@ async def test_image_optimizer_task() -> None:
 
 @pytest.mark.anyio
 async def test_thumbnail_generator_task() -> None:
-    attachment = Attachment(original_filename="image.jpg", melding=Mock(Melding))
+    attachment = Attachment(original_filename="image.jpg", original_media_type="image/png", melding=Mock(Melding))
     attachment.file_path = "path/to/image.jpg"
 
     thumbnail_path = "path/to/image-thumbnail.webp"
@@ -169,7 +169,7 @@ async def test_ingestor() -> None:
     task_manager = Mock(BackgroundTasks)
     optimizer_task = Mock(ImageOptimizerTask)
     thumbnail_task = Mock(ThumbnailGeneratorTask)
-    attachment = Attachment(original_filename="image.jpg", melding=Mock(Melding))
+    attachment = Attachment(original_filename="image.jpg", original_media_type="image/png", melding=Mock(Melding))
     ingest = Ingestor(AsyncMock(BaseMalwareScanner), filesystem, task_manager, optimizer_task, thumbnail_task, "/tmp")
 
     async def iterate() -> AsyncIterator[bytes]:

@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from typing import Any, Final, Optional, Union
+from typing import Any, Optional, Union
 
 from geoalchemy2 import Geometry, WKBElement
 from meldingen_core.models import Answer as BaseAnswer
@@ -371,9 +371,12 @@ class Answer(AsyncAttrs, BaseDBModel, BaseAnswer):
 class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     file_path: Mapped[str] = mapped_column(String(), init=False)
     original_filename: Mapped[str] = mapped_column(String())
+    original_media_type: Mapped[str] = mapped_column(String())
 
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
     melding: Mapped[Melding] = relationship()
 
     optimized_path: Mapped[str | None] = mapped_column(String(), default=None)
+    optimized_media_type: Mapped[str | None] = mapped_column(String(), default=None)
     thumbnail_path: Mapped[str | None] = mapped_column(String(), default=None)
+    thumbnail_media_type: Mapped[str | None] = mapped_column(String(), default=None)
