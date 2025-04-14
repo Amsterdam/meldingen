@@ -73,10 +73,11 @@ async def test_imgproxy_image_processor() -> None:
     http_client.stream.return_value.__aenter__.return_value = response
     process = IMGProxyImageProcessor(url_generator, http_client)
 
-    processed_path = await process("path/to/image.jpg", "processed")
+    processed_path, media_type = await process("path/to/image.jpg", "processed")
 
     http_client.stream.assert_called_with("GET", "http://some.url")
     assert processed_path == "path/to/image-processed.webp"
+    assert media_type == "image/webp"
 
 
 @pytest.mark.anyio
@@ -100,9 +101,10 @@ async def test_imgproxy_image_optimizer() -> None:
     optimize = IMGProxyImageOptimizer(processor)
     path = "path/to/image.jpg"
 
-    optimized_path = await optimize(path)
+    optimized_path, media_type = await optimize(path)
 
     assert optimized_path == expected_path
+    assert media_type == "image/webp"
     # For some reason assert_awaited_once_with() does not work, so we go through the hassle below
     assert len(processor.mock_calls) == 1
     _, args, _ = processor.mock_calls[0]
@@ -118,9 +120,10 @@ async def test_imgproxy_thumbnail_generator() -> None:
     optimize = IMGProxyThumbnailGenerator(processor)
     path = "path/to/image.jpg"
 
-    thumbnail_path = await optimize(path)
+    thumbnail_path, media_type = await optimize(path)
 
     assert thumbnail_path == expected_path
+    assert media_type == "image/webp"
     # For some reason assert_awaited_once_with() does not work, so we go through the hassle below
     assert len(processor.mock_calls) == 1
     _, args, _ = processor.mock_calls[0]
