@@ -3,6 +3,7 @@ import hashlib
 import hmac
 from abc import ABCMeta, abstractmethod
 from typing import AsyncIterator
+from urllib.parse import quote
 from uuid import uuid4
 
 from fastapi import BackgroundTasks
@@ -52,7 +53,7 @@ class IMGProxyImageOptimizerUrlGenerator(BaseIMGProxyUrlGenerator):
         self._imgproxy_base_url = imgproxy_base_url
 
     def __call__(self, image_path: str) -> str:
-        url_path = f"/f:webp/plain/{image_path}"
+        url_path = f"/f:webp/plain/{quote(image_path)}"
         signature = self._generate_signature(url_path)
 
         return f"{self._imgproxy_base_url}/{signature}{url_path}"
@@ -73,7 +74,7 @@ class IMGProxyThumbnailUrlGenerator(BaseIMGProxyUrlGenerator):
         self._height = height
 
     def __call__(self, image_path: str) -> str:
-        url_path = f"/rs:auto:{self._width}:{self._height}/f:webp/plain/{image_path}"
+        url_path = f"/rs:auto:{self._width}:{self._height}/f:webp/plain/{quote(image_path)}"
         signature = self._generate_signature(url_path)
 
         return f"{self._imgproxy_base_url}/{signature}{url_path}"
