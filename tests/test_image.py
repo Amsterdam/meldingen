@@ -97,7 +97,7 @@ async def test_imgproxy_image_processor_request_failed() -> None:
 @pytest.mark.anyio
 async def test_imgproxy_image_optimizer() -> None:
     expected_path = "path/to/image-optimized.webp"
-    processor = AsyncMock(IMGProxyImageProcessor, return_value=expected_path)
+    processor = AsyncMock(IMGProxyImageProcessor, return_value=(expected_path, "image/webp"))
     optimize = IMGProxyImageOptimizer(processor)
     path = "path/to/image.jpg"
 
@@ -116,7 +116,7 @@ async def test_imgproxy_image_optimizer() -> None:
 @pytest.mark.anyio
 async def test_imgproxy_thumbnail_generator() -> None:
     expected_path = "path/to/image-thumbnail.webp"
-    processor = AsyncMock(IMGProxyImageProcessor, return_value=expected_path)
+    processor = AsyncMock(IMGProxyImageProcessor, return_value=(expected_path, "image/webp"))
     optimize = IMGProxyThumbnailGenerator(processor)
     path = "path/to/image.jpg"
 
@@ -138,7 +138,7 @@ async def test_image_optimizer_task() -> None:
     attachment.file_path = "/path/to/image.jpg"
 
     optimized_path = "/path/to/image-optimized.webp"
-    optimizer = AsyncMock(BaseImageOptimizer, return_value=optimized_path)
+    optimizer = AsyncMock(BaseImageOptimizer, return_value=(optimized_path, "image/webp"))
     repository = Mock(AttachmentRepository)
 
     run = ImageOptimizerTask(optimizer, repository)
@@ -155,7 +155,7 @@ async def test_thumbnail_generator_task() -> None:
     attachment.file_path = "path/to/image.jpg"
 
     thumbnail_path = "path/to/image-thumbnail.webp"
-    thumbnail_generator = AsyncMock(BaseThumbnailGenerator, return_value=thumbnail_path)
+    thumbnail_generator = AsyncMock(BaseThumbnailGenerator, return_value=(thumbnail_path, "image/webp"))
     repository = Mock(AttachmentRepository)
 
     run = ThumbnailGeneratorTask(thumbnail_generator, repository)
