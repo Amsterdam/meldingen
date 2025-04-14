@@ -520,13 +520,13 @@ async def download_attachment(
     ] = AttachmentTypes.ORIGINAL,
 ) -> StreamingResponse:
     try:
-        iterator = await action(melding_id, attachment_id, token, _type)
+        iterator, media_type = await action(melding_id, attachment_id, token, _type)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return StreamingResponse(iterator)
+    return StreamingResponse(iterator, media_type=media_type)
 
 
 @router.get(
