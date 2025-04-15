@@ -1,4 +1,4 @@
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -8,6 +8,7 @@ from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from meldingen_core.malware import BaseMalwareScanner
 from plugfs.filesystem import Filesystem
 
+from meldingen.factories import BaseFilesystemFactory
 from meldingen.image import (
     ImageOptimizerException,
     ImageOptimizerTask,
@@ -60,9 +61,23 @@ def test_imgproxy_thumbnail_url_generator() -> None:
     )
 
 
-@pytest.mark.skip(reason="We need to refactor the processor in order to test this.")
 @pytest.mark.anyio
 async def test_imgproxy_image_processor() -> None:
+    filesystem = Mock(Filesystem)
+
+    class AIterator(AsyncIterator[Filesystem]):
+        _round: int = 0
+
+        def __aiter__(self) -> AsyncIterator[Filesystem]:
+            return self
+
+        async def __anext__(self) -> Filesystem:
+            if self._round == 0:
+                self._round += 1
+                return filesystem
+
+            raise StopAsyncIteration
+
     url_generator = Mock(IMGProxyImageOptimizerUrlGenerator)
     url_generator.return_value = "http://some.url"
 
@@ -71,11 +86,16 @@ async def test_imgproxy_image_processor() -> None:
 
     http_client = AsyncMock(AsyncClient)
     http_client.stream.return_value.__aenter__.return_value = response
-    process = IMGProxyImageProcessor(url_generator, http_client)
+
+    filesystem_factory = Mock(BaseFilesystemFactory)
+    filesystem_factory.return_value = AIterator()
+
+    process = IMGProxyImageProcessor(url_generator, http_client, filesystem_factory)
 
     processed_path, media_type = await process("path/to/image.jpg", "processed")
 
     http_client.stream.assert_called_with("GET", "http://some.url")
+    filesystem.write_iterator.assert_awaited_once()
     assert processed_path == "path/to/image-processed.webp"
     assert media_type == "image/webp"
 
