@@ -102,13 +102,31 @@ async def test_imgproxy_image_processor() -> None:
 
 @pytest.mark.anyio
 async def test_imgproxy_image_processor_request_failed() -> None:
+    filesystem = Mock(Filesystem)
+
+    class AIterator(AsyncIterator[Filesystem]):
+        _round: int = 0
+
+        def __aiter__(self) -> AsyncIterator[Filesystem]:
+            return self
+
+        async def __anext__(self) -> Filesystem:
+            if self._round == 0:
+                self._round += 1
+                return filesystem
+
+            raise StopAsyncIteration
+
     response = Mock(Response)
     response.status_code = 404
 
     http_client = AsyncMock(AsyncClient)
     http_client.stream.return_value.__aenter__.return_value = response
 
-    process = IMGProxyImageProcessor(Mock(IMGProxyImageOptimizerUrlGenerator), http_client)
+    filesystem_factory = Mock(BaseFilesystemFactory)
+    filesystem_factory.return_value = AIterator()
+
+    process = IMGProxyImageProcessor(Mock(IMGProxyImageOptimizerUrlGenerator), http_client, filesystem_factory)
 
     with pytest.raises(ImageOptimizerException):
         await process("/path/to/image.jpg", "processed")
