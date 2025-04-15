@@ -63,7 +63,7 @@ from meldingen.actions import (
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
-from meldingen.factories import AttachmentFactory
+from meldingen.factories import AttachmentFactory, AzureFilesystemFactory, BaseFilesystemFactory
 from meldingen.image import (
     ImageOptimizerTask,
     IMGProxyImageOptimizer,
@@ -412,6 +412,10 @@ def filesystem(adapter: Annotated[Adapter, Depends(filesystem_adapter)]) -> File
     return Filesystem(adapter)
 
 
+def filesystem_factory() -> BaseFilesystemFactory:
+    return AzureFilesystemFactory()
+
+
 def media_type_validator() -> MediaTypeValidator:
     return MediaTypeValidator(settings.attachment_allow_media_types)
 
@@ -441,8 +445,9 @@ def img_proxy_image_optimizer_url_generator(
 def img_proxy_image_optimizer_processor(
     url_generator: Annotated[IMGProxyImageOptimizerUrlGenerator, Depends(img_proxy_image_optimizer_url_generator)],
     http_client: Annotated[AsyncClient, Depends(http_client)],
+    filesystem_factory: Annotated[BaseFilesystemFactory, Depends(filesystem_factory)],
 ) -> IMGProxyImageProcessor:
-    return IMGProxyImageProcessor(url_generator, http_client)
+    return IMGProxyImageProcessor(url_generator, http_client, filesystem_factory)
 
 
 def image_optimizer(
@@ -469,8 +474,9 @@ def img_proxy_thumbnail_url_generator(
 def img_proxy_thumbnail_processor(
     url_generator: Annotated[IMGProxyThumbnailUrlGenerator, Depends(img_proxy_thumbnail_url_generator)],
     http_client: Annotated[AsyncClient, Depends(http_client)],
+    filesystem_factory: Annotated[BaseFilesystemFactory, Depends(filesystem_factory)],
 ) -> IMGProxyImageProcessor:
-    return IMGProxyImageProcessor(url_generator, http_client)
+    return IMGProxyImageProcessor(url_generator, http_client, filesystem_factory)
 
 
 def thumbnail_generator(

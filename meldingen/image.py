@@ -13,6 +13,7 @@ from meldingen_core.malware import BaseMalwareScanner
 from plugfs.filesystem import Filesystem
 from starlette.status import HTTP_200_OK
 
+from meldingen.factories import BaseFilesystemFactory
 from meldingen.models import Attachment
 from meldingen.repositories import AttachmentRepository
 
@@ -83,19 +84,20 @@ class IMGProxyThumbnailUrlGenerator(BaseIMGProxyUrlGenerator):
 class IMGProxyImageProcessor:
     _generate_url: BaseIMGProxyUrlGenerator
     _http_client: AsyncClient
+    _filesystem_factory: BaseFilesystemFactory
 
-    def __init__(self, url_generator: BaseIMGProxyUrlGenerator, http_client: AsyncClient):
+    def __init__(
+        self,
+        url_generator: BaseIMGProxyUrlGenerator,
+        http_client: AsyncClient,
+        filesystem_factory: BaseFilesystemFactory,
+    ):
         self._generate_url = url_generator
         self._http_client = http_client
+        self._filesystem_factory = filesystem_factory
 
     async def __call__(self, image_path: str, suffix: str) -> tuple[str, str]:
-        # TODO: Use a factory for this, FastAPI no longer supports using dependencies from context
-        #  managers in background tasks and this is not agnostic
-        from meldingen.dependencies import azure_container_client, filesystem, filesystem_adapter
-
-        async for client in azure_container_client():
-            _filesystem = filesystem(filesystem_adapter(client))
-
+        async for _filesystem in self._filesystem_factory():
             imgproxy_url = self._generate_url(image_path)
 
             file_path, _ = image_path.rsplit(".", 1)
