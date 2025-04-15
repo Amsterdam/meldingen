@@ -460,7 +460,7 @@ def attachment_filename(request: FixtureRequest) -> str:
 
 @pytest.fixture
 async def attachment(db_session: AsyncSession, melding: Melding, attachment_filename: str) -> Attachment:
-    attachment = Attachment(original_filename=attachment_filename, melding=melding)
+    attachment = Attachment(original_filename=attachment_filename, original_media_type="image/jpeg", melding=melding)
     attachment.file_path = f"/tmp/{uuid4()}/{attachment_filename}"
 
     db_session.add(attachment)
@@ -473,7 +473,7 @@ async def attachment(db_session: AsyncSession, melding: Melding, attachment_file
 async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -> Melding:
     for i in range(9):
         filename = f"test{i}.jpg"
-        attachment = Attachment(original_filename=filename, melding=melding)
+        attachment = Attachment(original_filename=filename, original_media_type="image/jpeg", melding=melding)
         attachment.file_path = f"/tmp/{uuid4()}/{filename}"
 
         db_session.add(attachment)

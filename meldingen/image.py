@@ -88,7 +88,7 @@ class IMGProxyImageProcessor:
         self._generate_url = url_generator
         self._http_client = http_client
 
-    async def __call__(self, image_path: str, suffix: str) -> str:
+    async def __call__(self, image_path: str, suffix: str) -> tuple[str, str]:
         # TODO: Use a factory for this, FastAPI no longer supports using dependencies from context
         #  managers in background tasks and this is not agnostic
         from meldingen.dependencies import azure_container_client, filesystem, filesystem_adapter
@@ -107,7 +107,7 @@ class IMGProxyImageProcessor:
 
                 await _filesystem.write_iterator(processed_path, response.aiter_bytes())
 
-            return processed_path
+            return processed_path, "image/webp"
 
         raise Exception("Failed to get container client!")
 
@@ -118,7 +118,7 @@ class IMGProxyImageOptimizer(BaseImageOptimizer):
     def __init__(self, img_proxy_processor: IMGProxyImageProcessor):
         self._process = img_proxy_processor
 
-    async def __call__(self, image_path: str) -> str:
+    async def __call__(self, image_path: str) -> tuple[str, str]:
         return await self._process(image_path, "optimized")
 
 
@@ -128,7 +128,7 @@ class IMGProxyThumbnailGenerator(BaseThumbnailGenerator):
     def __init__(self, img_proxy_processor: IMGProxyImageProcessor):
         self._process = img_proxy_processor
 
-    async def __call__(self, image_path: str) -> str:
+    async def __call__(self, image_path: str) -> tuple[str, str]:
         return await self._process(image_path, "thumbnail")
 
 
@@ -141,7 +141,9 @@ class ImageOptimizerTask:
         self._repository = repository
 
     async def __call__(self, attachment: Attachment) -> None:
-        attachment.optimized_path = await self._optimizer(attachment.file_path)
+        path, media_type = await self._optimizer(attachment.file_path)
+        attachment.optimized_path = path
+        attachment.optimized_media_type = media_type
 
         await self._repository.save(attachment)
 
@@ -155,7 +157,9 @@ class ThumbnailGeneratorTask:
         self._repository = repository
 
     async def __call__(self, attachment: Attachment) -> None:
-        attachment.thumbnail_path = await self._thumbnail_generator(attachment.file_path)
+        path, media_type = await self._thumbnail_generator(attachment.file_path)
+        attachment.thumbnail_path = path
+        attachment.thumbnail_media_type = media_type
 
         await self._repository.save(attachment)
 

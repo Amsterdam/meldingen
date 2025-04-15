@@ -1547,6 +1547,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
 
         assert response.status_code == HTTP_200_OK
         assert response.text == "some data"
+        assert response.headers.get("content-type") == "image/jpeg"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1581,6 +1582,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
         db_session: AsyncSession,
     ) -> None:
         attachment.optimized_path = f"/tmp/{uuid4()}/optimized.webp"
+        attachment.optimized_media_type = "image/webp"
         db_session.add(attachment)
         await db_session.commit()
 
@@ -1597,6 +1599,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
 
         assert response.status_code == HTTP_200_OK
         assert response.text == "some data"
+        assert response.headers.get("content-type") == "image/webp"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1631,6 +1634,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
         db_session: AsyncSession,
     ) -> None:
         attachment.thumbnail_path = f"/tmp/{uuid4()}/thumbnail.webp"
+        attachment.thumbnail_media_type = "image/webp"
         db_session.add(attachment)
         await db_session.commit()
 
@@ -1647,6 +1651,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
 
         assert response.status_code == HTTP_200_OK
         assert response.text == "some data"
+        assert response.headers.get("content-type") == "image/webp"
 
 
 class TestMeldingListAttachments(BaseTokenAuthenticationTest):

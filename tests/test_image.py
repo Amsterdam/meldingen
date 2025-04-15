@@ -73,10 +73,11 @@ async def test_imgproxy_image_processor() -> None:
     http_client.stream.return_value.__aenter__.return_value = response
     process = IMGProxyImageProcessor(url_generator, http_client)
 
-    processed_path = await process("path/to/image.jpg", "processed")
+    processed_path, media_type = await process("path/to/image.jpg", "processed")
 
     http_client.stream.assert_called_with("GET", "http://some.url")
     assert processed_path == "path/to/image-processed.webp"
+    assert media_type == "image/webp"
 
 
 @pytest.mark.anyio
@@ -96,13 +97,14 @@ async def test_imgproxy_image_processor_request_failed() -> None:
 @pytest.mark.anyio
 async def test_imgproxy_image_optimizer() -> None:
     expected_path = "path/to/image-optimized.webp"
-    processor = AsyncMock(IMGProxyImageProcessor, return_value=expected_path)
+    processor = AsyncMock(IMGProxyImageProcessor, return_value=(expected_path, "image/webp"))
     optimize = IMGProxyImageOptimizer(processor)
     path = "path/to/image.jpg"
 
-    optimized_path = await optimize(path)
+    optimized_path, media_type = await optimize(path)
 
     assert optimized_path == expected_path
+    assert media_type == "image/webp"
     # For some reason assert_awaited_once_with() does not work, so we go through the hassle below
     assert len(processor.mock_calls) == 1
     _, args, _ = processor.mock_calls[0]
@@ -114,13 +116,14 @@ async def test_imgproxy_image_optimizer() -> None:
 @pytest.mark.anyio
 async def test_imgproxy_thumbnail_generator() -> None:
     expected_path = "path/to/image-thumbnail.webp"
-    processor = AsyncMock(IMGProxyImageProcessor, return_value=expected_path)
+    processor = AsyncMock(IMGProxyImageProcessor, return_value=(expected_path, "image/webp"))
     optimize = IMGProxyThumbnailGenerator(processor)
     path = "path/to/image.jpg"
 
-    thumbnail_path = await optimize(path)
+    thumbnail_path, media_type = await optimize(path)
 
     assert thumbnail_path == expected_path
+    assert media_type == "image/webp"
     # For some reason assert_awaited_once_with() does not work, so we go through the hassle below
     assert len(processor.mock_calls) == 1
     _, args, _ = processor.mock_calls[0]
@@ -131,11 +134,11 @@ async def test_imgproxy_thumbnail_generator() -> None:
 
 @pytest.mark.anyio
 async def test_image_optimizer_task() -> None:
-    attachment = Attachment(original_filename="image.jpg", melding=Mock(Melding))
+    attachment = Attachment(original_filename="image.jpg", original_media_type="image/png", melding=Mock(Melding))
     attachment.file_path = "/path/to/image.jpg"
 
     optimized_path = "/path/to/image-optimized.webp"
-    optimizer = AsyncMock(BaseImageOptimizer, return_value=optimized_path)
+    optimizer = AsyncMock(BaseImageOptimizer, return_value=(optimized_path, "image/webp"))
     repository = Mock(AttachmentRepository)
 
     run = ImageOptimizerTask(optimizer, repository)
@@ -148,11 +151,11 @@ async def test_image_optimizer_task() -> None:
 
 @pytest.mark.anyio
 async def test_thumbnail_generator_task() -> None:
-    attachment = Attachment(original_filename="image.jpg", melding=Mock(Melding))
+    attachment = Attachment(original_filename="image.jpg", original_media_type="image/png", melding=Mock(Melding))
     attachment.file_path = "path/to/image.jpg"
 
     thumbnail_path = "path/to/image-thumbnail.webp"
-    thumbnail_generator = AsyncMock(BaseThumbnailGenerator, return_value=thumbnail_path)
+    thumbnail_generator = AsyncMock(BaseThumbnailGenerator, return_value=(thumbnail_path, "image/webp"))
     repository = Mock(AttachmentRepository)
 
     run = ThumbnailGeneratorTask(thumbnail_generator, repository)
@@ -169,7 +172,7 @@ async def test_ingestor() -> None:
     task_manager = Mock(BackgroundTasks)
     optimizer_task = Mock(ImageOptimizerTask)
     thumbnail_task = Mock(ThumbnailGeneratorTask)
-    attachment = Attachment(original_filename="image.jpg", melding=Mock(Melding))
+    attachment = Attachment(original_filename="image.jpg", original_media_type="image/png", melding=Mock(Melding))
     ingest = Ingestor(AsyncMock(BaseMalwareScanner), filesystem, task_manager, optimizer_task, thumbnail_task, "/tmp")
 
     async def iterate() -> AsyncIterator[bytes]:
