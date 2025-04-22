@@ -37,6 +37,7 @@ from meldingen.actions import (
     DeleteAttachmentAction,
     DownloadAttachmentAction,
     ListAttachmentsAction,
+    MelderListAttachmentsAction,
     MelderMeldingRetrieveAction,
     MeldingListAction,
     MeldingRetrieveAction,
@@ -53,6 +54,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
+    melder_melding_list_attachments_action,
     melder_melding_retrieve_action,
     melding_add_attachments_action,
     melding_add_contact_action,
@@ -533,11 +535,33 @@ async def download_attachment(
     "/{melding_id}/attachments",
     name="melding:attachments",
     responses={**not_found_response, **unauthorized_response},
+    dependencies=[Depends(authenticate_user)],
 )
 async def list_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
+) -> list[AttachmentOutput]:
+    try:
+        attachments = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    output = []
+    for attachment in attachments:
+        output.append(_hydrate_attachment_output(attachment))
+
+    return output
+
+
+@router.get(
+    "/{melding_id}/attachments/melder",
+    name="melding:attachments_melder",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def melder_list_attachments(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[MelderListAttachmentsAction, Depends(melder_melding_list_attachments_action)],
 ) -> list[AttachmentOutput]:
     try:
         attachments = await action(melding_id, token)

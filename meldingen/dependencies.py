@@ -46,6 +46,7 @@ from meldingen.actions import (
     FormRetrieveByClassificationAction,
     FormUpdateAction,
     ListAttachmentsAction,
+    MelderListAttachmentsAction,
     MelderMeldingRetrieveAction,
     MeldingListAction,
     MeldingRetrieveAction,
@@ -547,10 +548,16 @@ def melding_download_attachment_action(
 
 
 def melding_list_attachments_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
 ) -> ListAttachmentsAction:
-    return ListAttachmentsAction(token_verifier, attachment_repository)
+    return ListAttachmentsAction(attachment_repository)
+
+
+def melder_melding_list_attachments_action(
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+) -> MelderListAttachmentsAction:
+    return MelderListAttachmentsAction(token_verifier, attachment_repository)
 
 
 def melding_delete_attachment_action(
