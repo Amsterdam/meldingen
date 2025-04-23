@@ -3,6 +3,7 @@ from typing import Annotated, AsyncIterator
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
+from geojson_pydantic import Feature
 from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.actions.melding import (
     MelderMeldingListQuestionsAnswersAction,
@@ -138,12 +139,21 @@ async def list_meldingen(
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[MeldingListAction, Depends(melding_list_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+    in_area: Annotated[str, Query(description="Geometry which the melding location should reside in.")] | None = None,
 ) -> list[MeldingOutput]:
+    area = None
+    if in_area is not None:
+        area = Feature.model_validate_json(in_area)
+
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
     meldingen = await action(
-        limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+        limit=limit,
+        offset=offset,
+        sort_attribute_name=sort.get_attribute_name(),
+        sort_direction=sort.get_direction(),
+        area=area,
     )
     output = []
     for melding in meldingen:
