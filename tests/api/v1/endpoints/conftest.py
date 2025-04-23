@@ -216,6 +216,34 @@ async def meldingen(db_session: AsyncSession, melding_text: str) -> list[Melding
     return meldingen
 
 
+@pytest.fixture
+def melding_locations(request: FixtureRequest) -> list[str]:
+    if hasattr(request, "param"):
+        return request.param
+
+    return []
+
+
+@pytest.fixture
+async def meldingen_with_location(db_session: AsyncSession, melding_locations: list[str]) -> list[Melding]:
+    meldingen = []
+    i = 0
+    for location in melding_locations:
+        i += 1
+        melding = Melding(text=f"Melding {i}")
+        melding.geo_location = location
+
+        db_session.add(melding)
+        meldingen.append(melding)
+
+    await db_session.commit()
+
+    for melding in meldingen:
+        await db_session.refresh(melding)
+
+    return meldingen
+
+
 async def authenticate_user_override(token: str | None = None) -> User:
     user = User(username="user@example.com", email="user@example.com")
     user.id = 400
