@@ -6,7 +6,6 @@ from uuid import uuid4
 import pytest
 from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
-from geojson_pydantic import Feature
 from httpx import AsyncClient
 from meldingen_core import SortingDirection
 from meldingen_core.malware import BaseMalwareScanner
