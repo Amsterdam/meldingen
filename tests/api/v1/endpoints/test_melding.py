@@ -267,10 +267,10 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         "melding_locations",
         [
             (
-                "POINT(52.37256509259712 4.898451690545197)",  # Barndesteeg 1B, Stadsdeel: Centrum
-                "POINT(52.40152495315581 4.938320969227033)",  # Bakkerswaal 30, Stadsdeel: Noord
-                "POINT(52.3341878625198 4.872746743968191)",  # Ennemaborg 7, Stadsdeel: Zuid
-                "POINT(52.37127670396132 4.7765014635225835)",  # Osdorperweg 686, Stadsdeel: Nieuw-West
+                "POINT(4.898451690545197 52.37256509259712)",  # Barndesteeg 1B, Stadsdeel: Centrum
+                "POINT(4.938320969227033 52.40152495315581)",  # Bakkerswaal 30, Stadsdeel: Noord
+                "POINT(4.872746743968191 52.3341878625198)",  # Ennemaborg 7, Stadsdeel: Zuid
+                "POINT(4.7765014635225835 52.37127670396132)",  # Osdorperweg 686, Stadsdeel: Nieuw-West
             )
         ],
     )
