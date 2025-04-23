@@ -155,6 +155,35 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
 
         return result.scalars().unique().all()
 
+    async def list_meldingen(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+        area=None,
+    ) -> Sequence[Melding]:
+        _type = self.get_model_type()
+        statement = select(_type)
+
+        if area is not None:
+            statement = statement.filter(
+                func.ST_Contains(func.ST_GeomFromGeoJSON(area.geometry.model_dump_json()), Melding.geo_location)
+            )
+
+        statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
+
+        if limit:
+            statement = statement.limit(limit)
+
+        if offset:
+            statement = statement.offset(offset)
+
+        results = await self._session.execute(statement)
+
+        return results.scalars().unique().all()
+
 
 class UserRepository(BaseSQLAlchemyRepository[User], BaseUserRepository):
     def get_model_type(self) -> type[User]:
