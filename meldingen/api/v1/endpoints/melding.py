@@ -558,12 +558,14 @@ async def list_attachments(
 async def melder_list_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
+    action: Annotated[MelderListAttachmentsAction, Depends(melder_melding_list_attachments_action)],
 ) -> list[AttachmentOutput]:
     try:
         attachments = await action(melding_id, token)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     output = []
     for attachment in attachments:
