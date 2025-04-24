@@ -539,10 +539,6 @@ async def download_attachment(
 )
 async def list_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-=======
     action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
 ) -> list[AttachmentOutput]:
     attachments = await action(melding_id)
@@ -561,13 +557,11 @@ async def list_attachments(
 )
 async def melder_list_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
->>>>>>> Stashed changes
     token: Annotated[str, Query(description="The token of the melding.")],
->>>>>>> Stashed changes
     action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
 ) -> list[AttachmentOutput]:
     try:
-        attachments = await action(melding_id)
+        attachments = await action(melding_id, token)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
@@ -589,7 +583,7 @@ async def melder_list_attachments(
     action: Annotated[MelderListAttachmentsAction, Depends(melder_melding_list_attachments_action)],
 ) -> list[AttachmentOutput]:
     try:
-        attachments = await action(melding_id, token)
+        attachments = await action(token, melding_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
