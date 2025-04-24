@@ -1,4 +1,4 @@
-from typing import Any, Sequence, TypeVar
+from typing import Any, Sequence, TypeVar, override
 
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
@@ -104,7 +104,30 @@ class UserUpdateAction(BaseUserUpdateAction[User]): ...
 class UserDeleteAction(BaseUserDeleteAction[User]): ...
 
 
-class MeldingListAction(BaseMeldingListAction[Melding]): ...
+class MeldingListAction(BaseMeldingListAction[Melding]):
+    @override
+    async def __call__(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+        area: str | None = None,
+    ) -> Sequence[Melding]:
+        try:
+            return await super().__call__(
+                limit=limit,
+                offset=offset,
+                sort_attribute_name=sort_attribute_name,
+                sort_direction=sort_direction,
+                area=area,
+            )
+        except AttributeNotFoundException as e:
+            raise HTTPException(
+                HTTP_422_UNPROCESSABLE_ENTITY,
+                [{"loc": ("query", "sort"), "msg": e.message, "type": "attribute_not_found"}],
+            )
 
 
 class MeldingRetrieveAction(BaseMeldingRetrieveAction[Melding]): ...
