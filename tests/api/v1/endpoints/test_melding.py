@@ -1681,9 +1681,10 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
 
         assert len(attachments) == len(body)
 
-
     @pytest.mark.anyio
-    async def test_list_attachments_with_non_existing_melding(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+    async def test_list_attachments_with_non_existing_melding(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=123))
 
         assert response.status_code == HTTP_200_OK
