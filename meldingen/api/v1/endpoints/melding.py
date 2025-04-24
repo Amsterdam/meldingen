@@ -572,30 +572,6 @@ async def melder_list_attachments(
     return output
 
 
-@router.get(
-    "/{melding_id}/attachments/melder",
-    name="melding:attachments_melder",
-    responses={**not_found_response, **unauthorized_response},
-)
-async def melder_list_attachments(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[MelderListAttachmentsAction, Depends(melder_melding_list_attachments_action)],
-) -> list[AttachmentOutput]:
-    try:
-        attachments = await action(token, melding_id)
-    except NotFoundException:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
-
-    output = []
-    for attachment in attachments:
-        output.append(_hydrate_attachment_output(attachment))
-
-    return output
-
-
 @router.delete(
     "/{melding_id}/attachment/{attachment_id}",
     name="melding:attachment-delete",
