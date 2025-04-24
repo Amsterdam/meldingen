@@ -541,10 +541,7 @@ async def list_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
 ) -> list[AttachmentOutput]:
-    try:
-        attachments = await action(melding_id)
-    except NotFoundException:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    attachments = await action(melding_id)
 
     output = []
     for attachment in attachments:
