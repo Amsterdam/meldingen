@@ -1,9 +1,10 @@
 import logging
-from typing import Annotated, AsyncIterator
+from typing import Annotated, Any, AsyncIterator
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from geojson_pydantic import Feature
+from geojson_pydantic.geometries import Geometry
 from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.actions.melding import (
     MelderMeldingListQuestionsAnswersAction,
@@ -22,6 +23,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
+from pydantic import BaseModel
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -143,7 +145,9 @@ async def list_meldingen(
 ) -> list[MeldingOutput]:
     area = None
     if in_area is not None:
-        area = Feature.model_validate_json(in_area).geometry.model_dump_json()
+        feature: Feature[Geometry, dict[str, Any] | BaseModel] = Feature.model_validate_json(in_area)
+        if feature.geometry is not None:
+            area = feature.geometry.model_dump_json()
 
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0

@@ -168,9 +168,7 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         statement = select(_type)
 
         if area is not None:
-            statement = statement.filter(
-                func.ST_Contains(func.ST_GeomFromGeoJSON(area), Melding.geo_location)
-            )
+            statement = statement.filter(func.ST_Contains(func.ST_GeomFromGeoJSON(area), Melding.geo_location))
 
         statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
 
