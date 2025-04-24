@@ -10,7 +10,7 @@ from tests.conftest import malware_scanner_override
 from tests.scenarios.conftest import async_step
 
 ROUTE_ADD_ATTACHMENTS: Final[str] = "melding:attachment"
-ROUTE_MELDING_LIST_ATTACHMENTS: Final[str] = "melding:attachments"
+ROUTE_MELDING_LIST_ATTACHMENTS: Final[str] = "melding:attachments_melder"
 
 
 @given(

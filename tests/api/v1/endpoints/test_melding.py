@@ -1654,8 +1654,36 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
         assert response.headers.get("content-type") == "image/webp"
 
 
-class TestMeldingListAttachments(BaseTokenAuthenticationTest):
+class TestMeldingListAttachments(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:attachments"
+    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return "GET"
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
+    async def test_list_attachments(
+        self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding, auth_user: None
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_attachments.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        attachments = await melding_with_attachments.awaitable_attrs.attachments
+        body = response.json()
+
+        assert len(attachments) == len(body)
+
+
+class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
+    ROUTE_NAME: Final[str] = "melding:attachments_melder"
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -1664,7 +1692,7 @@ class TestMeldingListAttachments(BaseTokenAuthenticationTest):
         return "GET"
 
     @pytest.mark.anyio
-    async def test_list_attachments_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+    async def test_melder_list_attachments_not_found(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME, melding_id=123),
             params={"token": "supersecuretoken"},
@@ -1674,7 +1702,9 @@ class TestMeldingListAttachments(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
-    async def test_list_attachments(self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding) -> None:
+    async def test_melder_list_attachments(
+        self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding
+    ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_attachments.id),
             params={"token": "supersecuretoken"},
