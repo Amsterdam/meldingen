@@ -539,6 +539,31 @@ async def download_attachment(
 )
 async def list_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+=======
+    action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
+) -> list[AttachmentOutput]:
+    attachments = await action(melding_id)
+
+    output = []
+    for attachment in attachments:
+        output.append(_hydrate_attachment_output(attachment))
+
+    return output
+
+
+@router.get(
+    "/{melding_id}/attachments/melder",
+    name="melding:attachments_melder",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def melder_list_attachments(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+>>>>>>> Stashed changes
+    token: Annotated[str, Query(description="The token of the melding.")],
+>>>>>>> Stashed changes
     action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
 ) -> list[AttachmentOutput]:
     try:

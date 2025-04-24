@@ -1656,6 +1656,11 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
 
 class TestMeldingListAttachments(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:attachments"
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
     PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
@@ -1682,8 +1687,24 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         assert len(attachments) == len(body)
 
 
+<<<<<<< Updated upstream
 class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:attachments_melder"
+=======
+    @pytest.mark.anyio
+    async def test_list_attachments_with_non_existing_melding(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=123))
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+
+        assert len(body) == 0
+
+
+class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
+    ROUTE_NAME: Final[str] = "melding:attachments_melder"
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
