@@ -143,7 +143,7 @@ async def list_meldingen(
 ) -> list[MeldingOutput]:
     area = None
     if in_area is not None:
-        area = Feature.model_validate_json(in_area)
+        area = Feature.model_validate_json(in_area).geometry.model_dump_json()
 
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0

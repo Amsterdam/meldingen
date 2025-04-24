@@ -162,14 +162,14 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        area=None,
+        area: str | None = None,
     ) -> Sequence[Melding]:
         _type = self.get_model_type()
         statement = select(_type)
 
         if area is not None:
             statement = statement.filter(
-                func.ST_Contains(func.ST_GeomFromGeoJSON(area.geometry.model_dump_json()), Melding.geo_location)
+                func.ST_Contains(func.ST_GeomFromGeoJSON(area), Melding.geo_location)
             )
 
         statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
