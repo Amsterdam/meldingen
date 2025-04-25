@@ -11,11 +11,11 @@ stateDiagram-v2
     state HasAnsweredRequiredQuestions <<choice>>
     Classified --> HasAnsweredRequiredQuestions
     HasAnsweredRequiredQuestions --> Questions_Answered: HasAnsweredRequiredQuestions
-    Questions_Answered --> Attachments_Added
     state HasLocation <<choice>>
-    Attachments_Added --> HasLocation
+    Questions_Answered --> HasLocation
     HasLocation --> Location_Submitted: HasLocation
-    Location_Submitted --> Contact_Info_Added
+    Location_Submitted --> Attachments_Added
+    Attachments_Added --> Contact_Info_Added
     Contact_Info_Added --> Submitted
     Submitted --> Processing
     Processing --> Completed
