@@ -4,6 +4,7 @@ import string
 
 class PublicIdGenerator:
     _alphabet: str
+
     def __init__(self, alphabet: str | None = None):
         self._alphabet = alphabet
         if alphabet is None:
