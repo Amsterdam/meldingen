@@ -1975,7 +1975,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "feat/geo-filter-meldingen-list"
-resolved_reference = "f55012c0822605a8eaef671e678146d0117f78a3"
+resolved_reference = "8f5419a5eb6ed737f44a069ece94fa4ae890eb83"
 
 [[package]]
 name = "mergedeep"
