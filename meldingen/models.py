@@ -37,6 +37,7 @@ class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
 
 
 class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
+    public_id: Mapped[str] = mapped_column(String(), unique=True, init=False)
     text: Mapped[str] = mapped_column(String)
     state: Mapped[str] = mapped_column(String, default=MeldingStates.NEW)
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
