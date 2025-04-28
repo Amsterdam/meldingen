@@ -23,7 +23,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -31,6 +31,7 @@ from starlette.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+    HTTP_422_UNPROCESSABLE_ENTITY,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
@@ -145,7 +146,11 @@ async def list_meldingen(
 ) -> list[MeldingOutput]:
     area = None
     if in_area is not None:
-        feature: Feature[Geometry, dict[str, Any] | BaseModel] = Feature.model_validate_json(in_area)
+        try:
+            feature: Feature[Geometry, dict[str, Any] | BaseModel] = Feature.model_validate_json(in_area)
+        except ValidationError as e:
+            raise HTTPException(HTTP_422_UNPROCESSABLE_ENTITY, e.errors()) from e
+
         if feature.geometry is not None:
             area = feature.geometry.model_dump_json()
 

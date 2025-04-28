@@ -263,6 +263,17 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         assert response.headers.get("content-range") == f"melding {offset}-{limit - 1 + offset}/10"
 
     @pytest.mark.anyio
+    async def test_list_in_area_filter_invalid_geojson(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"in_area": "not_geo_json"})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "melding_locations",
         [
