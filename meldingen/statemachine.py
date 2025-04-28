@@ -86,16 +86,6 @@ class AnswerQuestions(BaseTransition[Melding]):
         return self._guards
 
 
-class AddAttachments(BaseTransition[Melding]):
-    @property
-    def from_states(self) -> list[str]:
-        return [MeldingStates.QUESTIONS_ANSWERED]
-
-    @property
-    def to_state(self) -> str:
-        return MeldingStates.ATTACHMENTS_ADDED
-
-
 class SubmitLocation(BaseTransition[Melding]):
     _guards: list[BaseGuard[Melding]]
 
@@ -104,7 +94,7 @@ class SubmitLocation(BaseTransition[Melding]):
 
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.ATTACHMENTS_ADDED]
+        return [MeldingStates.QUESTIONS_ANSWERED]
 
     @property
     def to_state(self) -> str:
@@ -115,10 +105,20 @@ class SubmitLocation(BaseTransition[Melding]):
         return self._guards
 
 
-class AddContactInfo(BaseTransition[Melding]):
+class AddAttachments(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
         return [MeldingStates.LOCATION_SUBMITTED]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.ATTACHMENTS_ADDED
+
+
+class AddContactInfo(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.ATTACHMENTS_ADDED]
 
     @property
     def to_state(self) -> str:

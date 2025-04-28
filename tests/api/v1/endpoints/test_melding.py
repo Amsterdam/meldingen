@@ -600,7 +600,7 @@ class TestMeldingAddAttachments(BaseTokenAuthenticationTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
-        [("De restafvalcontainer is vol.", MeldingStates.QUESTIONS_ANSWERED, "supersecrettoken")],
+        [("De restafvalcontainer is vol.", MeldingStates.LOCATION_SUBMITTED, "supersecrettoken")],
         indirect=True,
     )
     async def test_add_attachments(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
@@ -655,7 +655,7 @@ class TestMeldingSubmitLocation(BaseTokenAuthenticationTest):
         [
             (
                 "De restafvalcontainer is vol.",
-                MeldingStates.ATTACHMENTS_ADDED,
+                MeldingStates.QUESTIONS_ANSWERED,
                 "supersecrettoken",
                 "POINT(52.3680 4.8970)",
             )
@@ -679,7 +679,7 @@ class TestMeldingSubmitLocation(BaseTokenAuthenticationTest):
 
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
-        [("De restafvalcontainer is vol.", MeldingStates.ATTACHMENTS_ADDED, "supersecrettoken")],
+        [("De restafvalcontainer is vol.", MeldingStates.QUESTIONS_ANSWERED, "supersecrettoken")],
         indirect=True,
     )
     async def test_submit_location_no_location_added(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
@@ -1971,28 +1971,28 @@ class TestMeldingContactInfoAdded(BaseTokenAuthenticationTest):
         [
             (
                 "De restafvalcontainer is vol.",
-                MeldingStates.LOCATION_SUBMITTED,
+                MeldingStates.ATTACHMENTS_ADDED,
                 "supersecrettoken",
                 None,
                 None,
             ),
             (
                 "De restafvalcontainer is vol.",
-                MeldingStates.LOCATION_SUBMITTED,
+                MeldingStates.ATTACHMENTS_ADDED,
                 "supersecrettoken",
                 "melder@example.com",
                 "+31612345678",
             ),
             (
                 "De restafvalcontainer is vol.",
-                MeldingStates.LOCATION_SUBMITTED,
+                MeldingStates.ATTACHMENTS_ADDED,
                 "supersecrettoken",
                 None,
                 "+31612345678",
             ),
             (
                 "De restafvalcontainer is vol.",
-                MeldingStates.LOCATION_SUBMITTED,
+                MeldingStates.ATTACHMENTS_ADDED,
                 "supersecrettoken",
                 "melder@example.com",
                 None,

@@ -262,8 +262,8 @@ def melding_state_machine(
             {
                 MeldingTransitions.CLASSIFY: Classify([HasClassification()]),
                 MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions([has_answered_required_questions]),
-                MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
                 MeldingTransitions.SUBMIT_LOCATION: SubmitLocation([HasLocation()]),
+                MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
                 MeldingTransitions.ADD_CONTACT_INFO: AddContactInfo(),
                 MeldingTransitions.SUBMIT: Submit(),
                 MeldingTransitions.PROCESS: Process(),
