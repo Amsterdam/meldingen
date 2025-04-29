@@ -2033,7 +2033,7 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
     def get_method(self) -> str:
         return "GET"
 
-    def get_path_params(self) -> str:
+    def get_path_params(self) -> dict[str, Any]:
         return {"melding_id": 1}
 
     @pytest.mark.anyio
