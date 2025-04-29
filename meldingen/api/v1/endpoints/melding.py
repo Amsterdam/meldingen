@@ -714,9 +714,6 @@ async def list_answers(
     ],
     produce_output: Annotated[AnswerListOutputFactory, Depends(melding_list_questions_and_answers_output_factory)],
 ) -> list[AnswerQuestionOutput]:
-    try:
-        answers = await action(melding_id)
-    except NotFoundException:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    answers = await action(melding_id)
 
     return await produce_output(answers)
