@@ -678,7 +678,7 @@ async def add_contact_info(
         **unauthorized_response,
     },
 )
-async def list_answers(
+async def melder_list_answers(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[
