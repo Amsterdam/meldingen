@@ -11,5 +11,4 @@ class PublicIdGenerator:
             self._alphabet = string.ascii_uppercase + string.digits
 
     def __call__(self, length: int = 6) -> str:
-        alphabet = string.ascii_uppercase + string.digits
-        return "".join(secrets.choice(alphabet) for _ in range(length))
+        return "".join(secrets.choice(self._alphabet) for _ in range(length))
