@@ -7,6 +7,7 @@ from fastapi import BackgroundTasks, Depends
 from httpx import AsyncClient
 from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.melding import (
+    MelderMeldingListQuestionsAnswersAction,
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
@@ -390,10 +391,16 @@ def melding_answer_create_action(
 
 
 def melding_list_questions_and_answers_action(
+    answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
+) -> MeldingListQuestionsAnswersAction[Answer]:
+    return MeldingListQuestionsAnswersAction(answer_repository)
+
+
+def melder_melding_list_questions_and_answers_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
-) -> MeldingListQuestionsAnswersAction[Melding, Answer]:
-    return MeldingListQuestionsAnswersAction(token_verifier, answer_repository)
+) -> MelderMeldingListQuestionsAnswersAction[Melding, Answer]:
+    return MelderMeldingListQuestionsAnswersAction(token_verifier, answer_repository)
 
 
 async def azure_container_client() -> AsyncIterator[ContainerClient]:

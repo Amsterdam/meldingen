@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, Up
 from fastapi.responses import StreamingResponse
 from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.actions.melding import (
+    MelderMeldingListQuestionsAnswersAction,
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCompleteAction,
@@ -55,6 +56,7 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
     melder_melding_list_attachments_action,
+    melder_melding_list_questions_and_answers_action,
     melder_melding_retrieve_action,
     melding_add_attachments_action,
     melding_add_contact_action,
@@ -669,8 +671,8 @@ async def add_contact_info(
 
 
 @router.get(
-    "/{melding_id}/answers",
-    name="melding:answers",
+    "/{melding_id}/answers/melder",
+    name="melding:answers_melder",
     responses={
         **not_found_response,
         **unauthorized_response,
@@ -680,8 +682,8 @@ async def list_answers(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[
-        MeldingListQuestionsAnswersAction[Melding, Answer],
-        Depends(melding_list_questions_and_answers_action),
+        MelderMeldingListQuestionsAnswersAction[Melding, Answer],
+        Depends(melder_melding_list_questions_and_answers_action),
     ],
     produce_output: Annotated[AnswerListOutputFactory, Depends(melding_list_questions_and_answers_output_factory)],
 ) -> list[AnswerQuestionOutput]:
@@ -691,5 +693,30 @@ async def list_answers(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return await produce_output(answers)
+
+
+@router.get(
+    "/{melding_id}/answers",
+    name="melding:answers",
+    dependencies=[Depends(authenticate_user)],
+    responses={
+        **not_found_response,
+        **unauthorized_response,
+    },
+)
+async def list_answers(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    action: Annotated[
+        MeldingListQuestionsAnswersAction[Answer],
+        Depends(melding_list_questions_and_answers_action),
+    ],
+    produce_output: Annotated[AnswerListOutputFactory, Depends(melding_list_questions_and_answers_output_factory)],
+) -> list[AnswerQuestionOutput]:
+    try:
+        answers = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return await produce_output(answers)
