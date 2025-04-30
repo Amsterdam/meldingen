@@ -22,6 +22,7 @@ class BaseFormOutput(BaseOutputModel):
 
 
 class MeldingOutput(BaseOutputModel):
+    public_id: str
     text: str
     state: str
     classification: int | None = Field(default=None)

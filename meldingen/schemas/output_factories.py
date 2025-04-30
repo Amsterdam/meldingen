@@ -543,6 +543,7 @@ class MeldingOutputFactory:
 
         return MeldingOutput(
             id=melding.id,
+            public_id=melding.public_id,
             text=melding.text,
             state=melding.state,
             classification=melding.classification_id,

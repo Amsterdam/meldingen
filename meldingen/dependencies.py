@@ -66,6 +66,7 @@ from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import AttachmentFactory, AzureFilesystemFactory, BaseFilesystemFactory
+from meldingen.generators import PublicIdGenerator
 from meldingen.image import (
     ImageOptimizerTask,
     IMGProxyImageOptimizer,
@@ -272,6 +273,10 @@ def melding_state_machine(
             }
         )
     )
+
+
+def public_id_generator() -> PublicIdGenerator:
+    return PublicIdGenerator()
 
 
 def melding_create_action(

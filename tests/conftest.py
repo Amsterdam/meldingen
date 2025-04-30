@@ -1,6 +1,6 @@
 import contextlib
 from typing import AsyncGenerator, AsyncIterator
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from _pytest.tmpdir import TempPathFactory
@@ -27,7 +27,9 @@ from meldingen.dependencies import (
     database_session,
     database_session_manager,
     malware_scanner,
+    public_id_generator,
 )
+from meldingen.generators import PublicIdGenerator
 from meldingen.main import get_application
 from meldingen.models import BaseDBModel, User
 
@@ -263,6 +265,17 @@ def malware_scanner_override(app: FastAPI) -> None:
         return scanner
 
     app.dependency_overrides[malware_scanner] = test_malware_scanner
+
+
+@pytest.fixture
+def public_id_generator_override(app: FastAPI) -> None:
+    generator = Mock(PublicIdGenerator)
+    generator.side_effect = ["PUBMEL", "MELPUB"]
+
+    def test_public_id_generator() -> PublicIdGenerator:
+        return generator
+
+    app.dependency_overrides[public_id_generator] = test_public_id_generator
 
 
 @pytest.fixture(scope="session")

@@ -88,9 +88,18 @@ def melding_phone(request: FixtureRequest) -> str | None:
 
 
 @pytest.fixture
+def melding_public_id(request: FixtureRequest) -> str:
+    if hasattr(request, "param") and request.param is not None:
+        return str(request.param)
+    else:
+        return "PUBMEL"
+
+
+@pytest.fixture
 async def melding(
     db_session: AsyncSession,
     melding_text: str,
+    melding_public_id: str,
     melding_state: str | None,
     melding_token: str | None,
     melding_token_expires: datetime | None,
@@ -99,6 +108,7 @@ async def melding(
     melding_phone: str | None,
 ) -> Melding:
     melding = Melding(text=melding_text)
+    melding.public_id = melding_public_id
     if melding_state is not None:
         melding.state = melding_state
 
@@ -207,6 +217,7 @@ async def meldingen(db_session: AsyncSession, melding_text: str) -> list[Melding
     meldingen = []
     for i in range(10):
         melding = Melding(text=f"{melding_text} {i}")
+        melding.public_id = f"MELDI{i}"
 
         db_session.add(melding)
         meldingen.append(melding)
@@ -231,6 +242,7 @@ async def meldingen_with_location(db_session: AsyncSession, melding_locations: l
     for location in melding_locations:
         i += 1
         melding = Melding(text=f"Melding {i}")
+        melding.public_id = f"MELDI{i}"
         melding.geo_location = location
 
         db_session.add(melding)

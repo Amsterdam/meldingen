@@ -43,6 +43,27 @@ class TestMeldingCreate:
         assert data.get("token") is not None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
+        public_id = data.get("public_id")
+        assert isinstance(public_id, str)
+        assert len(public_id) == 6
+
+    @pytest.mark.anyio
+    async def test_create_melding_with_duplicate_public_id(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, public_id_generator_override: None
+    ) -> None:
+        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "This is a test melding."})
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("id") > 0
+        assert data.get("text") == "This is a test melding."
+        assert data.get("state") == MeldingStates.NEW
+        assert data.get("classification", "") is None
+        assert data.get("token") is not None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+        assert data.get("public_id") == "MELPUB"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["classification_name"], indirect=True)
@@ -342,6 +363,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert body.get("phone", "") is None
         assert body.get("created_at") == melding.created_at.isoformat()
         assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("public_id") == melding.public_id
 
     @pytest.mark.anyio
     async def test_retrieve_melding_that_does_not_exist(
@@ -476,6 +498,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         assert body.get("classification") == classification.id
         assert body.get("created_at") == melding.created_at.isoformat()
         assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("public_id") == melding.public_id
 
 
 class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
@@ -1542,6 +1565,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
         self, app: FastAPI, client: AsyncClient, attachment: Attachment, db_session: AsyncSession
     ) -> None:
         melding = Melding(text="Hoi!", token="supersecuretoken")
+        melding.public_id = "MELPUB"
 
         db_session.add(melding)
         await db_session.commit()
@@ -1818,6 +1842,7 @@ class TestMeldingDeleteAttachmentAction(BaseTokenAuthenticationTest):
         self, app: FastAPI, client: AsyncClient, attachment: Attachment, db_session: AsyncSession
     ) -> None:
         melding = Melding(text="Hoi!", token="supersecuretoken")
+        melding.public_id = "MELPUB"
 
         db_session.add(melding)
         await db_session.commit()

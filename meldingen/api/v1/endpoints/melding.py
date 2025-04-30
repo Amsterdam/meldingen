@@ -24,6 +24,7 @@ from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
 from pydantic import BaseModel, ValidationError
+from sqlalchemy.exc import IntegrityError
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -84,8 +85,10 @@ from meldingen.dependencies import (
     melding_submit_location_action,
     melding_update_action,
     melding_upload_attachment_action,
+    public_id_generator,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
+from meldingen.generators import PublicIdGenerator
 from meldingen.models import Answer, Attachment, Melding
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas.input import AnswerInput, MeldingContactInput, MeldingInput
@@ -107,13 +110,22 @@ logger = logging.getLogger(__name__)
 async def create_melding(
     melding_input: MeldingInput,
     action: Annotated[MeldingCreateAction[Melding], Depends(melding_create_action)],
+    generate_public_id: Annotated[PublicIdGenerator, Depends(public_id_generator)],
 ) -> MeldingCreateOutput:
     melding = Melding(**melding_input.model_dump())
 
-    await action(melding)
+    while True:
+        melding.public_id = generate_public_id()
+        try:
+            await action(melding)
+        except IntegrityError:
+            continue
+
+        break
 
     return MeldingCreateOutput(
         id=melding.id,
+        public_id=melding.public_id,
         text=melding.text,
         state=melding.state,
         classification=melding.classification_id,
