@@ -262,6 +262,52 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
 
         assert response.headers.get("content-range") == f"melding {offset}-{limit - 1 + offset}/10"
 
+    @pytest.mark.anyio
+    async def test_list_in_area_filter_invalid_geojson(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"in_area": "not_geo_json"})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "melding_locations",
+        [
+            (
+                "POINT(4.898451690545197 52.37256509259712)",  # Barndesteeg 1B, Stadsdeel: Centrum
+                "POINT(4.938320969227033 52.40152495315581)",  # Bakkerswaal 30, Stadsdeel: Noord
+                "POINT(4.872746743968191 52.3341878625198)",  # Ennemaborg 7, Stadsdeel: Zuid
+                "POINT(4.7765014635225835 52.37127670396132)",  # Osdorperweg 686, Stadsdeel: Nieuw-West
+            )
+        ],
+    )
+    async def test_list_in_area_filter(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        meldingen_with_location: list[Melding],
+    ) -> None:
+        with open("tests/resources/stadsdeel-centrum.json") as f:
+            geojson = f.read()
+
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson})
+
+        assert response.status_code == 200
+
+        body = response.json()
+
+        assert len(body) == 1
+
+        melding = meldingen_with_location[0]
+        melding_response = body[0]
+
+        assert melding_response.get("text") == melding.text
+
 
 class TestMeldingRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:retrieve"

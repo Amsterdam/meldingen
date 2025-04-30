@@ -1,8 +1,10 @@
 import logging
-from typing import Annotated, AsyncIterator
+from typing import Annotated, Any, AsyncIterator
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
+from geojson_pydantic import Feature
+from geojson_pydantic.geometries import Geometry
 from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.actions.melding import (
     MelderMeldingListQuestionsAnswersAction,
@@ -21,6 +23,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
+from pydantic import BaseModel, ValidationError
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -28,6 +31,7 @@ from starlette.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+    HTTP_422_UNPROCESSABLE_ENTITY,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
@@ -138,12 +142,27 @@ async def list_meldingen(
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[MeldingListAction, Depends(melding_list_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+    in_area: Annotated[str, Query(description="Geometry which the melding location should reside in.")] | None = None,
 ) -> list[MeldingOutput]:
+    area = None
+    if in_area is not None:
+        try:
+            feature: Feature[Geometry, dict[str, Any] | BaseModel] = Feature.model_validate_json(in_area)
+        except ValidationError as e:
+            raise HTTPException(HTTP_422_UNPROCESSABLE_ENTITY, e.errors()) from e
+
+        if feature.geometry is not None:
+            area = feature.geometry.model_dump_json()
+
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
     meldingen = await action(
-        limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+        limit=limit,
+        offset=offset,
+        sort_attribute_name=sort.get_attribute_name(),
+        sort_direction=sort.get_direction(),
+        area=area,
     )
     output = []
     for melding in meldingen:
