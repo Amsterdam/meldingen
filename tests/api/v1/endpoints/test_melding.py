@@ -43,6 +43,9 @@ class TestMeldingCreate:
         assert data.get("token") is not None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
+        public_id = data.get("public_id")
+        assert isinstance(public_id, str)
+        assert len(public_id) == 6
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["classification_name"], indirect=True)
@@ -342,6 +345,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert body.get("phone", "") is None
         assert body.get("created_at") == melding.created_at.isoformat()
         assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("public_id") == melding.public_id
 
     @pytest.mark.anyio
     async def test_retrieve_melding_that_does_not_exist(
@@ -476,6 +480,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         assert body.get("classification") == classification.id
         assert body.get("created_at") == melding.created_at.isoformat()
         assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("public_id") == melding.public_id
 
 
 class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
