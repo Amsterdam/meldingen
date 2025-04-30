@@ -48,6 +48,24 @@ class TestMeldingCreate:
         assert len(public_id) == 6
 
     @pytest.mark.anyio
+    async def test_create_melding_with_duplicate_public_id(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, public_id_generator_override: None
+    ) -> None:
+        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "This is a test melding."})
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("id") > 0
+        assert data.get("text") == "This is a test melding."
+        assert data.get("state") == MeldingStates.NEW
+        assert data.get("classification", "") is None
+        assert data.get("token") is not None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+        assert data.get("public_id") == "MELPUB"
+
+    @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name,", ["classification_name"], indirect=True)
     async def test_create_melding_with_classification(
         self, app: FastAPI, client: AsyncClient, classification: Classification
