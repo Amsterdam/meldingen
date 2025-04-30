@@ -2026,9 +2026,75 @@ class TestMeldingContactInfoAdded(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_404_NOT_FOUND
 
 
-class TestMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
+class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
     def get_route_name(self) -> str:
         return "melding:answers"
+
+    def get_method(self) -> str:
+        return "GET"
+
+    def get_path_params(self) -> dict[str, Any]:
+        return {"melding_id": 1}
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_list_answers_melding_without_answers(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, auth_user: None
+    ) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": melding.token},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert isinstance(body, list)
+        assert len(body) == 0
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_list_answers(
+        self, app: FastAPI, client: AsyncClient, melding_with_answers: Melding, auth_user: None
+    ) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_answers.id),
+            params={"token": melding_with_answers.token},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert isinstance(body, list)
+        assert len(body) == 10
+
+        question_ids = []
+        for answer_output in body:
+            question = answer_output.get("question")
+            question_ids.append(question.get("id"))
+
+        assert sorted(question_ids) == question_ids
+
+        answer = body[0]
+        assert answer.get("id") > 0
+        assert answer.get("text") == "Answer 0"
+        assert answer.get("created_at") is not None
+        assert answer.get("updated_at") is not None
+
+        question = answer.get("question")
+        assert question is not None
+        assert question.get("id") > 0
+        assert question.get("text") == "Question 0"
+        assert question.get("created_at") is not None
+        assert question.get("updated_at") is not None
+
+
+class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
+    def get_route_name(self) -> str:
+        return "melding:answers_melder"
 
     def get_method(self) -> str:
         return "GET"
