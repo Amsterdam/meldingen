@@ -1974,8 +1974,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feat/geo-filter-meldingen-list"
-resolved_reference = "8f5419a5eb6ed737f44a069ece94fa4ae890eb83"
+reference = "HEAD"
+resolved_reference = "29e17009e6581ae8322c3cff8b52d564ffd8df0d"
 
 [[package]]
 name = "mergedeep"
@@ -4483,4 +4483,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "d683a4a7ab2fe17112b88a5d69004dad1816e4eb52c9b580dd3b637a72acf8e3"
+content-hash = "fde40fc0c21762611f420f2a01c9832f5388d7f71c147b700596a8673765e615"
