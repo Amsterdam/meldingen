@@ -88,9 +88,18 @@ def melding_phone(request: FixtureRequest) -> str | None:
 
 
 @pytest.fixture
+def melding_public_id(request: FixtureRequest) -> str:
+    if hasattr(request, "param") and request.param is not None:
+        return str(request.param)
+    else:
+        return "PUBMEL"
+
+
+@pytest.fixture
 async def melding(
     db_session: AsyncSession,
     melding_text: str,
+    melding_public_id: str,
     melding_state: str | None,
     melding_token: str | None,
     melding_token_expires: datetime | None,
@@ -99,6 +108,7 @@ async def melding(
     melding_phone: str | None,
 ) -> Melding:
     melding = Melding(text=melding_text)
+    melding.public_id = melding_public_id
     if melding_state is not None:
         melding.state = melding_state
 
