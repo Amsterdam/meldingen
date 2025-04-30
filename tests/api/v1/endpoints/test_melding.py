@@ -1547,6 +1547,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
         self, app: FastAPI, client: AsyncClient, attachment: Attachment, db_session: AsyncSession
     ) -> None:
         melding = Melding(text="Hoi!", token="supersecuretoken")
+        melding.public_id = "MELPUB"
 
         db_session.add(melding)
         await db_session.commit()
@@ -1823,6 +1824,7 @@ class TestMeldingDeleteAttachmentAction(BaseTokenAuthenticationTest):
         self, app: FastAPI, client: AsyncClient, attachment: Attachment, db_session: AsyncSession
     ) -> None:
         melding = Melding(text="Hoi!", token="supersecuretoken")
+        melding.public_id = "MELPUB"
 
         db_session.add(melding)
         await db_session.commit()
