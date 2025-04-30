@@ -207,6 +207,7 @@ async def meldingen(db_session: AsyncSession, melding_text: str) -> list[Melding
     meldingen = []
     for i in range(10):
         melding = Melding(text=f"{melding_text} {i}")
+        melding.public_id = f"MELDI{i}"
 
         db_session.add(melding)
         meldingen.append(melding)
