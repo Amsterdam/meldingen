@@ -242,6 +242,7 @@ async def meldingen_with_location(db_session: AsyncSession, melding_locations: l
     for location in melding_locations:
         i += 1
         melding = Melding(text=f"Melding {i}")
+        melding.public_id = f"MELDI{i}"
         melding.geo_location = location
 
         db_session.add(melding)
