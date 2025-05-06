@@ -27,6 +27,11 @@ class MeldingOutput(BaseOutputModel):
     state: str
     classification: int | None = Field(default=None)
     geo_location: GeoJson | None = Field(default=None)
+    street: str | None = Field(default=None)
+    house_number: int | None = Field(default=None)
+    house_number_addition: str | None = Field(default=None)
+    postal_code: str | None = Field(default=None)
+    city: str | None = Field(default=None)
     email: EmailStr | None = Field(default=None)
     phone: PhoneNumber | None = Field(default=None)
 

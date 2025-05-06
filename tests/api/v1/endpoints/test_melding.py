@@ -346,7 +346,19 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        "melding_text", ["Er ligt poep op de stoep.", "Er is een matras naast de prullenbak gedumpt."], indirect=True
+        [
+            "melding_text",
+            "melding_street",
+            "melding_house_number",
+            "melding_house_number_addition",
+            "melding_postal_code",
+            "melding_city",
+        ],
+        [
+            ("Er ligt poep op de stoep.", "Amstel", 1, None, "1011PN", "Amsterdam"),
+            ("Er is een matras naast de prullenbak gedumpt.", "Stationsplein", 35, "D", "1012AB", "Amsterdam"),
+        ],
+        indirect=True,
     )
     async def test_retrieve_melding(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=melding.id))
@@ -364,6 +376,11 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert body.get("created_at") == melding.created_at.isoformat()
         assert body.get("updated_at") == melding.updated_at.isoformat()
         assert body.get("public_id") == melding.public_id
+        assert body.get("street") == melding.street
+        assert body.get("house_number") == melding.house_number
+        assert body.get("house_number_addition") == melding.house_number_addition
+        assert body.get("postal_code") == melding.postal_code
+        assert body.get("city") == melding.city
 
     @pytest.mark.anyio
     async def test_retrieve_melding_that_does_not_exist(

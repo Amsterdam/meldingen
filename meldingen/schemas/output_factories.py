@@ -550,6 +550,11 @@ class MeldingOutputFactory:
             created_at=melding.created_at,
             updated_at=melding.updated_at,
             geo_location=geojson,
+            street=melding.street,
+            house_number=melding.house_number,
+            house_number_addition=melding.house_number_addition,
+            postal_code=melding.postal_code,
+            city=melding.city,
             email=melding.email,
             phone=melding.phone,
         )

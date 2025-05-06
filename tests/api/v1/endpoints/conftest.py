@@ -96,6 +96,46 @@ def melding_public_id(request: FixtureRequest) -> str:
 
 
 @pytest.fixture
+def melding_street(request: FixtureRequest) -> str | None:
+    if hasattr(request, "param") and request.param is not None:
+        return str(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
+def melding_house_number(request: FixtureRequest) -> int | None:
+    if hasattr(request, "param") and request.param is not None:
+        return int(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
+def melding_house_number_addition(request: FixtureRequest) -> str | None:
+    if hasattr(request, "param") and request.param is not None:
+        return str(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
+def melding_postal_code(request: FixtureRequest) -> str | None:
+    if hasattr(request, "param") and request.param is not None:
+        return str(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
+def melding_city(request: FixtureRequest) -> str | None:
+    if hasattr(request, "param") and request.param is not None:
+        return str(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
 async def melding(
     db_session: AsyncSession,
     melding_text: str,
@@ -104,11 +144,17 @@ async def melding(
     melding_token: str | None,
     melding_token_expires: datetime | None,
     melding_geo_location: str | None,
+    melding_street: str | None,
+    melding_house_number: int | None,
+    melding_house_number_addition: str | None,
+    melding_postal_code: str | None,
+    melding_city: str | None,
     melding_email: str | None,
     melding_phone: str | None,
 ) -> Melding:
     melding = Melding(text=melding_text)
     melding.public_id = melding_public_id
+
     if melding_state is not None:
         melding.state = melding_state
 
@@ -123,6 +169,11 @@ async def melding(
 
     melding.email = melding_email
     melding.phone = melding_phone
+    melding.street = melding_street
+    melding.postal_code = melding_postal_code
+    melding.house_number = melding_house_number
+    melding.house_number_addition = melding_house_number_addition
+    melding.city = melding_city
 
     db_session.add(melding)
     await db_session.commit()
