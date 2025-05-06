@@ -41,8 +41,8 @@ from meldingen.actions import (
     AddLocationToMeldingAction,
     AnswerCreateAction,
     DeleteAttachmentAction,
-    DownloadAttachmentAction,
     ListAttachmentsAction,
+    MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
     MelderMeldingRetrieveAction,
     MeldingListAction,
@@ -542,7 +542,7 @@ async def upload_attachment(
     },
 )
 async def download_attachment(
-    action: Annotated[DownloadAttachmentAction, Depends(melding_download_attachment_action)],
+    action: Annotated[MelderDownloadAttachmentAction, Depends(melding_download_attachment_action)],
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],

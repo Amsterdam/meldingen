@@ -3,8 +3,8 @@ from typing import Any, Sequence, TypeVar, override
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
 from meldingen_core.actions.attachment import DeleteAttachmentAction as BaseDeleteAttachmentAction
-from meldingen_core.actions.attachment import MelderDownloadAttachmentAction as BaseMelderDownloadAttachmentAction
 from meldingen_core.actions.attachment import ListAttachmentsAction as BaseListAttachmentsAction
+from meldingen_core.actions.attachment import MelderDownloadAttachmentAction as BaseMelderDownloadAttachmentAction
 from meldingen_core.actions.attachment import MelderListAttachmentsAction as BaseMelderListAttachmentsAction
 from meldingen_core.actions.attachment import UploadAttachmentAction as BaseUploadAttachmentAction
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction
@@ -543,7 +543,7 @@ class StaticFormListAction(BaseListAction[StaticForm]): ...
 class UploadAttachmentAction(BaseUploadAttachmentAction[Attachment, Melding]): ...
 
 
-class DownloadAttachmentAction(BaseMelderDownloadAttachmentAction[Attachment, Melding]): ...
+class MelderDownloadAttachmentAction(BaseMelderDownloadAttachmentAction[Attachment, Melding]): ...
 
 
 class ListAttachmentsAction(BaseListAttachmentsAction[Attachment]): ...
