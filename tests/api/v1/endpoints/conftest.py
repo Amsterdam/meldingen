@@ -96,6 +96,22 @@ def melding_public_id(request: FixtureRequest) -> str:
 
 
 @pytest.fixture
+def melding_address(request: FixtureRequest) -> str | None:
+    if hasattr(request, "param") and request.param is not None:
+        return str(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
+def melding_zip_code(request: FixtureRequest) -> str | None:
+    if hasattr(request, "param") and request.param is not None:
+        return str(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
 async def melding(
     db_session: AsyncSession,
     melding_text: str,
@@ -104,11 +120,14 @@ async def melding(
     melding_token: str | None,
     melding_token_expires: datetime | None,
     melding_geo_location: str | None,
+    melding_address: str | None,
+    melding_zip_code: str | None,
     melding_email: str | None,
     melding_phone: str | None,
 ) -> Melding:
     melding = Melding(text=melding_text)
     melding.public_id = melding_public_id
+
     if melding_state is not None:
         melding.state = melding_state
 
@@ -123,6 +142,8 @@ async def melding(
 
     melding.email = melding_email
     melding.phone = melding_phone
+    melding.address = melding_address
+    melding.zip_code = melding_zip_code
 
     db_session.add(melding)
     await db_session.commit()
