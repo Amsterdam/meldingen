@@ -1976,8 +1976,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "6b9863f6aa9a35e6d8c4f9cab8accaa377453c18"
+reference = "feat/download-attachment-without-token"
+resolved_reference = "843795d38e095b1cbfb3d0d80260b06d42e068f7"
 
 [[package]]
 name = "mergedeep"
@@ -4485,4 +4485,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "fde40fc0c21762611f420f2a01c9832f5388d7f71c147b700596a8673765e615"
+content-hash = "a52d760280b73881f8b9bcc7828b786541a690f6d83038533facc0510a0c24f3"
