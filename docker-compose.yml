@@ -130,6 +130,29 @@ services:
     networks:
       - meldingen_network
 
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - meldingen_network
+
+  mail-service:
+    image: amsterdam/amsterdam-mail-service:latest
+    environment:
+      PORT: 8003
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+    depends_on:
+      - otel-collector
+      - mailpit
+    ports:
+      - "8003:8003"
+    networks:
+      - meldingen_network
+
 volumes:
     pgdata: ~
     azurite: ~
