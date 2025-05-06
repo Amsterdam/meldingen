@@ -541,7 +541,7 @@ async def upload_attachment(
         **unauthorized_response,
     },
 )
-async def download_attachment(
+async def melder_download_attachment(
     action: Annotated[MelderDownloadAttachmentAction, Depends(melder_melding_download_attachment_action)],
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
