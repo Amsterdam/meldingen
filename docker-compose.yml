@@ -145,6 +145,9 @@ services:
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+    depends_on:
+      - otel-collector
+      - mailpit
     ports:
       - "8003:8003"
     networks:
