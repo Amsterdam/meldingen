@@ -551,7 +551,7 @@ def melding_upload_attachment_action(
     )
 
 
-def melding_download_attachment_action(
+def melder_melding_download_attachment_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],

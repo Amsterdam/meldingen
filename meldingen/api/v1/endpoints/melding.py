@@ -60,6 +60,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
+    melder_melding_download_attachment_action,
     melder_melding_list_attachments_action,
     melder_melding_list_questions_and_answers_action,
     melder_melding_retrieve_action,
@@ -72,7 +73,6 @@ from meldingen.dependencies import (
     melding_contact_info_added_action,
     melding_create_action,
     melding_delete_attachment_action,
-    melding_download_attachment_action,
     melding_list_action,
     melding_list_attachments_action,
     melding_list_questions_and_answers_action,
@@ -542,7 +542,7 @@ async def upload_attachment(
     },
 )
 async def download_attachment(
-    action: Annotated[MelderDownloadAttachmentAction, Depends(melding_download_attachment_action)],
+    action: Annotated[MelderDownloadAttachmentAction, Depends(melder_melding_download_attachment_action)],
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
