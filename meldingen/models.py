@@ -52,8 +52,11 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     geo_location: Mapped[WKBElement | None] = mapped_column(
         Geometry(geometry_type="GEOMETRY", srid=4326), default=None  # WGS84
     )
-    # address: Mapped[str | None] = mapped_column(String, default=None)
-    # zip_code: Mapped[str | None] = mapped_column(String(16), default=None)
+    street: Mapped[str | None] = mapped_column(String, default=None)
+    house_number: Mapped[int | None] = mapped_column(Integer, default=None)
+    house_number_addition: Mapped[str | None] = mapped_column(String, default=None)
+    postal_code: Mapped[str | None] = mapped_column(String(16), default=None)
+    city: Mapped[str | None] = mapped_column(String, default=None)
     email: Mapped[str | None] = mapped_column(String(254), default=None)
     phone: Mapped[str | None] = mapped_column(String(50), default=None)
 
