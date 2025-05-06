@@ -130,6 +130,12 @@ services:
     networks:
       - meldingen_network
 
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
 volumes:
     pgdata: ~
     azurite: ~
