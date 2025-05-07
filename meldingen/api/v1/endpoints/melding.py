@@ -53,6 +53,7 @@ from meldingen.actions import (
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (
     default_response,
+    image_data_response,
     list_response,
     not_found_response,
     transition_not_allowed,
@@ -536,7 +537,9 @@ async def upload_attachment(
 @router.get(
     "/{melding_id}/attachment/{attachment_id}/download",
     name="melding:attachment-download",
+    response_class=StreamingResponse,
     responses={
+        **image_data_response,
         **not_found_response,
         **unauthorized_response,
     },

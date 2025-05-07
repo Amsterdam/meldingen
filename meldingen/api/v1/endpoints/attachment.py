@@ -7,7 +7,7 @@ from starlette.responses import StreamingResponse
 from starlette.status import HTTP_404_NOT_FOUND
 
 from meldingen.actions import DownloadAttachmentAction
-from meldingen.api.v1 import not_found_response, unauthorized_response
+from meldingen.api.v1 import image_data_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import download_attachment_action
 
@@ -17,7 +17,8 @@ router = APIRouter()
 @router.get(
     "/{id}",
     name="attachment:download",
-    responses={**unauthorized_response, **not_found_response},
+    responses={**image_data_response, **unauthorized_response, **not_found_response},
+    response_class=StreamingResponse,
     dependencies=[Depends(authenticate_user)],
 )
 async def download_attachment(
