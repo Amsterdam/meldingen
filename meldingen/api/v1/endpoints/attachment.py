@@ -23,7 +23,7 @@ router = APIRouter()
 )
 async def download_attachment(
     action: Annotated[DownloadAttachmentAction, Depends(download_attachment_action)],
-    attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
+    id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
     _type: Annotated[
         AttachmentTypes,
         Query(
@@ -33,7 +33,7 @@ async def download_attachment(
     ] = AttachmentTypes.ORIGINAL,
 ) -> StreamingResponse:
     try:
-        iterator, media_type = await action(attachment_id, _type)
+        iterator, media_type = await action(id, _type)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
