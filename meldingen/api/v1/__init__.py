@@ -59,6 +59,6 @@ image_data_response: Final[dict[str | int, dict[str, Any]]] = {
                     "format": "binary",
                 },
             }
-        }
+        },
     }
 }
