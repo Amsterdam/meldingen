@@ -49,3 +49,16 @@ transition_not_allowed: Final[dict[str | int, dict[str, Any]]] = {
         "content": {"application/json": {"example": {"detail": "Transition not allowed from current state"}}},
     }
 }
+image_data_response: Final[dict[str | int, dict[str, Any]]] = {
+    HTTP_200_OK: {
+        "description": "The binary image data",
+        "content": {
+            "image/*": {
+                "schema": {
+                    "type": "string",
+                    "format": "binary",
+                },
+            }
+        },
+    }
+}

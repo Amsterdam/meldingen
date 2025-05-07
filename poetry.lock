@@ -1977,7 +1977,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "HEAD"
-resolved_reference = "6b9863f6aa9a35e6d8c4f9cab8accaa377453c18"
+resolved_reference = "a4ace9aa814f68fe0e092d6e991f4e94b1989e64"
 
 [[package]]
 name = "mergedeep"
