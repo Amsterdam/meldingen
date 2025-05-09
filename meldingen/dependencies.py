@@ -2,6 +2,9 @@ import logging
 from functools import lru_cache
 from typing import Annotated, AsyncIterator
 
+from amsterdam_mail_service_client.api.default_api import DefaultApi
+from amsterdam_mail_service_client.api_client import ApiClient
+from amsterdam_mail_service_client.configuration import Configuration
 from azure.storage.blob.aio import ContainerClient
 from fastapi import BackgroundTasks, Depends
 from httpx import AsyncClient
@@ -20,6 +23,7 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.classification import Classifier
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
+from meldingen_core.mail import BaseMeldingConfirmationMailer
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
@@ -89,6 +93,7 @@ from meldingen.location import (
     ShapeToWKBTransformer,
     WKBToShapeTransformer,
 )
+from meldingen.mail import AmsterdamMailServiceMailer, AmsterdamMailServiceMeldingConfirmationMailer, BaseMailer
 from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwareScanner
 from meldingen.models import Answer, Melding
 from meldingen.repositories import (
@@ -352,13 +357,46 @@ def melding_submit_location_action(
     return MeldingSubmitLocationAction(state_machine, repository, token_verifier)
 
 
+def mail_configuration() -> Configuration:
+    return Configuration(host=settings.mail_service_api_base_url)
+
+
+async def mail_api_client(
+    configuration: Annotated[Configuration, Depends(mail_configuration)],
+) -> AsyncIterator[ApiClient]:
+    async with ApiClient(configuration) as api_client:
+        yield api_client
+
+
+def mail_default_api(api_client: Annotated[ApiClient, Depends(mail_api_client)]) -> DefaultApi:
+    return DefaultApi(api_client)
+
+
+def mailer(api: Annotated[DefaultApi, Depends(mail_default_api)]) -> BaseMailer:
+    return AmsterdamMailServiceMailer(api)
+
+
+def melding_confirmation_mailer(
+    mailer: Annotated[BaseMailer, Depends(mailer)],
+) -> BaseMeldingConfirmationMailer[Melding]:
+    return AmsterdamMailServiceMeldingConfirmationMailer(
+        mailer,
+        settings.mail_melding_confirmation_title,
+        settings.mail_melding_confirmation_preview_text,
+        settings.mail_melding_confirmation_body_text,
+        settings.mail_default_sender,
+        settings.mail_melding_confirmation_subject,
+    )
+
+
 def melding_submit_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     token_invalidator: Annotated[TokenInvalidator, Depends(token_invalidator)],
+    confirmation_mailer: Annotated[BaseMeldingConfirmationMailer[Melding], Depends(melding_confirmation_mailer)],
 ) -> MeldingSubmitAction:
-    return MeldingSubmitAction(repository, state_machine, token_verifier, token_invalidator)
+    return MeldingSubmitAction(repository, state_machine, token_verifier, token_invalidator, confirmation_mailer)
 
 
 def melding_complete_action(
