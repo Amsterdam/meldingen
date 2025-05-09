@@ -11,6 +11,9 @@ from meldingen.models import Melding
 class MailException(Exception): ...
 
 
+class EmailAddressMissingException(MailException): ...
+
+
 class BaseMailer(metaclass=ABCMeta):
     @abstractmethod
     async def __call__(
@@ -45,15 +48,32 @@ class AmsterdamMailServiceMeldingConfirmationMailer(BaseMeldingConfirmationMaile
     _title_template: str
     _preview_template: str
     _body_template: str
+    _from: str
     _subject_template: str
 
     def __init__(
-        self, mailer: BaseMailer, title_template: str, preview_template: str, body_template: str, subject_template: str
+        self,
+        mailer: BaseMailer,
+        title_template: str,
+        preview_template: str,
+        body_template: str,
+        _from: str,
+        subject_template: str,
     ) -> None:
         self._send_mail = mailer
         self._title_template = title_template
         self._preview_template = preview_template
         self._body_template = body_template
+        self._from = _from
         self._subject_template = subject_template
 
-    async def __call__(self, melding: Melding) -> None: ...
+    async def __call__(self, melding: Melding) -> None:
+        if melding.email is None:
+            raise EmailAddressMissingException("Email address missing!")
+
+        title = self._title_template
+        preview_text = self._preview_template.format(melding.public_id)
+        body_text = self._body_template.format(melding.text, melding.public_id)
+        subject = self._subject_template.format(melding.public_id)
+
+        await self._send_mail(title, preview_text, body_text, self._from, melding.email, subject)
