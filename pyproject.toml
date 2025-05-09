@@ -47,6 +47,7 @@ asgi-lifespan = "^2.1.0"
 black = "^25.1.0"
 filelock = "^3.17.0"
 isort = "^6.0.0"
+mailpit-api-client = {extras = ["pytest"], version = "^1.0.0"}
 mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.6.2"
 mkdocstrings = {version = "^0.29.0", extras = ["python"]}
