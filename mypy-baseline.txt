@@ -46,6 +46,8 @@ meldingen/models.py:0: error: Incompatible types in assignment (expression has t
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str | None]", base class "Attachment" defined the type as "str | None")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "Mapped[str | None]", base class "Attachment" defined the type as "str | None")  [assignment]
 migrations/env.py:0: error: Argument 1 to "async_engine_from_config" has incompatible type "dict[str, str] | None"; expected "dict[str, Any]"  [arg-type]
+tests/api/v1/endpoints/test_melding.py:0: error: Skipping analyzing "mailpit.client.api": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+tests/api/v1/endpoints/test_melding.py:0: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
 tests/api/v1/endpoints/test_form.py:0: error: Need type annotation for "new_data"  [var-annotated]
 commands/static_forms.py:0: error: Call to untyped function "append" in typed context  [no-untyped-call]
 commands/static_forms.py:0: error: Call to untyped function "append" in typed context  [no-untyped-call]
