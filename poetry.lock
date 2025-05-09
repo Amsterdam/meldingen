@@ -2016,7 +2016,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "feat/send-confirmation-email"
-resolved_reference = "fc4820d30b0a416372dd4fa3f033fb5d00bb502a"
+resolved_reference = "e4be111bf9e2575f74eb921459abc7dca68b152b"
 
 [[package]]
 name = "mergedeep"
