@@ -72,23 +72,22 @@ class Settings(BaseSettings):
     mail_melding_confirmation_title: str = "Uw melding"
     mail_melding_confirmation_preview_text: str = "Uw melding: {}"
     mail_melding_confirmation_body_text: str = """U heeft ons het volgende laten weten:
-    
-    *{}*
-    
-    ## Wat doen we met uw melding?
-    
-    Wij gaan aan het werk met uw melding. U hoort zo snel mogelijk wat wij hebben gedaan. Als de situatie gevaarlijk is
-    gaan wij direct aan het werk.
-    
-    ## Meer weten?
-    Heeft u nog een vraag over uw melding? Bel met het telefoonnummer [14 020](tel:14020), maandag tot en met vrijdag
-    van 08.00 tot 18.00. Geef dan ook het nummer van uw melding door: {}.
-    
-    Met vriendelijke groet,
-    
-    Gemeente Amsterdam
-    
-    *Dit bericht is automatisch gemaakt met de informatie uit uw melding.*"""
+
+*{}*
+
+### Wat doen we met uw melding?
+Wij gaan aan het werk met uw melding. U hoort zo snel mogelijk wat wij hebben gedaan. Als de situatie gevaarlijk is
+gaan wij direct aan het werk.
+
+### Meer weten?
+Heeft u nog een vraag over uw melding? Bel met het telefoonnummer [14 020](tel:14020), maandag tot en met vrijdag
+van 08.00 tot 18.00. Geef dan ook het nummer van uw melding door: {}.
+
+Met vriendelijke groet,
+
+Gemeente Amsterdam
+
+*Dit bericht is automatisch gemaakt met de informatie uit uw melding.*"""
     mail_melding_confirmation_subject: str = "Uw melding {}: melding ontvangen"
 
 
