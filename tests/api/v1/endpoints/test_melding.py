@@ -7,6 +7,7 @@ import pytest
 from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
+from mailpit.client.api import API
 from meldingen_core import SortingDirection
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.statemachine import MeldingStates
@@ -2290,10 +2291,11 @@ class TestMeldingSubmit(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_state", "melding_token", "melding_email"],
-        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com")],
+        ["melding_state", "melding_token", "melding_email", "mailpit_api"],
+        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com", "http://mailpit:8025")],
+        indirect=True,
     )
-    async def test_submit_melding(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+    async def test_submit_melding(self, app: FastAPI, client: AsyncClient, melding: Melding, mailpit_api: API) -> None:
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding.id),
@@ -2304,6 +2306,9 @@ class TestMeldingSubmit(BaseTokenAuthenticationTest):
 
         body = response.json()
         assert body.get("state") == MeldingStates.SUBMITTED
+
+        messages = mailpit_api.get_messages()
+        assert messages.total == 1
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
