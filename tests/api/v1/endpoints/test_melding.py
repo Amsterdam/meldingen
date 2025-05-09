@@ -2290,8 +2290,8 @@ class TestMeldingSubmit(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_state", "melding_token"],
-        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken")],
+        ["melding_state", "melding_token", "melding_email"],
+        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com")],
     )
     async def test_submit_melding(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.request(
