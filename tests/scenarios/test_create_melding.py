@@ -5,6 +5,7 @@ from tests.scenarios.context.classification import *  # noqa
 from tests.scenarios.context.contact import *  # noqa
 from tests.scenarios.context.form import *  # noqa
 from tests.scenarios.context.location import *  # noqa
+from tests.scenarios.context.mail import *  # noqa
 from tests.scenarios.context.melding import *  # noqa
 from tests.scenarios.context.statemachine import *  # noqa
 

@@ -50,6 +50,7 @@ Feature: Melding Form
         When I finish my current step by completing "SUBMIT"
         Then I should receive a response with the current content of my melding
         And the state of the melding should be "submitted"
+        And a confirmation email should be sent to "test@example.com"
 
     Scenario: A melding can't be submitted if not all required additional questions are answered
         # Initial melding and classification
