@@ -1,5 +1,5 @@
 import contextlib
-from typing import AsyncGenerator, AsyncIterator
+from typing import Any, AsyncGenerator, AsyncIterator
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -11,6 +11,8 @@ from fastapi import FastAPI
 from filelock import FileLock
 from httpx import ASGITransport, AsyncClient
 from meldingen_core.malware import BaseMalwareScanner
+
+from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
 from sqlalchemy import NullPool
@@ -22,6 +24,7 @@ from sqlalchemy.sql.ddl import DropTable
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager as BaseDatabaseSessionManager
 from meldingen.dependencies import (
+    address_api_instance,
     azure_container_client,
     database_engine,
     database_session,
@@ -282,3 +285,16 @@ def public_id_generator_override(app: FastAPI) -> None:
 @pytest.fixture(scope="session")
 def anyio_backend() -> str:
     return "asyncio"
+
+
+@pytest.fixture
+def address_api_client_override(app: FastAPI, address_api_mock_data: dict[str, Any]) -> None:
+    """Prevent unnecessary calls to external address API"""
+
+    api = Mock(PDOKApiInstance)
+    api.reverse_geocoder.return_value = address_api_mock_data
+
+    def test_address_api() -> PDOKApiInstance:
+        return api
+
+    app.dependency_overrides[address_api_instance] = test_address_api

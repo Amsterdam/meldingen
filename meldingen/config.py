@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     # OpenTelemetry
     opentelemetry_service_name: str = "meldingen"
 
+    # Address API
+    address_api_resolver_retries: int = 5
+
     # Mail
     mail_service_api_base_url: str = "http://mail-service:8003"
     mail_default_sender: str = "meldingen@example.com"

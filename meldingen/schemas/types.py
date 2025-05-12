@@ -2,13 +2,20 @@ from typing import Any
 
 from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from geojson_pydantic import Point
-from pydantic import BaseModel
+from meldingen_core.address import Address as BaseAddress
+from pydantic import BaseModel, Field
+from pydantic.dataclasses import dataclass
 from pydantic_extra_types.phone_numbers import PhoneNumber as PydanticPhoneNumber
 
 from meldingen.config import settings
 
 
 class GeoJson(GeoJsonPydanticFeature[Point, dict[str, Any] | BaseModel]): ...
+
+
+@dataclass
+class Address(BaseAddress):
+    house_number: int = Field(gt=0)
 
 
 class PhoneNumber(PydanticPhoneNumber):

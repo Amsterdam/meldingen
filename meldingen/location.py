@@ -48,11 +48,11 @@ class ShapeToGeoJSONTransformer:
         return self._transform_to_geojson(geometry=geometry)
 
 
-class WKBToShapeTransformer:
+class WKBToPointShapeTransformer:
 
-    def __call__(self, wkb_element: WKBElement) -> Geometry:
+    def __call__(self, wkb_element: WKBElement) -> Point:
         shape = to_shape(wkb_element)
-        assert isinstance(shape, Geometry)
+        assert isinstance(shape, Point)
         return shape
 
 
@@ -82,7 +82,7 @@ class MeldingLocationIngestor:
         if geojson.geometry is None:
             return melding
 
-        shape = self._geojson_to_shapely_point(*geojson.geometry.coordinates)
+        shape = self._geojson_to_shapely_point(geojson.geometry.coordinates[0], geojson.geometry.coordinates[1])
         wkb_element = self._shape_to_wkb_transformer(shape)
         assert isinstance(wkb_element, WKBElement)
 
@@ -99,22 +99,22 @@ class LocationOutputTransformer:
     Eventually the shape will be converted to a geojson object which is returned to the client.
     """
 
-    _wkb_to_shape: WKBToShapeTransformer
+    _wkb_to_point_shape: WKBToPointShapeTransformer
     _shape_to_geojson: ShapeToGeoJSONTransformer
 
     def __init__(
         self,
-        wkb_to_shape_transformer: WKBToShapeTransformer,
+        wkb_to_point_shape_transformer: WKBToPointShapeTransformer,
         shape_to_geojson_transformer: ShapeToGeoJSONTransformer,
     ) -> None:
-        self._wkb_to_shape_transformer = wkb_to_shape_transformer
-        self._shape_to_geojson_transformer = shape_to_geojson_transformer
+        self._wkb_to_point_shape = wkb_to_point_shape_transformer
+        self._shape_to_geojson = shape_to_geojson_transformer
 
     def __call__(self, geo_location: WKBElement | None) -> GeoJson | None:
         if geo_location is None:
             return geo_location
 
-        shape = self._wkb_to_shape_transformer(geo_location)
-        geojson = self._shape_to_geojson_transformer(shape)
+        shape = self._wkb_to_point_shape(geo_location)
+        geojson = self._shape_to_geojson(shape)
 
         return geojson

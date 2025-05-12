@@ -1,6 +1,6 @@
 from typing import Any, Sequence, TypeVar, override
 
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 from meldingen_core import SortingDirection
 from meldingen_core.actions.attachment import DeleteAttachmentAction as BaseDeleteAttachmentAction
 from meldingen_core.actions.attachment import DownloadAttachmentAction as BaseDownloadAttachmentAction
@@ -26,13 +26,14 @@ from meldingen_core.actions.user import UserDeleteAction as BaseUserDeleteAction
 from meldingen_core.actions.user import UserListAction as BaseUserListAction
 from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
+from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
-from meldingen.location import MeldingLocationIngestor
+from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
 from meldingen.mail import BaseMailPreviewer
 from meldingen.models import (
     Answer,
@@ -67,7 +68,7 @@ from meldingen.repositories import (
     StaticFormRepository,
 )
 from meldingen.schemas.input import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, StaticFormInput
-from meldingen.schemas.types import GeoJson
+from meldingen.schemas.types import Address, GeoJson
 
 T = TypeVar("T")
 
@@ -564,18 +565,32 @@ class DeleteAttachmentAction(BaseDeleteAttachmentAction[Attachment, Melding]): .
 class AddLocationToMeldingAction:
     _verify_token: TokenVerifier[Melding]
     _ingest_location: MeldingLocationIngestor
+    _background_task_manager: BackgroundTasks
+    _add_address: BaseAddressEnricher[Melding, Address]
+    _wkb_to_point_shape: WKBToPointShapeTransformer
 
     def __init__(
         self,
         token_verifier: TokenVerifier[Melding],
         location_ingestor: MeldingLocationIngestor,
+        background_task_manager: BackgroundTasks,
+        address_enricher: BaseAddressEnricher[Melding, Address],
+        wkb_to_point_shape_transformer: WKBToPointShapeTransformer,
     ) -> None:
         self._verify_token = token_verifier
         self._ingest_location = location_ingestor
+        self._background_task_manager = background_task_manager
+        self._add_address = address_enricher
+        self._wkb_to_point_shape = wkb_to_point_shape_transformer
 
     async def __call__(self, melding_id: int, token: str, location: GeoJson) -> Melding:
         melding = await self._verify_token(melding_id, token)
         melding = await self._ingest_location(melding, location)
+
+        assert melding.geo_location is not None
+        shape = self._wkb_to_point_shape(melding.geo_location)
+
+        self._background_task_manager.add_task(self._add_address, melding, shape.x, shape.y)
 
         return melding
 
