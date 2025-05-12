@@ -19,6 +19,8 @@ services:
         condition: service_healthy
       otel-collector:
         condition: service_started
+      mail-service:
+        condition: service_started
     volumes:
       - ".:/opt/meldingen"
     networks:
