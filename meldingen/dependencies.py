@@ -93,7 +93,12 @@ from meldingen.location import (
     ShapeToWKBTransformer,
     WKBToShapeTransformer,
 )
-from meldingen.mail import AmsterdamMailServiceMailer, AmsterdamMailServiceMeldingConfirmationMailer, BaseMailer
+from meldingen.mail import (
+    AmsterdamMailServiceMailer,
+    AmsterdamMailServiceMeldingConfirmationMailer,
+    BaseMailer,
+    SendConfirmationMailTask,
+)
 from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwareScanner
 from meldingen.models import Answer, Melding
 from meldingen.repositories import (
@@ -376,16 +381,26 @@ def mailer(api: Annotated[DefaultApi, Depends(mail_default_api)]) -> BaseMailer:
     return AmsterdamMailServiceMailer(api)
 
 
-def melding_confirmation_mailer(
+def send_confirmation_mail_task(
     mailer: Annotated[BaseMailer, Depends(mailer)],
-) -> BaseMeldingConfirmationMailer[Melding]:
-    return AmsterdamMailServiceMeldingConfirmationMailer(
+) -> SendConfirmationMailTask:
+    return SendConfirmationMailTask(
         mailer,
         settings.mail_melding_confirmation_title,
         settings.mail_melding_confirmation_preview_text,
         settings.mail_melding_confirmation_body_text,
         settings.mail_default_sender,
         settings.mail_melding_confirmation_subject,
+    )
+
+
+def melding_confirmation_mailer(
+    background_task_manager: BackgroundTasks,
+    send_confirmation_mail_task: Annotated[SendConfirmationMailTask, Depends(send_confirmation_mail_task)],
+) -> BaseMeldingConfirmationMailer[Melding]:
+    return AmsterdamMailServiceMeldingConfirmationMailer(
+        background_task_manager,
+        send_confirmation_mail_task,
     )
 
 

@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 from amsterdam_mail_service_client.api.default_api import DefaultApi
 from amsterdam_mail_service_client.exceptions import ApiException
 from amsterdam_mail_service_client.models.send_request import SendRequest
+from fastapi import BackgroundTasks
 from meldingen_core.mail import BaseMeldingConfirmationMailer
 
 from meldingen.models import Melding
@@ -43,7 +44,7 @@ class AmsterdamMailServiceMailer(BaseMailer):
             raise MailException("Failed to send mail!") from e
 
 
-class AmsterdamMailServiceMeldingConfirmationMailer(BaseMeldingConfirmationMailer[Melding]):
+class SendConfirmationMailTask:
     _send_mail: BaseMailer
     _title_template: str
     _preview_template: str
@@ -77,3 +78,17 @@ class AmsterdamMailServiceMeldingConfirmationMailer(BaseMeldingConfirmationMaile
         subject = self._subject_template.format(melding.public_id)
 
         await self._send_mail(title, preview_text, body_text, self._from, melding.email, subject)
+
+
+class AmsterdamMailServiceMeldingConfirmationMailer(BaseMeldingConfirmationMailer[Melding]):
+    _background_task_manager: BackgroundTasks
+    _send_confirmation_mail_task: SendConfirmationMailTask
+
+    def __init__(
+        self, background_task_manager: BackgroundTasks, send_confirmation_mail_task: SendConfirmationMailTask
+    ) -> None:
+        self._background_task_manager = background_task_manager
+        self._send_confirmation_mail_task = send_confirmation_mail_task
+
+    async def __call__(self, melding: Melding) -> None:
+        self._background_task_manager.add_task(self._send_confirmation_mail_task, melding=melding)
