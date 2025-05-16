@@ -7,6 +7,7 @@ from meldingen.actions import PreviewMailAction
 from meldingen.api.v1 import unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import preview_mail_action
+from meldingen.schemas.input import MailPreviewInput
 
 router = APIRouter()
 
@@ -19,9 +20,7 @@ router = APIRouter()
     dependencies=[Depends(authenticate_user)],
 )
 async def preview(
-    title: str,
-    preview_text: str,
-    body_text: str,
+    input: MailPreviewInput,
     action: Annotated[PreviewMailAction, Depends(preview_mail_action)],
 ) -> HTMLResponse:
-    return HTMLResponse(await action(title, preview_text, body_text))
+    return HTMLResponse(await action(input.title, input.preview_text, input.body_text))
