@@ -57,6 +57,7 @@ from meldingen.actions import (
     MeldingListAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
+    PreviewMailAction,
     StaticFormListAction,
     StaticFormRetrieveAction,
     StaticFormUpdateAction,
@@ -95,8 +96,10 @@ from meldingen.location import (
 )
 from meldingen.mail import (
     AmsterdamMailServiceMailer,
+    AmsterdamMailServiceMailPreviewer,
     AmsterdamMailServiceMeldingConfirmationMailer,
     BaseMailer,
+    BaseMailPreviewer,
     SendConfirmationMailTask,
 )
 from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwareScanner
@@ -375,6 +378,14 @@ async def mail_api_client(
 
 def mail_default_api(api_client: Annotated[ApiClient, Depends(mail_api_client)]) -> DefaultApi:
     return DefaultApi(api_client)
+
+
+def mail_previewer(api: Annotated[DefaultApi, Depends(mail_default_api)]) -> BaseMailPreviewer:
+    return AmsterdamMailServiceMailPreviewer(api)
+
+
+def preview_mail_action(previewer: Annotated[BaseMailPreviewer, Depends(mail_previewer)]) -> PreviewMailAction:
+    return PreviewMailAction(previewer)
 
 
 def mailer(api: Annotated[DefaultApi, Depends(mail_default_api)]) -> BaseMailer:
