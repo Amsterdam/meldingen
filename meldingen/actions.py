@@ -16,6 +16,7 @@ from meldingen_core.actions.classification import ClassificationDeleteAction as 
 from meldingen_core.actions.classification import ClassificationListAction as BaseClassificationListAction
 from meldingen_core.actions.classification import ClassificationRetrieveAction as BaseClassificationRetrieveAction
 from meldingen_core.actions.classification import ClassificationUpdateAction as BaseClassificationUpdateAction
+from meldingen_core.actions.mail import BasePreviewMailAction
 from meldingen_core.actions.melding import MeldingAddContactInfoAction as BaseMeldingAddContactInfoAction
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
@@ -32,6 +33,7 @@ from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
 from meldingen.location import MeldingLocationIngestor
+from meldingen.mail import BaseMailPreviewer
 from meldingen.models import (
     Answer,
     Attachment,
@@ -582,3 +584,13 @@ class AddContactInfoToMeldingAction(BaseMeldingAddContactInfoAction[Melding]): .
 
 
 class MeldingSubmitAction(BaseMeldingSubmitAction[Melding]): ...
+
+
+class PreviewMailAction(BasePreviewMailAction):
+    _get_preview: BaseMailPreviewer
+
+    def __init__(self, previewer: BaseMailPreviewer):
+        self._get_preview = previewer
+
+    async def __call__(self, title: str, preview_text: str, body_text: str) -> str:
+        return await self._get_preview(title, preview_text, body_text)

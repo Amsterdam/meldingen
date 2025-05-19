@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 from amsterdam_mail_service_client.api.default_api import DefaultApi
 from amsterdam_mail_service_client.exceptions import ApiException
+from amsterdam_mail_service_client.models.preview_request import PreviewRequest
 from amsterdam_mail_service_client.models.send_request import SendRequest
 from fastapi import BackgroundTasks
 from meldingen_core.mail import BaseMeldingConfirmationMailer
@@ -92,3 +93,29 @@ class AmsterdamMailServiceMeldingConfirmationMailer(BaseMeldingConfirmationMaile
 
     async def __call__(self, melding: Melding) -> None:
         self._background_task_manager.add_task(self._send_confirmation_mail_task, melding=melding)
+
+
+class BaseMailPreviewer(metaclass=ABCMeta):
+    @abstractmethod
+    async def __call__(self, title: str, preview_text: str, body_text: str) -> str: ...
+
+
+class AmsterdamMailServiceMailPreviewer(BaseMailPreviewer):
+    _api: DefaultApi
+
+    def __init__(self, api: DefaultApi) -> None:
+        self._api = api
+
+    async def __call__(self, title: str, preview_text: str, body_text: str) -> str:
+        request = PreviewRequest(
+            title=title,
+            preview_text=preview_text,
+            body_text=body_text,
+        )
+
+        try:
+            html = await self._api.preview(request)
+        except ApiException as e:
+            raise MailException("Failed to get preview!") from e
+
+        return html

@@ -184,3 +184,9 @@ class FormSelectComponentInput(FormComponentInput):
 
 class AnswerInput(BaseModel):
     text: str = Field(min_length=1)
+
+
+class MailPreviewInput(BaseModel):
+    title: str
+    preview_text: str
+    body_text: str
