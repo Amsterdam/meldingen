@@ -38,8 +38,11 @@ async def create_melding_with_text(text: str, app: FastAPI, client: AsyncClient)
 def the_melding_should_be_classified_as(
     classification: Classification, my_melding: dict[str, Any], classification_name: str
 ) -> None:
-    assert classification.name == classification_name
-    assert my_melding.get("classification") == classification.id
+    my_classification = my_melding.get("classification")
+    assert isinstance(my_classification, dict)
+
+    assert my_classification.get("name") == classification.name
+    assert my_classification.get("id") == classification.id
 
 
 @then("the melding should contain a token", target_fixture="token")

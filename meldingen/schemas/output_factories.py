@@ -5,6 +5,7 @@ from meldingen.location import LocationOutputTransformer
 from meldingen.models import (
     Answer,
     BaseFormIoValuesComponent,
+    Classification,
     Form,
     FormIoCheckBoxComponent,
     FormIoComponent,
@@ -21,6 +22,7 @@ from meldingen.models import (
 from meldingen.schemas.output import (
     AnswerQuestionOutput,
     BaseFormComponentOutput,
+    ClassificationOutput,
     FormCheckboxComponentOutput,
     FormComponentOutputValidate,
     FormComponentValueOutput,
@@ -31,8 +33,10 @@ from meldingen.schemas.output import (
     FormSelectComponentOutput,
     FormTextAreaComponentOutput,
     FormTextFieldInputComponentOutput,
+    MeldingCreateOutput,
     MeldingOutput,
     QuestionOutput,
+    SimpleClassificationOutput,
     SimpleStaticFormOutput,
     StaticFormCheckboxComponentOutput,
     StaticFormOutput,
@@ -529,11 +533,29 @@ class FormOutputFactory:
         )
 
 
+class SimpleClassificationOutputFactory:
+
+    def __call__(self, classification: Classification | None) -> SimpleClassificationOutput | None:
+        if classification is None:
+            return None
+
+        return SimpleClassificationOutput(
+            id=classification.id,
+            name=classification.name,
+            created_at=classification.created_at,
+            updated_at=classification.updated_at,
+        )
+
+
 class MeldingOutputFactory:
     _transform_location: LocationOutputTransformer
+    _classification: SimpleClassificationOutputFactory
 
-    def __init__(self, location_transformer: LocationOutputTransformer):
+    def __init__(
+        self, location_transformer: LocationOutputTransformer, classification: SimpleClassificationOutputFactory
+    ):
         self._transform_location = location_transformer
+        self._classification = classification
 
     def __call__(self, melding: Melding) -> MeldingOutput:
         if melding.geo_location is None:
@@ -546,7 +568,7 @@ class MeldingOutputFactory:
             public_id=melding.public_id,
             text=melding.text,
             state=melding.state,
-            classification=melding.classification_id,
+            classification=self._classification(melding.classification),
             created_at=melding.created_at,
             updated_at=melding.updated_at,
             geo_location=geojson,
@@ -557,6 +579,25 @@ class MeldingOutputFactory:
             city=melding.city,
             email=melding.email,
             phone=melding.phone,
+        )
+
+
+class MeldingCreateOutputFactory:
+    _classification: SimpleClassificationOutputFactory
+
+    def __init__(self, classification: SimpleClassificationOutputFactory):
+        self._classification = classification
+
+    def __call__(self, melding: Melding) -> MeldingCreateOutput:
+        return MeldingCreateOutput(
+            id=melding.id,
+            public_id=melding.public_id,
+            text=melding.text,
+            state=melding.state,
+            classification=self._classification(melding.classification),
+            token=melding.token,
+            created_at=melding.created_at,
+            updated_at=melding.updated_at,
         )
 
 

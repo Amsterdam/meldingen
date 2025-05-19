@@ -21,11 +21,19 @@ class BaseFormOutput(BaseOutputModel):
     display: str
 
 
+class SimpleClassificationOutput(BaseOutputModel):
+    name: str
+
+
+class ClassificationOutput(SimpleClassificationOutput):
+    form: int | None = None
+
+
 class MeldingOutput(BaseOutputModel):
     public_id: str
     text: str
     state: str
-    classification: int | None = Field(default=None)
+    classification: SimpleClassificationOutput | None = Field(default=None)
     geo_location: GeoJson | None = Field(default=None)
     street: str | None = Field(default=None)
     house_number: int | None = Field(default=None)
@@ -38,11 +46,6 @@ class MeldingOutput(BaseOutputModel):
 
 class MeldingCreateOutput(MeldingOutput):
     token: str
-
-
-class ClassificationOutput(BaseOutputModel):
-    name: str
-    form: int | None = None
 
 
 class SimpleStaticFormOutput(BaseFormOutput):

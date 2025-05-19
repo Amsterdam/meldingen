@@ -98,8 +98,11 @@ async def retrieve_additional_questions_through_classification(
     app: FastAPI,
     my_melding: dict[str, Any],
 ) -> dict[str, Any]:
+    classification = my_melding.get("classification")
+    assert isinstance(classification, dict)
+
     response = await client.get(
-        app.url_path_for(ROUTE_RETRIEVE_ADDITIONAL_QUESTIONS, classification_id=my_melding.get("classification"))
+        app.url_path_for(ROUTE_RETRIEVE_ADDITIONAL_QUESTIONS, classification_id=classification.get("id"))
     )
     assert response.status_code == HTTP_200_OK
 

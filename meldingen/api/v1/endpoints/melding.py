@@ -73,6 +73,7 @@ from meldingen.dependencies import (
     melding_complete_action,
     melding_contact_info_added_action,
     melding_create_action,
+    melding_create_output_factory,
     melding_delete_attachment_action,
     melding_list_action,
     melding_list_attachments_action,
@@ -100,7 +101,7 @@ from meldingen.schemas.output import (
     MeldingCreateOutput,
     MeldingOutput,
 )
-from meldingen.schemas.output_factories import AnswerListOutputFactory, MeldingOutputFactory
+from meldingen.schemas.output_factories import AnswerListOutputFactory, MeldingCreateOutputFactory, MeldingOutputFactory
 from meldingen.schemas.types import GeoJson
 
 router = APIRouter()
@@ -112,6 +113,7 @@ async def create_melding(
     melding_input: MeldingInput,
     action: Annotated[MeldingCreateAction[Melding], Depends(melding_create_action)],
     generate_public_id: Annotated[PublicIdGenerator, Depends(public_id_generator)],
+    produce_output: Annotated[MeldingCreateOutputFactory, Depends(melding_create_output_factory)],
 ) -> MeldingCreateOutput:
     melding = Melding(**melding_input.model_dump())
 
@@ -124,16 +126,7 @@ async def create_melding(
 
         break
 
-    return MeldingCreateOutput(
-        id=melding.id,
-        public_id=melding.public_id,
-        text=melding.text,
-        state=melding.state,
-        classification=melding.classification_id,
-        token=melding.token,
-        created_at=melding.created_at,
-        updated_at=melding.updated_at,
-    )
+    return produce_output(melding)
 
 
 async def _add_content_range_header(

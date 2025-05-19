@@ -41,7 +41,7 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     text: Mapped[str] = mapped_column(String)
     state: Mapped[str] = mapped_column(String, default=MeldingStates.NEW)
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
-    classification: Mapped[Classification | None] = relationship(default=None)
+    classification: Mapped[Classification | None] = relationship(default=None, lazy="joined")
     token: Mapped[str | None] = mapped_column(String, default=None)
     token_expires: Mapped[DateTime | None] = mapped_column(DateTime, default=None)
     attachments: Mapped[list["Attachment"]] = relationship(
