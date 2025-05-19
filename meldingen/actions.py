@@ -16,6 +16,7 @@ from meldingen_core.actions.classification import ClassificationDeleteAction as 
 from meldingen_core.actions.classification import ClassificationListAction as BaseClassificationListAction
 from meldingen_core.actions.classification import ClassificationRetrieveAction as BaseClassificationRetrieveAction
 from meldingen_core.actions.classification import ClassificationUpdateAction as BaseClassificationUpdateAction
+from meldingen_core.actions.mail import BasePreviewMailAction
 from meldingen_core.actions.melding import MeldingAddContactInfoAction as BaseMeldingAddContactInfoAction
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
@@ -585,7 +586,7 @@ class AddContactInfoToMeldingAction(BaseMeldingAddContactInfoAction[Melding]): .
 class MeldingSubmitAction(BaseMeldingSubmitAction[Melding]): ...
 
 
-class PreviewMailAction:
+class PreviewMailAction(BasePreviewMailAction):
     _get_preview: BaseMailPreviewer
 
     def __init__(self, previewer: BaseMailPreviewer):
