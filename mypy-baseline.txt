@@ -1,8 +1,5 @@
 meldingen/jsonlogic.py:0: error: Call to untyped function "jsonLogic" in typed context  [no-untyped-call]
 tests/scenarios/context/mail.py:0: error: Skipping analyzing "mailpit.client.api": module is installed, but missing library stubs or py.typed marker  [import-untyped]
-migrations/versions/781aa6a913a6_form_models.py:0: error: Call to untyped function "drop" in typed context  [no-untyped-call]
-migrations/versions/781aa6a913a6_form_models.py:0: error: Call to untyped function "drop" in typed context  [no-untyped-call]
-migrations/versions/781aa6a913a6_form_models.py:0: error: Call to untyped function "drop" in typed context  [no-untyped-call]
 migrations/versions/f88c971186dc_remove_location_form_type_from_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/f88c971186dc_remove_location_form_type_from_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/f00d6c808e2d_add_other_static_form_types.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
