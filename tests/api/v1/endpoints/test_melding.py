@@ -40,7 +40,7 @@ class TestMeldingCreate:
         assert data.get("id") > 0
         assert data.get("text") == "This is a test melding."
         assert data.get("state") == MeldingStates.NEW
-        assert data.get("classification", "") is None
+        assert data.get("classification") is None
         assert data.get("token") is not None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
@@ -60,7 +60,7 @@ class TestMeldingCreate:
         assert data.get("id") > 0
         assert data.get("text") == "This is a test melding."
         assert data.get("state") == MeldingStates.NEW
-        assert data.get("classification", "") is None
+        assert data.get("classification") is None
         assert data.get("token") is not None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
@@ -79,7 +79,8 @@ class TestMeldingCreate:
         assert data.get("id") is not None
         assert data.get("text") == "classification_name"
         assert data.get("state") == MeldingStates.CLASSIFIED
-        assert data.get("classification") == classification.id
+        assert data.get("classification").get("id") == classification.id
+        assert data.get("classification").get("name") == classification.name
 
     @pytest.mark.anyio
     async def test_create_melding_text_minimum_length_violation(self, app: FastAPI, client: AsyncClient) -> None:
@@ -370,7 +371,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert body.get("id") == melding.id
         assert body.get("text") == melding.text
         assert body.get("state") == MeldingStates.NEW
-        assert body.get("classification", "") is None
+        assert body.get("classification") is None
         assert body.get("geo_location", "") is None
         assert body.get("email", "") is None
         assert body.get("phone", "") is None
@@ -513,7 +514,8 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         assert body.get("id") == melding.id
         assert body.get("text") == "classification_name"
         assert body.get("state") == MeldingStates.CLASSIFIED
-        assert body.get("classification") == classification.id
+        assert body.get("classification").get("id") == classification.id
+        assert body.get("classification").get("name") == classification.name
         assert body.get("created_at") == melding.created_at.isoformat()
         assert body.get("updated_at") == melding.updated_at.isoformat()
         assert body.get("public_id") == melding.public_id
@@ -2274,7 +2276,7 @@ class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
         assert body.get("id") == melding.id
         assert body.get("text") == melding.text
         assert body.get("state") == MeldingStates.NEW
-        assert body.get("classification", "") is None
+        assert body.get("classification") is None
         assert body.get("geo_location", "") is None
         assert body.get("email", "") is None
         assert body.get("phone", "") is None
