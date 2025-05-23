@@ -93,7 +93,7 @@ from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
 from meldingen.models import Answer, Attachment, Melding
 from meldingen.repositories import MeldingRepository
-from meldingen.schemas.input import AnswerInput, MeldingContactInput, MeldingInput
+from meldingen.schemas.input import AnswerInput, CompleteMeldingInput, MeldingContactInput, MeldingInput
 from meldingen.schemas.output import (
     AnswerOutput,
     AnswerQuestionOutput,
@@ -400,6 +400,7 @@ async def complete_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[MeldingCompleteAction[Melding], Depends(melding_complete_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+    input: CompleteMeldingInput | None = None,
 ) -> MeldingOutput:
     try:
         melding = await action(melding_id)

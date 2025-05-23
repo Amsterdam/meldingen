@@ -190,3 +190,7 @@ class MailPreviewInput(BaseModel):
     title: str
     preview_text: str
     body_text: str
+
+
+class CompleteMeldingInput(BaseModel):
+    mail_body: str
