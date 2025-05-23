@@ -32,8 +32,8 @@ class TestStaticFormRetrieve(BaseStaticFormTest):
         assert data.get("type") == primary_form.type
         assert data.get("title") == primary_form.title
         assert data.get("display") == primary_form.display
-        assert data.get("created_at") == primary_form.created_at.isoformat()
-        assert data.get("updated_at") == primary_form.updated_at.isoformat()
+        assert data.get("created_at") == primary_form.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert data.get("updated_at") == primary_form.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         components = await primary_form.awaitable_attrs.components
         assert len(data.get("components")) == len(components)

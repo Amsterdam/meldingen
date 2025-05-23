@@ -375,8 +375,8 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert body.get("geo_location", "") is None
         assert body.get("email", "") is None
         assert body.get("phone", "") is None
-        assert body.get("created_at") == melding.created_at.isoformat()
-        assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("public_id") == melding.public_id
         assert body.get("street") == melding.street
         assert body.get("house_number") == melding.house_number
@@ -516,8 +516,8 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         assert body.get("state") == MeldingStates.CLASSIFIED
         assert body.get("classification").get("id") == classification.id
         assert body.get("classification").get("name") == classification.name
-        assert body.get("created_at") == melding.created_at.isoformat()
-        assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("public_id") == melding.public_id
 
 
@@ -549,8 +549,8 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
-        assert body.get("created_at") == melding_with_classification.created_at.isoformat()
-        assert body.get("updated_at") == melding_with_classification.updated_at.isoformat()
+        assert body.get("created_at") == melding_with_classification.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding_with_classification.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -574,8 +574,8 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
-        assert body.get("created_at") == melding_with_answers.created_at.isoformat()
-        assert body.get("updated_at") == melding_with_answers.updated_at.isoformat()
+        assert body.get("created_at") == melding_with_answers.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding_with_answers.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     async def test_answer_questions_not_found(self, app: FastAPI, client: AsyncClient) -> None:
@@ -675,8 +675,8 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
-        assert body.get("created_at") == melding_with_classification.created_at.isoformat()
-        assert body.get("updated_at") == melding_with_classification.updated_at.isoformat()
+        assert body.get("created_at") == melding_with_classification.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding_with_classification.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class TestMeldingAddAttachments(BaseTokenAuthenticationTest):
@@ -702,8 +702,8 @@ class TestMeldingAddAttachments(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.ATTACHMENTS_ADDED
-        assert body.get("created_at") == melding.created_at.isoformat()
-        assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     async def test_add_attachments_not_found(self, app: FastAPI, client: AsyncClient) -> None:
@@ -763,8 +763,8 @@ class TestMeldingSubmitLocation(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.LOCATION_SUBMITTED
-        assert body.get("created_at") == melding.created_at.isoformat()
-        assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token"],
@@ -816,8 +816,8 @@ class TestMeldingProcess(BaseUnauthorizedTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.PROCESSING
-        assert body.get("created_at") == melding.created_at.isoformat()
-        assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
@@ -874,8 +874,8 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.COMPLETED
-        assert body.get("created_at") == melding.created_at.isoformat()
-        assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
@@ -2103,8 +2103,8 @@ class TestMeldingContactInfoAdded(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.CONTACT_INFO_ADDED
-        assert body.get("created_at") == melding.created_at.isoformat()
-        assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     async def test_contact_info_added_not_found(self, app: FastAPI, client: AsyncClient) -> None:
@@ -2280,8 +2280,8 @@ class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
         assert body.get("geo_location", "") is None
         assert body.get("email", "") is None
         assert body.get("phone", "") is None
-        assert body.get("created_at") == melding.created_at.isoformat()
-        assert body.get("updated_at") == melding.updated_at.isoformat()
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class TestMeldingSubmit(BaseTokenAuthenticationTest):

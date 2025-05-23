@@ -338,8 +338,8 @@ class TestFormRetrieve(BaseFormTest):
         assert data.get("id") == form.id
         assert data.get("title") == form.title
         assert data.get("display") == form.display
-        assert data.get("created_at") == form.created_at.isoformat()
-        assert data.get("updated_at") == form.updated_at.isoformat()
+        assert data.get("created_at") == form.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert data.get("updated_at") == form.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         await self._assert_components(data.get("components"), await form.awaitable_attrs.components)
 
@@ -1707,5 +1707,5 @@ class TestFormClassification:
         assert body.get("display") == form_with_classification.display
         assert len(body.get("components")) == 1
         assert body.get("id") == form_with_classification.id
-        assert body.get("created_at") == form_with_classification.created_at.isoformat()
-        assert body.get("updated_at") == form_with_classification.updated_at.isoformat()
+        assert body.get("created_at") == form_with_classification.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == form_with_classification.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
