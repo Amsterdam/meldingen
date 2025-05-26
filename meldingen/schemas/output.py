@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Union
 
-from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field
+from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field, field_serializer
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
@@ -14,6 +14,14 @@ class BaseOutputModel(BaseModel):
     id: int
     created_at: datetime
     updated_at: datetime
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, created_at: datetime) -> str:
+        return created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @field_serializer("updated_at")
+    def serialize_updated_at(self, updated_at: datetime) -> str:
+        return updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class BaseFormOutput(BaseOutputModel):

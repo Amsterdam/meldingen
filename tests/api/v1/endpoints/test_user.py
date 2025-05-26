@@ -319,8 +319,8 @@ class TestUserRetrieve(BaseUnauthorizedTest):
         assert data.get("id") == user.id
         assert data.get("username") == user.username
         assert data.get("email") == user.email
-        assert data.get("created_at") == user.created_at.isoformat()
-        assert data.get("updated_at") == user.updated_at.isoformat()
+        assert data.get("created_at") == user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert data.get("updated_at") == user.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     async def test_retrieve_user_that_does_not_exist(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
@@ -428,8 +428,8 @@ class TestUserUpdate(BaseUnauthorizedTest):
         for key, value in new_data.items():
             assert data.get(key) == value
 
-        assert data.get("created_at") == user.created_at.isoformat()
-        assert data.get("updated_at") == user.updated_at.isoformat()
+        assert data.get("created_at") == user.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert data.get("updated_at") == user.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     async def test_update_user_username_minimum_length_violation(
