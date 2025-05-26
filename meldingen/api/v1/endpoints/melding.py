@@ -402,8 +402,12 @@ async def complete_melding(
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
     input: CompleteMeldingInput | None = None,
 ) -> MeldingOutput:
+    mail_text = None
+    if input is not None:
+        mail_text = input.mail_body
+
     try:
-        melding = await action(melding_id)
+        melding = await action(melding_id, mail_text)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except WrongStateException:

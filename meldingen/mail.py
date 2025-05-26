@@ -5,7 +5,7 @@ from amsterdam_mail_service_client.exceptions import ApiException
 from amsterdam_mail_service_client.models.preview_request import PreviewRequest
 from amsterdam_mail_service_client.models.send_request import SendRequest
 from fastapi import BackgroundTasks
-from meldingen_core.mail import BaseMeldingConfirmationMailer
+from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 
 from meldingen.models import Melding
 
@@ -119,3 +119,8 @@ class AmsterdamMailServiceMailPreviewer(BaseMailPreviewer):
             raise MailException("Failed to get preview!") from e
 
         return html
+
+
+class AmsterdamMailServiceMeldingCompleteMailer(BaseMeldingCompleteMailer[Melding]):
+    async def __call__(self, melding: Melding, mail_text: str) -> None:
+        pass

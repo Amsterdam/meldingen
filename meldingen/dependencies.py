@@ -23,7 +23,7 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.classification import Classifier
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
-from meldingen_core.mail import BaseMeldingConfirmationMailer
+from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
@@ -97,6 +97,7 @@ from meldingen.location import (
 from meldingen.mail import (
     AmsterdamMailServiceMailer,
     AmsterdamMailServiceMailPreviewer,
+    AmsterdamMailServiceMeldingCompleteMailer,
     AmsterdamMailServiceMeldingConfirmationMailer,
     BaseMailer,
     BaseMailPreviewer,
@@ -439,11 +440,16 @@ def melding_submit_action(
     return MeldingSubmitAction(repository, state_machine, token_verifier, token_invalidator, confirmation_mailer)
 
 
+def melding_complete_mailer() -> BaseMeldingCompleteMailer[Melding]:
+    return AmsterdamMailServiceMeldingCompleteMailer()
+
+
 def melding_complete_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    mailer: Annotated[BaseMeldingCompleteMailer[Melding], Depends(melding_complete_mailer)],
 ) -> MeldingCompleteAction[Melding]:
-    return MeldingCompleteAction(state_machine, repository)
+    return MeldingCompleteAction(state_machine, repository, mailer)
 
 
 def jsonlogic_validator() -> JSONLogicValidator:
