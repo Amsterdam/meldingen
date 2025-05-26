@@ -2145,8 +2145,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feat/melding-completed-mail"
-resolved_reference = "5da40e4b417bbe8ac330a62c46643cfbda65f530"
+reference = "HEAD"
+resolved_reference = "5c88d65eae83a4f34d28595eedd0d65c82d995bc"
 
 [[package]]
 name = "mergedeep"
@@ -4750,4 +4750,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "673a5fca1ce8e1bfc6f40018bbcb524d48336cd65de2fb6722449c5b5aad75a4"
+content-hash = "ab67e1ef4bab16447243d9ca69aa6832530465e632e1a2cc69620971960554dc"
