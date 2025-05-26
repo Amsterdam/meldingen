@@ -101,6 +101,7 @@ from meldingen.mail import (
     AmsterdamMailServiceMeldingConfirmationMailer,
     BaseMailer,
     BaseMailPreviewer,
+    SendCompletedMailTask,
     SendConfirmationMailTask,
 )
 from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwareScanner
@@ -440,8 +441,21 @@ def melding_submit_action(
     return MeldingSubmitAction(repository, state_machine, token_verifier, token_invalidator, confirmation_mailer)
 
 
-def melding_complete_mailer() -> BaseMeldingCompleteMailer[Melding]:
-    return AmsterdamMailServiceMeldingCompleteMailer()
+def send_completed_mail_task(mailer: Annotated[BaseMailer, Depends(mailer)]) -> SendCompletedMailTask:
+    return SendCompletedMailTask(
+        mailer,
+        settings.mail_melding_completed_title,
+        settings.mail_melding_completed_preview_text,
+        settings.mail_default_sender,
+        settings.mail_melding_completed_subject,
+    )
+
+
+def melding_complete_mailer(
+    background_task_manager: BackgroundTasks,
+    send_completed_mail_task: Annotated[SendCompletedMailTask, Depends(send_completed_mail_task)],
+) -> BaseMeldingCompleteMailer[Melding]:
+    return AmsterdamMailServiceMeldingCompleteMailer(background_task_manager, send_completed_mail_task)
 
 
 def melding_complete_action(

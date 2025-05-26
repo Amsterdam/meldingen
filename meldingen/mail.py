@@ -121,6 +121,47 @@ class AmsterdamMailServiceMailPreviewer(BaseMailPreviewer):
         return html
 
 
+class SendCompletedMailTask:
+    _send_mail: BaseMailer
+    _title_template: str
+    _preview_template: str
+    _from: str
+    _subject_template: str
+
+    def __init__(
+        self,
+        mailer: BaseMailer,
+        title_template: str,
+        preview_template: str,
+        _from: str,
+        subject_template: str,
+    ) -> None:
+        self._send_mail = mailer
+        self._title_template = title_template
+        self._preview_template = preview_template
+        self._from = _from
+        self._subject_template = subject_template
+
+    async def __call__(self, melding: Melding, body_text: str) -> None:
+        if melding.email is None:
+            raise EmailAddressMissingException("Email address missing!")
+
+        title = self._title_template
+        preview_text = self._preview_template.format(melding.public_id)
+        subject = self._subject_template.format(melding.public_id)
+
+        await self._send_mail(title, preview_text, body_text, self._from, melding.email, subject)
+
+
 class AmsterdamMailServiceMeldingCompleteMailer(BaseMeldingCompleteMailer[Melding]):
+    _background_task_manager: BackgroundTasks
+    _send_completed_mail_task: SendCompletedMailTask
+
+    def __init__(
+        self, background_task_manager: BackgroundTasks, send_completed_mail_task: SendCompletedMailTask
+    ) -> None:
+        self._background_task_manager = background_task_manager
+        self._send_completed_mail_task = send_completed_mail_task
+
     async def __call__(self, melding: Melding, mail_text: str) -> None:
-        pass
+        self._background_task_manager.add_task(self._send_completed_mail_task, melding=melding, body_text=mail_text)
