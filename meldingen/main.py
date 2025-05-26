@@ -5,11 +5,15 @@ from fastapi import FastAPI
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs._internal.export import BatchLogRecordProcessor
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics._internal.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -65,8 +69,6 @@ processor = BatchSpanProcessor(OTLPSpanExporter())
 tracer_provider.add_span_processor(processor)
 trace.set_tracer_provider(tracer_provider)
 
-FastAPIInstrumentor.instrument_app(app)
-
 logger_provider = LoggerProvider(resource=resource)
 logger_provider.add_log_record_processor(BatchLogRecordProcessor(OTLPLogExporter()))
 set_logger_provider(logger_provider)
@@ -78,3 +80,8 @@ logger.addHandler(logging_handler)
 logger.setLevel(settings.log_level)
 
 AioHttpClientInstrumentor().instrument()
+
+metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter())
+set_meter_provider(MeterProvider((metric_reader,)))
+
+FastAPIInstrumentor.instrument_app(app)
