@@ -90,6 +90,10 @@ Gemeente Amsterdam
 *Dit bericht is automatisch gemaakt met de informatie uit uw melding.*"""
     mail_melding_confirmation_subject: str = "Uw melding {}: melding ontvangen"
 
+    mail_melding_completed_title: str = "Uw melding {}: melding afgehandeld"
+    mail_melding_completed_preview_text: str = "Uw melding: {}"
+    mail_melding_completed_subject: str = "Uw melding: {} afgehandeld"
+
 
 # Create an instance of the Settings model
 settings = Settings()
