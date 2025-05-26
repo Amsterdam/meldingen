@@ -878,6 +878,31 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_email", "mailpit_api"],
+        [("Er ligt poep op de stoep.", MeldingStates.PROCESSING, "me@example.com", "http://mailpit:8025")],
+        indirect=True,
+    )
+    async def test_complete_melding_with_mail_text(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding, mailpit_api: API
+    ) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            json={"mail_body": "TEST MAIL TEXT"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body.get("state") == MeldingStates.COMPLETED
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        messages = mailpit_api.get_messages()
+        assert messages.total == 1
+
+    @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
     async def test_complete_melding_not_found(
         self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
