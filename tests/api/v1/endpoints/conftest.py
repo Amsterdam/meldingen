@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from typing import Any
-from urllib.request import Request
 from uuid import uuid4
 
 import pytest

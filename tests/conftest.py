@@ -11,7 +11,6 @@ from fastapi import FastAPI
 from filelock import FileLock
 from httpx import ASGITransport, AsyncClient
 from meldingen_core.malware import BaseMalwareScanner
-
 from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
 from pytest import FixtureRequest
 from pytest_alembic.config import Config as PytestAlembicConfig
