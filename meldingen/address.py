@@ -59,7 +59,7 @@ class PDOKAddressResolver(BaseAddressResolver[Address]):
         return self._transform_address(results.docs[0])
 
 
-class AddressEnricherTask(BaseAddressEnricher[Melding, Address], metaclass=ABCMeta):
+class AddressEnricherTask(BaseAddressEnricher[Melding, Address]):
     _resolve_address: BaseAddressResolver[Address]
     _repository: MeldingRepository
 
