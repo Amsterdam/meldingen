@@ -1,6 +1,6 @@
 import logging
 from functools import lru_cache
-from typing import Annotated, AsyncIterator
+from typing import Annotated, Any, AsyncIterator
 
 from amsterdam_mail_service_client.api.default_api import DefaultApi
 from amsterdam_mail_service_client.api_client import ApiClient
@@ -29,6 +29,9 @@ from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
+from pdok_api_client.api_client import ApiClient as PDOKApiClient
+from pdok_api_client.configuration import Configuration as PDOKApiConfiguration
 from plugfs.azure import AzureStorageBlobsAdapter
 from plugfs.filesystem import Adapter, Filesystem
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
@@ -68,6 +71,7 @@ from meldingen.actions import (
     UserRetrieveAction,
     UserUpdateAction,
 )
+from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
@@ -92,7 +96,7 @@ from meldingen.location import (
     ShapePointFactory,
     ShapeToGeoJSONTransformer,
     ShapeToWKBTransformer,
-    WKBToShapeTransformer,
+    WKBToPointShapeTransformer,
 )
 from meldingen.mail import (
     AmsterdamMailServiceMailer,
@@ -698,14 +702,57 @@ def shape_to_wkb_transformer() -> ShapeToWKBTransformer:
     return ShapeToWKBTransformer()
 
 
-def wkb_to_shape_transformer() -> WKBToShapeTransformer:
-    return WKBToShapeTransformer()
+def wkb_to_point_shape_transformer() -> WKBToPointShapeTransformer:
+    return WKBToPointShapeTransformer()
 
 
 def shape_to_geojson_transformer(
     geojson_factory: Annotated[GeoJsonFeatureFactory, Depends(geo_json_feature_factory)],
 ) -> ShapeToGeoJSONTransformer:
     return ShapeToGeoJSONTransformer(geojson_factory)
+
+
+def address_api_configuration() -> PDOKApiConfiguration:
+    return PDOKApiConfiguration(retries=settings.address_api_resolver_retries)
+
+
+async def address_api_client(
+    configuration: Annotated[PDOKApiConfiguration, Depends(address_api_configuration)],
+) -> AsyncIterator[PDOKApiClient]:
+    async with PDOKApiClient(configuration) as api_client:
+        yield api_client
+
+
+def address_api_instance(api_client: Annotated[PDOKApiClient, Depends(address_api_client)]) -> PDOKApiInstance:
+    return PDOKApiInstance(api_client)
+
+
+def address_transformer() -> PDOKAddressTransformer:
+    return PDOKAddressTransformer()
+
+
+def pdok_search_config() -> dict[str, Any]:
+    return {
+        "rows": 1,
+        "distance": 30,
+        "type": "adres",
+        "fl": "id, afstand, huisnummer, huisletter, postcode, straatnaam, woonplaatsnaam",
+    }
+
+
+def address_resolver(
+    api_instance: Annotated[PDOKApiInstance, Depends(address_api_instance)],
+    address_transformer: Annotated[PDOKAddressTransformer, Depends(address_transformer)],
+    search_config: Annotated[dict[str, Any], Depends(pdok_search_config)],
+) -> PDOKAddressResolver:
+    return PDOKAddressResolver(api_instance, address_transformer, search_config)
+
+
+def address_enricher_task(
+    address_resolver: Annotated[PDOKAddressResolver, Depends(address_resolver)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> AddressEnricherTask:
+    return AddressEnricherTask(address_resolver, repository)
 
 
 def location_ingestor(
@@ -717,17 +764,26 @@ def location_ingestor(
 
 
 def location_output_transformer(
-    wkb_to_shape_transformer: Annotated[WKBToShapeTransformer, Depends(wkb_to_shape_transformer)],
+    wkb_to_point_shape_transformer: Annotated[WKBToPointShapeTransformer, Depends(wkb_to_point_shape_transformer)],
     shape_to_geojson_transformer: Annotated[ShapeToGeoJSONTransformer, Depends(shape_to_geojson_transformer)],
 ) -> LocationOutputTransformer:
-    return LocationOutputTransformer(wkb_to_shape_transformer, shape_to_geojson_transformer)
+    return LocationOutputTransformer(wkb_to_point_shape_transformer, shape_to_geojson_transformer)
 
 
 def melding_add_location_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     location_ingestor: Annotated[MeldingLocationIngestor, Depends(location_ingestor)],
+    background_task_manager: BackgroundTasks,
+    address_enricher_task: Annotated[AddressEnricherTask, Depends(address_enricher_task)],
+    wkb_to_point_shape_transformer: Annotated[WKBToPointShapeTransformer, Depends(wkb_to_point_shape_transformer)],
 ) -> AddLocationToMeldingAction:
-    return AddLocationToMeldingAction(token_verifier, location_ingestor)
+    return AddLocationToMeldingAction(
+        token_verifier,
+        location_ingestor,
+        background_task_manager,
+        address_enricher_task,
+        wkb_to_point_shape_transformer,
+    )
 
 
 def melding_output_factory(

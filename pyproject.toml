@@ -29,6 +29,7 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi (>=0.50b0,<0.53)",
     "opentelemetry-instrumentation-httpx (>=0.50b0,<0.53)",
     "opentelemetry-instrumentation-sqlalchemy (>=0.50b0,<0.53)",
+    "pdok-api-client @ git+https://github.com/Amsterdam/pdok-api-client.git",
     "phonenumbers (>=9.0.0,<9.1.0)",
     "pydantic-extra-types (>=2.10.2,<3.0.0)",
     "pydantic-jsonlogic @ git+https://github.com/Amsterdam/pydantic-jsonlogic.git",

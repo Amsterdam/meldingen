@@ -1967,7 +1967,13 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
         indirect=True,
     )
     async def test_add_location_to_melding(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
+        geojson: dict[str, Any],
+        address_api_client_override: None,
+        address_api_mock_data: dict[str, Any],
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
@@ -1981,6 +1987,10 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
         assert body.get("geo_location").get("type") == geojson["type"]
         assert body.get("geo_location").get("geometry").get("type") == geojson["geometry"]["type"]
         assert body.get("geo_location").get("geometry").get("coordinates") == geojson["geometry"]["coordinates"]
+        assert body.get("city") == address_api_mock_data.get("woonplaatsnaam")
+        assert body.get("street") == address_api_mock_data.get("straatnaam")
+        assert body.get("house_number") == address_api_mock_data.get("huisnummer")
+        assert body.get("house_number_addition") == address_api_mock_data.get("huisletter")
 
     @pytest.mark.anyio
     async def test_add_location_to_melding_melding_not_found(
@@ -2025,6 +2035,38 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
 
         assert len(detail) == 6
         assert detail[0].get("msg") == "Input should be 'Point'"
+
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "geojson_geometry"],
+        [
+            (
+                "De restafvalcontainer is vol.",
+                MeldingStates.ATTACHMENTS_ADDED,
+                "supersecrettoken",
+                {
+                    "type": "Point",
+                },
+            )
+        ],
+        indirect=True,
+    )
+    async def test_add_location_no_coordinates(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+            json=geojson,
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Field required"
+        assert detail[0].get("loc") == ["body", "geometry", "coordinates"]
 
 
 class TestMeldingAddContactAction(BaseTokenAuthenticationTest):
