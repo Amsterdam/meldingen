@@ -2153,7 +2153,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "task/use-sequence-instead-list-in-models"
-resolved_reference = "7aeda7e666238744dda16f76ee08ebfb2d0a6ad4"
+resolved_reference = "181cd1390678b0696efcfa359acf3a08169e8101"
 
 [[package]]
 name = "mergedeep"
