@@ -21,13 +21,24 @@ class BaseAddressTransformer(metaclass=ABCMeta):
 
 class PDOKAddressTransformer(BaseAddressTransformer):
 
-    def __call__(self, data: dict[str, Any]) -> Address:
+    def __call__(self, data: dict[str, str | int | None]) -> Address:
+        street = data.get("street")
+        assert isinstance(street, str)
+        house_number = data.get("huisnummer")
+        assert isinstance(house_number, int)
+        house_number_addition = data.get("huisletter")
+        assert isinstance(house_number_addition, str) or house_number_addition is None
+        postal_code = data.get("postcode")
+        assert isinstance(postal_code, str)
+        city = data.get("woonplaatsnaam")
+        assert isinstance(city, str)
+
         return Address(
-            street=data.get("straatnaam", None),
-            house_number=data.get("huisnummer", None),
-            house_number_addition=data.get("huisletter", None),
-            postal_code=data.get("postcode", None),
-            city=data.get("woonplaatsnaam", None),
+            street=street,
+            house_number=house_number,
+            house_number_addition=house_number_addition,
+            postal_code=postal_code,
+            city=city,
         )
 
 
