@@ -2152,8 +2152,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "6a9efa05809d4a0fe25f22465a3f32e3aa79ad8f"
+reference = "task/use-sequence-instead-list-in-models"
+resolved_reference = "7aeda7e666238744dda16f76ee08ebfb2d0a6ad4"
 
 [[package]]
 name = "mergedeep"
@@ -4778,4 +4778,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "7d2936560b40338735a2d52f5ca33da1b85e1b576d5ac806400082102f8c4bc7"
+content-hash = "bd599af0a6a3a6f232df912b072b9528a2d9b771d20e1ef0b6e8989a307f43dc"
