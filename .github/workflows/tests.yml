@@ -1,7 +1,7 @@
 name: Tests
 on:
   workflow_run:
-    workflows: [Build]
+    workflows: [build_container_images]
     types: [completed]
 permissions:
   contents: read
