@@ -22,15 +22,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create the .env file
+        run: cp .env.example .env
+
       - name: Pull container images
         run: |
           export REGISTRY=ghcr.io
           export REPOSITORY=amsterdam
           export VERSION=cache
           docker compose pull meldingen
-
-      - name: Create the .env file
-        run: cp .env.example .env
 
       - name: Run alembic tests
         run: docker compose run --rm meldingen pytest --test-alembic -m alembic
