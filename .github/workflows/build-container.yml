@@ -31,7 +31,7 @@ jobs:
       - name: Push images
         run: |
           export
-          echo ${REGISTRY}
+          echo ${vars.REGISTRY}
           docker compose push meldingen
 
   run_tests:
