@@ -60,3 +60,25 @@ jobs:
 
       - name: Run tests
         run: docker compose run --rm -e COVERAGE_FILE=/tmp/.coverage meldingen pytest --cov --cov-fail-under=95 -n auto -v
+
+  Black:
+    needs: build_container_images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create the .env file
+        run: cp .env.example .env
+
+      - name: Pull images
+        run: docker compose pull meldingen
+
+      - name: black
+        run:  docker compose run --rm meldingen black . --check
