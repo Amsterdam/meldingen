@@ -3,6 +3,10 @@ on: [pull_request]
 permissions:
   contents: read
   packages: write
+env:
+  REGISTRY: ${{ vars.REGISTRY }}
+  REPOSITORY: ${{ vars.REPOSITORY }}
+  VERSION: ${{ vars.VERSION }}
 
 jobs:
   build_container_images:
@@ -24,12 +28,6 @@ jobs:
 
       - name: Create the .env file
         run: cp .env.example .env
-
-      - name: Set env vars
-        run: |
-          export REGISTRY=${{ vars.REGISTRY }}
-          export REPOSITORY=${{ vars.REPOSITORY }}
-          export VERSION=${{ vars.VERSION }}
 
       - name: Build containers
         run: docker buildx bake --file docker-compose.yml --file docker-compose.cache.json
