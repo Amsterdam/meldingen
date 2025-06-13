@@ -30,8 +30,10 @@ jobs:
 
       - name: Push images
         run: |
+          export REGISTRY=${{ vars.REGISTRY }}
+          export REPOSITORY=${{ vars.REPOSITORY }}
+          export VERSION=${{ vars.VERSION }}
           export
-          echo ${vars.REGISTRY}
           docker compose push meldingen
 
   run_tests:
