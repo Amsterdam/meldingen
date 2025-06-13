@@ -27,9 +27,9 @@ jobs:
 
       - name: Pull container images
         run: |
-          export REGISTRY=ghcr.io
-          export REPOSITORY=amsterdam
-          export VERSION=cache
+          export REGISTRY="ghcr.io"
+          export REPOSITORY="amsterdam/meldingen"
+          export VERSION="cache"
           docker compose pull meldingen
 
       - name: Run alembic tests
