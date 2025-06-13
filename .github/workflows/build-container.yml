@@ -27,3 +27,31 @@ jobs:
 
       - name: Build containers
         run: docker buildx bake --file docker-compose.yml --file docker-compose.cache.json
+
+      - name: Push images
+        run: docker compose push meldingen
+
+  run_tests:
+    needs: build_container_images
+    runs-on:
+      group: large-runners
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull images
+        run: docker compose pull meldingen
+
+      - name: Create the .env file
+        run: cp .env.example .env
+
+      - name: Run alembic tests
+        run: docker compose run --rm meldingen pytest --test-alembic -m alembic
+
+      - name: Run tests
+        run: docker compose run --rm -e COVERAGE_FILE=/tmp/.coverage meldingen pytest --cov --cov-fail-under=95 -n auto -v
