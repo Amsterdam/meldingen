@@ -2518,19 +2518,19 @@ reports = ["lxml"]
 
 [[package]]
 name = "mypy-baseline"
-version = "0.7.2"
+version = "0.7.3"
 description = "Integrate mypy with existing codebase."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "mypy_baseline-0.7.2-py3-none-any.whl", hash = "sha256:11db405082075f244c808d9268130ea95554ec2b8856b5c9bb09df539dc1836a"},
-    {file = "mypy_baseline-0.7.2.tar.gz", hash = "sha256:cffd6943a5d8959c15951ffe04f020c9010408711eee5113a507e0f1816d9a2d"},
+    {file = "mypy_baseline-0.7.3-py3-none-any.whl", hash = "sha256:bd7fa899e687d75af2e3f392a9d6d1790e65dae3d31fe12525cc14f26d866b74"},
+    {file = "mypy_baseline-0.7.3.tar.gz", hash = "sha256:325f0695310eb8f5c0f10fa7af36ee1b3785a9d26b886a61c07b4a8eddb28d29"},
 ]
 
 [package.extras]
 docs = ["myst-parser", "sphinx"]
-lint = ["flake8", "isort", "mypy", "types-requests", "types-toml", "unify"]
+lint = ["flake8", "isort", "mypy", "types-requests", "types-toml"]
 test = ["pytest", "pytest-cov", "requests", "responses"]
 
 [[package]]
@@ -4781,4 +4781,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "7d2936560b40338735a2d52f5ca33da1b85e1b576d5ac806400082102f8c4bc7"
+content-hash = "6d063d1da3fa5458b834725fa92708f1397bcaba4357879fc83c3f3d7c3a990e"

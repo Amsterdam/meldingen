@@ -53,7 +53,7 @@ mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.6.2"
 mkdocstrings = {version = "^0.29.0", extras = ["python"]}
 mypy = "^1.14.0"
-mypy-baseline = "^0.7.1"
+mypy-baseline = "^0.7.3"
 pre-commit = "^4.1.0"
 pytest = "^8.3.3"
 pytest-alembic = "^0.11.1"
