@@ -2,10 +2,10 @@
   "target": {
     "meldingen": {
       "cache-from": [
-        "type=registry,ref=ghcr.io/amsterdam/meldingen:cache"
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-backend:cache"
       ],
       "cache-to": [
-        "type=registry,ref=ghcr.io/amsterdam/meldingen:cache"
+        "type=registry,ref=ghcr.io/amsterdam/meldingen-backend:cache"
       ],
       "output": [
         "type=docker"

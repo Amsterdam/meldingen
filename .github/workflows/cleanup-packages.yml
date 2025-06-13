@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/delete-package-versions@v5
         with:
-          package-name: 'meldingen'
+          package-name: 'meldingen-backend'
           package-type: 'container'
           min-versions-to-keep: 2
       - uses: actions/delete-package-versions@v5

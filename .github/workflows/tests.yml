@@ -24,7 +24,10 @@ jobs:
 
       - name: Pull container images
         run: |
-          docker compose --file docker-compose.yml --file docker-compose.cache.json pull meldingen
+          export REGISTRY=ghcr.io
+          export REPOSITORY=amsterdam
+          export VERSION=cache
+          docker compose pull meldingen
 
       - name: Create the .env file
         run: cp .env.example .env
