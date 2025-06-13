@@ -58,7 +58,7 @@ pre-commit = "^4.1.0"
 pytest = "^8.3.3"
 pytest-alembic = "^0.12.1"
 pytest-bdd = "^8.1.0"
-pytest-cov = "^6.0.0"
+pytest-cov = "^6.2.1"
 pytest-xdist = {extras = ["psutil"], version = "^3.6.1"}
 typer = {extras = ["all"], version = "^0.15.1"}
 types-shapely = "^2.0.0.20241221"
