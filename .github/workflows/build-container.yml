@@ -25,16 +25,17 @@ jobs:
       - name: Create the .env file
         run: cp .env.example .env
 
-      - name: Build containers
-        run: docker buildx bake --file docker-compose.yml --file docker-compose.cache.json
-
-      - name: Push images
+      - name: Set env vars
         run: |
           export REGISTRY=${{ vars.REGISTRY }}
           export REPOSITORY=${{ vars.REPOSITORY }}
           export VERSION=${{ vars.VERSION }}
-          export
-          docker compose push meldingen
+
+      - name: Build containers
+        run: docker buildx bake --file docker-compose.yml --file docker-compose.cache.json
+
+      - name: Push images
+        run: docker compose push meldingen
 
   run_tests:
     needs: build_container_images
