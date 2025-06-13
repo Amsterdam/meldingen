@@ -6,7 +6,7 @@ permissions:
 env:
   REGISTRY: ${{ vars.REGISTRY }}
   REPOSITORY: ${{ vars.REPOSITORY }}
-  VERSION: ${{ vars.VERSION }}
+  VERSION: ${{ github.ref_name }}
 
 jobs:
   build_container_images:
