@@ -14,6 +14,7 @@ from meldingen_core.repositories import (
     BaseRepository,
     BaseUserRepository,
 )
+from meldingen_core.statemachine import MeldingStates
 from sqlalchemy import Select, delete, desc, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -163,12 +164,19 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
         area: str | None = None,
+        state: MeldingStates | None = None,
     ) -> Sequence[Melding]:
         _type = self.get_model_type()
         statement = select(_type)
 
+        print(f"Filtering by state: {state}")
+
         if area is not None:
             statement = statement.filter(func.ST_Contains(func.ST_GeomFromGeoJSON(area), Melding.geo_location))
+
+        if state is not None:
+            print(f"Filtering by state: {state}")
+            statement = statement.filter(Melding.state == state)
 
         statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
 

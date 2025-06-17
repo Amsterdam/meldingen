@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
+from meldingen_core.statemachine import MeldingStates
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
 from sqlalchemy import select
@@ -295,6 +296,37 @@ async def meldingen_with_location(db_session: AsyncSession, melding_locations: l
         melding = Melding(text=f"Melding {i}")
         melding.public_id = f"MELDI{i}"
         melding.geo_location = location
+
+        db_session.add(melding)
+        meldingen.append(melding)
+
+    await db_session.commit()
+
+    for melding in meldingen:
+        await db_session.refresh(melding)
+
+    return meldingen
+
+
+@pytest.fixture
+def melding_states(request: FixtureRequest) -> list[MeldingStates]:
+    if hasattr(request, "param"):
+        return request.param
+
+    return []
+
+
+@pytest.fixture
+async def meldingen_with_different_states(
+    db_session: AsyncSession, melding_states: list[MeldingStates]
+) -> list[Melding]:
+    meldingen = []
+    i = 0
+    for state in melding_states:
+        i += 1
+        melding = Melding(text=f"Melding {i}")
+        melding.public_id = f"MELDI{i}"
+        melding.state = state
 
         db_session.add(melding)
         meldingen.append(melding)

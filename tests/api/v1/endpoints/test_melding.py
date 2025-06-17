@@ -331,6 +331,42 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
 
         assert melding_response.get("text") == melding.text
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "melding_states",
+        [
+            (
+                MeldingStates.NEW,
+                MeldingStates.NEW,
+                MeldingStates.ATTACHMENTS_ADDED,
+                MeldingStates.CLASSIFIED,
+                MeldingStates.NEW,
+                MeldingStates.PROCESSING,
+                MeldingStates.SUBMITTED,
+                MeldingStates.NEW,
+            )
+        ],
+    )
+    async def test_list_state_filter(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        meldingen_with_different_states: list[Melding],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"state": MeldingStates.NEW})
+
+        assert response.status_code == 200
+
+        body = response.json()
+
+        assert len(body) == 4
+
+        melding = meldingen_with_different_states[0]
+        melding_response = body[0]
+
+        assert melding_response.get("state") == melding.state
+
 
 class TestMeldingRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:retrieve"

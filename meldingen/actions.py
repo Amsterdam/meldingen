@@ -28,6 +28,7 @@ from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAc
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
 from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.statemachine import MeldingStates
 from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -118,6 +119,7 @@ class MeldingListAction(BaseMeldingListAction[Melding]):
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
         area: str | None = None,
+        state: MeldingStates | None = None,
     ) -> Sequence[Melding]:
         try:
             return await super().__call__(
@@ -126,6 +128,7 @@ class MeldingListAction(BaseMeldingListAction[Melding]):
                 sort_attribute_name=sort_attribute_name,
                 sort_direction=sort_direction,
                 area=area,
+                state=state,
             )
         except AttributeNotFoundException as e:
             raise HTTPException(
