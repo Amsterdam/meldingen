@@ -311,7 +311,8 @@ async def meldingen_with_location(db_session: AsyncSession, melding_locations: l
 @pytest.fixture
 def melding_states(request: FixtureRequest) -> list[MeldingStates]:
     if hasattr(request, "param"):
-        return request.param
+        param: list[MeldingStates] = request.param
+        return param
 
     return []
 
