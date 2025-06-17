@@ -169,13 +169,10 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         _type = self.get_model_type()
         statement = select(_type)
 
-        print(f"Filtering by state: {state}")
-
         if area is not None:
             statement = statement.filter(func.ST_Contains(func.ST_GeomFromGeoJSON(area), Melding.geo_location))
 
         if state is not None:
-            print(f"Filtering by state: {state}")
             statement = statement.filter(Melding.state == state)
 
         statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
