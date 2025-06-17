@@ -367,6 +367,59 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
 
         assert melding_response.get("state") == melding.state
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "melding_states, melding_locations",
+        [
+            (
+                [
+                    MeldingStates.NEW,
+                    MeldingStates.NEW,
+                    MeldingStates.NEW,
+                    MeldingStates.PROCESSING,
+                    MeldingStates.NEW,
+                    MeldingStates.NEW,
+                    MeldingStates.NEW,
+                    MeldingStates.NEW,
+                ],
+                [
+                    "POINT(4.898451690545197 52.37256509259712)",  # Barndesteeg 1B, Stadsdeel: Centrum
+                    "POINT(4.938320969227033 52.40152495315581)",  # Bakkerswaal 30, Stadsdeel: Noord
+                    "POINT(4.872746743968191 52.3341878625198)",  # Ennemaborg 7, Stadsdeel: Zuid
+                    "POINT(4.898451690545197 52.37256509259712)",  # Barndesteeg 1B, Stadsdeel: Centrum
+                    "POINT(4.7765014635225835 52.37127670396132)",  # Osdorperweg 686, Stadsdeel: Nieuw-West
+                    "POINT(4.898451690545197 52.37256509259712)",  # Barndesteeg 1B, Stadsdeel: Centrum
+                    "POINT(4.7765014635225835 52.37127670396132)",  # Osdorperweg 686, Stadsdeel: Nieuw-West
+                    "POINT(4.898451690545197 52.37256509259712)",  # Barndesteeg 1B, Stadsdeel: Centrum
+                ],
+            )
+        ],
+    )
+    async def test_list_with_state_and_in_area_filter(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        meldingen_with_different_states_and_locations: list[Melding],
+    ) -> None:
+        with open("tests/resources/stadsdeel-centrum.json") as f:
+            geojson = f.read()
+
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson, "state": MeldingStates.NEW}
+        )
+
+        assert response.status_code == 200
+
+        body = response.json()
+
+        assert len(body) == 3
+
+        melding = meldingen_with_different_states_and_locations[0]
+        melding_response = body[0]
+
+        assert melding_response.get("text") == melding.text
+
 
 class TestMeldingRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:retrieve"
