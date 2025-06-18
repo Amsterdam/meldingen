@@ -2,6 +2,8 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from meldingen_core.address import BaseAddressResolver
+from pdok_api_client.models.free200_response import Free200Response
+from pdok_api_client.models.response import Response
 from pdok_api_client.api.locatieserver_api import LocatieserverApi
 from pydantic_core import ValidationError
 
@@ -67,3 +69,19 @@ class TestPDOKAddressResolver:
 
         with pytest.raises(InvalidAPIRequestException):
             await resolve(123.0, 456.0)
+
+    @pytest.mark.anyio
+    async def test_returns_none_when_address_can_be_resolved(self) -> None:
+        data = Mock(Free200Response)
+        data.response = Mock(Response)
+        data.response.num_found = 0
+        data.response.docs = []
+
+        api = AsyncMock(LocatieserverApi)
+        api.reverse_geocoder.return_value = data
+
+        resolve = PDOKAddressResolver(api, Mock(PDOKAddressTransformer), {})
+
+        resolved = await resolve(123.0, 456.0)
+
+        assert resolved is None
