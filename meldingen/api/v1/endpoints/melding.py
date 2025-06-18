@@ -20,6 +20,7 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.statemachine import MeldingStates
 from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
@@ -149,6 +150,7 @@ async def list_meldingen(
     action: Annotated[MeldingListAction, Depends(melding_list_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
     in_area: Annotated[str, Query(description="Geometry which the melding location should reside in.")] | None = None,
+    state: Annotated[MeldingStates, Query(description="State that the melding should have")] | None = None,
 ) -> list[MeldingOutput]:
     area = None
     if in_area is not None:
@@ -169,6 +171,7 @@ async def list_meldingen(
         sort_attribute_name=sort.get_attribute_name(),
         sort_direction=sort.get_direction(),
         area=area,
+        state=state,
     )
     output = []
     for melding in meldingen:
