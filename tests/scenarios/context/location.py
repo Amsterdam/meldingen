@@ -20,7 +20,12 @@ def i_know_the_latitude_and_longitude_values_of_my_melding(lat: float, lon: floa
 @when("I add the location as geojson to my melding", target_fixture="my_melding")
 @async_step
 async def i_supply_the_location_as_geojson_to_my_melding(
-    my_melding: dict[str, Any], token: str, geojson: dict[str, float], app: FastAPI, client: AsyncClient
+    my_melding: dict[str, Any],
+    token: str,
+    geojson: dict[str, float],
+    app: FastAPI,
+    client: AsyncClient,
+    address_api_client_override: None,
 ) -> dict[str, Any]:
     response = await client.post(
         app.url_path_for(ROUTE_NAME_LOCATION_ADD, melding_id=my_melding["id"]), params={"token": token}, json=geojson
