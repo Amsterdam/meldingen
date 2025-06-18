@@ -88,7 +88,7 @@ class TestPDOKAddressResolver:
 
     @pytest.mark.anyio
     async def test_address_can_be_resolved(self) -> None:
-        doc = {}
+        doc: dict[str, str | int | None] = {}
         data = Mock(Free200Response)
         data.response = Mock(Response)
         data.response.num_found = 1
