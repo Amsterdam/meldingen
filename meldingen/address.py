@@ -58,7 +58,7 @@ class PDOKAddressResolver(BaseAddressResolver[Address]):
         try:
             data = await self._api.reverse_geocoder(lat=lat, lon=lon, **self._search_config)
         except ValidationError as e:
-            raise InvalidAPIRequestException(e)
+            raise InvalidAPIRequestException(e) from e
 
         results = data.response
         assert results is not None

@@ -2,8 +2,15 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from meldingen_core.address import BaseAddressResolver
+from pdok_api_client.api.locatieserver_api import LocatieserverApi
+from pydantic_core import ValidationError
 
-from meldingen.address import AddressEnricherTask
+from meldingen.address import (
+    AddressEnricherTask,
+    InvalidAPIRequestException,
+    PDOKAddressResolver,
+    PDOKAddressTransformer,
+)
 from meldingen.models import Melding
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas.types import Address
@@ -48,3 +55,15 @@ class TestAddressEnricherTask:
         assert melding.house_number_addition == "A"
         assert melding.postal_code == "1111AA"
         assert melding.city == "Amsterdam"
+
+
+class TestPDOKAddressResolver:
+    @pytest.mark.anyio
+    async def test_raises_invalid_api_request_exception(self) -> None:
+        api = AsyncMock(LocatieserverApi)
+        api.reverse_geocoder.side_effect = ValidationError("Title", [])
+
+        resolve = PDOKAddressResolver(api, Mock(PDOKAddressTransformer), {})
+
+        with pytest.raises(InvalidAPIRequestException):
+            await resolve(123.0, 456.0)
