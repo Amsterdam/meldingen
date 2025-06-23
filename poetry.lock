@@ -3472,8 +3472,8 @@ pydantic = ">=2.10.6,<3.0.0"
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/pydantic-jsonlogic.git"
-reference = "feat-6562/add-validation-message-option"
-resolved_reference = "b623d4d85fb33ddd6d65f6916a922423e6a8ae4d"
+reference = "HEAD"
+resolved_reference = "bdc1b3906e06bc18131fbf30cac644c5ab9f9bd1"
 
 [[package]]
 name = "pydantic-media-type"
@@ -4784,4 +4784,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "79086d833ecee6095d04beb1046f0ddc174945c7b4126fbffc434d68022a6c08"
+content-hash = "b75004990eb1efc8b6c3f3ced614048522a52829986e9aae00aef176b4cc648b"
