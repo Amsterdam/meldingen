@@ -1128,7 +1128,14 @@ class TestMeldingQuestionAnswer:
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_token", "classification_name", "jsonlogic"],
+        [
+            "melding_text",
+            "melding_state",
+            "melding_token",
+            "classification_name",
+            "jsonlogic",
+            "validation_err_message",
+        ],
         [
             (
                 "klacht over iets",
@@ -1136,7 +1143,16 @@ class TestMeldingQuestionAnswer:
                 "supersecuretoken",
                 "test_classification",
                 '{"!=":[{"var": "text"}, "dit is het antwoord op de vraag"]}',
-            )
+                "Input is not valid",
+            ),
+            (
+                "klacht over iets",
+                MeldingStates.CLASSIFIED,
+                "supersecuretoken",
+                "test_classification",
+                '{"if": [{"<=": [{"var": "value.length"},20]}, true, "Max 20 characters"]}',
+                "Max 20 characters",
+            ),
         ],
         indirect=[
             "classification_name",
@@ -1149,6 +1165,7 @@ class TestMeldingQuestionAnswer:
         client: AsyncClient,
         melding_with_classification: Melding,
         form_with_classification: Form,
+        validation_err_message: str,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
         assert len(components) == 1
@@ -1172,8 +1189,8 @@ class TestMeldingQuestionAnswer:
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
         body = response.json()
-        detail = body.get("detail")
-        assert detail == "Invalid input"
+        msg = body.get("detail")[0].get("msg")
+        assert msg == validation_err_message
 
     @pytest.mark.anyio
     async def test_answer_question_melding_does_not_exists(
