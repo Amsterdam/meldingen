@@ -287,7 +287,7 @@ def anyio_backend() -> str:
 
 
 @pytest.fixture
-def address_api_mock_data(request: FixtureRequest) -> dict[str, Any] | None:
+def address_api_mock_data(request: FixtureRequest) -> dict[str, Any]:
     if hasattr(request, "param"):
         return dict(request.param)
     else:
