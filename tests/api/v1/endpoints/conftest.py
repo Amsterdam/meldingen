@@ -653,24 +653,3 @@ async def geojson(geojson_geometry: dict[str, Any]) -> dict[str, Any]:
         "geometry": geometry,
         "properties": {},
     }
-
-
-@pytest.fixture
-def address_api_mock_data(request: FixtureRequest) -> dict[str, Any] | None:
-    if hasattr(request, "param"):
-        return dict(request.param)
-    else:
-        return {
-            "response": {
-                "num_found": 1,
-                "docs": [
-                    {
-                        "straatnaam": "Amstel",
-                        "huisnummer": 1,
-                        "huisletter": "B",
-                        "postcode": "1011PN",
-                        "woonplaatsnaam": "Amsterdam",
-                    }
-                ],
-            }
-        }

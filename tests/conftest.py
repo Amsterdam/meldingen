@@ -287,6 +287,27 @@ def anyio_backend() -> str:
 
 
 @pytest.fixture
+def address_api_mock_data(request: FixtureRequest) -> dict[str, Any]:
+    if hasattr(request, "param"):
+        return dict(request.param)
+    else:
+        return {
+            "response": {
+                "num_found": 1,
+                "docs": [
+                    {
+                        "straatnaam": "Amstel",
+                        "huisnummer": 1,
+                        "huisletter": "B",
+                        "postcode": "1011PN",
+                        "woonplaatsnaam": "Amsterdam",
+                    }
+                ],
+            }
+        }
+
+
+@pytest.fixture
 def address_api_client_override(app: FastAPI, address_api_mock_data: dict[str, Any]) -> None:
     """Prevent unnecessary calls to external address API"""
 
