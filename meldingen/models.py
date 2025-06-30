@@ -4,6 +4,7 @@ from typing import Any, Optional, Union
 
 from geoalchemy2 import Geometry, WKBElement
 from meldingen_core.models import Answer as BaseAnswer
+from meldingen_core.models import Asset as BaseAsset
 from meldingen_core.models import AssetType as BaseAssetType
 from meldingen_core.models import Attachment as BaseAttachment
 from meldingen_core.models import Classification as BaseClassification
@@ -34,6 +35,12 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
 
 class AssetType(BaseDBModel, BaseAssetType):
     name: Mapped[str] = mapped_column(String, unique=True)
+
+
+class Asset(BaseDBModel, BaseAsset):
+    external_id: Mapped[str] = mapped_column(String, unique=True)
+    type_id: Mapped[int] = mapped_column(ForeignKey(AssetType.id), init=False)
+    type: Mapped[AssetType] = relationship()
 
 
 class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
