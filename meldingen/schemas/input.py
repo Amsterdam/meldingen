@@ -194,3 +194,8 @@ class MailPreviewInput(BaseModel):
 
 class CompleteMeldingInput(BaseModel):
     mail_body: str
+
+
+class AssetTypeInput(BaseModel):
+    name: str
+    class_name: str
