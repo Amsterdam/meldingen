@@ -4,6 +4,7 @@ from typing import Any, Optional, Union
 
 from geoalchemy2 import Geometry, WKBElement
 from meldingen_core.models import Answer as BaseAnswer
+from meldingen_core.models import AssetType as BaseAssetType
 from meldingen_core.models import Attachment as BaseAttachment
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Form as BaseForm
@@ -29,6 +30,10 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
     def __tablename__(cls) -> str:
         """Converts the __name__ of the Class to lowercase snakecase"""
         return to_snake(cls.__name__)
+
+
+class AssetType(BaseDBModel, BaseAssetType):
+    name: Mapped[str] = mapped_column(String, unique=True)
 
 
 class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
