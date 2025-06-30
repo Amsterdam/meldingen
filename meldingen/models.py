@@ -4,6 +4,8 @@ from typing import Any, Optional, Union
 
 from geoalchemy2 import Geometry, WKBElement
 from meldingen_core.models import Answer as BaseAnswer
+from meldingen_core.models import Asset as BaseAsset
+from meldingen_core.models import AssetType as BaseAssetType
 from meldingen_core.models import Attachment as BaseAttachment
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Form as BaseForm
@@ -31,9 +33,29 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
         return to_snake(cls.__name__)
 
 
+class AssetType(BaseDBModel, BaseAssetType):
+    name: Mapped[str] = mapped_column(String, unique=True)
+
+
+class Asset(BaseDBModel, BaseAsset):
+    external_id: Mapped[str] = mapped_column(String, unique=True)
+    type_id: Mapped[int] = mapped_column(ForeignKey(AssetType.id), init=False)
+    type: Mapped[AssetType] = relationship()
+
+
 class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
     name: Mapped[str] = mapped_column(String, unique=True)
     form: Mapped[Optional["Form"]] = relationship(default=None, back_populates="classification")
+    asset_type_id: Mapped[int | None] = mapped_column(ForeignKey(AssetType.id), default=None)
+    asset_type: Mapped[AssetType | None] = relationship(default=None)
+
+
+asset_melding = Table(
+    "asset_melding",
+    BaseDBModel.metadata,
+    Column("asset_id", Integer, ForeignKey(Asset.id), primary_key=True),
+    Column("melding_id", Integer, ForeignKey("melding.id"), primary_key=True),
+)
 
 
 class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
@@ -59,6 +81,7 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     city: Mapped[str | None] = mapped_column(String, default=None)
     email: Mapped[str | None] = mapped_column(String(254), default=None)
     phone: Mapped[str | None] = mapped_column(String(50), default=None)
+    assets: Mapped[list[Asset]] = relationship(secondary=asset_melding, default_factory=list)
 
 
 user_group = Table(
