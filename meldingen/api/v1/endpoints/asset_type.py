@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from starlette.status import HTTP_201_CREATED
 
 from meldingen.actions import AssetTypeCreateAction
+from meldingen.api.v1 import conflict_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import asset_type_create_action
 from meldingen.models import AssetType
@@ -17,6 +18,7 @@ router = APIRouter()
     "/",
     name="asset-type:create",
     status_code=HTTP_201_CREATED,
+    responses={**unauthorized_response, **conflict_response},
     dependencies=[Depends(authenticate_user)],
 )
 async def create_asset_type(
