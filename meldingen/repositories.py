@@ -6,6 +6,7 @@ from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import (
     BaseAnswerRepository,
+    BaseAssetTypeRepository,
     BaseAttachmentRepository,
     BaseClassificationRepository,
     BaseFormRepository,
@@ -23,6 +24,7 @@ from sqlalchemy.sql import func
 
 from meldingen.models import (
     Answer,
+    AssetType,
     Attachment,
     BaseDBModel,
     Classification,
@@ -291,3 +293,8 @@ class AttachmentRepository(BaseSQLAlchemyRepository[Attachment], BaseAttachmentR
         result = await self._session.execute(statement)
 
         return result.scalars().all()
+
+
+class AssetTypeRepository(BaseSQLAlchemyRepository[AssetType], BaseAssetTypeRepository[AssetType]):
+    def get_model_type(self) -> type[AssetType]:
+        return AssetType
