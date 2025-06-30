@@ -35,6 +35,7 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
 
 class AssetType(BaseDBModel, BaseAssetType):
     name: Mapped[str] = mapped_column(String, unique=True)
+    class_name: Mapped[str] = mapped_column(String)
 
 
 class Asset(BaseDBModel, BaseAsset):
