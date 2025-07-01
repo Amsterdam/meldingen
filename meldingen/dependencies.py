@@ -41,6 +41,7 @@ from meldingen.actions import (
     AddLocationToMeldingAction,
     AnswerCreateAction,
     AssetTypeCreateAction,
+    AssetTypeRetrieveAction,
     ClassificationCreateAction,
     ClassificationDeleteAction,
     ClassificationListAction,
@@ -125,6 +126,7 @@ from meldingen.repositories import (
 )
 from meldingen.schemas.output_factories import (
     AnswerListOutputFactory,
+    AssetTypeOutputFactory,
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
     FormComponentValueOutputFactory,
@@ -1029,7 +1031,17 @@ def asset_type_repository(database_session: Annotated[AsyncSession, Depends(data
     return AssetTypeRepository(database_session)
 
 
+def asset_type_output_factory() -> AssetTypeOutputFactory:
+    return AssetTypeOutputFactory()
+
+
 def asset_type_create_action(
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> AssetTypeCreateAction:
     return AssetTypeCreateAction(repository)
+
+
+def asset_type_retrieve_action(
+    repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+) -> AssetTypeRetrieveAction:
+    return AssetTypeRetrieveAction(repository)
