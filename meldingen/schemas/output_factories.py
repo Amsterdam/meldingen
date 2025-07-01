@@ -4,6 +4,7 @@ from typing import Union
 from meldingen.location import LocationOutputTransformer
 from meldingen.models import (
     Answer,
+    AssetType,
     BaseFormIoValuesComponent,
     Classification,
     Form,
@@ -21,6 +22,7 @@ from meldingen.models import (
 )
 from meldingen.schemas.output import (
     AnswerQuestionOutput,
+    AssetTypeOutput,
     BaseFormComponentOutput,
     ClassificationOutput,
     FormCheckboxComponentOutput,
@@ -625,3 +627,14 @@ class AnswerListOutputFactory:
         _sorted = dict(sorted(flattened.items()))
 
         return [*_sorted.values()]
+
+
+class AssetTypeOutputFactory:
+    def __call__(self, asset_type: AssetType) -> AssetTypeOutput:
+        return AssetTypeOutput(
+            id=asset_type.id,
+            name=asset_type.name,
+            class_name=asset_type.class_name,
+            created_at=asset_type.created_at,
+            updated_at=asset_type.updated_at,
+        )
