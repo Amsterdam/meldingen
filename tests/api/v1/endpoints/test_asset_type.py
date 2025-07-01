@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_422_UNPROCESSABLE_ENTITY,
@@ -233,3 +234,31 @@ class TestUpdateAssetType(BaseUnauthorizedTest):
         assert body.get("class_name") == "bla.bla"
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
+
+
+class TestDeleteAssetType(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "asset-type:delete"
+
+    def get_method(self) -> str:
+        return "DELETE"
+
+    @override
+    def get_path_params(self) -> dict[str, Any]:
+        return {"asset_type_id": 123}
+
+    @pytest.mark.anyio
+    async def test_delete_asset_type_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.delete(app.url_path_for(self.get_route_name(), asset_type_id=123))
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_delete_asset_type(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_type: AssetType
+    ) -> None:
+        response = await client.delete(app.url_path_for(self.get_route_name(), asset_type_id=asset_type.id))
+
+        assert response.status_code == HTTP_204_NO_CONTENT
