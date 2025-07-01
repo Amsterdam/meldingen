@@ -41,6 +41,7 @@ from meldingen.actions import (
     AddLocationToMeldingAction,
     AnswerCreateAction,
     AssetTypeCreateAction,
+    AssetTypeDeleteAction,
     AssetTypeRetrieveAction,
     AssetTypeUpdateAction,
     ClassificationCreateAction,
@@ -1052,3 +1053,9 @@ def asset_type_update_action(
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> AssetTypeUpdateAction:
     return AssetTypeUpdateAction(repository)
+
+
+def asset_type_delete_action(
+    repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+) -> AssetTypeDeleteAction:
+    return AssetTypeDeleteAction(repository)
