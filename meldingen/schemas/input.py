@@ -199,3 +199,8 @@ class CompleteMeldingInput(BaseModel):
 class AssetTypeInput(BaseModel):
     name: str
     class_name: str
+
+
+class AssetTypeUpdateInput(BaseModel):
+    name: str | None = None
+    class_name: str | None = None
