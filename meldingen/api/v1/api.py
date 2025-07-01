@@ -1,6 +1,16 @@
 from fastapi import APIRouter
 
-from meldingen.api.v1.endpoints import asset, asset_type, attachment, classification, form, mail, melding, static_form, user
+from meldingen.api.v1.endpoints import (
+    asset,
+    asset_type,
+    attachment,
+    classification,
+    form,
+    mail,
+    melding,
+    static_form,
+    user,
+)
 
 api_router = APIRouter()
 api_router.include_router(attachment.router, prefix="/attachment", tags=["attachment"])
@@ -12,4 +22,3 @@ api_router.include_router(form.router, prefix="/form", tags=["form"])
 api_router.include_router(static_form.router, prefix="/static-form", tags=["static-form"])
 api_router.include_router(asset_type.router, prefix="/asset-type", tags=["asset-type"])
 api_router.include_router(asset.router, prefix="/asset", tags=["asset"])
-

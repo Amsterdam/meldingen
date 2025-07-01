@@ -1,13 +1,13 @@
-from typing import Tuple, AsyncIterator
+from typing import AsyncIterator, Tuple
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from fastapi import APIRouter, Depends, Request
 from httpx import AsyncClient
 from meldingen_core.wfs import BaseWfsProvider
 from starlette.responses import RedirectResponse, Response, StreamingResponse
 
-from meldingen.api.v1 import unauthorized_response, not_found_response
+from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
-from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 router = APIRouter()
 
@@ -30,19 +30,11 @@ class ContainerWfsAsset(BaseWfsProvider):
         output_format: str = "application/json",
         filter: str | None = None,
     ) -> Tuple[AsyncIterator[bytes], str]:
-        url = self.get_url(
-            self.base_url,
-            type_names,
-            count,
-            srs_name,
-            output_format,
-            filter
-        )
+        url = self.get_url(self.base_url, type_names, count, srs_name, output_format, filter)
 
         iterator = self.stream_data_from_url(url)
 
         return iterator, output_format
-
 
     async def stream_data_from_url(self, url: str) -> AsyncIterator[bytes]:
         """
@@ -56,7 +48,6 @@ class ContainerWfsAsset(BaseWfsProvider):
                 # Iterate over the response content in chunks
                 async for chunk in response.aiter_bytes():
                     yield chunk
-
 
     def get_url(
         self,

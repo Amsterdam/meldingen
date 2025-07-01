@@ -1,8 +1,9 @@
+import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
 
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
-import pytest
+
 
 class TestRetrieveContainerAsset(BaseUnauthorizedTest):
     def get_route_name(self) -> str:
@@ -16,5 +17,3 @@ class TestRetrieveContainerAsset(BaseUnauthorizedTest):
         response = await client.get(app.url_path_for(self.get_route_name()))
 
         print(response)
-
-
