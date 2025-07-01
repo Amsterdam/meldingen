@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from meldingen.authentication import authenticate_user
 from meldingen.models import (
     Answer,
+    AssetType,
     Attachment,
     Classification,
     Form,
@@ -653,3 +654,29 @@ async def geojson(geojson_geometry: dict[str, Any]) -> dict[str, Any]:
         "geometry": geometry,
         "properties": {},
     }
+
+
+@pytest.fixture
+def asset_type_name(request: FixtureRequest) -> str:
+    if hasattr(request, "param"):
+        return str(request.param)
+
+    return "test_asset_type"
+
+
+@pytest.fixture
+def asset_type_class_name(request: FixtureRequest) -> str:
+    if hasattr(request, "param"):
+        return str(request.param)
+
+    return "test.AssetTypeClassName"
+
+
+@pytest.fixture
+async def asset_type(db_session: AsyncSession, asset_type_name: str, asset_type_class_name: str) -> AssetType:
+    asset_type = AssetType(name=asset_type_name, class_name=asset_type_class_name)
+
+    db_session.add(asset_type)
+    await db_session.commit()
+
+    return asset_type

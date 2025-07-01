@@ -219,3 +219,8 @@ class AttachmentOutput(BaseOutputModel):
 class UserOutput(BaseOutputModel):
     email: str
     username: str
+
+
+class AssetTypeOutput(BaseOutputModel):
+    name: str
+    class_name: str

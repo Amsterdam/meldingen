@@ -2,6 +2,7 @@ from typing import Any, Sequence, TypeVar, override
 
 from fastapi import BackgroundTasks, HTTPException
 from meldingen_core import SortingDirection
+from meldingen_core.actions.asset_type import AssetTypeCreateAction as BaseAssetTypeCreateAction
 from meldingen_core.actions.attachment import DeleteAttachmentAction as BaseDeleteAttachmentAction
 from meldingen_core.actions.attachment import DownloadAttachmentAction as BaseDownloadAttachmentAction
 from meldingen_core.actions.attachment import ListAttachmentsAction as BaseListAttachmentsAction
@@ -38,6 +39,7 @@ from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransform
 from meldingen.mail import BaseMailPreviewer
 from meldingen.models import (
     Answer,
+    AssetType,
     Attachment,
     BaseFormIoValuesComponent,
     Classification,
@@ -614,3 +616,6 @@ class PreviewMailAction(BasePreviewMailAction):
 
     async def __call__(self, title: str, preview_text: str, body_text: str) -> str:
         return await self._get_preview(title, preview_text, body_text)
+
+
+class AssetTypeCreateAction(BaseAssetTypeCreateAction[AssetType]): ...

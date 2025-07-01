@@ -40,6 +40,7 @@ from meldingen.actions import (
     AddContactInfoToMeldingAction,
     AddLocationToMeldingAction,
     AnswerCreateAction,
+    AssetTypeCreateAction,
     ClassificationCreateAction,
     ClassificationDeleteAction,
     ClassificationListAction,
@@ -112,6 +113,7 @@ from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwar
 from meldingen.models import Answer, Melding
 from meldingen.repositories import (
     AnswerRepository,
+    AssetTypeRepository,
     AttachmentRepository,
     ClassificationRepository,
     FormIoQuestionComponentRepository,
@@ -1021,3 +1023,13 @@ def user_update_action(repository: Annotated[UserRepository, Depends(user_reposi
 
 def user_delete_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserDeleteAction:
     return UserDeleteAction(repository)
+
+
+def asset_type_repository(database_session: Annotated[AsyncSession, Depends(database_session)]) -> AssetTypeRepository:
+    return AssetTypeRepository(database_session)
+
+
+def asset_type_create_action(
+    repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+) -> AssetTypeCreateAction:
+    return AssetTypeCreateAction(repository)
