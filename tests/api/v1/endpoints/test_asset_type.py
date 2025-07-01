@@ -1,3 +1,5 @@
+from typing import Any, override
+
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
@@ -115,21 +117,27 @@ class TestRetrieveAssetType(BaseUnauthorizedTest):
     def get_method(self) -> str:
         return "GET"
 
+    @override
+    def get_path_params(self) -> dict[str, Any]:
+        return {"asset_type_id": 123}
+
     @pytest.mark.anyio
-    async def test_asset_type_retrieve_not_found(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.get(app.url_path_for(self.get_route_name(), params={"id": 123}))
+    async def test_asset_type_retrieve_not_found(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name(), asset_type_id=123))
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
     @pytest.mark.anyio
-    async def test_asset_type_retrieve(self, app: FastAPI, client: AsyncClient, asset_type: AssetType) -> None:
-        response = await client.get(app.url_path_for(self.get_route_name(), params={"id": asset_type.id}))
+    async def test_asset_type_retrieve(
+        self, app: FastAPI, client: AsyncClient, asset_type: AssetType, auth_user: None
+    ) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name(), asset_type_id=asset_type.id))
 
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
         assert body.get("id") > 0
-        assert body.get("name") == "bla"
-        assert body.get("class_name") == "bla.bla"
+        assert body.get("name") == "test_asset_type"
+        assert body.get("class_name") == "test.AssetTypeClassName"
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
