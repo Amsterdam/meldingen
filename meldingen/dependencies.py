@@ -42,6 +42,7 @@ from meldingen.actions import (
     AnswerCreateAction,
     AssetTypeCreateAction,
     AssetTypeDeleteAction,
+    AssetTypeListAction,
     AssetTypeRetrieveAction,
     AssetTypeUpdateAction,
     ClassificationCreateAction,
@@ -1047,6 +1048,12 @@ def asset_type_retrieve_action(
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> AssetTypeRetrieveAction:
     return AssetTypeRetrieveAction(repository)
+
+
+def asset_type_list_action(
+    repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+) -> AssetTypeListAction:
+    return AssetTypeListAction(repository)
 
 
 def asset_type_update_action(
