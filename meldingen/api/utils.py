@@ -1,6 +1,7 @@
-from typing import Annotated, Generic, TypedDict, TypeVar
+from typing import Annotated, Generic, TypedDict, TypeVar, AsyncIterator
 
 from fastapi import Depends, HTTPException, Query, Response
+from httpx import AsyncClient
 from meldingen_core import SortingDirection
 from pydantic import RootModel, ValidationError
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
@@ -67,3 +68,12 @@ class ContentRangeHeaderAdder(Generic[T]):
         )
 
         return 0
+
+
+async def stream_data_from_url(url: str) -> AsyncIterator[bytes]:
+    async with AsyncClient() as client:
+        async with client.stream("GET", url) as response:
+            response.raise_for_status()
+
+            async for chunk in response.aiter_bytes():
+                yield chunk
