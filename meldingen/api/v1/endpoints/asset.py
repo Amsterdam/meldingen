@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/{slug}",
+    "/{name}",
     name="asset:retrieve",
     responses={**unauthorized_response, **not_found_response},
     response_class=StreamingResponse,
@@ -24,17 +24,17 @@ router = APIRouter()
 )
 async def retrieve_asset(
     action: Annotated[AssetRetrieveAction, Depends(asset_retrieve_action)],
-    slug: Annotated[str, Path(description="The slug of the attachment.", min_length=1)],
+    name: Annotated[str, Path(description="The name of the asset.", min_length=1)],
     type_names: str = "app:container",
     count: int = 1000,
     srs_name: str = "urn:ogc:def:crs:EPSG::4326",
     output_format: str = "application/json",
     filter: str | None = None,
 ) -> StreamingResponse:
-    if slug != "container":
+    if name != "container":
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await action(slug, type_names, count, srs_name, output_format, filter)
+    return await action(name, type_names, count, srs_name, output_format, filter)
 
 
 class ContainerWfsClient(WfsProvider):
