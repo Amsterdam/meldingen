@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Union
+from typing import Annotated, Any, Union
 
 from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field, field_serializer
 from pydantic.alias_generators import to_camel
@@ -224,3 +224,4 @@ class UserOutput(BaseOutputModel):
 class AssetTypeOutput(BaseOutputModel):
     name: str
     class_name: str
+    arguments: dict[str, Any]

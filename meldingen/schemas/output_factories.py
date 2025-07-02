@@ -635,6 +635,7 @@ class AssetTypeOutputFactory:
             id=asset_type.id,
             name=asset_type.name,
             class_name=asset_type.class_name,
+            arguments=asset_type.arguments,
             created_at=asset_type.created_at,
             updated_at=asset_type.updated_at,
         )
