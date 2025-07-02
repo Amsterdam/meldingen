@@ -680,3 +680,16 @@ async def asset_type(db_session: AsyncSession, asset_type_name: str, asset_type_
     await db_session.commit()
 
     return asset_type
+
+
+@pytest.fixture
+async def asset_types(db_session: AsyncSession) -> list[AssetType]:
+    asset_types = []
+    for i in range(10):
+        asset_type = AssetType(f"{i}", f"package.module.ClassName{i}", {})
+        db_session.add(asset_type)
+        asset_types.append(asset_type)
+
+    await db_session.commit()
+
+    return asset_types
