@@ -218,14 +218,14 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
 
         assert len(data) == len(asset_types)
 
-        assert response.headers.get("content-range") == "classification 0-49/10"
+        assert response.headers.get("content-range") == "asset-type 0-49/10"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, expected",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
     )
-    async def test_list_classifications_paginated(
+    async def test_list_asset_types_paginated(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -242,7 +242,7 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
         data = response.json()
         assert len(data) == expected
 
-        assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
+        assert response.headers.get("content-range") == f"asset-type {offset}-{limit - 1 + offset}/10"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -339,7 +339,7 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
             assert data[i]["created_at"] is not None
             assert data[i]["updated_at"] is not None
 
-        assert response.headers.get("content-range") == "classification 0-49/10"
+        assert response.headers.get("content-range") == "asset-type 0-49/10"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -396,7 +396,7 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
             assert data[i]["created_at"] is not None
             assert data[i]["updated_at"] is not None
 
-        assert response.headers.get("content-range") == f"classification {offset}-{limit - 1 + offset}/10"
+        assert response.headers.get("content-range") == f"asset-type {offset}-{limit - 1 + offset}/10"
 
 
 class TestUpdateAssetType(BaseUnauthorizedTest):
