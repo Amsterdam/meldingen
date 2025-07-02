@@ -199,3 +199,10 @@ class CompleteMeldingInput(BaseModel):
 class AssetTypeInput(BaseModel):
     name: str
     class_name: str
+    arguments: dict[str, Any]
+
+
+class AssetTypeUpdateInput(BaseModel):
+    name: str | None = None
+    class_name: str | None = None
+    arguments: dict[str, Any] | None = None

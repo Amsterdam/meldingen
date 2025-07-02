@@ -43,7 +43,9 @@ from meldingen.actions import (
     AnswerCreateAction,
     AssetRetrieveAction,
     AssetTypeCreateAction,
+    AssetTypeDeleteAction,
     AssetTypeRetrieveAction,
+    AssetTypeUpdateAction,
     ClassificationCreateAction,
     ClassificationDeleteAction,
     ClassificationListAction,
@@ -1048,6 +1050,7 @@ def asset_type_retrieve_action(
 ) -> AssetTypeRetrieveAction:
     return AssetTypeRetrieveAction(repository)
 
+<<<<<<< HEAD
 def wfs_provider_factory() -> WfsProviderFactory:
     return WfsProviderFactory()
 
@@ -1056,3 +1059,16 @@ def asset_retrieve_action(
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> AssetRetrieveAction:
     return AssetRetrieveAction(provider_factory, repository)
+=======
+
+def asset_type_update_action(
+    repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+) -> AssetTypeUpdateAction:
+    return AssetTypeUpdateAction(repository)
+
+
+def asset_type_delete_action(
+    repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+) -> AssetTypeDeleteAction:
+    return AssetTypeDeleteAction(repository)
+>>>>>>> 14b0396778b3fb05a449d5f24a70a7ecb9a46400

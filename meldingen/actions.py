@@ -4,7 +4,9 @@ from fastapi import BackgroundTasks, HTTPException
 from meldingen_core import SortingDirection
 from meldingen_core.actions.asset import AssetRetrieveAction as BaseAssetRetrieveAction
 from meldingen_core.actions.asset_type import AssetTypeCreateAction as BaseAssetTypeCreateAction
+from meldingen_core.actions.asset_type import AssetTypeDeleteAction as BaseAssetTypeDeleteAction
 from meldingen_core.actions.asset_type import AssetTypeRetrieveAction as BaseAssetTypeRetrieveAction
+from meldingen_core.actions.asset_type import AssetTypeUpdateAction as BaseAssetTypeUpdateAction
 from meldingen_core.actions.attachment import DeleteAttachmentAction as BaseDeleteAttachmentAction
 from meldingen_core.actions.attachment import DownloadAttachmentAction as BaseDownloadAttachmentAction
 from meldingen_core.actions.attachment import ListAttachmentsAction as BaseListAttachmentsAction
@@ -626,4 +628,11 @@ class AssetTypeCreateAction(BaseAssetTypeCreateAction[AssetType]): ...
 class AssetTypeRetrieveAction(BaseAssetTypeRetrieveAction[AssetType]): ...
 
 
+<<<<<<< HEAD
 class AssetRetrieveAction(BaseAssetRetrieveAction): ...
+=======
+class AssetTypeUpdateAction(BaseAssetTypeUpdateAction[AssetType]): ...
+
+
+class AssetTypeDeleteAction(BaseAssetTypeDeleteAction[AssetType]): ...
+>>>>>>> 14b0396778b3fb05a449d5f24a70a7ecb9a46400

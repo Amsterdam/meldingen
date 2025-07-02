@@ -15,7 +15,7 @@ from meldingen_core.models import User as BaseUser
 from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
 from pydantic.alias_generators import to_snake
-from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, String, Table, func
+from sqlalchemy import JSON, Boolean, CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, String, Table, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
@@ -36,6 +36,7 @@ class BaseDBModel(MappedAsDataclass, DeclarativeBase):
 class AssetType(BaseDBModel, BaseAssetType):
     name: Mapped[str] = mapped_column(String, unique=True)
     class_name: Mapped[str] = mapped_column(String)
+    arguments: Mapped[dict[str, Any]] = mapped_column(JSON)
 
 
 class Asset(BaseDBModel, BaseAsset):
