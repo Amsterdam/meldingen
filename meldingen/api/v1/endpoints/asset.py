@@ -2,9 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path
 from meldingen_core.actions.asset import AssetRetrieveAction
-from starlette.exceptions import HTTPException
 from starlette.responses import StreamingResponse
-from starlette.status import HTTP_404_NOT_FOUND
 
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
@@ -30,10 +28,10 @@ async def retrieve_asset(
     output_format: str = "application/json",
     filter: str | None = None,
 ) -> StreamingResponse:
-    if name != "container":
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-
     return await action(name, type_names, count, srs_name, output_format, filter)
 
 
+# The base class provides everything we need to get the Wfs for containers, so all we need to do is to extend it.
+# Database class_name in AssetType: 'meldingen.api.v1.endpoints.asset.ContainerWfsClient'
+# Database arguments in AssetType: '{"base_url": "https://api.data.amsterdam.nl/v1/wfs/huishoudelijkafval"}'
 class ContainerWfsClient(WfsProvider): ...
