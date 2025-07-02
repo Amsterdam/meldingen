@@ -8,7 +8,6 @@ from starlette.status import HTTP_404_NOT_FOUND
 
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
-
 from meldingen.dependencies import asset_retrieve_action
 from meldingen.wfs import WfsProvider
 
@@ -37,5 +36,4 @@ async def retrieve_asset(
     return await action(name, type_names, count, srs_name, output_format, filter)
 
 
-class ContainerWfsClient(WfsProvider):
-    ...
+class ContainerWfsClient(WfsProvider): ...

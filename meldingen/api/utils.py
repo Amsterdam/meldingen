@@ -1,4 +1,4 @@
-from typing import Annotated, Generic, TypedDict, TypeVar, AsyncIterator
+from typing import Annotated, AsyncIterator, Generic, TypedDict, TypeVar
 
 from fastapi import Depends, HTTPException, Query, Response
 from httpx import AsyncClient

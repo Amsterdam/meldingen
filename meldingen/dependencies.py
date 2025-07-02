@@ -1050,6 +1050,7 @@ def asset_type_retrieve_action(
 ) -> AssetTypeRetrieveAction:
     return AssetTypeRetrieveAction(repository)
 
+
 def asset_type_update_action(
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> AssetTypeUpdateAction:

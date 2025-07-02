@@ -1,5 +1,5 @@
-from typing import Tuple, AsyncIterator
-from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+from typing import AsyncIterator, Tuple
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from meldingen_core.wfs import BaseWfsProvider
 
@@ -15,14 +15,13 @@ class WfsProvider(BaseWfsProvider):
     def __init__(self, base_url: str):
         self.base_url = base_url
 
-
     async def __call__(
-            self,
-            type_names: str = "app:container",
-            count: int = 1000,
-            srs_name: str = "urn:ogc:def:crs:EPSG::4326",
-            output_format: str = "application/json",
-            filter: str | None = None,
+        self,
+        type_names: str = "app:container",
+        count: int = 1000,
+        srs_name: str = "urn:ogc:def:crs:EPSG::4326",
+        output_format: str = "application/json",
+        filter: str | None = None,
     ) -> Tuple[AsyncIterator[bytes], str]:
         url = self.get_url(self.base_url, type_names, count, srs_name, output_format, filter)
 
@@ -30,16 +29,15 @@ class WfsProvider(BaseWfsProvider):
 
         return iterator, output_format
 
-
     # TODO:: Check if this is okay to parse the url
     def get_url(
-            self,
-            base_url: str,
-            type_names: str = "app:container",
-            count: int = 1000,
-            srs_name: str = "urn:ogc:def:crs:EPSG::4326",
-            output_format: str = "application/json",
-            filter: str | None = None,
+        self,
+        base_url: str,
+        type_names: str = "app:container",
+        count: int = 1000,
+        srs_name: str = "urn:ogc:def:crs:EPSG::4326",
+        output_format: str = "application/json",
+        filter: str | None = None,
     ):
         parsed_url = urlparse(base_url)
 

@@ -308,6 +308,3 @@ class AssetTypeRepository(BaseSQLAlchemyRepository[AssetType], BaseAssetTypeRepo
             return result.scalars().one()
         except NoResultFound:
             raise NotFoundException()
-
-
-
