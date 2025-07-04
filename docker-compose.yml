@@ -106,7 +106,7 @@ services:
       - meldingen_network
 
   otel-collector:
-    image: ${REGISTRY:-localhost:5000}/${REPOSITORY:-signalen/meldingen-otel-collector}:${VERSION:-latest}
+#    image: ${REGISTRY:-localhost:5000}/${REPOSITORY:-signalen/meldingen-otel-collector}:${VERSION:-latest}
     build:
       context: docker/otel-collector
     depends_on:
