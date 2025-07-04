@@ -14,5 +14,5 @@ help:
 build/%:
 	$(dc) build $*
 
-push/%:
-	$(dc) push $*
+push:
+	$(dc) push
