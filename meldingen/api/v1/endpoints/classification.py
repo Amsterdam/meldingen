@@ -30,26 +30,6 @@ from meldingen.schemas.output import ClassificationOutput
 router = APIRouter()
 
 
-@router.post(
-    "/",
-    name="classification:create",
-    status_code=HTTP_201_CREATED,
-    responses={**unauthorized_response, **conflict_response},
-    dependencies=[Depends(authenticate_user)],
-)
-async def create_classification(
-    classification_input: ClassificationInput,
-    action: Annotated[ClassificationCreateAction, Depends(classification_create_action)],
-) -> ClassificationOutput:
-    db_model = Classification(**classification_input.model_dump())
-
-    await action(db_model)
-
-    return ClassificationOutput(
-        id=db_model.id, name=db_model.name, created_at=db_model.created_at, updated_at=db_model.updated_at
-    )
-
-
 async def _add_content_range_header(
     response: Response,
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
@@ -73,6 +53,24 @@ async def _hydrate_output(classification: Classification) -> ClassificationOutpu
         created_at=classification.created_at,
         updated_at=classification.updated_at,
     )
+
+
+@router.post(
+    "/",
+    name="classification:create",
+    status_code=HTTP_201_CREATED,
+    responses={**unauthorized_response, **conflict_response},
+    dependencies=[Depends(authenticate_user)],
+)
+async def create_classification(
+    classification_input: ClassificationInput,
+    action: Annotated[ClassificationCreateAction, Depends(classification_create_action)],
+) -> ClassificationOutput:
+    classification = Classification(**classification_input.model_dump())
+
+    await action(classification)
+
+    return await _hydrate_output(classification)
 
 
 @router.get(
