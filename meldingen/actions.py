@@ -2,7 +2,6 @@ from typing import Any, Sequence, TypeVar, override
 
 from fastapi import BackgroundTasks, HTTPException
 from meldingen_core import SortingDirection
-from meldingen_core.actions.asset import AssetRetrieveAction as BaseAssetRetrieveAction
 from meldingen_core.actions.asset_type import AssetTypeCreateAction as BaseAssetTypeCreateAction
 from meldingen_core.actions.asset_type import AssetTypeDeleteAction as BaseAssetTypeDeleteAction
 from meldingen_core.actions.asset_type import AssetTypeListAction as BaseAssetTypeListAction
@@ -32,6 +31,7 @@ from meldingen_core.actions.user import UserDeleteAction as BaseUserDeleteAction
 from meldingen_core.actions.user import UserListAction as BaseUserListAction
 from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
 from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
+from meldingen_core.actions.wfs import WfsRetrieveAction as BaseWfsRetrieveAction
 from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.statemachine import MeldingStates
@@ -638,4 +638,4 @@ class AssetTypeUpdateAction(BaseAssetTypeUpdateAction[AssetType]): ...
 class AssetTypeDeleteAction(BaseAssetTypeDeleteAction[AssetType]): ...
 
 
-class AssetRetrieveAction(BaseAssetRetrieveAction): ...
+class WfsRetrieveAction(BaseWfsRetrieveAction): ...

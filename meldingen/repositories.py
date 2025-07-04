@@ -299,12 +299,10 @@ class AssetTypeRepository(BaseSQLAlchemyRepository[AssetType], BaseAssetTypeRepo
     def get_model_type(self) -> type[AssetType]:
         return AssetType
 
-    async def find_by_name(self, name: str) -> AssetType:
+    async def find_by_name(self, name: str) -> AssetType | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.name == name)
 
         result = await self._session.execute(statement)
-        try:
-            return result.scalars().one()
-        except NoResultFound:
-            raise NotFoundException()
+
+        return result.scalars().one_or_none()

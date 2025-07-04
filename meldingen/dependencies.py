@@ -41,7 +41,6 @@ from meldingen.actions import (
     AddContactInfoToMeldingAction,
     AddLocationToMeldingAction,
     AnswerCreateAction,
-    AssetRetrieveAction,
     AssetTypeCreateAction,
     AssetTypeDeleteAction,
     AssetTypeListAction,
@@ -77,6 +76,7 @@ from meldingen.actions import (
     UserListAction,
     UserRetrieveAction,
     UserUpdateAction,
+    WfsRetrieveAction,
 )
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.classification import DummyClassifierAdapter
@@ -1075,8 +1075,8 @@ def wfs_provider_factory() -> WfsProviderFactory:
     return WfsProviderFactory()
 
 
-def asset_retrieve_action(
+def wfs_retrieve_action(
     provider_factory: Annotated[WfsProviderFactory, Depends(wfs_provider_factory)],
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
-) -> AssetRetrieveAction:
-    return AssetRetrieveAction(provider_factory, repository)
+) -> WfsRetrieveAction:
+    return WfsRetrieveAction(provider_factory, repository)
