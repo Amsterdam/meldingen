@@ -13,6 +13,10 @@ class ClassificationInput(BaseModel):
     name: str = Field(min_length=1)
 
 
+class ClassificationCreateInput(ClassificationInput):
+    asset_type: int | None = Field(default=None)
+
+
 class MeldingInput(BaseModel):
     text: str = Field(min_length=1)
 
