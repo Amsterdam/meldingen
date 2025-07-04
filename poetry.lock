@@ -2153,8 +2153,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "de24e7374bdc2c26db9d76fa71fd51044949c592"
+reference = "feat/allow-creating-classification-with-asset-type"
+resolved_reference = "ced9fe0ab5670e99b1d7099f7f2b2677eebbf193"
 
 [[package]]
 name = "mergedeep"
@@ -4826,4 +4826,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "7b1cbd681dada17d7f674a3dbe9454480f5930fef85971a9fe251f58d30b9a40"
+content-hash = "e9efafed3431771b6ea37a7215b93ad873ec1df7bf0fd82c8dcc410a5a1f5ad5"
