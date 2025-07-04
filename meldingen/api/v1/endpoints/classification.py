@@ -24,7 +24,7 @@ from meldingen.dependencies import (
 )
 from meldingen.models import Classification
 from meldingen.repositories import ClassificationRepository
-from meldingen.schemas.input import ClassificationInput
+from meldingen.schemas.input import ClassificationCreateInput, ClassificationInput
 from meldingen.schemas.output import ClassificationOutput
 
 router = APIRouter()
@@ -59,16 +59,19 @@ async def _hydrate_output(classification: Classification) -> ClassificationOutpu
     "/",
     name="classification:create",
     status_code=HTTP_201_CREATED,
-    responses={**unauthorized_response, **conflict_response},
+    responses={**unauthorized_response, **conflict_response, **not_found_response},
     dependencies=[Depends(authenticate_user)],
 )
 async def create_classification(
-    classification_input: ClassificationInput,
+    classification_input: ClassificationCreateInput,
     action: Annotated[ClassificationCreateAction, Depends(classification_create_action)],
 ) -> ClassificationOutput:
-    classification = Classification(**classification_input.model_dump())
+    classification = Classification(classification_input.name)
 
-    await action(classification)
+    try:
+        await action(classification, classification_input.asset_type)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Asset type not found")
 
     return await _hydrate_output(classification)
 
