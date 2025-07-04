@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
@@ -12,6 +14,9 @@ class TestRetrieveContainerWfs(BaseUnauthorizedTest):
 
     def get_method(self) -> str:
         return "GET"
+
+    def get_path_params(self) -> dict[str, Any]:
+        return {"name": "container"}
 
     def get_asset_type_create_route_name(self) -> str:
         return "asset-type:create"
