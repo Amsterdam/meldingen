@@ -202,10 +202,15 @@ def classification_repository(session: Annotated[AsyncSession, Depends(database_
     return ClassificationRepository(session)
 
 
+def asset_type_repository(database_session: Annotated[AsyncSession, Depends(database_session)]) -> AssetTypeRepository:
+    return AssetTypeRepository(database_session)
+
+
 def classification_create_action(
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+    asset_type_repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> ClassificationCreateAction:
-    return ClassificationCreateAction(repository)
+    return ClassificationCreateAction(repository, asset_type_repository)
 
 
 def classification_retrieve_action(
@@ -1028,10 +1033,6 @@ def user_update_action(repository: Annotated[UserRepository, Depends(user_reposi
 
 def user_delete_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserDeleteAction:
     return UserDeleteAction(repository)
-
-
-def asset_type_repository(database_session: Annotated[AsyncSession, Depends(database_session)]) -> AssetTypeRepository:
-    return AssetTypeRepository(database_session)
 
 
 def asset_type_output_factory() -> AssetTypeOutputFactory:

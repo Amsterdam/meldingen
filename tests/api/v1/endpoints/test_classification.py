@@ -13,7 +13,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.models import Classification, Form
+from meldingen.models import AssetType, Classification, Form
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -40,6 +40,35 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
+
+    @pytest.mark.anyio
+    async def test_create_classification_with_asset_type(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_type: AssetType
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME), json={"name": "bla", "asset_type": asset_type.id}
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("id") > 0
+        assert data.get("name") == "bla"
+        assert data.get("form", "") is None
+        assert data.get("asset_type") == asset_type.id
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+
+    @pytest.mark.anyio
+    async def test_create_classification_with_asset_type_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla", "asset_type": 123})
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        body = response.json()
+        assert body.get("detail") == "Asset type not found"
 
     @pytest.mark.anyio
     async def test_create_classification_name_min_length_violation(
