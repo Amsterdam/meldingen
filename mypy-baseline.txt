@@ -19,6 +19,7 @@ migrations/env.py:0: error: Argument 1 to "async_engine_from_config" has incompa
 tests/api/v1/endpoints/test_melding.py:0: error: Skipping analyzing "mailpit.client.api": module is installed, but missing library stubs or py.typed marker  [import-untyped]
 tests/api/v1/endpoints/test_melding.py:0: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
 tests/api/v1/endpoints/test_form.py:0: error: Need type annotation for "new_data"  [var-annotated]
+meldingen/dependencies.py:0: error: Argument 2 to "WfsRetrieveAction" has incompatible type "AssetTypeRepository"; expected "BaseAssetTypeRepository[AssetType]"  [arg-type]
 commands/static_forms.py:0: error: Call to untyped function "append" in typed context  [no-untyped-call]
 commands/static_forms.py:0: error: Call to untyped function "append" in typed context  [no-untyped-call]
 commands/static_forms.py:0: error: Call to untyped function "append" in typed context  [no-untyped-call]
@@ -32,9 +33,9 @@ tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (e
 meldingen/main.py:0: error: Argument 1 to "add_middleware" of "Starlette" has incompatible type "type[ContentSizeLimitMiddleware]"; expected "_MiddlewareFactory[[int]]"  [arg-type]
 meldingen/main.py:0: note: Following member(s) of "ContentSizeLimitMiddleware" have conflicts:
 meldingen/main.py:0: note: Expected:
-meldingen/main.py:0: note: def __call__(Callable[[MutableMapping[str, Any], Callable[[], Awaitable[MutableMapping[str, Any]]], Callable[[MutableMapping[str, Any]], Awaitable[None]]], Awaitable[None]], /, max_size: int) -> Callable[[MutableMapping[str, Any], Callable[[], Awaitable[MutableMapping[str, Any]]], Callable[[MutableMapping[str, Any]], Awaitable[None]]], Awaitable[None]]
+meldingen/main.py:0: note: def __call__(self, Callable[[MutableMapping[str, Any], Callable[[], Awaitable[MutableMapping[str, Any]]], Callable[[MutableMapping[str, Any]], Awaitable[None]]], Awaitable[None]], /, max_size: int) -> Callable[[MutableMapping[str, Any], Callable[[], Awaitable[MutableMapping[str, Any]]], Callable[[MutableMapping[str, Any]], Awaitable[None]]], Awaitable[None]]
 meldingen/main.py:0: note: Got:
-meldingen/main.py:0: note: def __init__(app: FastAPI, max_size: int) -> ContentSizeLimitMiddleware
+meldingen/main.py:0: note: def ContentSizeLimitMiddleware(self, app: FastAPI, max_size: int) -> ContentSizeLimitMiddleware
 meldingen/main.py:0: note: "_MiddlewareFactory[[int]].__call__" has type "Callable[[Callable[[MutableMapping[str, Any], Callable[[], Awaitable[MutableMapping[str, Any]]], Callable[[MutableMapping[str, Any]], Awaitable[None]]], Awaitable[None]], Arg(int, 'max_size')], Callable[[MutableMapping[str, Any], Callable[[], Awaitable[MutableMapping[str, Any]]], Callable[[MutableMapping[str, Any]], Awaitable[None]]], Awaitable[None]]]"
 tests/conftest.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
 tests/conftest.py:0: error: Call to untyped function "visit_drop_table" in typed context  [no-untyped-call]
