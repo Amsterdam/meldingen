@@ -15,5 +15,5 @@ build/%:
 	cp .env.example .env
 	$(dc) build $*
 
-push:
+push/%:
 	$(dc) push
