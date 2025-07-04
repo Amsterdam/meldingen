@@ -16,4 +16,4 @@ build/%:
 	$(dc) build $*
 
 push/%:
-	$(dc) push
+	$(dc) push $*
