@@ -35,6 +35,7 @@ class SimpleClassificationOutput(BaseOutputModel):
 
 class ClassificationOutput(SimpleClassificationOutput):
     form: int | None = None
+    asset_type: int | None = None
 
 
 class MeldingOutput(BaseOutputModel):

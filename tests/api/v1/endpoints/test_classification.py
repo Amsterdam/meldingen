@@ -13,7 +13,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.models import Classification, Form
+from meldingen.models import AssetType, Classification, Form
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -37,8 +37,38 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert data.get("id") > 0
         assert data.get("name") == "bla"
         assert data.get("form", "") is None
+        assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
+
+    @pytest.mark.anyio
+    async def test_create_classification_with_asset_type(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_type: AssetType
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME), json={"name": "bla", "asset_type": asset_type.id}
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("id") > 0
+        assert data.get("name") == "bla"
+        assert data.get("form", "") is None
+        assert data.get("asset_type") == asset_type.id
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+
+    @pytest.mark.anyio
+    async def test_create_classification_with_asset_type_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla", "asset_type": 123})
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        body = response.json()
+        assert body.get("detail") == "Asset type not found"
 
     @pytest.mark.anyio
     async def test_create_classification_name_min_length_violation(
@@ -128,64 +158,64 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
                 "id",
                 SortingDirection.ASC,
                 [
-                    {"name": "category: 0", "form": None},
-                    {"name": "category: 1", "form": None},
-                    {"name": "category: 2", "form": None},
-                    {"name": "category: 3", "form": None},
-                    {"name": "category: 4", "form": None},
-                    {"name": "category: 5", "form": None},
-                    {"name": "category: 6", "form": None},
-                    {"name": "category: 7", "form": None},
-                    {"name": "category: 8", "form": None},
-                    {"name": "category: 9", "form": None},
+                    {"name": "category: 0", "form": None, "asset_type": None},
+                    {"name": "category: 1", "form": None, "asset_type": None},
+                    {"name": "category: 2", "form": None, "asset_type": None},
+                    {"name": "category: 3", "form": None, "asset_type": None},
+                    {"name": "category: 4", "form": None, "asset_type": None},
+                    {"name": "category: 5", "form": None, "asset_type": None},
+                    {"name": "category: 6", "form": None, "asset_type": None},
+                    {"name": "category: 7", "form": None, "asset_type": None},
+                    {"name": "category: 8", "form": None, "asset_type": None},
+                    {"name": "category: 9", "form": None, "asset_type": None},
                 ],
             ),
             (
                 "id",
                 SortingDirection.DESC,
                 [
-                    {"name": "category: 9", "form": None},
-                    {"name": "category: 8", "form": None},
-                    {"name": "category: 7", "form": None},
-                    {"name": "category: 6", "form": None},
-                    {"name": "category: 5", "form": None},
-                    {"name": "category: 4", "form": None},
-                    {"name": "category: 3", "form": None},
-                    {"name": "category: 2", "form": None},
-                    {"name": "category: 1", "form": None},
-                    {"name": "category: 0", "form": None},
+                    {"name": "category: 9", "form": None, "asset_type": None},
+                    {"name": "category: 8", "form": None, "asset_type": None},
+                    {"name": "category: 7", "form": None, "asset_type": None},
+                    {"name": "category: 6", "form": None, "asset_type": None},
+                    {"name": "category: 5", "form": None, "asset_type": None},
+                    {"name": "category: 4", "form": None, "asset_type": None},
+                    {"name": "category: 3", "form": None, "asset_type": None},
+                    {"name": "category: 2", "form": None, "asset_type": None},
+                    {"name": "category: 1", "form": None, "asset_type": None},
+                    {"name": "category: 0", "form": None, "asset_type": None},
                 ],
             ),
             (
                 "name",
                 SortingDirection.ASC,
                 [
-                    {"name": "category: 0", "form": None},
-                    {"name": "category: 1", "form": None},
-                    {"name": "category: 2", "form": None},
-                    {"name": "category: 3", "form": None},
-                    {"name": "category: 4", "form": None},
-                    {"name": "category: 5", "form": None},
-                    {"name": "category: 6", "form": None},
-                    {"name": "category: 7", "form": None},
-                    {"name": "category: 8", "form": None},
-                    {"name": "category: 9", "form": None},
+                    {"name": "category: 0", "form": None, "asset_type": None},
+                    {"name": "category: 1", "form": None, "asset_type": None},
+                    {"name": "category: 2", "form": None, "asset_type": None},
+                    {"name": "category: 3", "form": None, "asset_type": None},
+                    {"name": "category: 4", "form": None, "asset_type": None},
+                    {"name": "category: 5", "form": None, "asset_type": None},
+                    {"name": "category: 6", "form": None, "asset_type": None},
+                    {"name": "category: 7", "form": None, "asset_type": None},
+                    {"name": "category: 8", "form": None, "asset_type": None},
+                    {"name": "category: 9", "form": None, "asset_type": None},
                 ],
             ),
             (
                 "name",
                 SortingDirection.DESC,
                 [
-                    {"name": "category: 9", "form": None},
-                    {"name": "category: 8", "form": None},
-                    {"name": "category: 7", "form": None},
-                    {"name": "category: 6", "form": None},
-                    {"name": "category: 5", "form": None},
-                    {"name": "category: 4", "form": None},
-                    {"name": "category: 3", "form": None},
-                    {"name": "category: 2", "form": None},
-                    {"name": "category: 1", "form": None},
-                    {"name": "category: 0", "form": None},
+                    {"name": "category: 9", "form": None, "asset_type": None},
+                    {"name": "category: 8", "form": None, "asset_type": None},
+                    {"name": "category: 7", "form": None, "asset_type": None},
+                    {"name": "category: 6", "form": None, "asset_type": None},
+                    {"name": "category: 5", "form": None, "asset_type": None},
+                    {"name": "category: 4", "form": None, "asset_type": None},
+                    {"name": "category: 3", "form": None, "asset_type": None},
+                    {"name": "category: 2", "form": None, "asset_type": None},
+                    {"name": "category: 1", "form": None, "asset_type": None},
+                    {"name": "category: 0", "form": None, "asset_type": None},
                 ],
             ),
         ],
@@ -211,6 +241,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         for i in range(0, len(data)):
             assert data[i]["name"] == expected[i]["name"]
             assert data[i]["form"] == expected[i]["form"]
+            assert data[i]["asset_type"] == expected[i]["asset_type"]
             assert data[i]["created_at"] is not None
             assert data[i]["updated_at"] is not None
 
@@ -225,7 +256,10 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
                 2,
                 "name",
                 SortingDirection.DESC,
-                [{"name": "category: 7", "form": None}, {"name": "category: 6", "form": None}],
+                [
+                    {"name": "category: 7", "form": None, "asset_type": None},
+                    {"name": "category: 6", "form": None, "asset_type": None},
+                ],
             ),
             (
                 3,
@@ -233,9 +267,9 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
                 "name",
                 SortingDirection.ASC,
                 [
-                    {"name": "category: 1", "form": None},
-                    {"name": "category: 2", "form": None},
-                    {"name": "category: 3", "form": None},
+                    {"name": "category: 1", "form": None, "asset_type": None},
+                    {"name": "category: 2", "form": None, "asset_type": None},
+                    {"name": "category: 3", "form": None, "asset_type": None},
                 ],
             ),
         ],
@@ -264,6 +298,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         for i in range(0, len(data)):
             assert data[i]["name"] == expected[i]["name"]
             assert data[i]["form"] == expected[i]["form"]
+            assert data[i]["asset_type"] == expected[i]["asset_type"]
             assert data[i]["created_at"] is not None
             assert data[i]["updated_at"] is not None
 
@@ -326,6 +361,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         assert data.get("id") == classification.id
         assert data.get("name") == "bla"
         assert data.get("form", "") is None
+        assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
@@ -350,6 +386,40 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
 
         body = response.json()
         form = await classification_with_form.awaitable_attrs.form
+        assert body.get("form") == form.id
+
+    @pytest.mark.anyio
+    async def test_retrieve_classification_with_asset_type(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_asset_type: Classification
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification_with_asset_type.id)
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("asset_type") == classification_with_asset_type.asset_type_id
+
+    @pytest.mark.anyio
+    async def test_retrieve_classification_with_asset_type_and_form(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        classification_with_asset_type_and_form: Classification,
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification_with_asset_type_and_form.id)
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body.get("asset_type") == classification_with_asset_type_and_form.asset_type_id
+
+        form = await classification_with_asset_type_and_form.awaitable_attrs.form
         assert body.get("form") == form.id
 
 
@@ -381,6 +451,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         data = response.json()
         assert data.get("name") == "bladiebla"
         assert data.get("form", "") is None
+        assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 

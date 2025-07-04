@@ -5,6 +5,7 @@ from meldingen_core import SortingDirection
 from meldingen_core.actions.asset import AssetRetrieveAction as BaseAssetRetrieveAction
 from meldingen_core.actions.asset_type import AssetTypeCreateAction as BaseAssetTypeCreateAction
 from meldingen_core.actions.asset_type import AssetTypeDeleteAction as BaseAssetTypeDeleteAction
+from meldingen_core.actions.asset_type import AssetTypeListAction as BaseAssetTypeListAction
 from meldingen_core.actions.asset_type import AssetTypeRetrieveAction as BaseAssetTypeRetrieveAction
 from meldingen_core.actions.asset_type import AssetTypeUpdateAction as BaseAssetTypeUpdateAction
 from meldingen_core.actions.attachment import DeleteAttachmentAction as BaseDeleteAttachmentAction
@@ -159,7 +160,7 @@ class MelderMeldingRetrieveAction:
 class ClassificationListAction(BaseClassificationListAction[Classification], BaseListAction[Classification]): ...
 
 
-class ClassificationCreateAction(BaseClassificationCreateAction[Classification]): ...
+class ClassificationCreateAction(BaseClassificationCreateAction[Classification, AssetType]): ...
 
 
 class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classification]): ...
@@ -626,6 +627,9 @@ class AssetTypeCreateAction(BaseAssetTypeCreateAction[AssetType]): ...
 
 
 class AssetTypeRetrieveAction(BaseAssetTypeRetrieveAction[AssetType]): ...
+
+
+class AssetTypeListAction(BaseAssetTypeListAction[AssetType], BaseListAction[AssetType]): ...
 
 
 class AssetTypeUpdateAction(BaseAssetTypeUpdateAction[AssetType]): ...
