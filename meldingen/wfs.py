@@ -1,9 +1,8 @@
-from typing import AsyncIterator, Literal, Tuple
+from typing import AsyncIterator, Literal
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+from httpx import AsyncClient, Response
 from meldingen_core.wfs import BaseWfsProvider
-
-from meldingen.api.utils import stream_data_from_url
 
 
 class UrlProcessor:
@@ -44,10 +43,12 @@ class UrlProcessor:
 class ProxyWfsProvider(BaseWfsProvider):
     _base_url: str
     _get_url: UrlProcessor
+    _client: AsyncClient
 
-    def __init__(self, base_url: str, url_processor: UrlProcessor):
+    def __init__(self, base_url: str, url_processor: UrlProcessor, client: AsyncClient):
         self._base_url = base_url
         self._get_url = url_processor
+        self._client = client
 
     async def __call__(
         self,
@@ -60,6 +61,19 @@ class ProxyWfsProvider(BaseWfsProvider):
         request: Literal["GetFeature"] = "GetFeature",
         filter: str | None = None,
     ) -> AsyncIterator[bytes]:
-        url = self._get_url(self._base_url, type_names, count, srs_name, output_format, service, version, request, filter)
+        url = self._get_url(
+            self._base_url, type_names, count, srs_name, output_format, service, version, request, filter
+        )
 
-        return stream_data_from_url(url)
+        http_request = self._client.build_request("GET", url)
+        response = await self._client.send(http_request, stream=True)
+        response.raise_for_status()
+
+        async def iterator(response: Response) -> AsyncIterator[bytes]:
+            try:
+                async for chunk in response.aiter_bytes():
+                    yield chunk
+            finally:
+                await response.aclose()
+
+        return iterator(response)
