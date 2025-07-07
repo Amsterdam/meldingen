@@ -2,7 +2,7 @@ from typing import AsyncIterator, Literal
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from httpx import AsyncClient, Response
-from meldingen_core.wfs import BaseWfsProvider
+from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory
 
 
 class UrlProcessor:
@@ -77,3 +77,13 @@ class ProxyWfsProvider(BaseWfsProvider):
                 await response.aclose()
 
         return iterator(response)
+
+
+class ProxyWfsProviderFactory(BaseWfsProviderFactory):
+    _base_url: str
+
+    def __init__(self, base_url: str):
+        self._base_url = base_url
+
+    def __call__(self) -> ProxyWfsProvider:
+        return ProxyWfsProvider(self._base_url, UrlProcessor(), AsyncClient())
