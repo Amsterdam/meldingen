@@ -2154,7 +2154,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "task/make-wfs-proxy-client-mockable"
-resolved_reference = "08b53a13f25c0b3fe419ff7ddee59d26e4787dd3"
+resolved_reference = "86624aaeae3338c65c1d63a0443e109d370e3dd9"
 
 [[package]]
 name = "mergedeep"
