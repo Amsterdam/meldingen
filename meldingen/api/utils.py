@@ -68,12 +68,3 @@ class ContentRangeHeaderAdder(Generic[T]):
         )
 
         return 0
-
-
-async def stream_data_from_url(url: str) -> AsyncIterator[bytes]:
-    async with AsyncClient() as client:
-        async with client.stream("GET", url) as response:
-            response.raise_for_status()
-
-            async for chunk in response.aiter_bytes():
-                yield chunk
