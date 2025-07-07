@@ -9,6 +9,7 @@ from starlette.status import HTTP_404_NOT_FOUND
 
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.dependencies import wfs_retrieve_action
+from meldingen.models import AssetType
 from meldingen.schemas.types import GeoJson
 
 router = APIRouter()
@@ -22,7 +23,7 @@ router = APIRouter()
     response_model=GeoJson,
 )
 async def retrieve_wfs(
-    action: Annotated[WfsRetrieveAction, Depends(wfs_retrieve_action)],
+    action: Annotated[WfsRetrieveAction[AssetType], Depends(wfs_retrieve_action)],
     name: Annotated[str, Path(description="The name of the asset type.", min_length=1)],
     type_names: str = "app:container",
     count: int = 1000,
