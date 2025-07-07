@@ -500,6 +500,55 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         assert body.get("name") == "new_name"
         assert body.get("form") == form.id
 
+    @pytest.mark.anyio
+    async def test_update_classification_with_asset_type_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"asset_type": 123}
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_update_classification_with_asset_type(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification, asset_type: AssetType
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"asset_type": asset_type.id}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body.get("name") == classification.name
+        assert body.get("asset_type") == asset_type.id
+
+    @pytest.mark.parametrize("asset_type_name", ["test_asset_type_"])
+    @pytest.mark.anyio
+    async def test_update_classification_replace_existing_asset_type(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        classification_with_asset_type: Classification,
+        asset_type: AssetType,
+    ) -> None:
+        assert classification_with_asset_type.asset_type_id != asset_type.id
+
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification_with_asset_type.id),
+            json={"asset_type": asset_type.id},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body.get("name") == classification_with_asset_type.name
+        assert body.get("asset_type") == asset_type.id
+
 
 class TestClassificationDelete(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:delete"
