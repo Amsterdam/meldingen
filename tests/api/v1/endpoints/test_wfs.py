@@ -1,4 +1,3 @@
-import json
 from typing import Any
 
 import pytest
@@ -6,10 +5,8 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
-from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 
-
-class TestRetrieveContainerWfs(BaseUnauthorizedTest):
+class TestRetrieveContainerWfs:
     def get_route_name(self) -> str:
         return "wfs:retrieve"
 
