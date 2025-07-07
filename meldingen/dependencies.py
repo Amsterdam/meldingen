@@ -233,8 +233,9 @@ def classification_delete_action(
 
 def classification_update_action(
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+    asset_type_repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> ClassificationUpdateAction:
-    return ClassificationUpdateAction(repository)
+    return ClassificationUpdateAction(repository, asset_type_repository)
 
 
 def user_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> UserRepository:

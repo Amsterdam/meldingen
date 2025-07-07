@@ -24,7 +24,7 @@ from meldingen.dependencies import (
 )
 from meldingen.models import Classification
 from meldingen.repositories import ClassificationRepository
-from meldingen.schemas.input import ClassificationCreateInput, ClassificationInput
+from meldingen.schemas.input import ClassificationCreateInput, ClassificationInput, ClassificationUpdateInput
 from meldingen.schemas.output import ClassificationOutput
 
 router = APIRouter()
@@ -126,7 +126,7 @@ async def retrieve_classification(
 )
 async def update_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
-    classification_input: ClassificationInput,
+    classification_input: ClassificationUpdateInput,
     action: Annotated[ClassificationUpdateAction, Depends(classification_update_action)],
 ) -> ClassificationOutput:
     classification_data = classification_input.model_dump(exclude_unset=True)
