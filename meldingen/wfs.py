@@ -24,13 +24,12 @@ class ProxyWfsProvider(BaseWfsProvider):
         request: Literal["GetFeature"] = "GetFeature",
         filter: str | None = None,
     ) -> AsyncIterator[bytes]:
-        url = self.get_url(self.base_url, type_names, count, srs_name, output_format, service, version, request, filter)
+        url = self.get_url(type_names, count, srs_name, output_format, service, version, request, filter)
 
         return stream_data_from_url(url)
 
     def get_url(
         self,
-        base_url: str,
         type_names: str,
         count: int = 1000,
         srs_name: str = "urn:ogc:def:crs:EPSG::4326",
@@ -40,7 +39,7 @@ class ProxyWfsProvider(BaseWfsProvider):
         request: Literal["GetFeature"] = "GetFeature",
         filter: str | None = None,
     ) -> str:
-        parsed_url = urlparse(base_url)
+        parsed_url = urlparse(self.base_url)
 
         query = parse_qsl(parsed_url.query)
 

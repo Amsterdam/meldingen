@@ -1,4 +1,4 @@
-from typing import Annotated, AsyncIterator, Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Path
 from meldingen_core.actions.wfs import WfsRetrieveAction
@@ -8,7 +8,6 @@ from starlette.responses import StreamingResponse
 from starlette.status import HTTP_404_NOT_FOUND
 
 from meldingen.api.v1 import not_found_response, unauthorized_response
-from meldingen.authentication import authenticate_user
 from meldingen.dependencies import wfs_retrieve_action
 from meldingen.schemas.types import GeoJson
 
@@ -21,7 +20,6 @@ router = APIRouter()
     responses={**unauthorized_response, **not_found_response},
     response_class=StreamingResponse,
     response_model=GeoJson,
-    dependencies=[Depends(authenticate_user)],
 )
 async def retrieve_wfs(
     action: Annotated[WfsRetrieveAction, Depends(wfs_retrieve_action)],
@@ -29,7 +27,7 @@ async def retrieve_wfs(
     type_names: str = "app:container",
     count: int = 1000,
     srs_name: str = "urn:ogc:def:crs:EPSG::4326",
-    output_format: str = "application/json",
+    output_format: Literal["application/json"] = "application/json",
     service: Literal["WFS"] = "WFS",
     version: str = "2.0.0",
     request: Literal["GetFeature"] = "GetFeature",
