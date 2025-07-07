@@ -11,9 +11,9 @@ dc = docker compose
 help:
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
 
-build:
+build/%:
 	cp .env.example .env
-	$(dc) build
+	$(dc) build $*
 
-push: build
-	$(dc) push
+push/%:
+	$(dc) push $*
