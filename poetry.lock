@@ -2154,7 +2154,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "feat/update-classification-with-asset-type"
-resolved_reference = "87dcc6a56574dc8d495ac565d379936c8c32baa8"
+resolved_reference = "b33dde2e768021aa0130fa77062fc28005e0dc78"
 
 [[package]]
 name = "mergedeep"
