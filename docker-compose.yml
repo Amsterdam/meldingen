@@ -48,6 +48,7 @@ services:
   keycloak:
     build:
       context: docker/keycloak
+    image: ${REGISTRY:-localhost:5000}/${REPOSITORY:-signalen/keycloak}:${VERSION:-latest}
     command: ["/opt/keycloak/bin/kc.sh", "start-dev", "--http-port", "8002"]
     ports:
       - "8002:8002"
