@@ -17,6 +17,11 @@ class ClassificationCreateInput(ClassificationInput):
     asset_type: int | None = Field(default=None)
 
 
+class ClassificationUpdateInput(BaseModel):
+    name: str | None = Field(min_length=1, default=None)
+    asset_type: int | None = Field(default=None)
+
+
 class MeldingInput(BaseModel):
     text: str = Field(min_length=1)
 
