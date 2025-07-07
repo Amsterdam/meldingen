@@ -6,30 +6,10 @@ from meldingen_core.wfs import BaseWfsProvider
 from meldingen.api.utils import stream_data_from_url
 
 
-# The base class provides everything we need to get the Wfs from a proxy, so all we need to do is to extend it.
-# Database class_name in AssetType: 'meldingen.wfs.ProxyWfsProvider'
-# Database arguments example in AssetType: '{"base_url": "https://api.data.amsterdam.nl/v1/wfs/huishoudelijkafval"}'
-class ProxyWfsProvider(BaseWfsProvider):
-    def __init__(self, base_url: str):
-        self.base_url = base_url
-
-    async def __call__(
+class UrlProcessor:
+    def __call__(
         self,
-        type_names: str,
-        count: int = 1000,
-        srs_name: str = "urn:ogc:def:crs:EPSG::4326",
-        output_format: str = "application/json",
-        service: Literal["WFS"] = "WFS",
-        version: str = "2.0.0",
-        request: Literal["GetFeature"] = "GetFeature",
-        filter: str | None = None,
-    ) -> AsyncIterator[bytes]:
-        url = self.get_url(type_names, count, srs_name, output_format, service, version, request, filter)
-
-        return stream_data_from_url(url)
-
-    def get_url(
-        self,
+        base_url: str,
         type_names: str,
         count: int = 1000,
         srs_name: str = "urn:ogc:def:crs:EPSG::4326",
@@ -39,7 +19,7 @@ class ProxyWfsProvider(BaseWfsProvider):
         request: Literal["GetFeature"] = "GetFeature",
         filter: str | None = None,
     ) -> str:
-        parsed_url = urlparse(self.base_url)
+        parsed_url = urlparse(base_url)
 
         query = parse_qsl(parsed_url.query)
 
@@ -59,3 +39,27 @@ class ProxyWfsProvider(BaseWfsProvider):
         new_url = urlunparse(parsed_url._replace(query=new_query))
 
         return str(new_url)
+
+
+class ProxyWfsProvider(BaseWfsProvider):
+    _base_url: str
+    _get_url: UrlProcessor
+
+    def __init__(self, base_url: str, url_processor: UrlProcessor):
+        self._base_url = base_url
+        self._get_url = url_processor
+
+    async def __call__(
+        self,
+        type_names: str,
+        count: int = 1000,
+        srs_name: str = "urn:ogc:def:crs:EPSG::4326",
+        output_format: str = "application/json",
+        service: Literal["WFS"] = "WFS",
+        version: str = "2.0.0",
+        request: Literal["GetFeature"] = "GetFeature",
+        filter: str | None = None,
+    ) -> AsyncIterator[bytes]:
+        url = self._get_url(self._base_url, type_names, count, srs_name, output_format, service, version, request, filter)
+
+        return stream_data_from_url(url)
