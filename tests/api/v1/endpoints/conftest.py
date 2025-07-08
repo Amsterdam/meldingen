@@ -696,13 +696,15 @@ def asset_type_class_name(request: FixtureRequest) -> str:
 
 
 @pytest.fixture
-async def asset_type(
-    db_session: AsyncSession, asset_type_name: str, asset_type_class_name: str, arguments: dict[str, Any] | None = None
-) -> AssetType:
-    if arguments is None:
-        arguments = {}
+def asset_type_arguments(request: FixtureRequest) -> dict[str, Any]:
+    return {}
 
-    asset_type = AssetType(name=asset_type_name, class_name=asset_type_class_name, arguments=arguments)
+
+@pytest.fixture
+async def asset_type(
+    db_session: AsyncSession, asset_type_name: str, asset_type_class_name: str, asset_type_arguments: dict[str, Any]
+) -> AssetType:
+    asset_type = AssetType(name=asset_type_name, class_name=asset_type_class_name, arguments=asset_type_arguments)
 
     db_session.add(asset_type)
     await db_session.commit()

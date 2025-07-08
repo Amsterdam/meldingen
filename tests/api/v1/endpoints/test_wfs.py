@@ -29,7 +29,7 @@ class ValidMockProxyWfsProviderFactory(BaseWfsProviderFactory):
 
 @pytest.mark.anyio
 @pytest.mark.parametrize(
-    "asset_type_name, asset_type_class_name, arguments",
+    "asset_type_name, asset_type_class_name, asset_type_arguments",
     [
         (
             "container",
