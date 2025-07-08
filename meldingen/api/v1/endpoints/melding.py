@@ -46,6 +46,7 @@ from meldingen.actions import (
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
     MelderMeldingRetrieveAction,
+    MeldingAddAssetAction,
     MeldingListAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
@@ -66,6 +67,7 @@ from meldingen.dependencies import (
     melder_melding_list_attachments_action,
     melder_melding_list_questions_and_answers_action,
     melder_melding_retrieve_action,
+    melding_add_asset_action,
     melding_add_attachments_action,
     melding_add_contact_action,
     melding_add_location_action,
@@ -94,7 +96,13 @@ from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
 from meldingen.models import Answer, Attachment, Melding
 from meldingen.repositories import MeldingRepository
-from meldingen.schemas.input import AnswerInput, CompleteMeldingInput, MeldingContactInput, MeldingInput
+from meldingen.schemas.input import (
+    AnswerInput,
+    CompleteMeldingInput,
+    MeldingAssetInput,
+    MeldingContactInput,
+    MeldingInput,
+)
 from meldingen.schemas.output import (
     AnswerOutput,
     AnswerQuestionOutput,
@@ -752,3 +760,25 @@ async def list_answers(
     answers = await action(melding_id)
 
     return await produce_output(answers)
+
+
+@router.post(
+    "/{melding_id}/asset",
+    name="melding:add-asset",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def add_asset(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    input: MeldingAssetInput,
+    action: Annotated[MeldingAddAssetAction, Depends(melding_add_asset_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id, input.external_id, input.asset_type_id, token)
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except TokenException as e:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
+
+    return produce_output(melding)
