@@ -1,6 +1,7 @@
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Path
+from geojson_pydantic import FeatureCollection
 from meldingen_core.actions.wfs import WfsRetrieveAction
 from meldingen_core.exceptions import NotFoundException
 from starlette.exceptions import HTTPException
@@ -10,7 +11,6 @@ from starlette.status import HTTP_404_NOT_FOUND
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.dependencies import wfs_retrieve_action
 from meldingen.models import AssetType
-from meldingen.schemas.types import GeoJson
 
 router = APIRouter()
 
@@ -19,8 +19,7 @@ router = APIRouter()
     "/{name}",
     name="wfs:retrieve",
     responses={**unauthorized_response, **not_found_response},
-    response_class=StreamingResponse,
-    response_model=GeoJson,
+    response_model=FeatureCollection,
 )
 async def retrieve_wfs(
     action: Annotated[WfsRetrieveAction[AssetType], Depends(wfs_retrieve_action)],
