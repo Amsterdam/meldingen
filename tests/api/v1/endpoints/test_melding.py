@@ -2510,3 +2510,15 @@ class TestMeldingSubmit(BaseTokenAuthenticationTest):
 
         body = response.json()
         assert body.get("detail") == "Transition not allowed from current state"
+
+
+class TestMeldingAddAsset(BaseTokenAuthenticationTest):
+    def get_route_name(self) -> str:
+        return "melding:add-asset"
+
+    def get_method(self) -> str:
+        return "POST"
+
+    @override
+    def get_json(self) -> dict[str, Any] | None:
+        return {"external_id": "some_external_id", "asset_type_id": 123}
