@@ -697,8 +697,11 @@ def asset_type_class_name(request: FixtureRequest) -> str:
 
 @pytest.fixture
 async def asset_type(
-    db_session: AsyncSession, asset_type_name: str, asset_type_class_name: str, arguments: dict[str, Any]
+    db_session: AsyncSession, asset_type_name: str, asset_type_class_name: str, arguments: dict[str, Any] | None = None
 ) -> AssetType:
+    if arguments is None:
+        arguments = {}
+
     asset_type = AssetType(name=asset_type_name, class_name=asset_type_class_name, arguments=arguments)
 
     db_session.add(asset_type)
