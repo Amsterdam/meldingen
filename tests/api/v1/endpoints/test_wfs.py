@@ -19,7 +19,6 @@ class ValidMockProxyWfsProviderFactory(BaseWfsProviderFactory):
     def __call__(self) -> ProxyWfsProvider:
         response = Mock(Response)
         response.status_code = 200
-        response.json = {"testkey": "testvalue"}
 
         http_client = AsyncMock(AsyncClient)
         http_client.stream.return_value.__aenter__.return_value = response
