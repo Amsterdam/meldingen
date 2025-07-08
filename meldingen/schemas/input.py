@@ -215,3 +215,8 @@ class AssetTypeUpdateInput(BaseModel):
     name: str | None = None
     class_name: str | None = None
     arguments: dict[str, Any] | None = None
+
+
+class MeldingAssetInput(BaseModel):
+    external_id: str
+    asset_type_id: int
