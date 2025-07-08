@@ -1,6 +1,7 @@
-from typing import Annotated, Generic, TypedDict, TypeVar
+from typing import Annotated, AsyncIterator, Generic, TypedDict, TypeVar
 
 from fastapi import Depends, HTTPException, Query, Response
+from httpx import AsyncClient
 from meldingen_core import SortingDirection
 from pydantic import RootModel, ValidationError
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY

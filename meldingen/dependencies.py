@@ -27,6 +27,7 @@ from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmati
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
+from meldingen_core.wfs import WfsProviderFactory
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
@@ -75,6 +76,7 @@ from meldingen.actions import (
     UserListAction,
     UserRetrieveAction,
     UserUpdateAction,
+    WfsRetrieveAction,
 )
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.classification import DummyClassifierAdapter
@@ -1068,3 +1070,14 @@ def asset_type_delete_action(
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> AssetTypeDeleteAction:
     return AssetTypeDeleteAction(repository)
+
+
+def wfs_provider_factory() -> WfsProviderFactory:
+    return WfsProviderFactory()
+
+
+def wfs_retrieve_action(
+    provider_factory: Annotated[WfsProviderFactory, Depends(wfs_provider_factory)],
+    repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+) -> WfsRetrieveAction:
+    return WfsRetrieveAction(provider_factory, repository)
