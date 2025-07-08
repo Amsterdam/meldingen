@@ -13,6 +13,7 @@ migrations/versions/a4c7c0e946d2_geolocation_column.py:0: error: Module has no a
 migrations/versions/a4c7c0e946d2_geolocation_column.py:0: error: Module has no attribute "drop_geospatial_index"  [attr-defined]
 migrations/versions/a4c7c0e946d2_geolocation_column.py:0: error: Module has no attribute "drop_geospatial_column"  [attr-defined]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "DateTime | None", base class "Melding" defined the type as "datetime | None")  [assignment]
+meldingen/models.py:0: error: Incompatible types in assignment (expression has type "list[meldingen.models.Asset]", base class "Melding" defined the type as "MutableSequence[meldingen_core.models.Asset]")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
 migrations/env.py:0: error: Argument 1 to "async_engine_from_config" has incompatible type "dict[str, str] | None"; expected "dict[str, Any]"  [arg-type]
