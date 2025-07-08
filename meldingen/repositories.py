@@ -6,6 +6,7 @@ from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import (
     BaseAnswerRepository,
+    BaseAssetRepository,
     BaseAssetTypeRepository,
     BaseAttachmentRepository,
     BaseClassificationRepository,
@@ -24,6 +25,7 @@ from sqlalchemy.sql import func
 
 from meldingen.models import (
     Answer,
+    Asset,
     AssetType,
     Attachment,
     BaseDBModel,
@@ -302,6 +304,19 @@ class AssetTypeRepository(BaseSQLAlchemyRepository[AssetType], BaseAssetTypeRepo
     async def find_by_name(self, name: str) -> AssetType | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.name == name)
+
+        result = await self._session.execute(statement)
+
+        return result.scalars().one_or_none()
+
+
+class AssetRepository(BaseSQLAlchemyRepository[Asset], BaseAssetRepository[Asset]):
+    def get_model_type(self) -> type[Asset]:
+        return Asset
+
+    async def find_by_external_id_and_asset_type_id(self, external_id: str, asset_type_id: int) -> Asset | None:
+        _type = self.get_model_type()
+        statement = select(_type).where(_type.external_id == external_id).where(_type.type_id == asset_type_id)
 
         result = await self._session.execute(statement)
 
