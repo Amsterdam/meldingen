@@ -63,6 +63,7 @@ from meldingen.actions import (
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
     MelderMeldingRetrieveAction,
+    MeldingAddAssetAction,
     MeldingListAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
@@ -82,7 +83,7 @@ from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddr
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
-from meldingen.factories import AttachmentFactory, AzureFilesystemFactory, BaseFilesystemFactory
+from meldingen.factories import AssetFactory, AttachmentFactory, AzureFilesystemFactory, BaseFilesystemFactory
 from meldingen.generators import PublicIdGenerator
 from meldingen.image import (
     ImageOptimizerTask,
@@ -119,6 +120,7 @@ from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwar
 from meldingen.models import Answer, Melding
 from meldingen.repositories import (
     AnswerRepository,
+    AssetRepository,
     AssetTypeRepository,
     AttachmentRepository,
     ClassificationRepository,
@@ -262,6 +264,14 @@ def form_repository(session: Annotated[AsyncSession, Depends(database_session)])
 
 def attachment_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> AttachmentRepository:
     return AttachmentRepository(session)
+
+
+def asset_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> AssetRepository:
+    return AssetRepository(session)
+
+
+def asset_factory() -> AssetFactory:
+    return AssetFactory()
 
 
 def classifier(repository: Annotated[ClassificationRepository, Depends(classification_repository)]) -> Classifier:
@@ -524,6 +534,22 @@ def melder_melding_list_questions_and_answers_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
 ) -> MelderMeldingListQuestionsAnswersAction[Melding, Answer]:
     return MelderMeldingListQuestionsAnswersAction(token_verifier, answer_repository)
+
+
+def melding_add_asset_action(
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    asset_repository: Annotated[AssetRepository, Depends(asset_repository)],
+    asset_type_repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+    asset_factory: Annotated[AssetFactory, Depends(asset_factory)],
+) -> MeldingAddAssetAction:
+    return MeldingAddAssetAction(
+        token_verifier,
+        melding_repository,
+        asset_repository,
+        asset_type_repository,
+        asset_factory,
+    )
 
 
 async def azure_container_client() -> AsyncIterator[ContainerClient]:

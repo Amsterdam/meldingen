@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from meldingen.authentication import authenticate_user
 from meldingen.models import (
     Answer,
+    Asset,
     AssetType,
     Attachment,
     Classification,
@@ -723,3 +724,13 @@ async def asset_types(db_session: AsyncSession) -> list[AssetType]:
     await db_session.commit()
 
     return asset_types
+
+
+@pytest.fixture
+async def asset(db_session: AsyncSession, asset_type: AssetType) -> Asset:
+    asset = Asset("some_external_id", asset_type)
+
+    db_session.add(asset)
+    await db_session.commit()
+
+    return asset

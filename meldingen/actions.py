@@ -22,6 +22,7 @@ from meldingen_core.actions.classification import ClassificationListAction as Ba
 from meldingen_core.actions.classification import ClassificationRetrieveAction as BaseClassificationRetrieveAction
 from meldingen_core.actions.classification import ClassificationUpdateAction as BaseClassificationUpdateAction
 from meldingen_core.actions.mail import BasePreviewMailAction
+from meldingen_core.actions.melding import MeldingAddAssetAction as BaseMeldingAddAssetAction
 from meldingen_core.actions.melding import MeldingAddContactInfoAction as BaseMeldingAddContactInfoAction
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
@@ -44,6 +45,7 @@ from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransform
 from meldingen.mail import BaseMailPreviewer
 from meldingen.models import (
     Answer,
+    Asset,
     AssetType,
     Attachment,
     BaseFormIoValuesComponent,
@@ -639,3 +641,6 @@ class AssetTypeDeleteAction(BaseAssetTypeDeleteAction[AssetType]): ...
 
 
 class WfsRetrieveAction(BaseWfsRetrieveAction[AssetType]): ...
+
+
+class MeldingAddAssetAction(BaseMeldingAddAssetAction[Melding, Asset, AssetType]): ...

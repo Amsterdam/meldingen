@@ -23,7 +23,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from meldingen.models import Attachment, Classification, Form, Melding, Question
+from meldingen.models import Asset, AssetType, Attachment, Classification, Form, Melding, Question
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -2510,3 +2510,104 @@ class TestMeldingSubmit(BaseTokenAuthenticationTest):
 
         body = response.json()
         assert body.get("detail") == "Transition not allowed from current state"
+
+
+class TestMeldingAddAsset(BaseTokenAuthenticationTest):
+    def get_route_name(self) -> str:
+        return "melding:add-asset"
+
+    def get_method(self) -> str:
+        return "POST"
+
+    @override
+    def get_json(self) -> dict[str, Any] | None:
+        return {"external_id": "some_external_id", "asset_type_id": 123}
+
+    @pytest.mark.anyio
+    async def test_add_asset_to_melding_that_does_not_exist(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=123),
+            params={"token": "supersecrettoken"},
+            json=self.get_json(),
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        body = response.json()
+        assert body.get("detail") == "Melding not found"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_add_asset_with_asset_type_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+            json=self.get_json(),
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+        body = response.json()
+        assert body.get("detail") == "Failed to find asset type with id 123"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_add_asset_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, asset_type: AssetType
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+            json={"external_id": "my_external_id", "asset_type_id": asset_type.id},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") > 0
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+        assert body.get("public_id") == "PUBMEL"
+        assert body.get("text") == "This is a test melding."
+        assert body.get("state") == "new"
+        assert body.get("classification", "") is None
+        assert body.get("geo_location", "") is None
+        assert body.get("street", "") is None
+        assert body.get("house_number", "") is None
+        assert body.get("house_number_addition", "") is None
+        assert body.get("postal_code", "") is None
+        assert body.get("city", "") is None
+        assert body.get("email", "") is None
+        assert body.get("phone", "") is None
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_add_asset_that_already_exists(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, asset: Asset
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+            json={"external_id": asset.external_id, "asset_type_id": asset.type_id},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") > 0
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+        assert body.get("public_id") == "PUBMEL"
+        assert body.get("text") == "This is a test melding."
+        assert body.get("state") == "new"
+        assert body.get("classification", "") is None
+        assert body.get("geo_location", "") is None
+        assert body.get("street", "") is None
+        assert body.get("house_number", "") is None
+        assert body.get("house_number_addition", "") is None
+        assert body.get("postal_code", "") is None
+        assert body.get("city", "") is None
+        assert body.get("email", "") is None
+        assert body.get("phone", "") is None
