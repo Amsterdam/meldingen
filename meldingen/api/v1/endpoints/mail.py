@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
-from meldingen.actions import PreviewMailAction
+from meldingen.actions.mail import PreviewMailAction
 from meldingen.api.v1 import unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import preview_mail_action
