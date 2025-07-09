@@ -37,42 +37,20 @@ from plugfs.azure import AzureStorageBlobsAdapter
 from plugfs.filesystem import Adapter, Filesystem
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-from meldingen.actions import (
-    AddContactInfoToMeldingAction,
-    AddLocationToMeldingAction,
-    AnswerCreateAction,
+from meldingen.actions.asset_type import (
     AssetTypeCreateAction,
     AssetTypeDeleteAction,
     AssetTypeListAction,
     AssetTypeRetrieveAction,
     AssetTypeUpdateAction,
+)
+from meldingen.actions.attachment import (
     DeleteAttachmentAction,
     DownloadAttachmentAction,
-    FormCreateAction,
-    FormDeleteAction,
-    FormListAction,
-    FormRetrieveAction,
-    FormRetrieveByClassificationAction,
-    FormUpdateAction,
     ListAttachmentsAction,
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
-    MelderMeldingRetrieveAction,
-    MeldingAddAssetAction,
-    MeldingListAction,
-    MeldingRetrieveAction,
-    MeldingSubmitAction,
-    PreviewMailAction,
-    StaticFormListAction,
-    StaticFormRetrieveAction,
-    StaticFormUpdateAction,
     UploadAttachmentAction,
-    UserCreateAction,
-    UserDeleteAction,
-    UserListAction,
-    UserRetrieveAction,
-    UserUpdateAction,
-    WfsRetrieveAction,
 )
 from meldingen.actions.classification import (
     ClassificationCreateAction,
@@ -81,6 +59,36 @@ from meldingen.actions.classification import (
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
 )
+from meldingen.actions.form import (
+    AnswerCreateAction,
+    FormCreateAction,
+    FormDeleteAction,
+    FormListAction,
+    FormRetrieveAction,
+    FormRetrieveByClassificationAction,
+    FormUpdateAction,
+    StaticFormListAction,
+    StaticFormRetrieveAction,
+    StaticFormUpdateAction,
+)
+from meldingen.actions.mail import PreviewMailAction
+from meldingen.actions.melding import (
+    AddContactInfoToMeldingAction,
+    AddLocationToMeldingAction,
+    MelderMeldingRetrieveAction,
+    MeldingAddAssetAction,
+    MeldingListAction,
+    MeldingRetrieveAction,
+    MeldingSubmitAction,
+)
+from meldingen.actions.user import (
+    UserCreateAction,
+    UserDeleteAction,
+    UserListAction,
+    UserRetrieveAction,
+    UserUpdateAction,
+)
+from meldingen.actions.wfs import WfsRetrieveAction
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
