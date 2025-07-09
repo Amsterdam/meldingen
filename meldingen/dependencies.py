@@ -46,11 +46,6 @@ from meldingen.actions import (
     AssetTypeListAction,
     AssetTypeRetrieveAction,
     AssetTypeUpdateAction,
-    ClassificationCreateAction,
-    ClassificationDeleteAction,
-    ClassificationListAction,
-    ClassificationRetrieveAction,
-    ClassificationUpdateAction,
     DeleteAttachmentAction,
     DownloadAttachmentAction,
     FormCreateAction,
@@ -78,6 +73,13 @@ from meldingen.actions import (
     UserRetrieveAction,
     UserUpdateAction,
     WfsRetrieveAction,
+)
+from meldingen.actions.classification import (
+    ClassificationCreateAction,
+    ClassificationDeleteAction,
+    ClassificationListAction,
+    ClassificationRetrieveAction,
+    ClassificationUpdateAction,
 )
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.classification import DummyClassifierAdapter
