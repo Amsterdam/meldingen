@@ -37,20 +37,22 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from meldingen.actions import (
-    AddContactInfoToMeldingAction,
-    AddLocationToMeldingAction,
-    AnswerCreateAction,
+from meldingen.actions.attachment import (
     DeleteAttachmentAction,
     ListAttachmentsAction,
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
+    UploadAttachmentAction,
+)
+from meldingen.actions.form import AnswerCreateAction
+from meldingen.actions.melding import (
+    AddContactInfoToMeldingAction,
+    AddLocationToMeldingAction,
     MelderMeldingRetrieveAction,
     MeldingAddAssetAction,
     MeldingListAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
-    UploadAttachmentAction,
 )
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (

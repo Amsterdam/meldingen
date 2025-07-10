@@ -1,55 +1,18 @@
-from typing import Any, Sequence, TypeVar, override
+from collections.abc import Sequence
+from typing import Any
 
-from fastapi import BackgroundTasks, HTTPException
-from meldingen_core import SortingDirection
-from meldingen_core.actions.asset_type import AssetTypeCreateAction as BaseAssetTypeCreateAction
-from meldingen_core.actions.asset_type import AssetTypeDeleteAction as BaseAssetTypeDeleteAction
-from meldingen_core.actions.asset_type import AssetTypeListAction as BaseAssetTypeListAction
-from meldingen_core.actions.asset_type import AssetTypeRetrieveAction as BaseAssetTypeRetrieveAction
-from meldingen_core.actions.asset_type import AssetTypeUpdateAction as BaseAssetTypeUpdateAction
-from meldingen_core.actions.attachment import DeleteAttachmentAction as BaseDeleteAttachmentAction
-from meldingen_core.actions.attachment import DownloadAttachmentAction as BaseDownloadAttachmentAction
-from meldingen_core.actions.attachment import ListAttachmentsAction as BaseListAttachmentsAction
-from meldingen_core.actions.attachment import MelderDownloadAttachmentAction as BaseMelderDownloadAttachmentAction
-from meldingen_core.actions.attachment import MelderListAttachmentsAction as BaseMelderListAttachmentsAction
-from meldingen_core.actions.attachment import UploadAttachmentAction as BaseUploadAttachmentAction
-from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction
-from meldingen_core.actions.base import BaseListAction as BaseCoreListAction
-from meldingen_core.actions.base import BaseRetrieveAction
-from meldingen_core.actions.classification import ClassificationCreateAction as BaseClassificationCreateAction
-from meldingen_core.actions.classification import ClassificationDeleteAction as BaseClassificationDeleteAction
-from meldingen_core.actions.classification import ClassificationListAction as BaseClassificationListAction
-from meldingen_core.actions.classification import ClassificationRetrieveAction as BaseClassificationRetrieveAction
-from meldingen_core.actions.classification import ClassificationUpdateAction as BaseClassificationUpdateAction
-from meldingen_core.actions.mail import BasePreviewMailAction
-from meldingen_core.actions.melding import MeldingAddAssetAction as BaseMeldingAddAssetAction
-from meldingen_core.actions.melding import MeldingAddContactInfoAction as BaseMeldingAddContactInfoAction
-from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
-from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
-from meldingen_core.actions.melding import MeldingSubmitAction as BaseMeldingSubmitAction
-from meldingen_core.actions.user import UserCreateAction as BaseUserCreateAction
-from meldingen_core.actions.user import UserDeleteAction as BaseUserDeleteAction
-from meldingen_core.actions.user import UserListAction as BaseUserListAction
-from meldingen_core.actions.user import UserRetrieveAction as BaseUserRetrieveAction
-from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
-from meldingen_core.actions.wfs import WfsRetrieveAction as BaseWfsRetrieveAction
-from meldingen_core.address import BaseAddressEnricher
+from fastapi import HTTPException
+from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction, BaseRetrieveAction
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.statemachine import MeldingStates
 from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
+from meldingen.actions.base import BaseListAction
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
-from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
-from meldingen.mail import BaseMailPreviewer
 from meldingen.models import (
     Answer,
-    Asset,
-    AssetType,
-    Attachment,
     BaseFormIoValuesComponent,
-    Classification,
     Form,
     FormIoCheckBoxComponent,
     FormIoComponentTypeEnum,
@@ -65,11 +28,9 @@ from meldingen.models import (
     Melding,
     Question,
     StaticForm,
-    User,
 )
 from meldingen.repositories import (
     AnswerRepository,
-    AttributeNotFoundException,
     ClassificationRepository,
     FormIoQuestionComponentRepository,
     FormRepository,
@@ -78,100 +39,6 @@ from meldingen.repositories import (
     StaticFormRepository,
 )
 from meldingen.schemas.input import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, StaticFormInput
-from meldingen.schemas.types import Address, GeoJson
-
-T = TypeVar("T")
-
-
-class BaseListAction(BaseCoreListAction[T]):
-    async def __call__(
-        self,
-        *,
-        limit: int | None = None,
-        offset: int | None = None,
-        sort_attribute_name: str | None = None,
-        sort_direction: SortingDirection | None = None,
-    ) -> Sequence[T]:
-        try:
-            return await super().__call__(
-                limit=limit, offset=offset, sort_attribute_name=sort_attribute_name, sort_direction=sort_direction
-            )
-        except AttributeNotFoundException as e:
-            raise HTTPException(
-                HTTP_422_UNPROCESSABLE_ENTITY,
-                [{"loc": ("query", "sort"), "msg": e.message, "type": "attribute_not_found"}],
-            )
-
-
-class UserCreateAction(BaseUserCreateAction[User]): ...
-
-
-class UserListAction(BaseUserListAction[User], BaseListAction[User]): ...
-
-
-class UserRetrieveAction(BaseUserRetrieveAction[User]): ...
-
-
-class UserUpdateAction(BaseUserUpdateAction[User]): ...
-
-
-class UserDeleteAction(BaseUserDeleteAction[User]): ...
-
-
-class MeldingListAction(BaseMeldingListAction[Melding]):
-    @override
-    async def __call__(
-        self,
-        *,
-        limit: int | None = None,
-        offset: int | None = None,
-        sort_attribute_name: str | None = None,
-        sort_direction: SortingDirection | None = None,
-        area: str | None = None,
-        state: MeldingStates | None = None,
-    ) -> Sequence[Melding]:
-        try:
-            return await super().__call__(
-                limit=limit,
-                offset=offset,
-                sort_attribute_name=sort_attribute_name,
-                sort_direction=sort_direction,
-                area=area,
-                state=state,
-            )
-        except AttributeNotFoundException as e:
-            raise HTTPException(
-                HTTP_422_UNPROCESSABLE_ENTITY,
-                [{"loc": ("query", "sort"), "msg": e.message, "type": "attribute_not_found"}],
-            )
-
-
-class MeldingRetrieveAction(BaseMeldingRetrieveAction[Melding]): ...
-
-
-class MelderMeldingRetrieveAction:
-    _verify_token: TokenVerifier[Melding]
-
-    def __init__(self, token_verifier: TokenVerifier[Melding]):
-        self._verify_token = token_verifier
-
-    async def __call__(self, melding_id: int, token: str) -> Melding:
-        return await self._verify_token(melding_id, token)
-
-
-class ClassificationListAction(BaseClassificationListAction[Classification], BaseListAction[Classification]): ...
-
-
-class ClassificationCreateAction(BaseClassificationCreateAction[Classification, AssetType]): ...
-
-
-class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classification]): ...
-
-
-class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, AssetType]): ...
-
-
-class ClassificationDeleteAction(BaseClassificationDeleteAction[Classification]): ...
 
 
 class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
@@ -556,91 +423,3 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
 
 
 class StaticFormListAction(BaseListAction[StaticForm]): ...
-
-
-class UploadAttachmentAction(BaseUploadAttachmentAction[Attachment, Melding]): ...
-
-
-class DownloadAttachmentAction(BaseDownloadAttachmentAction[Attachment]): ...
-
-
-class MelderDownloadAttachmentAction(BaseMelderDownloadAttachmentAction[Attachment, Melding]): ...
-
-
-class ListAttachmentsAction(BaseListAttachmentsAction[Attachment]): ...
-
-
-class MelderListAttachmentsAction(BaseMelderListAttachmentsAction[Attachment, Melding]): ...
-
-
-class DeleteAttachmentAction(BaseDeleteAttachmentAction[Attachment, Melding]): ...
-
-
-class AddLocationToMeldingAction:
-    _verify_token: TokenVerifier[Melding]
-    _ingest_location: MeldingLocationIngestor
-    _background_task_manager: BackgroundTasks
-    _add_address: BaseAddressEnricher[Melding, Address]
-    _wkb_to_point_shape: WKBToPointShapeTransformer
-
-    def __init__(
-        self,
-        token_verifier: TokenVerifier[Melding],
-        location_ingestor: MeldingLocationIngestor,
-        background_task_manager: BackgroundTasks,
-        address_enricher: BaseAddressEnricher[Melding, Address],
-        wkb_to_point_shape_transformer: WKBToPointShapeTransformer,
-    ) -> None:
-        self._verify_token = token_verifier
-        self._ingest_location = location_ingestor
-        self._background_task_manager = background_task_manager
-        self._add_address = address_enricher
-        self._wkb_to_point_shape = wkb_to_point_shape_transformer
-
-    async def __call__(self, melding_id: int, token: str, location: GeoJson) -> Melding:
-        melding = await self._verify_token(melding_id, token)
-        melding = await self._ingest_location(melding, location)
-
-        assert melding.geo_location is not None
-        shape = self._wkb_to_point_shape(melding.geo_location)
-
-        self._background_task_manager.add_task(self._add_address, melding, shape.x, shape.y)
-
-        return melding
-
-
-class AddContactInfoToMeldingAction(BaseMeldingAddContactInfoAction[Melding]): ...
-
-
-class MeldingSubmitAction(BaseMeldingSubmitAction[Melding]): ...
-
-
-class PreviewMailAction(BasePreviewMailAction):
-    _get_preview: BaseMailPreviewer
-
-    def __init__(self, previewer: BaseMailPreviewer):
-        self._get_preview = previewer
-
-    async def __call__(self, title: str, preview_text: str, body_text: str) -> str:
-        return await self._get_preview(title, preview_text, body_text)
-
-
-class AssetTypeCreateAction(BaseAssetTypeCreateAction[AssetType]): ...
-
-
-class AssetTypeRetrieveAction(BaseAssetTypeRetrieveAction[AssetType]): ...
-
-
-class AssetTypeListAction(BaseAssetTypeListAction[AssetType], BaseListAction[AssetType]): ...
-
-
-class AssetTypeUpdateAction(BaseAssetTypeUpdateAction[AssetType]): ...
-
-
-class AssetTypeDeleteAction(BaseAssetTypeDeleteAction[AssetType]): ...
-
-
-class WfsRetrieveAction(BaseWfsRetrieveAction[AssetType]): ...
-
-
-class MeldingAddAssetAction(BaseMeldingAddAssetAction[Melding, Asset, AssetType]): ...

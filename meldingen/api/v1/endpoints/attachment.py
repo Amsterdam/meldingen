@@ -6,7 +6,7 @@ from meldingen_core.exceptions import NotFoundException
 from starlette.responses import StreamingResponse
 from starlette.status import HTTP_404_NOT_FOUND
 
-from meldingen.actions import DownloadAttachmentAction
+from meldingen.actions.attachment import DownloadAttachmentAction
 from meldingen.api.v1 import image_data_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import download_attachment_action

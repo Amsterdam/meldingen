@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from meldingen_core.exceptions import NotFoundException
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
-from meldingen.actions import (
+from meldingen.actions.classification import (
     ClassificationCreateAction,
     ClassificationDeleteAction,
     ClassificationListAction,

@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from starlette.status import HTTP_404_NOT_FOUND
 
-from meldingen.actions import StaticFormListAction, StaticFormRetrieveAction, StaticFormUpdateAction
+from meldingen.actions.form import StaticFormListAction, StaticFormRetrieveAction, StaticFormUpdateAction
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
