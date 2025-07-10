@@ -81,7 +81,7 @@ jobs:
         run: docker compose pull meldingen
 
       - name: black
-        run:  docker run ${REGISTRY}/${REPOSITORY}:${VERSION} black . --check
+        run:  docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} black . --check
 
   iSort:
     needs: build_container_images
@@ -103,7 +103,7 @@ jobs:
         run: docker compose pull meldingen
 
       - name: isort
-        run: docker run ${REGISTRY}/${REPOSITORY}:${VERSION} isort . --check
+        run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} isort . --check
 
   MyPy:
     needs: build_container_images
@@ -125,4 +125,4 @@ jobs:
         run: docker compose pull meldingen
 
       - name: mypy
-        run: docker run ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "mypy --strict . | mypy-baseline filter"
+        run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "mypy --strict . | mypy-baseline filter"
