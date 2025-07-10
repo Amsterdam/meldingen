@@ -81,7 +81,7 @@ jobs:
         run: docker compose pull meldingen
 
       - name: black
-        run:  docker compose run --rm meldingen black . --check
+        run:  docker run --rm -it ${REGISTRY}/${REPOSITORY}:${VERSION} black . --check
 
   iSort:
     needs: build_container_images
