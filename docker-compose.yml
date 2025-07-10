@@ -106,9 +106,7 @@ services:
       - meldingen_network
 
   otel-collector:
-    image: ${REGISTRY:-localhost:5000}/${REPOSITORY:-signalen/meldingen-otel-collector}:${VERSION:-latest}
-    build:
-      context: docker/otel-collector
+    image: otel/opentelemetry-collector-contrib:0.129.1
     depends_on:
       - jaeger
     ports:
@@ -117,7 +115,7 @@ services:
     # environment:
     #  APPLICATIONINSIGHTS_CONNECTION_STRING: InstrumentationKey=[redacted];IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=[redacted]
     volumes:
-      - ./docker/otel-collector/otel-collector-config-dev.yaml:/etc/otelcol-contrib/config.yaml
+      - ./docker/otel-collector/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
     networks:
       - meldingen_network
 
