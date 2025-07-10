@@ -2,7 +2,7 @@ import logging
 from datetime import timedelta
 from pathlib import Path
 
-from pydantic import HttpUrl, PostgresDsn
+from pydantic import PostgresDsn
 from pydantic_media_type import MediaType
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     # Database settings
     database_dsn: PostgresDsn
+    test_database_dsn: PostgresDsn = PostgresDsn("postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test")
 
     # Authentication
     jwks_url: str
