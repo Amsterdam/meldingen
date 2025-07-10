@@ -1,6 +1,7 @@
 import asyncio
 
 import typer
+from pydantic.v1 import EmailStr
 from rich import print
 from sqlalchemy.exc import IntegrityError
 
@@ -16,7 +17,7 @@ async def async_add_user(email: str) -> None:
     async for session in database_session(database_session_manager(database_engine())):
         user_repository = UserRepository(session)
 
-        user_input = UserCreateInput(username=email, email=email)
+        user_input = UserCreateInput(username=email, email=EmailStr(email))
         user = User(**user_input.model_dump())
 
         try:
