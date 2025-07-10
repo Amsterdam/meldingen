@@ -36,7 +36,7 @@ from meldingen.main import get_application
 from meldingen.models import BaseDBModel, User
 
 pytest_plugins = ["mailpit.testing.pytest"]
-TEST_DATABASE_URL: str = "postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test"
+TEST_DATABASE_URL: str = str(settings.test_database_dsn)
 
 
 @pytest.fixture
