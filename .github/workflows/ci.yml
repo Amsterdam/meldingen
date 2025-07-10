@@ -103,7 +103,7 @@ jobs:
         run: docker compose pull meldingen
 
       - name: isort
-        run: docker compose run --rm meldingen isort . --check
+        run: docker run ${REGISTRY}/${REPOSITORY}:${VERSION} isort . --check
 
   MyPy:
     needs: build_container_images
@@ -125,4 +125,4 @@ jobs:
         run: docker compose pull meldingen
 
       - name: mypy
-        run: docker compose run --rm meldingen bash -c "mypy --strict . | mypy-baseline filter"
+        run: docker run ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "mypy --strict . | mypy-baseline filter"
