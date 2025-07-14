@@ -58,7 +58,7 @@ jobs:
       - name: Run alembic tests
         run: |
           docker compose up -d database
-          docker run -v $(pwd):/opt/meldingen --network meldingen_network ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --test-alembic -m alembic
+          docker run -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --test-alembic -m alembic
 
       - name: Run tests
         run: docker compose run --rm -e COVERAGE_FILE=/tmp/.coverage meldingen pytest --cov --cov-fail-under=95 -n auto -v
