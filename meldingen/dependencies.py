@@ -518,7 +518,6 @@ def form_io_question_component_repository(
 def melding_answer_create_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
-    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
     jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
@@ -526,7 +525,6 @@ def melding_answer_create_action(
     return AnswerCreateAction(
         answer_repository,
         token_verifier,
-        melding_repository,
         question_repository,
         component_repository,
         jsonlogic_validator,

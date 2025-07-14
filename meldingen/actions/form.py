@@ -34,7 +34,6 @@ from meldingen.repositories import (
     ClassificationRepository,
     FormIoQuestionComponentRepository,
     FormRepository,
-    MeldingRepository,
     QuestionRepository,
     StaticFormRepository,
 )
@@ -248,7 +247,6 @@ class FormRetrieveByClassificationAction(BaseCRUDAction[Form]):
 
 class AnswerCreateAction(BaseCRUDAction[Answer]):
     _token_verifier: TokenVerifier[Melding]
-    _melding_repository: MeldingRepository
     _question_repository: QuestionRepository
     _component_repository: FormIoQuestionComponentRepository
     _jsonlogic_validate: JSONLogicValidator
@@ -257,14 +255,12 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         self,
         repository: AnswerRepository,
         token_verifier: TokenVerifier[Melding],
-        melding_repository: MeldingRepository,
         question_repository: QuestionRepository,
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
     ):
         super().__init__(repository)
         self._token_verifier = token_verifier
-        self._melding_repository = melding_repository
         self._question_repository = question_repository
         self._component_repository = component_repository
         self._jsonlogic_validate = jsonlogic_validator
