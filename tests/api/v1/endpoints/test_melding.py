@@ -11,6 +11,7 @@ from mailpit.client.api import API
 from meldingen_core import SortingDirection
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.statemachine import MeldingStates
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
     HTTP_200_OK,
@@ -23,7 +24,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from meldingen.models import Asset, AssetType, Attachment, Classification, Form, Melding, Question
+from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -1059,7 +1060,8 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        text = "dit is het antwoord op de vraag"
+        data = {"text": text}
 
         response = await client.post(
             app.url_path_for(
@@ -1073,6 +1075,7 @@ class TestMeldingQuestionAnswer:
 
         data = response.json()
         assert data.get("id") is not None
+        assert data.get("text") == text
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
@@ -1374,6 +1377,156 @@ class TestMeldingQuestionAnswer:
 
         data = response.json()
         assert data.get("detail") == "Not Found"
+
+
+class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
+    def get_route_name(self) -> str:
+        return "melding:update-answer"
+
+    def get_method(self) -> str:
+        return "PATCH"
+
+    @override
+    def get_json(self) -> dict[str, Any] | None:
+        return {"text": "This is the answer"}
+
+    @override
+    def get_extra_path_params(self) -> dict[str, Any]:
+        return {"answer_id": 123}
+
+    @pytest.mark.anyio
+    async def test_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=123, answer_id=456),
+            params={"token": "supersecuretoken"},
+            json=self.get_json(),
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.parametrize("melding_token", ["supersecrettoken"])
+    @pytest.mark.anyio
+    async def test_answer_not_found(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=456),
+            params={"token": melding.token},
+            json=self.get_json(),
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_answer_does_not_belong_to_melding(
+        self, app: FastAPI, client: AsyncClient, melding_with_some_answers: Melding, db_session: AsyncSession
+    ) -> None:
+        melding = Melding("Text", token="supersecrettoken")
+        melding.public_id = "PUB123"
+        db_session.add(melding)
+        await db_session.commit()
+
+        result = await db_session.execute(select(Answer))
+        answers = result.scalars().all()
+        assert len(answers) > 0
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answers[0].id),
+            params={"token": melding.token},
+            json=self.get_json(),
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Answer does not belong to melding"
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name", "jsonlogic"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+                '{"if": [{"==": [{"var": "text"},"test"]}, true, "Not equal"]}',
+            )
+        ],
+        indirect=["classification_name", "jsonlogic"],
+    )
+    @pytest.mark.anyio
+    async def test_answer_text_invalid(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+        db_session: AsyncSession,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = Answer(text="This is the answer", question=questions[0], melding=melding_with_classification)
+        db_session.add(answer)
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"text": "This is another answer"},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Not equal"
+        assert detail[0].get("input") == {"text": "This is another answer"}
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name", "jsonlogic"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+                '{"if": [{"==": [{"var": "text"},"This is another answer"]}, true, "Not equal"]}',
+            )
+        ],
+        indirect=["classification_name", "jsonlogic"],
+    )
+    @pytest.mark.anyio
+    async def test_update_answer(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+        db_session: AsyncSession,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = Answer(text="This is the answer", question=questions[0], melding=melding_with_classification)
+        db_session.add(answer)
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"text": "This is another answer"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") == answer.id
+        assert body.get("text") == "This is another answer"
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
 
 
 class TestMeldingUploadAttachment:

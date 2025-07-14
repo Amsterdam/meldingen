@@ -21,10 +21,10 @@ from meldingen.models import (
     StaticForm,
 )
 from meldingen.schemas.output import (
+    AnswerOutput,
     AnswerQuestionOutput,
     AssetTypeOutput,
     BaseFormComponentOutput,
-    ClassificationOutput,
     FormCheckboxComponentOutput,
     FormComponentOutputValidate,
     FormComponentValueOutput,
@@ -639,3 +639,8 @@ class AssetTypeOutputFactory:
             created_at=asset_type.created_at,
             updated_at=asset_type.updated_at,
         )
+
+
+class AnswerOutputFactory:
+    def __call__(self, answer: Answer) -> AnswerOutput:
+        return AnswerOutput(id=answer.id, text=answer.text, created_at=answer.created_at, updated_at=answer.updated_at)

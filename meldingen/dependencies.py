@@ -61,6 +61,7 @@ from meldingen.actions.classification import (
 )
 from meldingen.actions.form import (
     AnswerCreateAction,
+    AnswerUpdateAction,
     FormCreateAction,
     FormDeleteAction,
     FormListAction,
@@ -143,6 +144,7 @@ from meldingen.repositories import (
 )
 from meldingen.schemas.output_factories import (
     AnswerListOutputFactory,
+    AnswerOutputFactory,
     AssetTypeOutputFactory,
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
@@ -529,6 +531,15 @@ def melding_answer_create_action(
         component_repository,
         jsonlogic_validator,
     )
+
+
+def melding_answer_update_action(
+    answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
+    jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
+) -> AnswerUpdateAction:
+    return AnswerUpdateAction(answer_repository, token_verifier, component_repository, jsonlogic_validator)
 
 
 def melding_list_questions_and_answers_action(
@@ -1115,3 +1126,7 @@ def wfs_retrieve_action(
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> WfsRetrieveAction:
     return WfsRetrieveAction(provider_factory, repository)
+
+
+def answer_output_factory() -> AnswerOutputFactory:
+    return AnswerOutputFactory()

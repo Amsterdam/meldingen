@@ -44,7 +44,7 @@ from meldingen.actions.attachment import (
     MelderListAttachmentsAction,
     UploadAttachmentAction,
 )
-from meldingen.actions.form import AnswerCreateAction
+from meldingen.actions.form import AnswerCreateAction, AnswerUpdateAction
 from meldingen.actions.melding import (
     AddContactInfoToMeldingAction,
     AddLocationToMeldingAction,
@@ -65,6 +65,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
+    answer_output_factory,
     melder_melding_download_attachment_action,
     melder_melding_list_attachments_action,
     melder_melding_list_questions_and_answers_action,
@@ -75,6 +76,7 @@ from meldingen.dependencies import (
     melding_add_location_action,
     melding_answer_create_action,
     melding_answer_questions_action,
+    melding_answer_update_action,
     melding_complete_action,
     melding_contact_info_added_action,
     melding_create_action,
@@ -112,7 +114,12 @@ from meldingen.schemas.output import (
     MeldingCreateOutput,
     MeldingOutput,
 )
-from meldingen.schemas.output_factories import AnswerListOutputFactory, MeldingCreateOutputFactory, MeldingOutputFactory
+from meldingen.schemas.output_factories import (
+    AnswerListOutputFactory,
+    AnswerOutputFactory,
+    MeldingCreateOutputFactory,
+    MeldingOutputFactory,
+)
 from meldingen.schemas.types import GeoJson
 
 router = APIRouter()
@@ -460,6 +467,7 @@ async def answer_additional_question(
     token: Annotated[str, Query(description="The token of the melding.")],
     answer_input: AnswerInput,
     action: Annotated[AnswerCreateAction, Depends(melding_answer_create_action)],
+    produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutput:
     try:
         answer = await action(melding_id, token, question_id, answer_input)
@@ -470,7 +478,43 @@ async def answer_additional_question(
     except MeldingNotClassifiedException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
 
-    return AnswerOutput(id=answer.id, created_at=answer.created_at, updated_at=answer.updated_at)
+    return produce_output(answer)
+
+
+@router.patch(
+    "/{melding_id}/answer/{answer_id}",
+    name="melding:update-answer",
+    responses={
+        **not_found_response,
+        **unauthorized_response,
+        **{
+            HTTP_400_BAD_REQUEST: {
+                "description": "",
+                "content": {
+                    "application/json": {
+                        "example": {"detail": [{"msg": "Answer does not belong to the melding."}]},
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_answer(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    answer_id: Annotated[int, Path(description="The id of the answer.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    answer_input: AnswerInput,
+    action: Annotated[AnswerUpdateAction, Depends(melding_answer_update_action)],
+    produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
+) -> AnswerOutput:
+    try:
+        answer = await action(melding_id, token, answer_id, answer_input.text)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+    return produce_output(answer)
 
 
 def _hydrate_attachment_output(attachment: Attachment) -> AttachmentOutput:

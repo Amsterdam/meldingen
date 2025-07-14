@@ -311,6 +311,52 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         return answer
 
 
+class AnswerUpdateAction(BaseCRUDAction[Answer]):
+    _token_verifier: TokenVerifier[Melding]
+    _component_repository: FormIoQuestionComponentRepository
+    _jsonlogic_validate: JSONLogicValidator
+
+    def __init__(
+        self,
+        repository: AnswerRepository,
+        token_verifier: TokenVerifier[Melding],
+        component_repository: FormIoQuestionComponentRepository,
+        jsonlogic_validator: JSONLogicValidator,
+    ):
+        super().__init__(repository)
+        self._token_verifier = token_verifier
+        self._component_repository = component_repository
+        self._jsonlogic_validate = jsonlogic_validator
+
+    async def __call__(self, melding_id: int, token: str, answer_id: int, text: str) -> Answer:
+        melding = await self._token_verifier(melding_id, token)
+
+        answer = await self._repository.retrieve(answer_id)
+        if answer is None:
+            raise NotFoundException("Answer not found")
+
+        answer_melding = await answer.awaitable_attrs.melding
+        if answer_melding != melding:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail=[{"msg": "Answer does not belong to melding"}],
+            )
+
+        form_component = await self._component_repository.find_component_by_question_id(answer.question_id)
+        if form_component.jsonlogic is not None:
+            try:
+                self._jsonlogic_validate(form_component.jsonlogic, {"text": text})
+            except JSONLogicValidationException as e:
+                raise HTTPException(
+                    status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=[{"msg": e.msg, "input": e.input}]
+                ) from e
+
+        answer.text = text
+        await self._repository.save(answer)
+
+        return answer
+
+
 class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]):
     _repository: StaticFormRepository
 
