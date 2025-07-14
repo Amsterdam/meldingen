@@ -484,7 +484,20 @@ async def answer_additional_question(
 @router.patch(
     "/{melding_id}/answer/{answer_id}",
     name="melding:update-answer",
-    responses={**not_found_response, **unauthorized_response},
+    responses={
+        **not_found_response,
+        **unauthorized_response,
+        **{
+            HTTP_400_BAD_REQUEST: {
+                "description": "",
+                "content": {
+                    "application/json": {
+                        "example": {"detail": [{"msg": "Answer does not belong to the melding."}]},
+                    },
+                },
+            },
+        },
+    },
 )
 async def update_answer(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
