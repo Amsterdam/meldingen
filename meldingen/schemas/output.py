@@ -201,7 +201,8 @@ class FormSelectComponentOutput(StaticFormSelectComponentOutput):
     question: int
 
 
-class AnswerOutput(BaseOutputModel): ...
+class AnswerOutput(BaseOutputModel):
+    text: str
 
 
 class QuestionOutput(BaseOutputModel):
