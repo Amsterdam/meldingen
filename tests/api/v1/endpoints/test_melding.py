@@ -1059,7 +1059,8 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        text = "dit is het antwoord op de vraag"
+        data = {"text": text}
 
         response = await client.post(
             app.url_path_for(
@@ -1073,6 +1074,7 @@ class TestMeldingQuestionAnswer:
 
         data = response.json()
         assert data.get("id") is not None
+        assert data.get("text") == text
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
 
