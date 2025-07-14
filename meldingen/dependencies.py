@@ -143,6 +143,7 @@ from meldingen.repositories import (
 )
 from meldingen.schemas.output_factories import (
     AnswerListOutputFactory,
+    AnswerOutputFactory,
     AssetTypeOutputFactory,
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
@@ -1115,3 +1116,7 @@ def wfs_retrieve_action(
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> WfsRetrieveAction:
     return WfsRetrieveAction(provider_factory, repository)
+
+
+def answer_output_factory() -> AnswerOutputFactory:
+    return AnswerOutputFactory()
