@@ -44,7 +44,7 @@ from meldingen.actions.attachment import (
     MelderListAttachmentsAction,
     UploadAttachmentAction,
 )
-from meldingen.actions.form import AnswerCreateAction
+from meldingen.actions.form import AnswerCreateAction, AnswerUpdateAction
 from meldingen.actions.melding import (
     AddContactInfoToMeldingAction,
     AddLocationToMeldingAction,
@@ -76,6 +76,7 @@ from meldingen.dependencies import (
     melding_add_location_action,
     melding_answer_create_action,
     melding_answer_questions_action,
+    melding_answer_update_action,
     melding_complete_action,
     melding_contact_info_added_action,
     melding_create_action,
@@ -476,6 +477,29 @@ async def answer_additional_question(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
     except MeldingNotClassifiedException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
+
+    return produce_output(answer)
+
+
+@router.patch(
+    "/{melding_id}/answer/{answer_id}",
+    name="melding:update-answer",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def update_answer(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    answer_id: Annotated[int, Path(description="The id of the answer.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    answer_input: AnswerInput,
+    action: Annotated[AnswerUpdateAction, Depends(melding_answer_update_action)],
+    produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
+) -> AnswerOutput:
+    try:
+        answer = await action(melding_id, token, answer_id, answer_input.text)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return produce_output(answer)
 
