@@ -65,6 +65,7 @@ from meldingen.api.v1 import (
 )
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
+    answer_output_factory,
     melder_melding_download_attachment_action,
     melder_melding_list_attachments_action,
     melder_melding_list_questions_and_answers_action,
@@ -112,7 +113,12 @@ from meldingen.schemas.output import (
     MeldingCreateOutput,
     MeldingOutput,
 )
-from meldingen.schemas.output_factories import AnswerListOutputFactory, MeldingCreateOutputFactory, MeldingOutputFactory
+from meldingen.schemas.output_factories import (
+    AnswerListOutputFactory,
+    AnswerOutputFactory,
+    MeldingCreateOutputFactory,
+    MeldingOutputFactory,
+)
 from meldingen.schemas.types import GeoJson
 
 router = APIRouter()
@@ -460,6 +466,7 @@ async def answer_additional_question(
     token: Annotated[str, Query(description="The token of the melding.")],
     answer_input: AnswerInput,
     action: Annotated[AnswerCreateAction, Depends(melding_answer_create_action)],
+    produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutput:
     try:
         answer = await action(melding_id, token, question_id, answer_input)
@@ -470,7 +477,7 @@ async def answer_additional_question(
     except MeldingNotClassifiedException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
 
-    return AnswerOutput(id=answer.id, created_at=answer.created_at, updated_at=answer.updated_at)
+    return produce_output(answer)
 
 
 def _hydrate_attachment_output(attachment: Attachment) -> AttachmentOutput:
