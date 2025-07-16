@@ -696,7 +696,6 @@ async def add_location_to_melding(
     action: Annotated[AddLocationToMeldingAction, Depends(melding_add_location_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
-
     try:
         melding = await action(melding_id, token, location)
     except NotFoundException:
