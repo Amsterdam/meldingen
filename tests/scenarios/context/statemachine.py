@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient, Response
 from meldingen_core.statemachine import MeldingTransitions
 from pytest_bdd import parsers, then, when
-from starlette.status import HTTP_400_BAD_REQUEST
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 
 from tests.scenarios.conftest import async_step
 
@@ -13,7 +13,6 @@ ROUTE_FINISH_UPLOADING_ATTACHMENTS: Final[str] = "melding:add-attachments"
 ROUTE_NAME_LOCATION_FINALIZE: Final[str] = "melding:submit-location"
 ROUTE_FINALIZE_CONTACT_INFO_ADD: Final[str] = "melding:add-contact-info"
 ROUTE_NAME_SUBMIT: Final[str] = "melding:submit"
-
 
 TRANSITION_TO_ROUTE_MAP = {
     MeldingTransitions.ANSWER_QUESTIONS: ROUTE_FINISH_ANSWERING_QUESTIONS,
@@ -57,7 +56,6 @@ def i_should_be_told_to_submit_location_first(api_response: Response) -> None:
 def i_should_be_told_to_answer_additional_questions(
     client: AsyncClient, app: FastAPI, api_response: Response, token: str
 ) -> None:
-
     assert api_response.status_code == HTTP_400_BAD_REQUEST
     body = api_response.json()
     assert isinstance(body, dict)
@@ -69,9 +67,19 @@ def i_should_be_told_to_answer_additional_questions(
 def i_should_be_told_transition_not_allowed_from_current_state(
     client: AsyncClient, app: FastAPI, api_response: Response, token: str
 ) -> None:
-
     assert api_response.status_code == HTTP_400_BAD_REQUEST
     body = api_response.json()
     assert isinstance(body, dict)
 
     assert body.get("detail") == "Transition not allowed from current state"
+
+
+@then("I should be told that I am not allowed to change the state because the token has been invalidated")
+def i_should_be_told_transition_not_allowed_after_submitting(
+    client: AsyncClient, app: FastAPI, api_response: Response, token: str
+) -> None:
+    assert api_response.status_code == HTTP_401_UNAUTHORIZED
+    body = api_response.json()
+    assert isinstance(body, dict)
+
+    assert body.get("detail") == "Unauthorized"
