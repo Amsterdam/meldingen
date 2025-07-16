@@ -175,3 +175,37 @@ Feature: Melding Form
         Examples:
         | transition |
         | SUBMIT           |
+
+    Scenario Outline: A melding in the state contact_info_added can go back to all previous states
+        # Initial melding and classification
+        When I create a melding with text "test"
+        Then the melding should be classified as "test"
+        And the state of the melding should be "classified"
+        And the melding should contain a token
+        # Additional questions
+        When I retrieve the additional questions through my classification
+        And I answer the additional questions with the text "text"
+        When I finish my current step by completing "ANSWER_QUESTIONS"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "questions_answered"
+        # Location
+        Given I know the latitude 52.3680605 and longitude 4.897092 values of my melding
+        When I add the location as geojson to my melding
+        Then the location should be attached to the melding
+        When I finish my current step by completing "SUBMIT_LOCATION"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "location_submitted"
+        # Attachments
+        When I finish my current step by completing "ADD_ATTACHMENTS"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "attachments_added"
+
+        When I finish my current step by completing "<transition>"
+        Then I should receive a response with the current content of my melding
+
+        Examples:
+        | transition |
+        | ANSWER_QUESTIONS |
+        | ADD_ATTACHMENTS |
+        | SUBMIT_LOCATION |
+        | ADD_CONTACT_INFO |

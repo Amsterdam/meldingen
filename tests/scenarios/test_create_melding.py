@@ -45,3 +45,8 @@ def test_melding_attachments_added_cant_skip_steps(anyio_backend: str, test_data
 @scenario("create_melding.feature", "A melding in the state location_submitted can't skip any steps")
 def test_melding_location_submitted_cant_skip_steps(anyio_backend: str, test_database: None) -> None:
     pass
+
+
+@scenario("create_melding.feature", "A melding in the state contact_info_added can go back to all previous states")
+def test_melding_location_submitted_cant_skip_steps(anyio_backend: str, test_database: None) -> None:
+    pass

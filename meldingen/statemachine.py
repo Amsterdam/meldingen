@@ -2,7 +2,7 @@ from meldingen_core.exceptions import NotFoundException
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
 from mp_fsm.statemachine import BaseGuard, BaseStateMachine, BaseTransition
 
-from meldingen.models import Answer, Form, Melding
+from meldingen.models import Melding
 from meldingen.repositories import AnswerRepository, FormRepository
 
 
@@ -56,7 +56,14 @@ class Classify(BaseTransition[Melding]):
 
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.NEW, MeldingStates.CLASSIFIED]
+        return [
+            MeldingStates.NEW,
+            MeldingStates.CLASSIFIED,
+            MeldingStates.QUESTIONS_ANSWERED,
+            MeldingStates.LOCATION_SUBMITTED,
+            MeldingStates.ATTACHMENTS_ADDED,
+            MeldingStates.CONTACT_INFO_ADDED,
+        ]
 
     @property
     def to_state(self) -> str:
@@ -75,7 +82,13 @@ class AnswerQuestions(BaseTransition[Melding]):
 
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.CLASSIFIED]
+        return [
+            MeldingStates.CLASSIFIED,
+            MeldingStates.QUESTIONS_ANSWERED,
+            MeldingStates.LOCATION_SUBMITTED,
+            MeldingStates.ATTACHMENTS_ADDED,
+            MeldingStates.CONTACT_INFO_ADDED,
+        ]
 
     @property
     def to_state(self) -> str:
@@ -94,7 +107,12 @@ class SubmitLocation(BaseTransition[Melding]):
 
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.QUESTIONS_ANSWERED]
+        return [
+            MeldingStates.QUESTIONS_ANSWERED,
+            MeldingStates.LOCATION_SUBMITTED,
+            MeldingStates.ATTACHMENTS_ADDED,
+            MeldingStates.CONTACT_INFO_ADDED,
+        ]
 
     @property
     def to_state(self) -> str:
@@ -108,7 +126,7 @@ class SubmitLocation(BaseTransition[Melding]):
 class AddAttachments(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.LOCATION_SUBMITTED]
+        return [MeldingStates.LOCATION_SUBMITTED, MeldingStates.ATTACHMENTS_ADDED, MeldingStates.CONTACT_INFO_ADDED]
 
     @property
     def to_state(self) -> str:
@@ -118,7 +136,7 @@ class AddAttachments(BaseTransition[Melding]):
 class AddContactInfo(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.ATTACHMENTS_ADDED]
+        return [MeldingStates.ATTACHMENTS_ADDED, MeldingStates.CONTACT_INFO_ADDED]
 
     @property
     def to_state(self) -> str:
