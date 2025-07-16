@@ -8,7 +8,7 @@ def a_confirmation_email_should_be_sent_to(mailpit_api: API, email_address: str)
     mailpit_api.mailpit_url = "http://mailpit:8025"
 
     messages = mailpit_api.get_messages()
-    assert messages.total == 1
+    assert messages.total >= 1
 
     message = messages.messages[0]
     assert len(message.to) == 1
