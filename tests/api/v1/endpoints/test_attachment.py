@@ -62,6 +62,7 @@ class TestDownloadAttachment(BaseUnauthorizedTest):
         auth_user: None,
         attachment: Attachment,
         container_client: ContainerClient,
+        azure_container_client_override: None,
     ) -> None:
         blob_client = container_client.get_blob_client(attachment.file_path)
         async with blob_client:
@@ -104,6 +105,7 @@ class TestDownloadAttachment(BaseUnauthorizedTest):
         auth_user: None,
         attachment: Attachment,
         container_client: ContainerClient,
+        azure_container_client_override: None,
         db_session: AsyncSession,
     ) -> None:
         attachment.optimized_path = f"/tmp/{uuid4()}/optimized.webp"
@@ -153,6 +155,7 @@ class TestDownloadAttachment(BaseUnauthorizedTest):
         auth_user: None,
         attachment: Attachment,
         container_client: ContainerClient,
+        azure_container_client_override: None,
         db_session: AsyncSession,
     ) -> None:
         attachment.thumbnail_path = f"/tmp/{uuid4()}/thumbnail.webp"

@@ -1549,6 +1549,7 @@ class TestMeldingUploadAttachment:
         melding: Melding,
         db_session: AsyncSession,
         container_client: ContainerClient,
+        azure_container_client_override: None,
         malware_scanner_override: BaseMalwareScanner,
         filename: str,
     ) -> None:
@@ -1610,8 +1611,6 @@ class TestMeldingUploadAttachment:
         app: FastAPI,
         client: AsyncClient,
         melding: Melding,
-        db_session: AsyncSession,
-        container_client: ContainerClient,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1646,7 +1645,6 @@ class TestMeldingUploadAttachment:
         melding: Melding,
         db_session: AsyncSession,
         filename: str,
-        container_client: ContainerClient,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1681,7 +1679,6 @@ class TestMeldingUploadAttachment:
         client: AsyncClient,
         melding: Melding,
         db_session: AsyncSession,
-        container_client: ContainerClient,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1715,7 +1712,9 @@ class TestMeldingUploadAttachment:
 
     @pytest.mark.anyio
     async def test_upload_attachment_melding_not_found(
-        self, app: FastAPI, client: AsyncClient, container_client: ContainerClient
+        self,
+        app: FastAPI,
+        client: AsyncClient,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=123),
@@ -1743,7 +1742,10 @@ class TestMeldingUploadAttachment:
         [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
     )
     async def test_upload_attachment_token_missing(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, container_client: ContainerClient
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1774,7 +1776,10 @@ class TestMeldingUploadAttachment:
 
     @pytest.mark.anyio
     async def test_upload_attachment_unauthorized_token_invalid(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, container_client: ContainerClient
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1803,7 +1808,10 @@ class TestMeldingUploadAttachment:
         indirect=True,
     )
     async def test_upload_attachment_unauthorized_token_expired(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, container_client: ContainerClient
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
@@ -1906,7 +1914,12 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
         indirect=True,
     )
     async def test_download_attachment(
-        self, app: FastAPI, client: AsyncClient, attachment: Attachment, container_client: ContainerClient
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        attachment: Attachment,
+        container_client: ContainerClient,
+        azure_container_client_override: None,
     ) -> None:
         blob_client = container_client.get_blob_client(attachment.file_path)
         async with blob_client:
@@ -1953,6 +1966,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
         client: AsyncClient,
         attachment: Attachment,
         container_client: ContainerClient,
+        azure_container_client_override: None,
         db_session: AsyncSession,
     ) -> None:
         attachment.optimized_path = f"/tmp/{uuid4()}/optimized.webp"
@@ -2005,6 +2019,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
         client: AsyncClient,
         attachment: Attachment,
         container_client: ContainerClient,
+        azure_container_client_override: None,
         db_session: AsyncSession,
     ) -> None:
         attachment.thumbnail_path = f"/tmp/{uuid4()}/thumbnail.webp"
@@ -2183,7 +2198,12 @@ class TestMeldingDeleteAttachmentAction(BaseTokenAuthenticationTest):
         indirect=True,
     )
     async def test_delete_attachment(
-        self, app: FastAPI, client: AsyncClient, attachment: Attachment, container_client: ContainerClient
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        attachment: Attachment,
+        container_client: ContainerClient,
+        azure_container_client_override: None,
     ) -> None:
         blob_client = container_client.get_blob_client(attachment.file_path)
         async with blob_client:

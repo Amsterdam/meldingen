@@ -250,7 +250,7 @@ async def container_client(tmp_path_factory: TempPathFactory, worker_id: str) ->
             yield client
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def azure_container_client_override(app: FastAPI, container_client: ContainerClient) -> None:
     async def get_azure_container_client() -> AsyncIterator[ContainerClient]:
         yield container_client
