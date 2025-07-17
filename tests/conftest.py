@@ -136,7 +136,7 @@ def app() -> FastAPI:
 
 
 @pytest.fixture
-async def client(app: FastAPI, test_database: None) -> AsyncGenerator[AsyncClient, None]:
+async def client(app: FastAPI, test_database: None, override_dependencies: None) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(
             transport=ASGITransport(app=app, raise_app_exceptions=False),
@@ -191,7 +191,7 @@ async def db_session(db_manager: DatabaseSessionManager) -> AsyncIterator[AsyncS
             await session.rollback()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 async def override_dependencies(
     app: FastAPI, db_engine: AsyncEngine, db_manager: DatabaseSessionManager, db_session: AsyncSession
 ) -> AsyncIterator[None]:
