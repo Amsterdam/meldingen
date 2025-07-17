@@ -31,7 +31,7 @@ class UrlProcessor:
         query.append(("COUNT", str(count)))
 
         if filter is not None:
-            query.append(("FILTERS", filter))
+            query.append(("FILTER", filter))
 
         new_query = urlencode(query)
 
