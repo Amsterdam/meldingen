@@ -50,13 +50,17 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create the .env file
-        run: cp .env.example .env
+        run: |
+          cp .env.example .env
+          echo "CI=true" >> .env
 
       - name: Pull images
         run: docker compose pull meldingen
 
       - name: Run alembic tests
-        run: docker compose run --rm meldingen pytest --test-alembic -m alembic
+        run: |
+          docker compose up -d database
+          docker run -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --test-alembic -m alembic
 
       - name: Run tests
         run: docker compose run --rm -e COVERAGE_FILE=/tmp/.coverage meldingen pytest --cov --cov-fail-under=95 -n auto -v

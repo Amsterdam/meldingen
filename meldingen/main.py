@@ -1,4 +1,5 @@
 import logging
+import os
 
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
@@ -60,28 +61,29 @@ def get_application() -> FastAPI:
 
 app = get_application()
 
-# OpenTelemetry
-resource = Resource(attributes={SERVICE_NAME: settings.opentelemetry_service_name})
-# There can be only one tracer provider, and it cannot be changed after this, it will automatically be used
-# by all instrumentation
-tracer_provider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(OTLPSpanExporter())
-tracer_provider.add_span_processor(processor)
-trace.set_tracer_provider(tracer_provider)
+if os.getenv("CI") is None:
+    # OpenTelemetry
+    resource = Resource(attributes={SERVICE_NAME: settings.opentelemetry_service_name})
+    # There can be only one tracer provider, and it cannot be changed after this, it will automatically be used
+    # by all instrumentation
+    tracer_provider = TracerProvider(resource=resource)
+    processor = BatchSpanProcessor(OTLPSpanExporter())
+    tracer_provider.add_span_processor(processor)
+    trace.set_tracer_provider(tracer_provider)
 
-logger_provider = LoggerProvider(resource=resource)
-logger_provider.add_log_record_processor(BatchLogRecordProcessor(OTLPLogExporter()))
-set_logger_provider(logger_provider)
+    logger_provider = LoggerProvider(resource=resource)
+    logger_provider.add_log_record_processor(BatchLogRecordProcessor(OTLPLogExporter()))
+    set_logger_provider(logger_provider)
 
-logging_handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
+    logging_handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
 
-logger = logging.getLogger()
-logger.addHandler(logging_handler)
-logger.setLevel(settings.log_level)
+    logger = logging.getLogger()
+    logger.addHandler(logging_handler)
+    logger.setLevel(settings.log_level)
 
-AioHttpClientInstrumentor().instrument()
+    AioHttpClientInstrumentor().instrument()
 
-metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter())
-set_meter_provider(MeterProvider((metric_reader,)))
+    metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter())
+    set_meter_provider(MeterProvider((metric_reader,)))
 
-FastAPIInstrumentor.instrument_app(app)
+    FastAPIInstrumentor.instrument_app(app)
