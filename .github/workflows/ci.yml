@@ -57,6 +57,7 @@ jobs:
 
       - name: Run alembic tests
         run: |
+          export
           docker compose up -d database
           docker run -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --test-alembic -m alembic
 
