@@ -50,7 +50,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create the .env file
-        run: cp .env.example .env
+        run: |
+          cp .env.example .env
+          echo "CI=true" >> .env
 
       - name: Pull images
         run: docker compose pull meldingen
