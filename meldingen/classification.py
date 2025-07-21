@@ -28,4 +28,7 @@ class Reclassifier(BaseReclassification[Melding, Classification]):
     def __init__(self, answer_purger: AnswerPurger):
         self._purge_answers = answer_purger
 
-    async def __call__(self, melding: Melding, new_classification: Classification | None) -> None: ...
+    async def __call__(self, melding: Melding, new_classification: Classification | None) -> None:
+        old_classification = await melding.awaitable_attrs.classification
+        if old_classification != new_classification:
+            await self._purge_answers(melding.id)
