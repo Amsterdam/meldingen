@@ -2163,7 +2163,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "task/make-base-reclassifier-generic"
-resolved_reference = "6f04a0b8d7254cbee9f05eb5814dd2ecef9c949b"
+resolved_reference = "8a106c3791fdfcdd4e07bedf0397dc401d10c778"
 
 [[package]]
 name = "mergedeep"
