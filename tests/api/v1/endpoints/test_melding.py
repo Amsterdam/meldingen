@@ -612,6 +612,67 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("public_id") == melding.public_id
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name"],
+        [("My melding text", MeldingStates.QUESTIONS_ANSWERED, "supersecretToken", "classification1")],
+    )
+    async def test_update_melding_with_answers_causing_reclassification_that_fails(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_answers: Melding,
+        db_session: AsyncSession,
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_answers.id),
+            params={"token": melding_with_answers.token},
+            json={"text": "classification2"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("classification", "") is None
+
+        results = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_answers.id))
+        answers = results.scalars().all()
+
+        assert len(answers) == 0
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name"],
+        [("My melding text", MeldingStates.QUESTIONS_ANSWERED, "supersecretToken", "classification1")],
+    )
+    async def test_update_melding_with_answers_causing_reclassification_that_succeeds(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_answers: Melding,
+        db_session: AsyncSession,
+    ) -> None:
+        classification2 = Classification("classification2")
+        db_session.add(classification2)
+        await db_session.commit()
+
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_answers.id),
+            params={"token": melding_with_answers.token},
+            json={"text": "classification2"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("classification").get("id") == classification2.id
+        assert body.get("classification").get("name") == classification2.name
+
+        results = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_answers.id))
+        answers = results.scalars().all()
+
+        assert len(answers) == 0
+
 
 class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:answer_questions"
