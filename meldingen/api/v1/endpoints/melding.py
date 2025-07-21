@@ -18,7 +18,6 @@ from meldingen_core.actions.melding import (
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
-from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.statemachine import MeldingStates
 from meldingen_core.token import TokenException
@@ -34,7 +33,6 @@ from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_413_REQUEST_ENTITY_TOO_LARGE,
     HTTP_422_UNPROCESSABLE_ENTITY,
-    HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
 from meldingen.actions.attachment import (
@@ -252,9 +250,6 @@ async def update_melding(
 ) -> MeldingOutput:
     try:
         melding = await action(pk=melding_id, values=melding_input.model_dump(), token=token)
-    except ClassificationNotFoundException:
-        logger.error("Classifier failed to find classification!")
-        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:

@@ -21,7 +21,6 @@ from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_413_REQUEST_ENTITY_TOO_LARGE,
     HTTP_422_UNPROCESSABLE_ENTITY,
-    HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
 from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question
@@ -581,7 +580,10 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
             json=self.get_json(),
         )
 
-        assert response.status_code == HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("classification", "") is None
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
