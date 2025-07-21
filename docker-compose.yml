@@ -106,7 +106,7 @@ services:
       - meldingen_network
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.129.1
+    image: otel/opentelemetry-collector-contrib:0.130.0
     depends_on:
       - jaeger
     ports:
