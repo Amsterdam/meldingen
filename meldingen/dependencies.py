@@ -175,7 +175,6 @@ from meldingen.statemachine import (
     Classify,
     Complete,
     HasAnsweredRequiredQuestions,
-    HasClassification,
     HasLocation,
     MeldingStateMachine,
     MpFsmMeldingStateMachine,
@@ -323,7 +322,7 @@ def melding_state_machine(
     return MeldingStateMachine(
         MpFsmMeldingStateMachine(
             {
-                MeldingTransitions.CLASSIFY: Classify([HasClassification()]),
+                MeldingTransitions.CLASSIFY: Classify(),
                 MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions([has_answered_required_questions]),
                 MeldingTransitions.SUBMIT_LOCATION: SubmitLocation([HasLocation()]),
                 MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
