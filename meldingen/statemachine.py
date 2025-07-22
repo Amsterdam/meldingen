@@ -7,11 +7,6 @@ from meldingen.repositories import AnswerRepository, FormRepository
 
 
 # guards
-class HasClassification(BaseGuard[Melding]):
-    async def __call__(self, obj: Melding) -> bool:
-        return obj.classification is not None
-
-
 class HasLocation(BaseGuard[Melding]):
     async def __call__(self, obj: Melding) -> bool:
         return obj.geo_location is not None
@@ -49,11 +44,6 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
 
 # transitions
 class Classify(BaseTransition[Melding]):
-    _guards: list[BaseGuard[Melding]]
-
-    def __init__(self, guards: list[BaseGuard[Melding]]):
-        self._guards = guards
-
     @property
     def from_states(self) -> list[str]:
         return [
@@ -68,10 +58,6 @@ class Classify(BaseTransition[Melding]):
     @property
     def to_state(self) -> str:
         return MeldingStates.CLASSIFIED
-
-    @property
-    def guards(self) -> list[BaseGuard[Melding]]:
-        return self._guards
 
 
 class AnswerQuestions(BaseTransition[Melding]):

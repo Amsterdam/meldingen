@@ -18,7 +18,6 @@ from meldingen_core.actions.melding import (
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
-from meldingen_core.classification import ClassificationNotFoundException
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.statemachine import MeldingStates
 from meldingen_core.token import TokenException
@@ -34,7 +33,6 @@ from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_413_REQUEST_ENTITY_TOO_LARGE,
     HTTP_422_UNPROCESSABLE_ENTITY,
-    HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
 from meldingen.actions.attachment import (
@@ -98,7 +96,7 @@ from meldingen.dependencies import (
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
-from meldingen.models import Answer, Attachment, Melding
+from meldingen.models import Answer, Attachment, Classification, Melding
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas.input import (
     AnswerInput,
@@ -129,7 +127,7 @@ logger = logging.getLogger(__name__)
 @router.post("/", name="melding:create", status_code=HTTP_201_CREATED)
 async def create_melding(
     melding_input: MeldingInput,
-    action: Annotated[MeldingCreateAction[Melding], Depends(melding_create_action)],
+    action: Annotated[MeldingCreateAction[Melding, Classification], Depends(melding_create_action)],
     generate_public_id: Annotated[PublicIdGenerator, Depends(public_id_generator)],
     produce_output: Annotated[MeldingCreateOutputFactory, Depends(melding_create_output_factory)],
 ) -> MeldingCreateOutput:
@@ -247,14 +245,11 @@ async def update_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     melding_input: MeldingInput,
-    action: Annotated[MeldingUpdateAction[Melding], Depends(melding_update_action)],
+    action: Annotated[MeldingUpdateAction[Melding, Classification], Depends(melding_update_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(pk=melding_id, values=melding_input.model_dump(), token=token)
-    except ClassificationNotFoundException:
-        logger.error("Classifier failed to find classification!")
-        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:

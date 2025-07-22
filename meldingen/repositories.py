@@ -215,7 +215,7 @@ class GroupRepository(BaseSQLAlchemyRepository[Group]):
         return results.scalars().one()
 
 
-class ClassificationRepository(BaseSQLAlchemyRepository[Classification], BaseClassificationRepository):
+class ClassificationRepository(BaseSQLAlchemyRepository[Classification], BaseClassificationRepository[Classification]):
     def get_model_type(self) -> type[Classification]:
         return Classification
 

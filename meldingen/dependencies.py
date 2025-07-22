@@ -91,7 +91,7 @@ from meldingen.actions.user import (
 )
 from meldingen.actions.wfs import WfsRetrieveAction
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
-from meldingen.classification import DummyClassifierAdapter
+from meldingen.classification import AnswerPurger, DummyClassifierAdapter, Reclassifier
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import AssetFactory, AttachmentFactory, AzureFilesystemFactory, BaseFilesystemFactory
@@ -128,7 +128,7 @@ from meldingen.mail import (
     SendConfirmationMailTask,
 )
 from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwareScanner
-from meldingen.models import Answer, Melding
+from meldingen.models import Answer, Classification, Melding
 from meldingen.repositories import (
     AnswerRepository,
     AssetRepository,
@@ -175,7 +175,6 @@ from meldingen.statemachine import (
     Classify,
     Complete,
     HasAnsweredRequiredQuestions,
-    HasClassification,
     HasLocation,
     MeldingStateMachine,
     MpFsmMeldingStateMachine,
@@ -286,7 +285,9 @@ def asset_factory() -> AssetFactory:
     return AssetFactory()
 
 
-def classifier(repository: Annotated[ClassificationRepository, Depends(classification_repository)]) -> Classifier:
+def classifier(
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+) -> Classifier[Classification]:
     return Classifier(DummyClassifierAdapter(), repository)
 
 
@@ -321,7 +322,7 @@ def melding_state_machine(
     return MeldingStateMachine(
         MpFsmMeldingStateMachine(
             {
-                MeldingTransitions.CLASSIFY: Classify([HasClassification()]),
+                MeldingTransitions.CLASSIFY: Classify(),
                 MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions([has_answered_required_questions]),
                 MeldingTransitions.SUBMIT_LOCATION: SubmitLocation([HasLocation()]),
                 MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
@@ -352,10 +353,10 @@ def melding_create_output_factory(
 
 def melding_create_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    classifier: Annotated[Classifier, Depends(classifier)],
+    classifier: Annotated[Classifier[Classification], Depends(classifier)],
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     token_generator: Annotated[BaseTokenGenerator, Depends(token_generator)],
-) -> MeldingCreateAction[Melding]:
+) -> MeldingCreateAction[Melding, Classification]:
     return MeldingCreateAction(repository, classifier, state_machine, token_generator, settings.token_duration)
 
 
@@ -375,13 +376,22 @@ def melding_list_action(repository: Annotated[MeldingRepository, Depends(melding
     return MeldingListAction(repository)
 
 
+def answer_purger(repository: Annotated[AnswerRepository, Depends(answer_repository)]) -> AnswerPurger:
+    return AnswerPurger(repository)
+
+
+def reclassifier(purger: Annotated[AnswerPurger, Depends(answer_purger)]) -> Reclassifier:
+    return Reclassifier(purger)
+
+
 def melding_update_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
-    classifier: Annotated[Classifier, Depends(classifier)],
+    classifier: Annotated[Classifier[Classification], Depends(classifier)],
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
-) -> MeldingUpdateAction[Melding]:
-    return MeldingUpdateAction(repository, token_verifier, classifier, state_machine)
+    reclassifier: Annotated[Reclassifier, Depends(reclassifier)],
+) -> MeldingUpdateAction[Melding, Classification]:
+    return MeldingUpdateAction(repository, token_verifier, classifier, state_machine, reclassifier)
 
 
 def melding_add_contact_action(
