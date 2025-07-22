@@ -51,3 +51,36 @@ def test_jsonlogic_validation_succeeds(jsonlogic_validator: JSONLogicValidator) 
 
 def test_jsonlogic_validation_succeeds_when_using_data(jsonlogic_validator: JSONLogicValidator) -> None:
     jsonlogic_validator('{"==": [{"var": ["text"]}, "This is test data"]}', {"text": "This is test data"})
+
+
+@pytest.mark.parametrize(
+    "logic, error_msg, data",
+    [
+        (
+            '{"if": [{"<":[{"length": {"var": ["text"]}},3]},true,"Too long"]}',
+            "Too long",
+            {"text": "Longerthan3"},
+        ),
+        (
+            '{"if": [{"<":[{"length": {"var": ["text"]}},3]},true,"Too long"]}',
+            "Too long",
+            {"text": "abc"},
+        ),
+        (
+            '{"if": [{"<=":[{"length": {"var": ["text"]}},5]},true,"Too long, too bad"]}',
+            "Too long, too bad",
+            {"text": "123456"},
+        ),
+    ],
+)
+def test_length_operator_negative(
+    jsonlogic_validator: JSONLogicValidator, logic: str, error_msg: str | bool, data: dict[str, str]
+) -> None:
+    with pytest.raises(JSONLogicValidationException) as exception_info:
+        jsonlogic_validator(logic, data)
+
+    assert exception_info.value.msg == error_msg
+
+
+def test_length_operator_positive(jsonlogic_validator: JSONLogicValidator) -> None:
+    jsonlogic_validator('{"if": [{"<=":[{"length": {"var": ["text"]}},3]},true,"Too long"]}', {"text": "ABC"})

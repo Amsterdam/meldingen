@@ -3466,7 +3466,7 @@ pydantic = ">=2.10.6,<3.0.0"
 type = "git"
 url = "https://github.com/Amsterdam/pydantic-jsonlogic.git"
 reference = "HEAD"
-resolved_reference = "3d554dc4685738f0be560f7f2350c3f642c477f9"
+resolved_reference = "381a18144dea414ed9b2589bb892effdcb993250"
 
 [[package]]
 name = "pydantic-media-type"
