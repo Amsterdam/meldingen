@@ -1,6 +1,7 @@
-from meldingen.answer import AnswerPurger
-from meldingen.models import Melding, Classification
 from meldingen_core.reclassification import BaseReclassification
+
+from meldingen.answer import AnswerPurger
+from meldingen.models import Classification, Melding
 
 
 class Reclassifier(BaseReclassification[Melding, Classification]):
