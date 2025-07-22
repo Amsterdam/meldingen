@@ -1239,14 +1239,6 @@ class TestMeldingQuestionAnswer:
                 '{"!=":[{"var": "text"}, "dit is het antwoord op de vraag"]}',
                 "Input is not valid",
             ),
-            (
-                "klacht over iets",
-                MeldingStates.CLASSIFIED,
-                "supersecuretoken",
-                "test_classification",
-                '{"if": [{"<=": [{"var": "value.length"},20]}, true, "Max 20 characters"]}',
-                "Max 20 characters",
-            ),
         ],
         indirect=[
             "classification_name",

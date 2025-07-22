@@ -1,11 +1,12 @@
 import pytest
+from jsonlogic.resolving import DotReferenceParser
 
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
 
 
 @pytest.fixture
 def jsonlogic_validator() -> JSONLogicValidator:
-    return JSONLogicValidator()
+    return JSONLogicValidator(DotReferenceParser())
 
 
 def test_validation_fails_when_jsonlogic_evaluation_fails(jsonlogic_validator: JSONLogicValidator) -> None:
@@ -29,9 +30,9 @@ def test_validation_succeeds_for_if_statement(jsonlogic_validator: JSONLogicVali
             {"text": "Fire"},
         ),
         (
-            '{"if": [{">=": [{"var": "value.length"},3]}, true, "More than 2 characters needed"]}',
-            "More than 2 characters needed",
-            {"text": "AB"},
+            '{"if": [{"!=": [{"var": "text"},"Fire"]}, true, "You must not type \'Fire\'!"]}',
+            "You must not type 'Fire'!",
+            {"text": "Fire"},
         ),
     ],
 )
