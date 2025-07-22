@@ -92,6 +92,7 @@ from meldingen.actions.user import (
 from meldingen.actions.wfs import WfsRetrieveAction
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
+from meldingen.asset import AssetPurger
 from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
@@ -112,6 +113,7 @@ from meldingen.jsonlogic import JSONLogicValidator
 from meldingen.location import (
     GeoJsonFeatureFactory,
     LocationOutputTransformer,
+    LocationPurger,
     MeldingLocationIngestor,
     ShapePointFactory,
     ShapeToGeoJSONTransformer,
@@ -382,8 +384,20 @@ def answer_purger(repository: Annotated[AnswerRepository, Depends(answer_reposit
     return AnswerPurger(repository)
 
 
-def reclassifier(purger: Annotated[AnswerPurger, Depends(answer_purger)]) -> Reclassifier:
-    return Reclassifier(purger)
+def location_purger(repository: Annotated[MeldingRepository, Depends(melding_repository)]) -> LocationPurger:
+    return LocationPurger(repository)
+
+
+def asset_purger(repository: Annotated[AssetRepository, Depends(asset_repository)]) -> AssetPurger:
+    return AssetPurger(repository)
+
+
+def reclassifier(
+    answer_purger: Annotated[AnswerPurger, Depends(answer_purger)],
+    location_purger: Annotated[LocationPurger, Depends(answer_purger)],
+    asset_purger: Annotated[AssetPurger, Depends(asset_purger)],
+) -> Reclassifier:
+    return Reclassifier(answer_purger, location_purger, asset_purger)
 
 
 def melding_update_action(
