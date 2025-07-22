@@ -1127,6 +1127,13 @@ class TestMeldingQuestionAnswer:
                 "supersecuretoken",
                 "test_classification",
                 '{"==":[{"var": "text"}, "dit is het antwoord op de vraag"]}',
+            ),
+            (
+                "klacht over iets",
+                MeldingStates.CLASSIFIED,
+                "supersecuretoken",
+                "test_classification",
+                '{"if": [{"<": [{"length": [{"var": "text"}]}, 32]}, true, "mag het wat minder"]}',
             )
         ],
         indirect=[
@@ -1239,6 +1246,14 @@ class TestMeldingQuestionAnswer:
                 '{"!=":[{"var": "text"}, "dit is het antwoord op de vraag"]}',
                 "Input is not valid",
             ),
+            (
+                "klacht over iets",
+                MeldingStates.CLASSIFIED,
+                "supersecuretoken",
+                "test_classification",
+                '{"if": [{"<": [{"length": [{"var": "text"}]}, 3]}, true, "mag het wat minder"]}',
+                "mag het wat minder",
+            )
         ],
         indirect=[
             "classification_name",
