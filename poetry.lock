@@ -2162,8 +2162,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "task/make-base-reclassifier-generic"
-resolved_reference = "8a106c3791fdfcdd4e07bedf0397dc401d10c778"
+reference = "HEAD"
+resolved_reference = "6fb4871d804d2f4da9360c98a237880a5b05da37"
 
 [[package]]
 name = "mergedeep"
@@ -5019,4 +5019,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "5322a662fd5d4c328974dd2144abbca899eed7d8037c1e1c6c1432d0c9bbdc07"
+content-hash = "9af8b77e465beee2c9d7d8ea323b6a70031e181c1fbbeddf0b42e1f639e0eafe"
