@@ -9,25 +9,6 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import BackgroundTasks, Depends
 from httpx import AsyncClient
 from jwt import PyJWKClient, PyJWT
-from meldingen_core.actions.melding import (
-    MelderMeldingListQuestionsAnswersAction,
-    MeldingAddAttachmentsAction,
-    MeldingAnswerQuestionsAction,
-    MeldingCompleteAction,
-    MeldingContactInfoAddedAction,
-    MeldingCreateAction,
-    MeldingListQuestionsAnswersAction,
-    MeldingProcessAction,
-    MeldingSubmitLocationAction,
-    MeldingUpdateAction,
-)
-from meldingen_core.classification import Classifier
-from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
-from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
-from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import MeldingTransitions
-from meldingen_core.token import BaseTokenGenerator, TokenVerifier
-from meldingen_core.wfs import WfsProviderFactory
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
@@ -91,7 +72,8 @@ from meldingen.actions.user import (
 )
 from meldingen.actions.wfs import WfsRetrieveAction
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
-from meldingen.classification import AnswerPurger, DummyClassifierAdapter, Reclassifier
+from meldingen.answer import AnswerPurger
+from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import AssetFactory, AttachmentFactory, AzureFilesystemFactory, BaseFilesystemFactory
@@ -129,6 +111,7 @@ from meldingen.mail import (
 )
 from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwareScanner
 from meldingen.models import Answer, Classification, Melding
+from meldingen.reclassification import Reclassifier
 from meldingen.repositories import (
     AnswerRepository,
     AssetRepository,
@@ -184,6 +167,25 @@ from meldingen.statemachine import (
 )
 from meldingen.token import TokenInvalidator, UrlSafeTokenGenerator
 from meldingen.validators import MediaTypeIntegrityValidator, MediaTypeValidator
+from meldingen_core.actions.melding import (
+    MelderMeldingListQuestionsAnswersAction,
+    MeldingAddAttachmentsAction,
+    MeldingAnswerQuestionsAction,
+    MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
+    MeldingCreateAction,
+    MeldingListQuestionsAnswersAction,
+    MeldingProcessAction,
+    MeldingSubmitLocationAction,
+    MeldingUpdateAction,
+)
+from meldingen_core.classification import Classifier
+from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
+from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
+from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.statemachine import MeldingTransitions
+from meldingen_core.token import BaseTokenGenerator, TokenVerifier
+from meldingen_core.wfs import WfsProviderFactory
 
 
 @lru_cache
