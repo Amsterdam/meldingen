@@ -1134,7 +1134,7 @@ class TestMeldingQuestionAnswer:
                 "supersecuretoken",
                 "test_classification",
                 '{"if": [{"<": [{"length": [{"var": "text"}]}, 32]}, true, "mag het wat minder"]}',
-            )
+            ),
         ],
         indirect=[
             "classification_name",
@@ -1253,7 +1253,7 @@ class TestMeldingQuestionAnswer:
                 "test_classification",
                 '{"if": [{"<": [{"length": [{"var": "text"}]}, 3]}, true, "mag het wat minder"]}',
                 "mag het wat minder",
-            )
+            ),
         ],
         indirect=[
             "classification_name",
