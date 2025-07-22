@@ -129,7 +129,7 @@ class LocationPurger:
     async def __call__(self, melding_id: int) -> None:
         melding = await self._repository.retrieve(melding_id)
 
-        if melding.geo_location is None:
+        if melding is None or melding.geo_location is None:
             return
 
         melding.geo_location = None

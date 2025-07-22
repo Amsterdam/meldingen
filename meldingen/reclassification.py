@@ -28,12 +28,15 @@ class Reclassifier(BaseReclassification[Melding, Classification]):
         # Always purge answers if the classification changed
         await self._purge_answers(melding.id)
 
-        if old_classification and new_classification and old_classification.asset_type == new_classification.asset_type:
+        old_asset_type = await old_classification.awaitable_attrs.asset_type if old_classification else None
+        new_asset_type = await new_classification.awaitable_attrs.asset_type if new_classification else None
+
+        if old_asset_type == new_asset_type:
             return
 
         # Always purge assets if the asset type changed
         await self._purge_assets(assets)
 
         # Location is not compatible when assets need to be selected
-        if new_classification and new_classification.asset_type:
+        if new_asset_type:
             await self._purge_location(melding.id)
