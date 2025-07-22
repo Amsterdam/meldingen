@@ -1,7 +1,10 @@
 import json
 from typing import Any
 
-from json_logic import jsonLogic
+from jsonlogic import JSONLogicExpression
+from jsonlogic.evaluation import evaluate
+from jsonlogic.operators import operator_registry
+from jsonlogic.resolving import ReferenceParser
 
 
 class JSONLogicValidationException(Exception):
@@ -12,8 +15,17 @@ class JSONLogicValidationException(Exception):
 
 
 class JSONLogicValidator:
+    _reference_parser: ReferenceParser
+
+    def __init__(self, reference_parser: ReferenceParser) -> None:
+        self._reference_parser = reference_parser
+
     def __call__(self, tests: str, data: dict[str, Any]) -> None:
-        result = jsonLogic(json.loads(tests), data)
+        expression = JSONLogicExpression.from_json(json.loads(tests))
+
+        root_operator = expression.as_operator_tree(operator_registry)
+
+        result = evaluate(root_operator, data, data_schema=None, settings={"reference_parser": self._reference_parser})
 
         if isinstance(result, str):
             raise JSONLogicValidationException(msg=result, input=data)

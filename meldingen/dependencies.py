@@ -8,6 +8,7 @@ from amsterdam_mail_service_client.configuration import Configuration
 from azure.storage.blob.aio import ContainerClient
 from fastapi import BackgroundTasks, Depends
 from httpx import AsyncClient
+from jsonlogic.resolving import DotReferenceParser, ReferenceParser
 from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.melding import (
     MelderMeldingListQuestionsAnswersAction,
@@ -517,8 +518,14 @@ def melding_complete_action(
     return MeldingCompleteAction(state_machine, repository, mailer)
 
 
-def jsonlogic_validator() -> JSONLogicValidator:
-    return JSONLogicValidator()
+def jsonlogic_reference_parser() -> ReferenceParser:
+    return DotReferenceParser()
+
+
+def jsonlogic_validator(
+    reference_parser: Annotated[ReferenceParser, Depends(jsonlogic_reference_parser)],
+) -> JSONLogicValidator:
+    return JSONLogicValidator(reference_parser)
 
 
 def form_io_question_component_repository(
