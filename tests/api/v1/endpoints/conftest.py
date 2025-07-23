@@ -199,6 +199,20 @@ async def melding_with_classification(
 
 
 @pytest.fixture
+async def melding_with_classification_with_asset_type(
+    db_session: AsyncSession,
+    melding: Melding,
+    classification_with_asset_type: Classification,
+) -> Melding:
+    melding.classification = classification_with_asset_type
+
+    db_session.add(melding)
+    await db_session.commit()
+
+    return melding
+
+
+@pytest.fixture
 async def form_with_multiple_questions(
     db_session: AsyncSession, melding_with_classification: Melding, classification: Classification, is_required: bool
 ) -> Form:

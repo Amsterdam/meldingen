@@ -701,6 +701,104 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
 
         assert len(answers) == 10
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_geo_location", "melding_token"],
+        [
+            (
+                "De restafvalcontainer is vol.",
+                MeldingStates.NEW,
+                "POINT(52.3680 4.8970)",
+                "supersecrettoken",
+            )
+        ],
+        indirect=True,
+    )
+    async def test_update_melding_removes_location_after_reclassification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
+        classification_with_asset_type: Classification,
+        db_session: AsyncSession,
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": melding.token},
+            json={"text": classification_with_asset_type.name},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("classification").get("name") == classification_with_asset_type.name
+        assert body.get("geo_location") == None
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_geo_location", "melding_token", "classification_name"],
+        [
+            (
+                "De restafvalcontainer is vol.",
+                MeldingStates.NEW,
+                "POINT(52.3680 4.8970)",
+                "supersecrettoken",
+                "classification1",
+            )
+        ],
+        indirect=True,
+    )
+    async def test_update_melding_retains_location_after_reclassification_without_asset_type(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
+        classification: Classification,
+        db_session: AsyncSession,
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": melding.token},
+            json={"text": classification.name},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("classification").get("name") == classification.name
+        assert body.get("geo_location").get("geometry").get("coordinates") == [52.3680, 4.8970]
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_geo_location", "melding_token"],
+        [
+            (
+                "De restafvalcontainer is vol.",
+                MeldingStates.NEW,
+                "POINT(52.3680 4.8970)",
+                "supersecrettoken",
+            )
+        ],
+        indirect=True,
+    )
+    async def test_update_melding_retains_location_after_reclassification_with_same_asset_type(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_classification_with_asset_type: Melding,
+        db_session: AsyncSession,
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification_with_asset_type.id),
+            params={"token": melding_with_classification_with_asset_type.token},
+            json={"text": "this is a test_classification with the same asset type!"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("geo_location").get("geometry").get("coordinates") == [52.3680, 4.8970]
+
 
 class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:answer_questions"

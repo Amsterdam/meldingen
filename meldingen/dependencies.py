@@ -394,7 +394,7 @@ def asset_purger(repository: Annotated[AssetRepository, Depends(asset_repository
 
 def reclassifier(
     answer_purger: Annotated[AnswerPurger, Depends(answer_purger)],
-    location_purger: Annotated[LocationPurger, Depends(answer_purger)],
+    location_purger: Annotated[LocationPurger, Depends(location_purger)],
     asset_purger: Annotated[AssetPurger, Depends(asset_purger)],
 ) -> Reclassifier:
     return Reclassifier(answer_purger, location_purger, asset_purger)
