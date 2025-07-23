@@ -260,6 +260,17 @@ async def melding_with_answers(
 
 
 @pytest.fixture
+async def melding_with_asset(
+    db_session: AsyncSession, melding_with_classification_with_asset_type: Melding, asset: Asset
+) -> Melding:
+    melding_with_classification_with_asset_type.assets.append(asset)
+
+    await db_session.commit()
+
+    return melding_with_classification_with_asset_type
+
+
+@pytest.fixture
 async def melding_with_some_answers(
     db_session: AsyncSession, melding_with_classification: Melding, form_with_multiple_questions: Form
 ) -> Melding:

@@ -8,6 +8,9 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
 from mailpit.client.api import API
+from meldingen_core import SortingDirection
+from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.statemachine import MeldingStates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
@@ -21,9 +24,6 @@ from starlette.status import (
 )
 
 from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question
-from meldingen_core import SortingDirection
-from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import MeldingStates
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 

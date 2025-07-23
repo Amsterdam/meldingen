@@ -1,10 +1,10 @@
+from meldingen_core.reclassification import BaseReclassification
 from sqlalchemy.orm.collections import InstrumentedList
 
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
 from meldingen.location import LocationPurger
 from meldingen.models import Asset, Classification, Melding
-from meldingen_core.reclassification import BaseReclassification
 
 
 class Reclassifier(BaseReclassification[Melding, Classification]):
