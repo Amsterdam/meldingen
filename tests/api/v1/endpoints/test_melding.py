@@ -8,9 +8,6 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
 from mailpit.client.api import API
-from meldingen_core import SortingDirection
-from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import MeldingStates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
@@ -24,6 +21,9 @@ from starlette.status import (
 )
 
 from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question
+from meldingen_core import SortingDirection
+from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.statemachine import MeldingStates
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -736,6 +736,38 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [
+            (
+                "De restafvalcontainer is vol.",
+                MeldingStates.NEW,
+                "supersecrettoken",
+            )
+        ],
+        indirect=True,
+    )
+    async def test_update_melding_retains_none_location_after_reclassification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
+        classification_with_asset_type: Classification,
+        db_session: AsyncSession,
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": melding.token},
+            json={"text": classification_with_asset_type.name},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("classification").get("name") == classification_with_asset_type.name
+        assert body.get("geo_location") is None
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_geo_location", "melding_token", "classification_name"],
         [
             (
@@ -791,7 +823,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification_with_asset_type.id),
             params={"token": melding_with_classification_with_asset_type.token},
-            json={"text": "this is a test_classification with the same asset type!"},
+            json={"text": "test_classification"},
         )
 
         assert response.status_code == HTTP_200_OK
