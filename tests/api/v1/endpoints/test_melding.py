@@ -909,7 +909,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         )
 
         assert response.status_code == HTTP_200_OK
-p
+
         body = response.json()
         assert body.get("geo_location") is None
 

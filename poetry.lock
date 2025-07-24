@@ -2102,6 +2102,27 @@ docs = ["autodocsumm (==0.2.14)", "furo (==2024.8.6)", "sphinx (==8.1.3)", "sphi
 tests = ["pytest", "simplejson"]
 
 [[package]]
+name = "maykin-json-logic-py"
+version = "0.13.0"
+description = "Build complex rules, serialize them as JSON, and execute them in Python"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "maykin-json-logic-py-0.13.0.tar.gz", hash = "sha256:4cd508d8fa03b17c2ad8719df1d30c1d0cbda8a0dd4427d11691d2f253eacf0a"},
+    {file = "maykin_json_logic_py-0.13.0-py3-none-any.whl", hash = "sha256:ff712855d3bb13e1078d391f0336a3874e0dfb53541ab95c4233f120642b4703"},
+]
+
+[package.dependencies]
+isodate = "*"
+
+[package.extras]
+coverage = ["coverage"]
+pep8 = ["flake8"]
+release = ["bumpversion", "twine"]
+tests = ["black", "coverage", "flake8", "freezegun", "isort", "pytest-cov", "tox"]
+
+[[package]]
 name = "mccabe"
 version = "0.7.0"
 description = "McCabe checker, plugin for flake8"
@@ -2141,8 +2162,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feat/send-old-classification-to-reclassifier-correctly"
-resolved_reference = "6fb4871d804d2f4da9360c98a237880a5b05da37"
+reference = "HEAD"
+resolved_reference = "a1506ba6b8a434bd5e14ac12a1dcc2b80c64707f"
 
 [[package]]
 name = "mergedeep"
@@ -5010,4 +5031,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "0b140a72c6434ef9302d471ba1e784512354c9e450b6af5727d592a7326412ac"
+content-hash = "57cf5d9d6231e74f1f79e461dc8268ec65d21913965b1c4f48bf3b8ba06a842c"
