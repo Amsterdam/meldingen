@@ -1,10 +1,9 @@
 from meldingen_core.reclassification import BaseReclassification
-from sqlalchemy.orm.collections import InstrumentedList
 
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
 from meldingen.location import LocationPurger
-from meldingen.models import Asset, Classification, Melding
+from meldingen.models import Classification, Melding
 
 
 class Reclassifier(BaseReclassification[Melding, Classification]):
@@ -35,4 +34,4 @@ class Reclassifier(BaseReclassification[Melding, Classification]):
 
         # Classification changed, but asset_type may still be the same
         if old_asset_type != new_asset_type:
-            await self._purge_assets(melding)
+            await self._purge_assets(melding.id)

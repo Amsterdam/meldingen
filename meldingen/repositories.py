@@ -192,6 +192,7 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         return results.scalars().unique().all()
 
     async def delete_assets_from_melding(self, melding: Melding) -> None:
+        await melding.awaitable_attrs.assets
         melding.assets = []
 
         await self.save(melding)

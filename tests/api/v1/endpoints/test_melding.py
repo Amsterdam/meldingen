@@ -707,7 +707,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         [
             (
                 "De restafvalcontainer is vol.",
-                MeldingStates.NEW,
+                MeldingStates.CLASSIFIED,
                 "POINT(52.3680 4.8970)",
                 "supersecrettoken",
             )
