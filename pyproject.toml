@@ -5,7 +5,8 @@ description = "The main meldingen project which includes the framework bindings.
 authors = [
     {name = "Youri Westerman",email = "y.westerman@amsterdam.nl"},
     {name = "David van Buiten",email = "d.van.buiten@amsterdam.nl"},
-    {name = "Ramon Hofmeister", email = "r.hofmeister@amsterdam.nl"}
+    {name = "Ramon Hofmeister", email = "r.hofmeister@amsterdam.nl"},
+    {name = "Joey Hendriks", email = "joey.hendriks@amsterdam.nl"}
 ]
 readme = "README.md"
 requires-python = "^3.13"
@@ -21,7 +22,6 @@ dependencies = [
     "geoalchemy2 (>=0.17.0,<1.0.0)",
     "geojson-pydantic (>=1.2.0,<2.0.0)",
     "httpx[http2] (>=0.28.1,<1.0.0)",
-    "maykin-json-logic-py (>=0.13.0,<1.0.0)",
     "meldingen-core @ git+https://github.com/Amsterdam/meldingen-core.git",
     "mp-fsm @ git+https://github.com/Amsterdam/mp-fsm.git",
     "opentelemetry-exporter-otlp-proto-grpc (>=1.29.0,<2.0.0)",
