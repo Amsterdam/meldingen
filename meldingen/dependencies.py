@@ -388,7 +388,7 @@ def location_purger(repository: Annotated[MeldingRepository, Depends(melding_rep
     return LocationPurger(repository)
 
 
-def asset_purger(repository: Annotated[AssetRepository, Depends(asset_repository)]) -> AssetPurger:
+def asset_purger(repository: Annotated[MeldingRepository, Depends(melding_repository)]) -> AssetPurger:
     return AssetPurger(repository)
 
 

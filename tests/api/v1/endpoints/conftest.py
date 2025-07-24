@@ -204,6 +204,9 @@ async def melding_with_classification_with_asset_type(
     melding: Melding,
     classification_with_asset_type: Classification,
 ) -> Melding:
+    asset = Asset(external_id="test_external_id", type=classification_with_asset_type.asset_type)
+
+    melding.assets.append(asset)
     melding.classification = classification_with_asset_type
 
     db_session.add(melding)
