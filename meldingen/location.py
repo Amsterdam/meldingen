@@ -118,3 +118,19 @@ class LocationOutputTransformer:
         geojson = self._shape_to_geojson(shape)
 
         return geojson
+
+
+class LocationPurger:
+    _repository: MeldingRepository
+
+    def __init__(self, repository: MeldingRepository):
+        self._repository = repository
+
+    async def __call__(self, melding_id: int) -> None:
+        melding = await self._repository.retrieve(melding_id)
+
+        if melding is None or melding.geo_location is None:
+            return
+
+        melding.geo_location = None
+        await self._repository.save(melding)
