@@ -4,7 +4,6 @@ from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
-from meldingen_core.statemachine import MeldingStates
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
 from sqlalchemy import select
@@ -29,6 +28,7 @@ from meldingen.models import (
     StaticFormTypeEnum,
     User,
 )
+from meldingen_core.statemachine import MeldingStates
 
 
 @pytest.fixture
@@ -204,7 +204,9 @@ async def melding_with_classification_with_asset_type(
     melding: Melding,
     classification_with_asset_type: Classification,
 ) -> Melding:
-    asset = Asset(external_id="test_external_id", type=classification_with_asset_type.asset_type)
+    asset_type: AssetType = await classification_with_asset_type.awaitable_attrs.asset_type
+    assert asset_type is not None
+    asset = Asset(external_id="test_external_id", type=asset_type)
 
     melding.assets.append(asset)
     melding.classification = classification_with_asset_type

@@ -9,8 +9,4 @@ class AssetPurger:
         self._repository = repository
 
     async def __call__(self, melding: Melding) -> None:
-        try:
-
-            await self._repository.delete_assets_from_melding(melding)
-        except Exception as e:
-            print(e)
+        await self._repository.delete_assets_from_melding(melding)
