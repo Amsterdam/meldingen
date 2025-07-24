@@ -1257,7 +1257,14 @@ class TestMeldingQuestionAnswer:
                 "supersecuretoken",
                 "test_classification",
                 '{"==":[{"var": "text"}, "dit is het antwoord op de vraag"]}',
-            )
+            ),
+            (
+                "klacht over iets",
+                MeldingStates.CLASSIFIED,
+                "supersecuretoken",
+                "test_classification",
+                '{"if": [{"<": [{"length": [{"var": "text"}]}, 32]}, true, "mag het wat minder"]}',
+            ),
         ],
         indirect=[
             "classification_name",
@@ -1374,8 +1381,8 @@ class TestMeldingQuestionAnswer:
                 MeldingStates.CLASSIFIED,
                 "supersecuretoken",
                 "test_classification",
-                '{"if": [{"<=": [{"var": "value.length"},20]}, true, "Max 20 characters"]}',
-                "Max 20 characters",
+                '{"if": [{"<": [{"length": [{"var": "text"}]}, 3]}, true, "mag het wat minder"]}',
+                "mag het wat minder",
             ),
         ],
         indirect=[
