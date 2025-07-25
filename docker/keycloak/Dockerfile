@@ -4,7 +4,7 @@ RUN dnf install --installroot /mnt/rootfs curl nc --releasever 9 --setopt instal
     dnf --installroot /mnt/rootfs clean all && \
     rpm --root /mnt/rootfs -e --nodeps setup
 
-FROM quay.io/keycloak/keycloak:23.0
+FROM quay.io/keycloak/keycloak:26.3
 
 COPY ./entrypoint.sh /entrypoint.sh
 
