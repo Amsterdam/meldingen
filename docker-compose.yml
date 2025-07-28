@@ -55,8 +55,8 @@ services:
     volumes:
       - "./docker/keycloak/import:/import"
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
     networks:
       - meldingen_network
 
