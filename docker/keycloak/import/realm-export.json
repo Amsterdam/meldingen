@@ -546,7 +546,11 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "redirectUris" : [ "http://localhost*" ],
+    "redirectUris" : [
+      "http://localhost*",
+      "https://api.sia-o.azure.amsterdam.nl/*",
+      "https://admin.sia-o.azure.amsterdam.nl/*"
+    ],
     "webOrigins" : [ "*" ],
     "notBefore" : 0,
     "bearerOnly" : false,
