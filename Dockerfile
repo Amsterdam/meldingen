@@ -50,4 +50,4 @@ ENV PYTHONPATH=/opt/meldingen
 USER meldingen
 
 ENTRYPOINT ["/opt/meldingen/meldingen-entrypoint.sh"]
-CMD ["fastapi", "run", "/opt/meldingen/meldingen/main.py"]
+CMD ["fastapi", "run", "/opt/meldingen/meldingen/main.py", "--proxy-headers"]
