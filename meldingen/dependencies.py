@@ -79,6 +79,7 @@ from meldingen.actions.melding import (
     AddLocationToMeldingAction,
     MelderMeldingRetrieveAction,
     MeldingAddAssetAction,
+    MeldingGetPossibleNextStatesAction,
     MeldingListAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
@@ -333,6 +334,15 @@ def melding_state_machine(
                 MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
                 MeldingTransitions.ADD_CONTACT_INFO: AddContactInfo(),
                 MeldingTransitions.SUBMIT: Submit(),
+            }
+        )
+    )
+
+
+def melding_submitted_state_machine() -> MeldingStateMachine:
+    return MeldingStateMachine(
+        MpFsmMeldingStateMachine(
+            {
                 MeldingTransitions.PROCESS: Process(),
                 MeldingTransitions.COMPLETE: Complete(),
             }
@@ -435,7 +445,7 @@ def melding_add_attachments_action(
 
 
 def melding_process_action(
-    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_submitted_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingProcessAction[Melding]:
     return MeldingProcessAction(state_machine, repository)
@@ -527,7 +537,7 @@ def melding_complete_mailer(
 
 
 def melding_complete_action(
-    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_submitted_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     mailer: Annotated[BaseMeldingCompleteMailer[Melding], Depends(melding_complete_mailer)],
 ) -> MeldingCompleteAction[Melding]:
@@ -894,6 +904,13 @@ def melding_contact_info_added_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> MeldingContactInfoAddedAction[Melding]:
     return MeldingContactInfoAddedAction(state_machine, repository, token_verifier)
+
+
+def melding_get_possible_next_states_action(
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_submitted_state_machine)],
+) -> MeldingGetPossibleNextStatesAction:
+    return MeldingGetPossibleNextStatesAction(token_verifier, state_machine)
 
 
 def melding_list_questions_and_answers_output_factory() -> AnswerListOutputFactory:
