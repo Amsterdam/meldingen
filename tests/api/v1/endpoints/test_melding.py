@@ -3096,24 +3096,42 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert body.get("phone", "") is None
 
 
-class TestMeldingGetNextPossibleStates(BaseTokenAuthenticationTest):
+class TestMeldingGetNextPossibleStates(BaseUnauthorizedTest):
     def get_route_name(self) -> str:
         return "melding:next_possible_states"
 
     def get_method(self) -> str:
         return "GET"
 
+    def get_path_params(self) -> dict[str, Any]:
+        return {"melding_id": 1}
+
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token", "melding_state"], [("supersecrettoken", MeldingStates.SUBMITTED)])
-    async def test_get_possible_states(self, app: FastAPI, client: AsyncClient, melding: Melding):
+    @pytest.mark.parametrize(["melding_state"], [[MeldingStates.SUBMITTED]])
+    async def test_get_possible_states(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
         response = await client.request(
-            self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding.id),
-            params={"token": melding.token},
+            self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
         )
 
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
 
-        assert body == ["process"]
+        assert body == {"states": ["process"]}
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_state"], [[MeldingStates.LOCATION_SUBMITTED]])
+    async def test_get_possible_states_is_empty_on_form_state(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.request(
+            self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body == {"states": []}
