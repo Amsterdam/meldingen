@@ -48,6 +48,7 @@ from meldingen.actions.melding import (
     AddLocationToMeldingAction,
     MelderMeldingRetrieveAction,
     MeldingAddAssetAction,
+    MeldingGetPossibleNextStatesAction,
     MeldingListAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
@@ -80,6 +81,7 @@ from meldingen.dependencies import (
     melding_create_action,
     melding_create_output_factory,
     melding_delete_attachment_action,
+    melding_get_possible_next_states_action,
     melding_list_action,
     melding_list_attachments_action,
     melding_list_questions_and_answers_action,
@@ -822,3 +824,31 @@ async def add_asset(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
 
     return produce_output(melding)
+
+
+@router.get(
+    "/{melding_id}/next_possible_states",
+    name="melding:next_possible_states",
+    # dependencies=[Depends(authenticate_user)],
+    responses={
+        **not_found_response,
+        **unauthorized_response,
+    },
+)
+async def next_possible_states(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[
+        MeldingGetPossibleNextStatesAction,
+        Depends(melding_get_possible_next_states_action),
+    ],
+) -> list[str]:
+    try:
+        states = await action(melding_id, token)
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except TokenException as e:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
+
+    # TODO:: produce_output() this
+    return states

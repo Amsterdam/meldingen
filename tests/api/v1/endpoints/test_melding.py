@@ -3094,3 +3094,26 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert body.get("city", "") is None
         assert body.get("email", "") is None
         assert body.get("phone", "") is None
+
+
+class TestMeldingGetNextPossibleStates(BaseTokenAuthenticationTest):
+    def get_route_name(self) -> str:
+        return "melding:next_possible_states"
+
+    def get_method(self) -> str:
+        return "GET"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token", "melding_state"], [("supersecrettoken", MeldingStates.SUBMITTED)])
+    async def test_get_possible_states(self, app: FastAPI, client: AsyncClient, melding: Melding):
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": melding.token},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert body == ["process"]

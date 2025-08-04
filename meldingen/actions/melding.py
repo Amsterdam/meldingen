@@ -17,6 +17,7 @@ from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransform
 from meldingen.models import Asset, AssetType, Melding
 from meldingen.repositories import AttributeNotFoundException
 from meldingen.schemas.types import Address, GeoJson
+from meldingen.statemachine import MeldingStateMachine
 
 
 class MeldingListAction(BaseMeldingListAction[Melding]):
@@ -100,3 +101,22 @@ class AddLocationToMeldingAction:
         self._background_task_manager.add_task(self._add_address, melding, shape.x, shape.y)
 
         return melding
+
+
+class MeldingGetPossibleNextStatesAction:
+    _verify_token: TokenVerifier[Melding]
+    _state_machine: MeldingStateMachine
+
+    def __init__(self, token_verifier: TokenVerifier[Melding], state_machine: MeldingStateMachine) -> None:
+        self._verify_token = token_verifier
+        self._state_machine = state_machine
+
+    async def __call__(self, melding_id: int, token: str) -> list[str]:
+        melding = await self._verify_token(melding_id, token)
+        melding_state = melding.state
+
+        return [
+            transition_name
+            for transition_name, transition in self._state_machine._state_machine._transitions.items()
+            if melding_state in transition.from_states
+        ]
