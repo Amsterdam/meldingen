@@ -227,3 +227,7 @@ class AssetTypeOutput(BaseOutputModel):
     name: str
     class_name: str
     arguments: dict[str, Any]
+
+
+class StatesOutput(BaseModel):
+    states: list[str]

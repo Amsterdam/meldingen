@@ -95,6 +95,7 @@ from meldingen.dependencies import (
     melding_update_action,
     melding_upload_attachment_action,
     public_id_generator,
+    states_output_factory,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
@@ -113,12 +114,14 @@ from meldingen.schemas.output import (
     AttachmentOutput,
     MeldingCreateOutput,
     MeldingOutput,
+    StatesOutput,
 )
 from meldingen.schemas.output_factories import (
     AnswerListOutputFactory,
     AnswerOutputFactory,
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
+    StatesOutputFactory,
 )
 from meldingen.schemas.types import GeoJson
 
@@ -829,7 +832,7 @@ async def add_asset(
 @router.get(
     "/{melding_id}/next_possible_states",
     name="melding:next_possible_states",
-    # dependencies=[Depends(authenticate_user)],
+    dependencies=[Depends(authenticate_user)],
     responses={
         **not_found_response,
         **unauthorized_response,
@@ -837,18 +840,17 @@ async def add_asset(
 )
 async def next_possible_states(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[
         MeldingGetPossibleNextStatesAction,
         Depends(melding_get_possible_next_states_action),
     ],
-) -> list[str]:
+    produce_output: Annotated[StatesOutputFactory, Depends(states_output_factory)],
+) -> StatesOutput:
     try:
-        states = await action(melding_id, token)
+        states = await action(melding_id)
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
     except TokenException as e:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
 
-    # TODO:: produce_output() this
-    return states
+    return produce_output(states)

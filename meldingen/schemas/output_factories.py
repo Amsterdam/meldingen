@@ -40,6 +40,7 @@ from meldingen.schemas.output import (
     QuestionOutput,
     SimpleClassificationOutput,
     SimpleStaticFormOutput,
+    StatesOutput,
     StaticFormCheckboxComponentOutput,
     StaticFormOutput,
     StaticFormPanelComponentOutput,
@@ -644,3 +645,8 @@ class AssetTypeOutputFactory:
 class AnswerOutputFactory:
     def __call__(self, answer: Answer) -> AnswerOutput:
         return AnswerOutput(id=answer.id, text=answer.text, created_at=answer.created_at, updated_at=answer.updated_at)
+
+
+class StatesOutputFactory:
+    def __call__(self, states: list[str]) -> StatesOutput:
+        return StatesOutput(states=states)

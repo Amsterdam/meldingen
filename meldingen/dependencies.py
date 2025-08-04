@@ -165,6 +165,7 @@ from meldingen.schemas.output_factories import (
     MeldingOutputFactory,
     SimpleClassificationOutputFactory,
     SimpleStaticFormOutputFactory,
+    StatesOutputFactory,
     StaticFormCheckboxComponentOutputFactory,
     StaticFormComponentOutputFactory,
     StaticFormOutputFactory,
@@ -907,10 +908,10 @@ def melding_contact_info_added_action(
 
 
 def melding_get_possible_next_states_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     state_machine: Annotated[MeldingStateMachine, Depends(melding_submitted_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingGetPossibleNextStatesAction:
-    return MeldingGetPossibleNextStatesAction(token_verifier, state_machine)
+    return MeldingGetPossibleNextStatesAction(state_machine, repository)
 
 
 def melding_list_questions_and_answers_output_factory() -> AnswerListOutputFactory:
@@ -1180,3 +1181,7 @@ def wfs_retrieve_action(
 
 def answer_output_factory() -> AnswerOutputFactory:
     return AnswerOutputFactory()
+
+
+def states_output_factory() -> StatesOutputFactory:
+    return StatesOutputFactory()

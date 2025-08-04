@@ -9,6 +9,7 @@ from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListA
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
 from meldingen_core.actions.melding import MeldingSubmitAction as BaseMeldingSubmitAction
 from meldingen_core.address import BaseAddressEnricher
+from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.statemachine import MeldingStates
 from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
@@ -103,16 +104,16 @@ class AddLocationToMeldingAction:
         return melding
 
 
-class MeldingGetPossibleNextStatesAction:
-    _verify_token: TokenVerifier[Melding]
+class MeldingGetPossibleNextStatesAction(BaseMeldingRetrieveAction[Melding]):
     _state_machine: MeldingStateMachine
+    _melding_repository: BaseMeldingRepository[Melding]
 
-    def __init__(self, token_verifier: TokenVerifier[Melding], state_machine: MeldingStateMachine) -> None:
-        self._verify_token = token_verifier
+    def __init__(self, state_machine: MeldingStateMachine, repository: BaseMeldingRepository[Melding]) -> None:
+        super().__init__(repository)
         self._state_machine = state_machine
 
-    async def __call__(self, melding_id: int, token: str) -> list[str]:
-        melding = await self._verify_token(melding_id, token)
+    async def __call__(self, melding_id: int) -> list[str]:
+        melding = await super().__call__(melding_id)
         melding_state = melding.state
 
         return [
