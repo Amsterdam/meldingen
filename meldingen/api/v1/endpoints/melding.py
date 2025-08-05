@@ -65,6 +65,7 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
     answer_output_factory,
+    jsonlogic_validator,
     melder_melding_download_attachment_action,
     melder_melding_list_attachments_action,
     melder_melding_list_questions_and_answers_action,
@@ -96,11 +97,13 @@ from meldingen.dependencies import (
     melding_upload_attachment_action,
     public_id_generator,
     states_output_factory,
+    static_form_repository,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
-from meldingen.models import Answer, Attachment, Classification, Melding
-from meldingen.repositories import MeldingRepository
+from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
+from meldingen.models import Answer, Attachment, Classification, Melding, StaticFormTypeEnum
+from meldingen.repositories import MeldingRepository, StaticFormRepository
 from meldingen.schemas.input import (
     AnswerInput,
     CompleteMeldingInput,
@@ -133,10 +136,24 @@ logger = logging.getLogger(__name__)
 async def create_melding(
     melding_input: MeldingInput,
     action: Annotated[MeldingCreateAction[Melding, Classification], Depends(melding_create_action)],
+    static_form_repository: Annotated[StaticFormRepository, Depends(static_form_repository)],
+    validate_using_jsonlogic: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
     generate_public_id: Annotated[PublicIdGenerator, Depends(public_id_generator)],
     produce_output: Annotated[MeldingCreateOutputFactory, Depends(melding_create_output_factory)],
 ) -> MeldingCreateOutput:
-    melding = Melding(**melding_input.model_dump())
+    primary_form = await static_form_repository.find_by_type(StaticFormTypeEnum.primary)
+    components = await primary_form.awaitable_attrs.components
+    assert len(components) == 1
+    component = components[0]
+
+    melding_dict = melding_input.model_dump()
+
+    try:
+        validate_using_jsonlogic(await component.awaitable_attrs.jsonlogic, melding_dict)
+    except JSONLogicValidationException as e:
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=[{"msg": e.msg, "input": e.input}]) from e
+
+    melding = Melding(**melding_dict)
 
     while True:
         melding.public_id = generate_public_id()
