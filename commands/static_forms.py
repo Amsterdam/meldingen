@@ -29,7 +29,7 @@ async def create_primary_form(static_form_repository: StaticFormRepository) -> N
             input=True,
             auto_expand=False,
             max_char_count=1000,
-            jsonlogic=None,
+            jsonlogic='{"if": [{"<": [{"length": [{"var": "text"}]},1000]},true,"Meldingtekst moet 1000 tekens of minder zijn."]}',
             required=True,
         )
     )
