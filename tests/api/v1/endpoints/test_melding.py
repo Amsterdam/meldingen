@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from os import path
 from typing import Any, Final, override
+from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
@@ -8,9 +9,6 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
 from mailpit.client.api import API
-from meldingen_core import SortingDirection
-from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import MeldingStates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
@@ -23,7 +21,12 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
+from meldingen.actions.melding import MeldingGetPossibleNextStatesAction
 from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question
+from meldingen.repositories import MeldingRepository
+from meldingen_core import SortingDirection
+from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -3144,3 +3147,8 @@ class TestMeldingGetNextPossibleStates(BaseUnauthorizedTest):
         response = await client.request(self.get_method(), app.url_path_for(self.get_route_name(), melding_id=9832745))
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+    def test_action_initialization(self) -> None:
+        action = MeldingGetPossibleNextStatesAction(Mock(BaseMeldingStateMachine), Mock(MeldingRepository))
+
+        assert action is not None
