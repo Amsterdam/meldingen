@@ -3119,7 +3119,7 @@ class TestMeldingGetNextPossibleStates(BaseUnauthorizedTest):
 
         body = response.json()
 
-        assert body == {"states": ["process"]}
+        assert body == {"states": ["process", "complete"]}
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_state"], [[MeldingStates.LOCATION_SUBMITTED]])
@@ -3135,3 +3135,12 @@ class TestMeldingGetNextPossibleStates(BaseUnauthorizedTest):
         body = response.json()
 
         assert body == {"states": []}
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_state"], [[MeldingStates.LOCATION_SUBMITTED]])
+    async def test_get_possible_states_404(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.request(self.get_method(), app.url_path_for(self.get_route_name(), melding_id=9832745))
+
+        assert response.status_code == HTTP_404_NOT_FOUND
