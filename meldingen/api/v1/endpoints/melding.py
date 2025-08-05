@@ -850,7 +850,5 @@ async def next_possible_states(
         states = await action(melding_id)
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
-    except TokenException as e:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
 
     return produce_output(states)

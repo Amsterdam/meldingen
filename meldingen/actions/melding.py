@@ -9,8 +9,9 @@ from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListA
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
 from meldingen_core.actions.melding import MeldingSubmitAction as BaseMeldingSubmitAction
 from meldingen_core.address import BaseAddressEnricher
+from meldingen_core.exceptions import NotFoundException
 from meldingen_core.repositories import BaseMeldingRepository
-from meldingen_core.statemachine import MeldingStates
+from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates
 from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -104,7 +105,7 @@ class AddLocationToMeldingAction:
         return melding
 
 
-class MeldingGetPossibleNextStatesAction(BaseMeldingRetrieveAction[Melding]):
+class MeldingGetPossibleNextStatesAction:
     _state_machine: MeldingStateMachine
     _melding_repository: BaseMeldingRepository[Melding]
 
@@ -113,11 +114,15 @@ class MeldingGetPossibleNextStatesAction(BaseMeldingRetrieveAction[Melding]):
         self._state_machine = state_machine
 
     async def __call__(self, melding_id: int) -> list[str]:
-        melding = await super().__call__(melding_id)
+        melding = await self._melding_repository.retrieve(melding_id)
+
+        if melding is None:
+            raise NotFoundException()
+
         melding_state = melding.state
 
         return [
             transition_name
             for transition_name, transition in self._state_machine._state_machine._transitions.items()
-            if melding_state in transition.from_states
+            if melding_state in transition.from_states and melding_state in MeldingBackofficeStates
         ]

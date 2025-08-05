@@ -152,7 +152,7 @@ class Process(BaseTransition[Melding]):
 class Complete(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.PROCESSING]
+        return [MeldingStates.PROCESSING, MeldingStates.SUBMITTED]
 
     @property
     def to_state(self) -> str:
