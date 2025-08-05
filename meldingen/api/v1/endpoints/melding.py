@@ -136,20 +136,24 @@ logger = logging.getLogger(__name__)
 async def create_melding(
     melding_input: MeldingInput,
     action: Annotated[MeldingCreateAction[Melding, Classification], Depends(melding_create_action)],
-    static_form_repository: Annotated[StaticFormRepository, Depends(static_form_repository)],
+    _static_form_repository: Annotated[StaticFormRepository, Depends(static_form_repository)],
     validate_using_jsonlogic: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
     generate_public_id: Annotated[PublicIdGenerator, Depends(public_id_generator)],
     produce_output: Annotated[MeldingCreateOutputFactory, Depends(melding_create_output_factory)],
 ) -> MeldingCreateOutput:
-    primary_form = await static_form_repository.find_by_type(StaticFormTypeEnum.primary)
-    components = await primary_form.awaitable_attrs.components
-    assert len(components) == 1
-    component = components[0]
-
     melding_dict = melding_input.model_dump()
 
     try:
-        validate_using_jsonlogic(await component.awaitable_attrs.jsonlogic, melding_dict)
+        primary_form = await _static_form_repository.find_by_type(StaticFormTypeEnum.primary)
+        components = await primary_form.awaitable_attrs.components
+        assert len(components) == 1
+        component = components[0]
+        jsonlogic = await component.awaitable_attrs.jsonlogic
+
+        if jsonlogic is not None:
+            validate_using_jsonlogic(jsonlogic, melding_dict)
+    except NotFoundException:
+        logger.warning("The primary form seems to be missing!")
     except JSONLogicValidationException as e:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=[{"msg": e.msg, "input": e.input}]) from e
 
