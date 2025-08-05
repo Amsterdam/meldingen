@@ -36,6 +36,7 @@ from meldingen.models import (
     Melding,
     Question,
     StaticForm,
+    StaticFormTypeEnum,
     User,
 )
 
@@ -254,6 +255,15 @@ class FormRepository(BaseSQLAlchemyRepository[Form], BaseFormRepository):
 class StaticFormRepository(BaseSQLAlchemyRepository[StaticForm]):
     def get_model_type(self) -> type[StaticForm]:
         return StaticForm
+
+    async def find_by_type(self, _type: StaticFormTypeEnum) -> StaticForm:
+        statement = select(StaticForm).where(StaticForm.type == _type)
+
+        result = await self._session.execute(statement)
+        try:
+            return result.scalars().one()
+        except NoResultFound as e:
+            raise NotFoundException() from e
 
 
 class QuestionRepository(BaseSQLAlchemyRepository[Question], BaseQuestionRepository):
