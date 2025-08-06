@@ -5,7 +5,7 @@ from typing import Any, Self
 from jsonlogic import JSONLogicExpression, JSONLogicSyntaxError, Operator
 from jsonlogic.evaluation import EvaluationContext, evaluate, get_value
 from jsonlogic.operators import operator_registry
-from jsonlogic.registry import UnkownOperator
+from jsonlogic.registry import UnkownOperator as UnknownOperator
 from jsonlogic.resolving import ReferenceParser
 from jsonlogic.typing import OperatorArgument
 
@@ -24,7 +24,7 @@ class JSONLogicValidator:
         self._reference_parser = reference_parser
         try:
             operator_registry.get("length")
-        except UnkownOperator:
+        except UnknownOperator:
             operator_registry.register("length", LengthOperator)
 
     def __call__(self, tests: str, data: dict[str, Any]) -> None:
