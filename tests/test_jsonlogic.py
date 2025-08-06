@@ -57,14 +57,13 @@ def test_validation_fails_with_custom_message_for_if_statement(
         ),
     ],
 )
-def test_validation_fails_with_custom_message_for_if_statement(
+def test_validation_fails_with_non_existing_operator(
     jsonlogic_validator: JSONLogicValidator, logic: str, error_msg: str, data: dict[str, str]
 ) -> None:
     with pytest.raises(UnknownOperator) as exception_info:
         jsonlogic_validator(logic, data)
 
         assert exception_info.value.msg == error_msg
-
 
 
 def test_jsonlogic_validation_succeeds(jsonlogic_validator: JSONLogicValidator) -> None:
