@@ -97,7 +97,7 @@ strict = true
 baseline_path = "mypy-baseline.txt"
 
 [tool.coverage.run]
-concurrency = ["greenlet"]
+concurrency = ["greenlet", "multiprocessing", "thread"]
 omit = [
   "tests/*",
   "migrations/env.py",
