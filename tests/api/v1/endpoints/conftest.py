@@ -611,6 +611,7 @@ async def primary_form(db_session: AsyncSession) -> StaticForm:
             input=True,
             auto_expand=True,
             max_char_count=255,
+            jsonlogic='{"if": [{"<=": [{"length": [{"var": "text"}]},1000]},true,"Meldingtekst moet 1000 tekens of minder zijn."]}',
         )
 
         components = await primary_form.awaitable_attrs.components
