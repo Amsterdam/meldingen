@@ -65,7 +65,6 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
     answer_output_factory,
-    jsonlogic_validator,
     melder_melding_download_attachment_action,
     melder_melding_list_attachments_action,
     melder_melding_list_questions_and_answers_action,
@@ -88,6 +87,7 @@ from meldingen.dependencies import (
     melding_list_questions_and_answers_action,
     melding_list_questions_and_answers_output_factory,
     melding_output_factory,
+    melding_primary_form_validator,
     melding_process_action,
     melding_repository,
     melding_retrieve_action,
@@ -97,13 +97,11 @@ from meldingen.dependencies import (
     melding_upload_attachment_action,
     public_id_generator,
     states_output_factory,
-    static_form_repository,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
-from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
-from meldingen.models import Answer, Attachment, Classification, Melding, StaticFormTypeEnum
-from meldingen.repositories import MeldingRepository, StaticFormRepository
+from meldingen.models import Answer, Attachment, Classification, Melding
+from meldingen.repositories import MeldingRepository
 from meldingen.schemas.input import (
     AnswerInput,
     CompleteMeldingInput,
@@ -127,6 +125,7 @@ from meldingen.schemas.output_factories import (
     StatesOutputFactory,
 )
 from meldingen.schemas.types import GeoJson
+from meldingen.validators import MeldingPrimaryFormValidator
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -136,26 +135,13 @@ logger = logging.getLogger(__name__)
 async def create_melding(
     melding_input: MeldingInput,
     action: Annotated[MeldingCreateAction[Melding, Classification], Depends(melding_create_action)],
-    _static_form_repository: Annotated[StaticFormRepository, Depends(static_form_repository)],
-    validate_using_jsonlogic: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
+    _validate_using_jsonlogic: Annotated[MeldingPrimaryFormValidator, Depends(melding_primary_form_validator)],
     generate_public_id: Annotated[PublicIdGenerator, Depends(public_id_generator)],
     produce_output: Annotated[MeldingCreateOutputFactory, Depends(melding_create_output_factory)],
 ) -> MeldingCreateOutput:
     melding_dict = melding_input.model_dump()
 
-    try:
-        primary_form = await _static_form_repository.find_by_type(StaticFormTypeEnum.primary)
-        components = await primary_form.awaitable_attrs.components
-        assert len(components) == 1
-        component = components[0]
-        jsonlogic = await component.awaitable_attrs.jsonlogic
-
-        if jsonlogic is not None:
-            validate_using_jsonlogic(jsonlogic, melding_dict)
-    except NotFoundException:
-        logger.warning("The primary form seems to be missing!")
-    except JSONLogicValidationException as e:
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=[{"msg": e.msg, "input": e.input}]) from e
+    await _validate_using_jsonlogic(melding_dict)
 
     melding = Melding(**melding_dict)
 

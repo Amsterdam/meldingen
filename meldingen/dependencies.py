@@ -190,7 +190,7 @@ from meldingen.statemachine import (
     SubmitLocation,
 )
 from meldingen.token import TokenInvalidator, UrlSafeTokenGenerator
-from meldingen.validators import MediaTypeIntegrityValidator, MediaTypeValidator
+from meldingen.validators import MediaTypeIntegrityValidator, MediaTypeValidator, MeldingPrimaryFormValidator
 
 
 @lru_cache
@@ -1176,3 +1176,10 @@ def answer_output_factory() -> AnswerOutputFactory:
 
 def states_output_factory() -> StatesOutputFactory:
     return StatesOutputFactory()
+
+
+def melding_primary_form_validator(
+    _static_form_repository: Annotated[StaticFormRepository, Depends(static_form_repository)],
+    _jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
+) -> MeldingPrimaryFormValidator:
+    return MeldingPrimaryFormValidator(_static_form_repository, _jsonlogic_validator)
