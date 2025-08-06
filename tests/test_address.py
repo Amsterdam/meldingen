@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from meldingen_core.address import BaseAddressResolver
 from pdok_api_client.api.locatieserver_api import LocatieserverApi
 from pdok_api_client.models.free200_response import Free200Response
 from pdok_api_client.models.response import Response
@@ -15,7 +16,6 @@ from meldingen.address import (
 from meldingen.models import Melding
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas.types import Address
-from meldingen_core.address import BaseAddressResolver
 
 
 class TestAddressEnricherTask:
@@ -113,6 +113,7 @@ class TestPDOKAddressResolver:
         resolved = await resolve(123.0, 456.0)
 
         assert resolved == address
+
 
 class TestPDOKAddressTransformer:
     def test_address_transormer(self) -> None:

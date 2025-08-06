@@ -9,6 +9,9 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
 from mailpit.client.api import API
+from meldingen_core import SortingDirection
+from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
@@ -24,9 +27,6 @@ from starlette.status import (
 from meldingen.actions.melding import MeldingGetPossibleNextStatesAction
 from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question, StaticForm
 from meldingen.repositories import MeldingRepository
-from meldingen_core import SortingDirection
-from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -3138,7 +3138,9 @@ class TestMeldingSubmit(BaseTokenAuthenticationTest):
         [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com", "http://mailpit:8025")],
         indirect=True,
     )
-    async def test_submit_melding_not_found(self, app: FastAPI, client: AsyncClient, melding: Melding, mailpit_api: API) -> None:
+    async def test_submit_melding_not_found(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, mailpit_api: API
+    ) -> None:
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=325894768),
