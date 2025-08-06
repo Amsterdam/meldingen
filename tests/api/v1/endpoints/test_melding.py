@@ -970,6 +970,76 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         body = response.json()
         assert body.get("geo_location") is None
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken")],
+    )
+    async def test_update_melding_with_invalid_text(
+        self, app: FastAPI, client: AsyncClient, primary_form: StaticForm, melding: Melding
+    ) -> None:
+        text = (
+            "On the other hand, we denounce with righteous indignation and dislike men who are so "
+            "beguiled and demoralized by the charms of pleasure of the moment, so blinded by desire, "
+            "that they cannot foresee the pain and trouble that are bound to ensue; and equal blame "
+            "belongs to those who fail in their duty through weakness of will, which is the same as "
+            "saying through shrinking from toil and pain. These cases are perfectly simple and easy "
+            "to distinguish. In a free hour, when our power of choice is untrammelled and when nothing "
+            "prevents our being able to do what we like best, every pleasure is to be welcomed and every "
+            "pain avoided. But in certain circumstances and owing to the claims of duty or the "
+            "obligations of business it will frequently occur that pleasures have to be repudiated and "
+            "annoyances accepted. The wise man therefore always holds in these matters to this principle "
+            "of selection: he rejects pleasures to secure other greater pleasures, or else he endures "
+            "pains to avoid worse pains.AAAAAAAAAAA"
+        )
+
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": melding.token},
+            json={"text": text},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        data = response.json()
+        detail = data.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("msg") == "Meldingtekst moet 1000 tekens of minder zijn."
+        assert violation.get("input") == {"text": text}
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken")],
+    )
+    async def test_update_melding_with_valid_text(
+        self, app: FastAPI, client: AsyncClient, primary_form: StaticForm, melding: Melding
+    ) -> None:
+        text = (
+            "On the other hand, we denounce with righteous indignation and dislike men who are so "
+            "beguiled and demoralized by the charms of pleasure of the moment, so blinded by desire, "
+            "that they cannot foresee the pain and trouble that are bound to ensue; and equal blame "
+            "belongs to those who fail in their duty through weakness of will, which is the same as "
+            "saying through shrinking from toil and pain. These cases are perfectly simple and easy "
+            "to distinguish. In a free hour, when our power of choice is untrammelled and when nothing "
+            "prevents our being able to do what we like best, every pleasure is to be welcomed and every "
+            "pain avoided. But in certain circumstances and owing to the claims of duty or the "
+            "obligations of business it will frequently occur that pleasures have to be repudiated and "
+            "annoyances accepted. The wise man therefore always holds in these matters to this principle "
+            "of selection: he rejects pleasures to secure other greater pleasures, or else he endures "
+            "pains to avoid worse pains."
+        )
+
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": melding.token},
+            json={"text": text},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
 
 class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:answer_questions"

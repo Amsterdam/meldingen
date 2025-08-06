@@ -257,11 +257,16 @@ async def update_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     melding_input: MeldingInput,
+    validate_using_jsonlogic: Annotated[MeldingPrimaryFormValidator, Depends(melding_primary_form_validator)],
     action: Annotated[MeldingUpdateAction[Melding, Classification], Depends(melding_update_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
+    melding_dict = melding_input.model_dump()
+
+    await validate_using_jsonlogic(melding_dict)
+
     try:
-        melding = await action(pk=melding_id, values=melding_input.model_dump(), token=token)
+        melding = await action(pk=melding_id, values=melding_dict, token=token)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
