@@ -135,13 +135,13 @@ logger = logging.getLogger(__name__)
 async def create_melding(
     melding_input: MeldingInput,
     action: Annotated[MeldingCreateAction[Melding, Classification], Depends(melding_create_action)],
-    _validate_using_jsonlogic: Annotated[MeldingPrimaryFormValidator, Depends(melding_primary_form_validator)],
+    validate_using_jsonlogic: Annotated[MeldingPrimaryFormValidator, Depends(melding_primary_form_validator)],
     generate_public_id: Annotated[PublicIdGenerator, Depends(public_id_generator)],
     produce_output: Annotated[MeldingCreateOutputFactory, Depends(melding_create_output_factory)],
 ) -> MeldingCreateOutput:
     melding_dict = melding_input.model_dump()
 
-    await _validate_using_jsonlogic(melding_dict)
+    await validate_using_jsonlogic(melding_dict)
 
     melding = Melding(**melding_dict)
 
