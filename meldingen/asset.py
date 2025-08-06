@@ -10,7 +10,6 @@ class AssetPurger:
     async def __call__(self, melding_id: int) -> None:
         melding = await self._repository.retrieve(melding_id)
 
-        if melding is None:
-            return
+        assert melding is not None
 
         await self._repository.delete_assets_from_melding(melding)

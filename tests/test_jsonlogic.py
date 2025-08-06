@@ -1,4 +1,6 @@
 import pytest
+from jsonlogic import JSONLogicSyntaxError
+from jsonlogic.registry import UnkownOperator as UnknownOperator
 from jsonlogic.resolving import DotReferenceParser
 
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
@@ -45,6 +47,26 @@ def test_validation_fails_with_custom_message_for_if_statement(
         assert exception_info.value.msg == error_msg
 
 
+@pytest.mark.parametrize(
+    "logic, error_msg, data",
+    [
+        (
+            '{"if": [{"non_existing_operator": [{"var": ["text"]},"Water"]}, true, "You must type \'Water\'!"]}',
+            "You must type 'Water'!",
+            {"text": "Fire"},
+        ),
+    ],
+)
+def test_validation_fails_with_custom_message_for_if_statement(
+    jsonlogic_validator: JSONLogicValidator, logic: str, error_msg: str, data: dict[str, str]
+) -> None:
+    with pytest.raises(UnknownOperator) as exception_info:
+        jsonlogic_validator(logic, data)
+
+        assert exception_info.value.msg == error_msg
+
+
+
 def test_jsonlogic_validation_succeeds(jsonlogic_validator: JSONLogicValidator) -> None:
     jsonlogic_validator('{">=":[10, 10]}', {})
 
@@ -84,3 +106,8 @@ def test_length_operator_negative(
 
 def test_length_operator_positive(jsonlogic_validator: JSONLogicValidator) -> None:
     jsonlogic_validator('{"if": [{"<=":[{"length": {"var": ["text"]}},3]},true,"Too long"]}', {"text": "ABC"})
+
+
+def test_length_operator_too_many_arguments(jsonlogic_validator: JSONLogicValidator) -> None:
+    with pytest.raises(JSONLogicSyntaxError):
+        jsonlogic_validator('{"if": [{"<=":[{"length": {"var": ["text"]}},3,5]},true,"Too long"]}', {"text": "ABC"})
