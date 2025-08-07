@@ -63,10 +63,10 @@ jobs:
         run: |
           docker network create meldingen_network
           docker run -d --rm -p "54321:5432" -v "$(pwd)/docker/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d" -e POSTGRES_USER=meldingen -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=meldingen --network meldingen_network --network-alias database postgis/postgis:16-3.4-alpine
-          docker run -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --test-alembic -m alembic
+          docker run --rm -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --test-alembic -m alembic
 
       - name: Run tests
-        run: docker compose run --rm -e COVERAGE_FILE=/tmp/.coverage meldingen pytest --cov --cov-fail-under=95 -n auto -v
+        run: docker run --rm -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --cov --cov-fail-under=95 -n auto -v
 
   Black:
     needs: build_container_images
