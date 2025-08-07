@@ -1,4 +1,5 @@
 import logging
+import os
 from functools import lru_cache
 from typing import Annotated, Any, AsyncIterator
 
@@ -22,13 +23,14 @@ from meldingen_core.actions.melding import (
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
-from meldingen_core.classification import Classifier
+from meldingen_core.classification import BaseClassifierAdapter, Classifier
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from meldingen_core.wfs import WfsProviderFactory
+from openai import AsyncOpenAI
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
@@ -95,7 +97,7 @@ from meldingen.actions.wfs import WfsRetrieveAction
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
-from meldingen.classification import DummyClassifierAdapter
+from meldingen.classification import OpenAIClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import AssetFactory, AttachmentFactory, AzureFilesystemFactory, BaseFilesystemFactory
@@ -292,10 +294,19 @@ def asset_factory() -> AssetFactory:
     return AssetFactory()
 
 
+def openai_client() -> AsyncOpenAI:
+    return AsyncOpenAI(base_url=os.getenv("LLM_URL"))
+
+
+def openai_classifier_adapter(client: Annotated[AsyncOpenAI, Depends(openai_client)]) -> OpenAIClassifierAdapter:
+    return OpenAIClassifierAdapter(client, os.getenv("LLM"))
+
+
 def classifier(
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+    adapter: Annotated[BaseClassifierAdapter, Depends(openai_classifier_adapter)],
 ) -> Classifier[Classification]:
-    return Classifier(DummyClassifierAdapter(), repository)
+    return Classifier(adapter, repository)
 
 
 def token_generator() -> BaseTokenGenerator:
