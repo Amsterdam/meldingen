@@ -10,6 +10,7 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from filelock import FileLock
 from httpx import ASGITransport, AsyncClient
+from meldingen_core.classification import BaseClassifierAdapter
 from meldingen_core.malware import BaseMalwareScanner
 from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
 from pytest import FixtureRequest
@@ -20,6 +21,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.compiler import DDLCompiler
 from sqlalchemy.sql.ddl import DropTable
 
+from meldingen.classification import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager as BaseDatabaseSessionManager
 from meldingen.dependencies import (
@@ -29,6 +31,7 @@ from meldingen.dependencies import (
     database_session,
     database_session_manager,
     malware_scanner,
+    openai_classifier_adapter,
     public_id_generator,
 )
 from meldingen.generators import PublicIdGenerator
@@ -205,11 +208,15 @@ async def override_dependencies(
     def db_manager_override() -> DatabaseSessionManager:
         return db_manager
 
+    def openai_classifier_adapter_override() -> BaseClassifierAdapter:
+        return DummyClassifierAdapter()
+
     app.dependency_overrides.update(
         {
             database_session: db_session_override,
             database_engine: db_engine_override,
             database_session_manager: db_manager_override,
+            openai_classifier_adapter: openai_classifier_adapter_override,
         }
     )
 
