@@ -58,6 +58,7 @@ jobs:
         run: |
           docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
           docker pull postgis/postgis:16-3.4-alpine
+          docker pull mcr.microsoft.com/azure-storage/azurite:latest
 
       - name: Run alembic tests
         run: |
@@ -66,7 +67,9 @@ jobs:
           docker run --rm -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --test-alembic -m alembic
 
       - name: Run tests
-        run: docker run --rm -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --cov --cov-fail-under=95 -n auto -v
+        run: |
+          docker run -d --rm -p "10000:10000" --network meldingen_network --network-alias azurite mcr.microsoft.com/azure-storage/azurite:latest azurite-blob --blobHost 0.0.0.0 --blobPort 10000
+          docker run --rm -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --cov --cov-fail-under=95 -n auto -v
 
   Black:
     needs: build_container_images
