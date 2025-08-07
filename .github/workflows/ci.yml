@@ -62,7 +62,7 @@ jobs:
       - name: Run alembic tests
         run: |
           docker network create meldingen_network
-          docker run -d --rm -p "54321:5432" -v "$(pwd)/docker/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d" --network meldingen_network --network-alias database postgis/postgis:16-3.4-alpine
+          docker run -d --rm -p "54321:5432" -v "$(pwd)/docker/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d" -e POSTGRES_USER=meldingen -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=meldingen --network meldingen_network --network-alias database postgis/postgis:16-3.4-alpine
           docker run -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --test-alembic -m alembic
 
       - name: Run tests
