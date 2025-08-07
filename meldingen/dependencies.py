@@ -1,5 +1,4 @@
 import logging
-import os
 from functools import lru_cache
 from typing import Annotated, Any, AsyncIterator
 
@@ -295,14 +294,14 @@ def asset_factory() -> AssetFactory:
 
 
 def openai_client() -> AsyncOpenAI:
-    return AsyncOpenAI(base_url=os.getenv("LLM_URL"))
+    return AsyncOpenAI(base_url=settings.llm_base_url)
 
 
 def openai_classifier_adapter(
     client: Annotated[AsyncOpenAI, Depends(openai_client)],
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> OpenAIClassifierAdapter:
-    return OpenAIClassifierAdapter(client, os.getenv("LLM"), repository)
+    return OpenAIClassifierAdapter(client, settings.llm_model_identifier, repository)
 
 
 def classifier(
