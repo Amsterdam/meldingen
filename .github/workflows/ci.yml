@@ -33,7 +33,7 @@ jobs:
         run: docker buildx bake --file docker-compose.yml --file docker-compose.cache.json
 
       - name: Push images
-        run: docker compose push meldingen
+        run: docker push ${REGISTRY}/${REPOSITORY}:${VERSION}
 
   run_tests:
     needs: build_container_images
