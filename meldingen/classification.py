@@ -48,7 +48,9 @@ class OpenAIClassifierAdapter(BaseClassifierAdapter):
             ],
         )
 
-        classification = response.choices[0].message.content.strip()
+        classification = response.choices[0].message.content
+        if classification is not None:
+            classification = classification.strip()
         logger.debug(f"Classification according to LLM: {classification}")
 
         return classification
