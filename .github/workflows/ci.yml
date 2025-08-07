@@ -55,7 +55,7 @@ jobs:
           echo "CI=true" >> .env
 
       - name: Pull images
-        run: docker compose pull meldingen
+        run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
       - name: Run alembic tests
         run: |
@@ -82,7 +82,7 @@ jobs:
         run: cp .env.example .env
 
       - name: Pull images
-        run: docker compose pull meldingen
+        run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
       - name: black
         run:  docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} black . --check
@@ -104,7 +104,7 @@ jobs:
         run: cp .env.example .env
 
       - name: Pull images
-        run: docker compose pull meldingen
+        run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
       - name: isort
         run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} isort . --check
@@ -126,7 +126,7 @@ jobs:
         run: cp .env.example .env
 
       - name: Pull images
-        run: docker compose pull meldingen
+        run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
       - name: mypy
         run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "mypy --strict . | mypy-baseline filter"
