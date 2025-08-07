@@ -298,8 +298,11 @@ def openai_client() -> AsyncOpenAI:
     return AsyncOpenAI(base_url=os.getenv("LLM_URL"))
 
 
-def openai_classifier_adapter(client: Annotated[AsyncOpenAI, Depends(openai_client)]) -> OpenAIClassifierAdapter:
-    return OpenAIClassifierAdapter(client, os.getenv("LLM"))
+def openai_classifier_adapter(
+    client: Annotated[AsyncOpenAI, Depends(openai_client)],
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+) -> OpenAIClassifierAdapter:
+    return OpenAIClassifierAdapter(client, os.getenv("LLM"), repository)
 
 
 def classifier(
