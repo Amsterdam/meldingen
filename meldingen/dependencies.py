@@ -96,7 +96,7 @@ from meldingen.actions.wfs import WfsRetrieveAction
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
-from meldingen.classification import OpenAIClassifierAdapter
+from meldingen.classification import DummyClassifierAdapter, OpenAIClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import AssetFactory, AttachmentFactory, AzureFilesystemFactory, BaseFilesystemFactory
@@ -297,16 +297,19 @@ def openai_client() -> AsyncOpenAI:
     return AsyncOpenAI(base_url=settings.llm_base_url)
 
 
-def openai_classifier_adapter(
+def classifier_adapter(
     client: Annotated[AsyncOpenAI, Depends(openai_client)],
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
-) -> OpenAIClassifierAdapter:
-    return OpenAIClassifierAdapter(client, settings.llm_model_identifier, repository)
+) -> BaseClassifierAdapter:
+    if settings.llm_enabled:
+        return OpenAIClassifierAdapter(client, settings.llm_model_identifier, repository)
+
+    return DummyClassifierAdapter()
 
 
 def classifier(
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
-    adapter: Annotated[BaseClassifierAdapter, Depends(openai_classifier_adapter)],
+    adapter: Annotated[BaseClassifierAdapter, Depends(classifier_adapter)],
 ) -> Classifier[Classification]:
     return Classifier(adapter, repository)
 
