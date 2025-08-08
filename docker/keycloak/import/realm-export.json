@@ -549,7 +549,8 @@
     "redirectUris" : [
       "http://localhost*",
       "https://api.sia-o.azure.amsterdam.nl/*",
-      "https://admin.sia-o.azure.amsterdam.nl/*"
+      "https://admin.sia-o.azure.amsterdam.nl/*",
+      "https://sia-o.azure.amsterdam.nl/beheer/*"
     ],
     "webOrigins" : [ "*" ],
     "notBefore" : 0,
