@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -97,6 +98,15 @@ Gemeente Amsterdam
     mail_melding_completed_title: str = "Uw melding {}: melding afgehandeld"
     mail_melding_completed_preview_text: str = "Uw melding: {}"
     mail_melding_completed_subject: str = "Uw melding: {} afgehandeld"
+
+    # LLM
+    llm_enabled: bool = False  # If True enables the OpenAIClassifierAdapter instead of the DummyClassifierAdapter
+    llm_base_url: str = os.getenv(
+        "LLM_URL", ""
+    )  # LLM_URL is injected by docker compose and specifies the OpenAI compatible API endpoint base URL
+    llm_model_identifier: str = os.getenv(
+        "LLM", ""
+    )  # LLM is injected by docker compose and specifies the model identifier
 
 
 # Create an instance of the Settings model

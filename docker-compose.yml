@@ -25,6 +25,8 @@ services:
       - ".:/opt/meldingen"
     networks:
       - meldingen_network
+    models:
+      - llm
 
   database:
     image: postgis/postgis:16-3.4-alpine
@@ -161,3 +163,6 @@ networks:
   meldingen_network:
     name: meldingen_network
     driver: bridge
+models:
+  llm:
+    model: ai/gemma3:1B-Q4_K_M
