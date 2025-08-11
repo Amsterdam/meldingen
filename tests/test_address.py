@@ -118,7 +118,7 @@ class TestPDOKAddressResolver:
 class TestPDOKAddressTransformer:
     def test_address_transormer(self) -> None:
         data: dict[str, str | int | None] = {
-            "street": "Straatweglaan",
+            "straatnaam": "Straatweglaan",
             "huisnummer": 12,
             "huisletter": "A",
             "postcode": "1111AA",
