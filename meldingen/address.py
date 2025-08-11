@@ -22,7 +22,7 @@ class BaseAddressTransformer(metaclass=ABCMeta):
 class PDOKAddressTransformer(BaseAddressTransformer):
 
     def __call__(self, data: dict[str, str | int | None]) -> Address:
-        street = data.get("street")
+        street = data.get("straatnaam")
         assert isinstance(street, str)
         house_number = data.get("huisnummer")
         assert isinstance(house_number, int)
