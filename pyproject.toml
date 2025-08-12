@@ -56,7 +56,7 @@ mkdocs-material = "^9.6.16"
 mkdocstrings = {version = "^0.30.0", extras = ["python"]}
 mypy = "^1.17.1"
 mypy-baseline = "^0.7.1"
-pre-commit = "^4.1.0"
+pre-commit = "^4.3.0"
 pytest = "^8.4.1"
 pytest-alembic = "^0.12.1"
 pytest-bdd = "^8.1.0"
