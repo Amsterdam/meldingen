@@ -99,6 +99,7 @@ class BaseFormTest:
         validate = data.get("validate")
         assert validate is not None
         assert validate.get("required") is not None
+        assert validate.get("required_error_message") is None
 
         if isinstance(component, FormIoTextAreaComponent):
             assert data.get("autoExpand") == component.auto_expand
@@ -1333,6 +1334,7 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "input": True,
                             "validate": {
                                 "required": True,
+                                "required_error_message": "U moet vertellen waarom u dit bij ons meldt!",
                             },
                         },
                     ],
@@ -1378,6 +1380,7 @@ class TestFormCreate(BaseUnauthorizedTest):
         validate = text_field.get("validate")
         assert validate is not None
         assert validate.get("required") is True
+        assert validate.get("required_error_message") == "U moet vertellen waarom u dit bij ons meldt!"
 
     @pytest.mark.anyio
     async def test_create_form_with_select(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:

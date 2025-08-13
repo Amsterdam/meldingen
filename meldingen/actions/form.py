@@ -105,6 +105,7 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
 
                     if component.validate_.required is not None:
                         component_values["required"] = component.validate_.required
+                        component_values["required_error_message"] = component.validate_.required_error_message
 
                 if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                     c_component = FormIoCheckBoxComponent(**component_values)
