@@ -54,16 +54,23 @@ from meldingen.schemas.output import (
 class ValidateAdder:
     async def __call__(self, component: FormIoQuestionComponent, output: BaseFormComponentOutput) -> None:
         required = await component.awaitable_attrs.required
+        required_error_message = await component.awaitable_attrs.required_error_message
+
         if required is None:
             required = False
+
+        if required is False:
+            required_error_message = None
 
         jsonlogic = await component.awaitable_attrs.jsonlogic
         if jsonlogic is not None:
             output.validate_ = FormComponentOutputValidate.model_validate_json(
-                f'{{"json": {jsonlogic}, "required": {"true" if required else "false"} }}'
+                f'{{"json": {jsonlogic}, "required": {"true" if required else "false"}, "required_error_message": {required_error_message if required_error_message else "null"} }}'
             )
         else:
-            output.validate_ = FormComponentOutputValidate(required=required)
+            output.validate_ = FormComponentOutputValidate(
+                required=required, required_error_message=required_error_message
+            )
 
 
 class StaticFormTextAreaComponentOutputFactory:

@@ -132,6 +132,7 @@ class FormPanelComponentOutput(BaseFormPanelComponentOutput):
 class FormComponentOutputValidate(BaseModel):
     json_: Annotated[JSONLogic | None, Field(alias="json")] = None
     required: bool
+    required_error_message: str | None
 
 
 class BaseFormComponentOutput(BaseModel):
