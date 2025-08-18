@@ -302,7 +302,8 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
                 self._jsonlogic_validate(form_component.jsonlogic, answer_data)
             except JSONLogicValidationException as e:
                 raise HTTPException(
-                    status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=[{"msg": e.msg, "input": e.input}]
+                    status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
                 ) from e
 
         answer = Answer(**answer_data, melding=melding, question=question)
@@ -349,7 +350,8 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
                 self._jsonlogic_validate(form_component.jsonlogic, {"text": text})
             except JSONLogicValidationException as e:
                 raise HTTPException(
-                    status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=[{"msg": e.msg, "input": e.input}]
+                    status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
                 ) from e
 
         answer.text = text

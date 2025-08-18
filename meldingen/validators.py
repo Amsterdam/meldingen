@@ -99,5 +99,6 @@ class MeldingPrimaryFormValidator:
             logger.warning("The primary form seems to be missing!")
         except JSONLogicValidationException as e:
             raise HTTPException(
-                status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail=[{"msg": e.msg, "input": e.input}]
+                status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
             ) from e
