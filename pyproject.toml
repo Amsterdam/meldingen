@@ -52,7 +52,7 @@ filelock = "^3.17.0"
 isort = "^6.0.0"
 mailpit-api-client = {extras = ["pytest"], version = "^1.0.0"}
 mkdocs-literate-nav = "^0.6.1"
-mkdocs-material = "^9.6.16"
+mkdocs-material = "^9.6.17"
 mkdocstrings = {version = "^0.30.0", extras = ["python"]}
 mypy = "^1.17.1"
 mypy-baseline = "^0.7.1"
