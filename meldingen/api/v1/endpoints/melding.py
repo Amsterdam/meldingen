@@ -5,23 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, Up
 from fastapi.responses import StreamingResponse
 from geojson_pydantic import Feature
 from geojson_pydantic.geometries import Geometry
-from meldingen_core.actions.attachment import AttachmentTypes
-from meldingen_core.actions.melding import (
-    MelderMeldingListQuestionsAnswersAction,
-    MeldingAddAttachmentsAction,
-    MeldingAnswerQuestionsAction,
-    MeldingCompleteAction,
-    MeldingContactInfoAddedAction,
-    MeldingCreateAction,
-    MeldingListQuestionsAnswersAction,
-    MeldingProcessAction,
-    MeldingSubmitLocationAction,
-    MeldingUpdateAction,
-)
-from meldingen_core.exceptions import NotFoundException
-from meldingen_core.statemachine import MeldingStates
-from meldingen_core.token import TokenException
-from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -126,6 +109,23 @@ from meldingen.schemas.output_factories import (
 )
 from meldingen.schemas.types import GeoJson
 from meldingen.validators import MeldingPrimaryFormValidator
+from meldingen_core.actions.attachment import AttachmentTypes
+from meldingen_core.actions.melding import (
+    MelderMeldingListQuestionsAnswersAction,
+    MeldingAddAttachmentsAction,
+    MeldingAnswerQuestionsAction,
+    MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
+    MeldingCreateAction,
+    MeldingListQuestionsAnswersAction,
+    MeldingProcessAction,
+    MeldingSubmitLocationAction,
+    MeldingUpdateAction,
+)
+from meldingen_core.exceptions import NotFoundException
+from meldingen_core.statemachine import MeldingStates, get_all_backoffice_states
+from meldingen_core.token import TokenException
+from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -191,6 +191,9 @@ async def list_meldingen(
 
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
+
+    if state is None:
+        state = get_all_backoffice_states()
 
     meldingen = await action(
         limit=limit,
