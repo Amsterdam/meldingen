@@ -10,7 +10,6 @@ from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingR
 from meldingen_core.actions.melding import MeldingSubmitAction as BaseMeldingSubmitAction
 from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import MeldingListFilters
 from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates
 from meldingen_core.token import TokenVerifier
@@ -41,10 +40,8 @@ class MeldingListAction(BaseMeldingListAction[Melding]):
                 offset=offset,
                 sort_attribute_name=sort_attribute_name,
                 sort_direction=sort_direction,
-                filters=MeldingListFilters(
-                    area=area,
-                    states=[state],
-                ),
+                area=area,
+                state=state,
             )
         except AttributeNotFoundException as e:
             raise HTTPException(
