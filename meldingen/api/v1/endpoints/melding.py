@@ -19,7 +19,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
 )
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.statemachine import MeldingStates
+from meldingen_core.statemachine import MeldingStates, get_all_backoffice_states
 from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
@@ -191,6 +191,9 @@ async def list_meldingen(
 
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
+
+    if state is None:
+        state = get_all_backoffice_states()
 
     meldingen = await action(
         limit=limit,
