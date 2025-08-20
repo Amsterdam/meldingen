@@ -4,7 +4,6 @@ from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
-from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
 from sqlalchemy import select
@@ -29,6 +28,7 @@ from meldingen.models import (
     StaticFormTypeEnum,
     User,
 )
+from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates
 
 
 @pytest.fixture
@@ -329,6 +329,7 @@ async def meldingen_with_location(db_session: AsyncSession, melding_locations: l
         melding = Melding(text=f"Melding {i}")
         melding.public_id = f"MELDI{i}"
         melding.geo_location = location
+        melding.state = MeldingBackofficeStates.PROCESSING
 
         db_session.add(melding)
         meldingen.append(melding)
