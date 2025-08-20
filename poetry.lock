@@ -2241,7 +2241,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "feature/add-function-to-get-backoffice-states"
-resolved_reference = "dbab1cb61b6aae8555836bd55802ca663868f982"
+resolved_reference = "c655105388e0e065e4c8491c47d3e5a113628f86"
 
 [[package]]
 name = "mergedeep"
