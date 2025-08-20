@@ -5,6 +5,24 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, Up
 from fastapi.responses import StreamingResponse
 from geojson_pydantic import Feature
 from geojson_pydantic.geometries import Geometry
+from meldingen_core.actions.attachment import AttachmentTypes
+from meldingen_core.actions.melding import (
+    MelderMeldingListQuestionsAnswersAction,
+    MeldingAddAttachmentsAction,
+    MeldingAnswerQuestionsAction,
+    MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
+    MeldingCreateAction,
+    MeldingListQuestionsAnswersAction,
+    MeldingProcessAction,
+    MeldingSubmitLocationAction,
+    MeldingUpdateAction,
+)
+from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import MeldingListFilters
+from meldingen_core.statemachine import MeldingStates, get_all_backoffice_states
+from meldingen_core.token import TokenException
+from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -109,23 +127,6 @@ from meldingen.schemas.output_factories import (
 )
 from meldingen.schemas.types import GeoJson
 from meldingen.validators import MeldingPrimaryFormValidator
-from meldingen_core.actions.attachment import AttachmentTypes
-from meldingen_core.actions.melding import (
-    MelderMeldingListQuestionsAnswersAction,
-    MeldingAddAttachmentsAction,
-    MeldingAnswerQuestionsAction,
-    MeldingCompleteAction,
-    MeldingContactInfoAddedAction,
-    MeldingCreateAction,
-    MeldingListQuestionsAnswersAction,
-    MeldingProcessAction,
-    MeldingSubmitLocationAction,
-    MeldingUpdateAction,
-)
-from meldingen_core.exceptions import NotFoundException
-from meldingen_core.statemachine import MeldingStates, get_all_backoffice_states
-from meldingen_core.token import TokenException
-from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -177,7 +178,16 @@ async def list_meldingen(
     action: Annotated[MeldingListAction, Depends(melding_list_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
     in_area: Annotated[str, Query(description="Geometry which the melding location should reside in.")] | None = None,
-    state: Annotated[MeldingStates, Query(description="State that the melding should have")] | None = None,
+    state: (
+        Annotated[
+            str,
+            Query(
+                example=f"{MeldingStates.PROCESSING},{MeldingStates.COMPLETED}",
+                description="Comma-seperated list of states that the melding should have. If left empty, meldingen will be filtered by backoffice states.",
+            ),
+        ]
+        | None
+    ) = None,
 ) -> list[MeldingOutput]:
     area = None
     if in_area is not None:
@@ -192,16 +202,17 @@ async def list_meldingen(
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
-    if state is None:
-        state = get_all_backoffice_states()
+    states: list[MeldingStates] = state.split(",") if state else get_all_backoffice_states()
 
     meldingen = await action(
         limit=limit,
         offset=offset,
         sort_attribute_name=sort.get_attribute_name(),
         sort_direction=sort.get_direction(),
-        area=area,
-        state=state,
+        filters=MeldingListFilters(
+            area=area,
+            states=states,
+        ),
     )
     output = []
     for melding in meldingen:

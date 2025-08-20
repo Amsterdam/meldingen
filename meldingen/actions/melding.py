@@ -2,13 +2,6 @@ from collections.abc import Sequence
 from typing import override
 
 from fastapi import BackgroundTasks, HTTPException
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
-
-from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
-from meldingen.models import Asset, AssetType, Melding
-from meldingen.repositories import AttributeNotFoundException
-from meldingen.schemas.types import Address, GeoJson
-from meldingen.statemachine import MeldingStateMachine
 from meldingen_core import SortingDirection
 from meldingen_core.actions.melding import MeldingAddAssetAction as BaseMeldingAddAssetAction
 from meldingen_core.actions.melding import MeldingAddContactInfoAction as BaseMeldingAddContactInfoAction
@@ -19,8 +12,15 @@ from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.repositories import BaseMeldingRepository
-from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates
+from meldingen_core.statemachine import MeldingBackofficeStates
 from meldingen_core.token import TokenVerifier
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+
+from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
+from meldingen.models import Asset, AssetType, Melding
+from meldingen.repositories import AttributeNotFoundException
+from meldingen.schemas.types import Address, GeoJson
+from meldingen.statemachine import MeldingStateMachine
 
 
 class MeldingListAction(BaseMeldingListAction[Melding]):
@@ -32,8 +32,7 @@ class MeldingListAction(BaseMeldingListAction[Melding]):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        area: str | None = None,
-        state: MeldingStates | None = None,
+        filters: MeldingListFilters | None = None,
     ) -> Sequence[Melding]:
         try:
             return await super().__call__(
@@ -41,10 +40,7 @@ class MeldingListAction(BaseMeldingListAction[Melding]):
                 offset=offset,
                 sort_attribute_name=sort_attribute_name,
                 sort_direction=sort_direction,
-                filters=MeldingListFilters(
-                    area=area,
-                    states=[state],
-                )
+                filters=filters,
             )
         except AttributeNotFoundException as e:
             raise HTTPException(
