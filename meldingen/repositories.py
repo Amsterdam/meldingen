@@ -2,6 +2,21 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from typing import Any, TypeVar
 
+from meldingen_core import SortingDirection
+from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import MeldingListFilters
+from meldingen_core.repositories import (
+    BaseAnswerRepository,
+    BaseAssetRepository,
+    BaseAssetTypeRepository,
+    BaseAttachmentRepository,
+    BaseClassificationRepository,
+    BaseFormRepository,
+    BaseMeldingRepository,
+    BaseQuestionRepository,
+    BaseRepository,
+    BaseUserRepository,
+)
 from sqlalchemy import Select, delete, desc, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,21 +38,6 @@ from meldingen.models import (
     StaticForm,
     StaticFormTypeEnum,
     User,
-)
-from meldingen_core import SortingDirection
-from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import MeldingListFilters
-from meldingen_core.repositories import (
-    BaseAnswerRepository,
-    BaseAssetRepository,
-    BaseAssetTypeRepository,
-    BaseAttachmentRepository,
-    BaseClassificationRepository,
-    BaseFormRepository,
-    BaseMeldingRepository,
-    BaseQuestionRepository,
-    BaseRepository,
-    BaseUserRepository,
 )
 
 
