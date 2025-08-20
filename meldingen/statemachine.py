@@ -132,7 +132,7 @@ class AddContactInfo(BaseTransition[Melding]):
 class Submit(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.CONTACT_INFO_ADDED]
+        return [MeldingStates.CONTACT_INFO_ADDED, MeldingStates.COMPLETED]
 
     @property
     def to_state(self) -> str:
@@ -142,7 +142,7 @@ class Submit(BaseTransition[Melding]):
 class Process(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.SUBMITTED]
+        return [MeldingStates.SUBMITTED, MeldingStates.COMPLETED]
 
     @property
     def to_state(self) -> str:
@@ -152,7 +152,7 @@ class Process(BaseTransition[Melding]):
 class Complete(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.PROCESSING]
+        return [MeldingStates.SUBMITTED, MeldingStates.PROCESSING]
 
     @property
     def to_state(self) -> str:
