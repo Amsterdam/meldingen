@@ -2240,8 +2240,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feature/add-function-to-get-backoffice-states"
-resolved_reference = "c655105388e0e065e4c8491c47d3e5a113628f86"
+reference = "HEAD"
+resolved_reference = "7303da913a8b1dcddc76691352c125911b32c53f"
 
 [[package]]
 name = "mergedeep"
@@ -5186,4 +5186,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "d32fd5a6edd93564ece72f1d4f8497a72bac55db42e9e3d97b56054f1dcc4f72"
+content-hash = "a5fe574711f55690b9b2a5d6d6badeaef3d59af7747fb4dd4fd008dff940edd3"
