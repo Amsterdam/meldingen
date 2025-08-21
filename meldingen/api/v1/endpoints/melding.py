@@ -20,7 +20,7 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters
-from meldingen_core.statemachine import BaseMeldingState, MeldingStates, get_all_backoffice_states
+from meldingen_core.statemachine import MeldingStates, get_all_backoffice_states
 from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
@@ -202,9 +202,7 @@ async def list_meldingen(
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
-    states: list[BaseMeldingState] = (
-        [MeldingStates(s) for s in state.split(",")] if state else get_all_backoffice_states()
-    )
+    states: list[MeldingStates] = [MeldingStates(s) for s in state.split(",")] if state else get_all_backoffice_states()
 
     meldingen = await action(
         limit=limit,
