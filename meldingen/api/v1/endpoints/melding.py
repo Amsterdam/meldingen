@@ -203,7 +203,9 @@ async def list_meldingen(
     offset = pagination["offset"] or 0
 
     states: Sequence[MeldingBackofficeStates] = (
-        [MeldingBackofficeStates(s) for s in state.split(",")] if state else get_all_backoffice_states()
+        [MeldingBackofficeStates(s) for s in state.split(",") if s in MeldingBackofficeStates]
+        if state
+        else get_all_backoffice_states()
     )
 
     meldingen = await action(
