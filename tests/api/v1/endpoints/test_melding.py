@@ -465,7 +465,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         auth_user: None,
         meldingen_with_different_states_and_locations: list[Melding],
     ) -> None:
-        with open("../../../../tests/resources/stadsdeel-centrum.json") as f:
+        with open("tests/resources/stadsdeel-centrum.json") as f:
             geojson = f.read()
 
         response = await client.get(
