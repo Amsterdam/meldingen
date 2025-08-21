@@ -11,7 +11,13 @@ from httpx import AsyncClient
 from mailpit.client.api import API
 from meldingen_core import SortingDirection
 from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
+from meldingen_core.statemachine import (
+    BaseMeldingStateMachine,
+    MeldingBackofficeStates,
+    MeldingFormStates,
+    MeldingStates,
+    get_all_backoffice_states,
+)
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
@@ -196,64 +202,64 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
                 "id",
                 SortingDirection.ASC,
                 [
-                    {"text": "This is a test melding. 0", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 1", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 2", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 3", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 4", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 5", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 6", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 7", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 8", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 9", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 0", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 2", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 3", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 4", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 5", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 6", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 8", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 9", "state": "processing", "classification": None},
                 ],
             ),
             (
                 "id",
                 SortingDirection.DESC,
                 [
-                    {"text": "This is a test melding. 9", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 8", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 7", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 6", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 5", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 4", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 3", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 2", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 1", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 0", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 9", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 8", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 6", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 5", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 4", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 3", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 2", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 0", "state": "processing", "classification": None},
                 ],
             ),
             (
                 "text",
                 SortingDirection.ASC,
                 [
-                    {"text": "This is a test melding. 0", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 1", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 2", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 3", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 4", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 5", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 6", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 7", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 8", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 9", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 0", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 2", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 3", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 4", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 5", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 6", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 8", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 9", "state": "processing", "classification": None},
                 ],
             ),
             (
                 "text",
                 SortingDirection.DESC,
                 [
-                    {"text": "This is a test melding. 9", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 8", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 7", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 6", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 5", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 4", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 3", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 2", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 1", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 0", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 9", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 8", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 6", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 5", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 4", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 3", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 2", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 0", "state": "processing", "classification": None},
                 ],
             ),
         ],
@@ -295,8 +301,8 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
                 "text",
                 SortingDirection.DESC,
                 [
-                    {"text": "This is a test melding. 7", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 6", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 6", "state": "processing", "classification": None},
                 ],
             ),
             (
@@ -305,9 +311,9 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
                 "text",
                 SortingDirection.ASC,
                 [
-                    {"text": "This is a test melding. 1", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 2", "state": "new", "classification": None},
-                    {"text": "This is a test melding. 3", "state": "new", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 2", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 3", "state": "processing", "classification": None},
                 ],
             ),
         ],
@@ -393,11 +399,11 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         "melding_states",
         [
             (
-                MeldingStates.NEW,
-                MeldingStates.NEW,
-                MeldingStates.ATTACHMENTS_ADDED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.COMPLETED,
                 MeldingStates.CLASSIFIED,
-                MeldingStates.NEW,
+                MeldingStates.SUBMITTED,
                 MeldingStates.PROCESSING,
                 MeldingStates.SUBMITTED,
                 MeldingStates.NEW,
@@ -411,7 +417,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         auth_user: None,
         meldingen_with_different_states: list[Melding],
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"state": MeldingStates.NEW})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"state": MeldingStates.SUBMITTED})
 
         assert response.status_code == 200
 
@@ -430,14 +436,14 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         [
             (
                 [
-                    MeldingStates.NEW,
-                    MeldingStates.NEW,
-                    MeldingStates.NEW,
-                    MeldingStates.PROCESSING,
-                    MeldingStates.NEW,
-                    MeldingStates.NEW,
-                    MeldingStates.NEW,
-                    MeldingStates.NEW,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.COMPLETED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
                 ],
                 [
                     "POINT(4.898451690545197 52.37256509259712)",  # Barndesteeg 1B, Stadsdeel: Centrum
@@ -463,7 +469,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
             geojson = f.read()
 
         response = await client.get(
-            app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson, "state": MeldingStates.NEW}
+            app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson, "state": MeldingStates.SUBMITTED}
         )
 
         assert response.status_code == 200
@@ -476,6 +482,199 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         melding_response = body[0]
 
         assert melding_response.get("text") == melding.text
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "melding_states",
+        [
+            (
+                MeldingStates.COMPLETED,
+                MeldingStates.COMPLETED,
+                MeldingStates.PROCESSING,
+                MeldingStates.SUBMITTED,
+                MeldingStates.COMPLETED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.COMPLETED,
+            )
+        ],
+    )
+    async def test_list_multiple_states_filter(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        meldingen_with_different_states: list[Melding],
+    ) -> None:
+        filter_states: list[MeldingStates] = [MeldingStates.COMPLETED, MeldingStates.PROCESSING]
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"state": ",".join(filter_states)})
+
+        assert response.status_code == 200
+
+        body = response.json()
+
+        assert len(body) == 5
+
+        for new_melding in body:
+            state = new_melding.get("state")
+            assert state in filter_states
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "melding_states",
+        [
+            (
+                MeldingStates.NEW,
+                MeldingStates.NEW,
+                MeldingBackofficeStates.SUBMITTED,
+                MeldingStates.ATTACHMENTS_ADDED,
+                MeldingBackofficeStates.PROCESSING,
+                MeldingStates.CLASSIFIED,
+                MeldingBackofficeStates.SUBMITTED,
+                MeldingStates.NEW,
+                MeldingBackofficeStates.PROCESSING,
+                MeldingBackofficeStates.COMPLETED,
+                MeldingBackofficeStates.SUBMITTED,
+                MeldingStates.NEW,
+                MeldingBackofficeStates.PROCESSING,
+                MeldingBackofficeStates.PROCESSING,
+            )
+        ],
+    )
+    async def test_list_empty_states_filter_for_backoffice_states(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        meldingen_with_different_states: list[Melding],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+
+        assert response.status_code == 200
+
+        body = response.json()
+
+        assert len(body) == 8
+
+        for new_melding in body:
+            state = new_melding.get("state")
+            assert state in get_all_backoffice_states()
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "melding_states",
+        [
+            (
+                MeldingStates.NEW,
+                MeldingStates.NEW,
+                MeldingBackofficeStates.SUBMITTED,
+                MeldingStates.ATTACHMENTS_ADDED,
+                MeldingBackofficeStates.PROCESSING,
+                MeldingStates.CLASSIFIED,
+                MeldingBackofficeStates.SUBMITTED,
+                MeldingStates.NEW,
+                MeldingBackofficeStates.PROCESSING,
+                MeldingBackofficeStates.COMPLETED,
+                MeldingBackofficeStates.SUBMITTED,
+                MeldingStates.NEW,
+                MeldingBackofficeStates.PROCESSING,
+                MeldingBackofficeStates.PROCESSING,
+            )
+        ],
+    )
+    async def test_list_states_filter_ignores_non_backoffice_states(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        meldingen_with_different_states: list[Melding],
+    ) -> None:
+        filter_states: list[MeldingStates] = [MeldingStates.COMPLETED, MeldingStates.PROCESSING]
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"state": ",".join(filter_states)})
+
+        assert response.status_code == 200
+
+        body = response.json()
+
+        assert len(body) == 5
+
+        for new_melding in body:
+            state = new_melding.get("state")
+            assert state in get_all_backoffice_states()
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "melding_states",
+        [
+            (
+                MeldingStates.NEW,
+                MeldingStates.NEW,
+                MeldingBackofficeStates.SUBMITTED,
+                MeldingStates.ATTACHMENTS_ADDED,
+                MeldingBackofficeStates.PROCESSING,
+                MeldingStates.CLASSIFIED,
+                MeldingBackofficeStates.SUBMITTED,
+                MeldingStates.NEW,
+                MeldingBackofficeStates.PROCESSING,
+                MeldingBackofficeStates.COMPLETED,
+                MeldingBackofficeStates.SUBMITTED,
+                MeldingStates.NEW,
+                MeldingBackofficeStates.PROCESSING,
+                MeldingBackofficeStates.PROCESSING,
+            )
+        ],
+    )
+    async def test_list_states_filter_returns_nothing_with_unknown_states(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        meldingen_with_different_states: list[Melding],
+    ) -> None:
+        filter_states: list[MeldingStates] = [MeldingStates.LOCATION_SUBMITTED]
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"state": ",".join(filter_states)})
+
+        assert response.status_code == 200
+
+        body = response.json()
+
+        assert len(body) == 0
+
+        for new_melding in body:
+            state = new_melding.get("state")
+            assert state in get_all_backoffice_states()
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "melding_states",
+        [
+            (
+                MeldingFormStates.NEW,
+                MeldingFormStates.LOCATION_SUBMITTED,
+                MeldingFormStates.CLASSIFIED,
+                MeldingFormStates.QUESTIONS_ANSWERED,
+                MeldingFormStates.ATTACHMENTS_ADDED,
+            )
+        ],
+    )
+    async def test_list_states_filter_does_not_return_non_backoffice_states(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        meldingen_with_different_states: list[Melding],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"state": ""})
+
+        assert response.status_code == 200
+
+        body = response.json()
+
+        assert len(body) == 0
+
+        for new_melding in body:
+            state = new_melding.get("state")
+            assert state in get_all_backoffice_states()
 
 
 class TestMeldingRetrieve(BaseUnauthorizedTest):

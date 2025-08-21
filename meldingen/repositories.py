@@ -4,6 +4,7 @@ from typing import Any, TypeVar
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import MeldingListFilters
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
@@ -16,7 +17,6 @@ from meldingen_core.repositories import (
     BaseRepository,
     BaseUserRepository,
 )
-from meldingen_core.statemachine import MeldingStates
 from sqlalchemy import Select, delete, desc, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -168,17 +168,19 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        area: str | None = None,
-        state: MeldingStates | None = None,
+        filters: MeldingListFilters | None = None,
     ) -> Sequence[Melding]:
         _type = self.get_model_type()
         statement = select(_type)
 
+        area = None if filters is None else filters.area
+        states = None if filters is None else filters.states
+
         if area is not None:
             statement = statement.filter(func.ST_Contains(func.ST_GeomFromGeoJSON(area), Melding.geo_location))
 
-        if state is not None:
-            statement = statement.filter(Melding.state == state)
+        if states is not None:
+            statement = statement.filter(Melding.state.in_(states))
 
         statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
 

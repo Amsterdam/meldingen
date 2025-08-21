@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated, Any, AsyncIterator
+from typing import Annotated, Any, AsyncIterator, Sequence
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
@@ -19,7 +19,8 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
 )
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.statemachine import MeldingStates
+from meldingen_core.filters import MeldingListFilters
+from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
 from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
@@ -177,7 +178,16 @@ async def list_meldingen(
     action: Annotated[MeldingListAction, Depends(melding_list_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
     in_area: Annotated[str, Query(description="Geometry which the melding location should reside in.")] | None = None,
-    state: Annotated[MeldingStates, Query(description="State that the melding should have")] | None = None,
+    state: (
+        Annotated[
+            str,
+            Query(
+                example=f"{MeldingStates.PROCESSING},{MeldingStates.COMPLETED}",
+                description="Comma-seperated list of states that the melding should have. If left empty, meldingen will be filtered by backoffice states.",
+            ),
+        ]
+        | None
+    ) = None,
 ) -> list[MeldingOutput]:
     area = None
     if in_area is not None:
@@ -192,13 +202,21 @@ async def list_meldingen(
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
+    states: Sequence[MeldingBackofficeStates] = (
+        [MeldingBackofficeStates(s) for s in state.split(",") if s in MeldingBackofficeStates]
+        if state
+        else get_all_backoffice_states()
+    )
+
     meldingen = await action(
         limit=limit,
         offset=offset,
         sort_attribute_name=sort.get_attribute_name(),
         sort_direction=sort.get_direction(),
-        area=area,
-        state=state,
+        filters=MeldingListFilters(
+            area=area,
+            states=states,
+        ),
     )
     output = []
     for melding in meldingen:
