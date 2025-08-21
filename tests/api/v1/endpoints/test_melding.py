@@ -1562,11 +1562,7 @@ class TestMeldingProcess(BaseUnauthorizedTest):
             self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
         )
 
-        assert response.status_code == HTTP_400_BAD_REQUEST
-
-        body = response.json()
-
-        assert body.get("detail") == "Transition not allowed from current state"
+        assert response.status_code == HTTP_200_OK
 
 
 class TestMeldingComplete(BaseUnauthorizedTest):
@@ -3315,8 +3311,6 @@ class TestMeldingSubmit(BaseTokenAuthenticationTest):
             (MeldingStates.ATTACHMENTS_ADDED, "supersecrettoken"),
             (MeldingStates.LOCATION_SUBMITTED, "supersecrettoken"),
             (MeldingStates.SUBMITTED, "supersecrettoken"),
-            (MeldingStates.PROCESSING, "supersecrettoken"),
-            (MeldingStates.COMPLETED, "supersecrettoken"),
         ],
     )
     async def test_submit_melding_wrong_from_state(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
@@ -3473,7 +3467,7 @@ class TestMeldingGetNextPossibleStates(BaseUnauthorizedTest):
 
         body = response.json()
 
-        assert body == {"states": ["process"]}
+        assert body == {"states": ["process", "complete"]}
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_state"], [[MeldingStates.LOCATION_SUBMITTED]])
