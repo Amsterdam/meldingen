@@ -148,7 +148,6 @@ services:
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
-      OIDC_DISABLE_HTTPS_CHECK: "true"
     depends_on:
       - otel-collector
       - mailpit
