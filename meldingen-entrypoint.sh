@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eux
 
-if [ "$1" = "fastapi" ]; then
+if [ "$1" = "fastapi" ] || [ "$1" = "uvicorn" ]; then
   # Run Alembic migrations
   alembic upgrade head
 
