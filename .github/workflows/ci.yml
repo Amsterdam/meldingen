@@ -74,7 +74,7 @@ jobs:
           docker run -d --rm -p "10000:10000" --network meldingen_network --network-alias azurite mcr.microsoft.com/azure-storage/azurite:latest azurite-blob --blobHost 0.0.0.0 --blobPort 10000
           docker run -d --rm -p "8081:8080" -e IMGPROXY_KEY=000000 -e IMGPROXY_SALT=111111 -e IMGPROXY_USE_ABS=true -e IMGPROXY_ABS_NAME=devstoreaccount1 -e IMGPROXY_ABS_KEY=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw== -e IMGPROXY_ABS_ENDPOINT=http://azurite:10000/devstoreaccount1 -e IMGPROXY_BASE_URL=abs://meldingencontainer/ --network meldingen_network --network-alias imgproxy darthsim/imgproxy 
           docker run -d --rm -p "8025:8025" -p "1025:1025" --network meldingen_network --network-alias mailpit axllent/mailpit:latest
-          docker run -d --rm -p "8003:8003" -e PORT=8003 -e SMTP_HOST=mailpit -e SMTP_PORT=1025 OIDC_DISABLE_HTTPS_CHECK=true --network meldingen_network --network-alias mail-service amsterdam/amsterdam-mail-service:latest
+          docker run -d --rm -p "8003:8003" -e PORT=8003 -e SMTP_HOST=mailpit -e SMTP_PORT=1025 -e OIDC_DISABLE_HTTPS_CHECK=true --network meldingen_network --network-alias mail-service amsterdam/amsterdam-mail-service:latest
           docker run --rm -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env -e COVERAGE_FILE=/tmp/.coverage ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --cov --cov-fail-under=95 -n auto -v
 
   Black:
