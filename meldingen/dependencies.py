@@ -164,6 +164,7 @@ from meldingen.schemas.output_factories import (
     FormTextFieldInputComponentOutputFactory,
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
+    MeldingUpdateOutputFactory,
     SimpleClassificationOutputFactory,
     SimpleStaticFormOutputFactory,
     StatesOutputFactory,
@@ -904,6 +905,15 @@ def melding_output_factory(
     ],
 ) -> MeldingOutputFactory:
     return MeldingOutputFactory(location_output_transformer, classification_output_factory)
+
+
+def melding_update_output_factory(
+    location_output_transformer: Annotated[LocationOutputTransformer, Depends(location_output_transformer)],
+    classification_output_factory: Annotated[
+        SimpleClassificationOutputFactory, Depends(simple_classification_output_factory)
+    ],
+) -> MeldingUpdateOutputFactory:
+    return MeldingUpdateOutputFactory(location_output_transformer, classification_output_factory)
 
 
 def melding_contact_info_added_action(

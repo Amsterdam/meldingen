@@ -53,8 +53,16 @@ class MeldingOutput(BaseOutputModel):
     phone: PhoneNumber | None = Field(default=None)
 
 
-class MeldingCreateOutput(MeldingOutput):
+class MeldingWithTokenOutput(MeldingOutput):
     token: str
+
+
+class MeldingCreateOutput(MeldingWithTokenOutput):
+    pass
+
+
+class MeldingUpdateOutput(MeldingWithTokenOutput):
+    pass
 
 
 class SimpleStaticFormOutput(BaseFormOutput):

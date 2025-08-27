@@ -95,6 +95,7 @@ from meldingen.dependencies import (
     melding_submit_action,
     melding_submit_location_action,
     melding_update_action,
+    melding_update_output_factory,
     melding_upload_attachment_action,
     public_id_generator,
     states_output_factory,
@@ -116,6 +117,7 @@ from meldingen.schemas.output import (
     AttachmentOutput,
     MeldingCreateOutput,
     MeldingOutput,
+    MeldingUpdateOutput,
     StatesOutput,
 )
 from meldingen.schemas.output_factories import (
@@ -123,6 +125,7 @@ from meldingen.schemas.output_factories import (
     AnswerOutputFactory,
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
+    MeldingUpdateOutputFactory,
     StatesOutputFactory,
 )
 from meldingen.schemas.types import GeoJson
@@ -277,8 +280,8 @@ async def update_melding(
     melding_input: MeldingInput,
     validate_using_jsonlogic: Annotated[MeldingPrimaryFormValidator, Depends(melding_primary_form_validator)],
     action: Annotated[MeldingUpdateAction[Melding, Classification], Depends(melding_update_action)],
-    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
-) -> MeldingOutput:
+    produce_output: Annotated[MeldingUpdateOutputFactory, Depends(melding_update_output_factory)],
+) -> MeldingUpdateOutput:
     melding_dict = melding_input.model_dump()
 
     await validate_using_jsonlogic(melding_dict)

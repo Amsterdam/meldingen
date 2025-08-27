@@ -867,6 +867,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("public_id") == melding.public_id
+        assert body.get("token") == "supersecuretoken"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
