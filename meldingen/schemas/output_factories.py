@@ -37,6 +37,7 @@ from meldingen.schemas.output import (
     FormTextFieldInputComponentOutput,
     MeldingCreateOutput,
     MeldingOutput,
+    MeldingUpdateOutput,
     QuestionOutput,
     SimpleClassificationOutput,
     SimpleStaticFormOutput,
@@ -608,6 +609,42 @@ class MeldingCreateOutputFactory:
             token=melding.token,
             created_at=melding.created_at,
             updated_at=melding.updated_at,
+        )
+
+
+class MeldingUpdateOutputFactory(MeldingOutputFactory):
+    _transform_location: LocationOutputTransformer
+    _classification: SimpleClassificationOutputFactory
+
+    def __init__(
+        self, location_transformer: LocationOutputTransformer, classification: SimpleClassificationOutputFactory
+    ):
+        self._transform_location = location_transformer
+        self._classification = classification
+
+    def __call__(self, melding: Melding) -> MeldingUpdateOutput:
+        if melding.geo_location is None:
+            geojson = None
+        else:
+            geojson = self._transform_location(melding.geo_location)
+
+        return MeldingUpdateOutput(
+            id=melding.id,
+            public_id=melding.public_id,
+            text=melding.text,
+            state=melding.state,
+            classification=self._classification(melding.classification),
+            created_at=melding.created_at,
+            updated_at=melding.updated_at,
+            geo_location=geojson,
+            street=melding.street,
+            house_number=melding.house_number,
+            house_number_addition=melding.house_number_addition,
+            postal_code=melding.postal_code,
+            city=melding.city,
+            email=melding.email,
+            phone=melding.phone,
+            token=melding.token,
         )
 
 
