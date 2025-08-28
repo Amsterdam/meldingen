@@ -11,7 +11,7 @@ from starlette.status import (
 not_found_response: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_404_NOT_FOUND: {
         "description": "Not Found",
-        "content": {"application/json": {"example": {"detail": "Not Found"}}},
+        "content": {"application/json": {"example": {"detail": "Not Found"}, "schema": {"detail": "Not Found"}}},
     }
 }
 default_response: Final[dict[str | int, dict[str, Any]]] = {"default": {"description": "Unexpected error"}}
@@ -22,7 +22,10 @@ conflict_response: Final[dict[str | int, dict[str, Any]]] = {
             "application/json": {
                 "example": {
                     "detail": "The requested operation could not be completed due to a conflict with existing data."
-                }
+                },
+                "schema": {
+                    "detail": "The requested operation could not be completed due to a conflict with existing data."
+                },
             }
         },
     }
@@ -30,7 +33,9 @@ conflict_response: Final[dict[str | int, dict[str, Any]]] = {
 unauthorized_response: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_401_UNAUTHORIZED: {
         "description": "Unauthorized, perhaps the token was invalid or expired, or the user could not be found.",
-        "content": {"application/json": {"example": {"detail": "Token expired"}}},
+        "content": {
+            "application/json": {"example": {"detail": "Token expired"}, "schema": {"detail": "Token expired"}}
+        },
     }
 }
 list_response: Final[dict[str | int, dict[str, Any]]] = {
@@ -46,7 +51,12 @@ list_response: Final[dict[str | int, dict[str, Any]]] = {
 transition_not_allowed: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_400_BAD_REQUEST: {
         "description": "Transition not allowed from current state",
-        "content": {"application/json": {"example": {"detail": "Transition not allowed from current state"}}},
+        "content": {
+            "application/json": {
+                "example": {"detail": "Transition not allowed from current state"},
+                "schema": {"detail": "Transition not allowed from current state"},
+            }
+        },
     }
 }
 image_data_response: Final[dict[str | int, dict[str, Any]]] = {
