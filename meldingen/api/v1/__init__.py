@@ -1,5 +1,6 @@
 from typing import Any, Final
 
+from pydantic import BaseModel
 from starlette.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
@@ -8,10 +9,17 @@ from starlette.status import (
     HTTP_409_CONFLICT,
 )
 
+
+class ResponseWithDetail(BaseModel):
+    detail: str
+
+
 not_found_response: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_404_NOT_FOUND: {
         "description": "Not Found",
-        "content": {"application/json": {"example": {"detail": "Not Found"}, "schema": {"detail": "Not Found"}}},
+        "content": {
+            "application/json": {"example": {"detail": "Not Found"}, "schema": ResponseWithDetail.model_json_schema()}
+        },
     }
 }
 default_response: Final[dict[str | int, dict[str, Any]]] = {"default": {"description": "Unexpected error"}}
@@ -23,9 +31,7 @@ conflict_response: Final[dict[str | int, dict[str, Any]]] = {
                 "example": {
                     "detail": "The requested operation could not be completed due to a conflict with existing data."
                 },
-                "schema": {
-                    "detail": "The requested operation could not be completed due to a conflict with existing data."
-                },
+                "schema": ResponseWithDetail.model_json_schema(),
             }
         },
     }
@@ -34,7 +40,10 @@ unauthorized_response: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_401_UNAUTHORIZED: {
         "description": "Unauthorized, perhaps the token was invalid or expired, or the user could not be found.",
         "content": {
-            "application/json": {"example": {"detail": "Token expired"}, "schema": {"detail": "Token expired"}}
+            "application/json": {
+                "example": {"detail": "Token expired"},
+                "schema": ResponseWithDetail.model_json_schema(),
+            }
         },
     }
 }
@@ -54,7 +63,7 @@ transition_not_allowed: Final[dict[str | int, dict[str, Any]]] = {
         "content": {
             "application/json": {
                 "example": {"detail": "Transition not allowed from current state"},
-                "schema": {"detail": "Transition not allowed from current state"},
+                "schema": ResponseWithDetail.model_json_schema(),
             }
         },
     }
