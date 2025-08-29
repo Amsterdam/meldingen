@@ -2862,7 +2862,7 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
         return self.ROUTE_NAME
 
     def get_method(self) -> str:
-        return "POST"
+        return "PATCH"
 
     @override
     def get_json(self) -> dict[str, Any] | None:
@@ -2887,7 +2887,7 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
         address_api_client_override: None,
         address_api_mock_data: dict[str, Any],
     ) -> None:
-        response = await client.post(
+        response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             json=geojson,
@@ -2908,7 +2908,7 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
     async def test_add_location_to_melding_melding_not_found(
         self, app: FastAPI, client: AsyncClient, geojson: dict[str, Any]
     ) -> None:
-        response = await client.post(
+        response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=123),
             params={"token": "test"},
             json=geojson,
@@ -2934,7 +2934,7 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
     async def test_add_location_wrong_geometry_type(
         self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
     ) -> None:
-        response = await client.post(
+        response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecrettoken"},
             json=geojson,
@@ -2965,7 +2965,7 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
     async def test_add_location_no_coordinates(
         self, app: FastAPI, client: AsyncClient, melding: Melding, geojson: dict[str, Any]
     ) -> None:
-        response = await client.post(
+        response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecrettoken"},
             json=geojson,
