@@ -717,7 +717,7 @@ async def delete_attachment(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
 
-@router.post(
+@router.patch(
     "/{melding_id}/location",
     name="melding:location-add",
     responses={**not_found_response, **unauthorized_response},
