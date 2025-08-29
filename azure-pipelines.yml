@@ -31,10 +31,7 @@ parameters:
 
 steps:
   - bash: |
-      echo $(AccessToken) | az devops login
-    displayName: 'Login'
-    env:
-      AccessToken: $(System.AccessToken)
-  - bash: |
       az pipelines run --project ${{parameters.project}} --id ${{parameters.pipelineId}} --branch ${{parameters.buildPipelineBranch}} --org ${{parameters.organization}} --parameters applicationBranch=$(Build.SourceBranch)
     displayName: 'Trigger Meldingen application pipeline for branch $(Build.SourceBranch)'
+    env:
+      AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
