@@ -23,7 +23,7 @@ def i_have_a_phone_number_and_an_email_address(phone_number: str, email: str) ->
 async def i_add_the_contact_information_to_my_melding(
     app: FastAPI, client: AsyncClient, my_melding: dict[str, Any], token: str, contact_info: dict[str, str]
 ) -> dict[str, Any]:
-    response = await client.post(
+    response = await client.patch(
         app.url_path_for(ROUTE_CONTACT_INFO_ADD, melding_id=my_melding["id"]),
         params={"token": token},
         json=contact_info,
