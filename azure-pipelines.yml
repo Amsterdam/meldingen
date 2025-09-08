@@ -29,9 +29,14 @@ parameters:
     type: string
     default: refs/heads/master
 
-steps:
-  - bash: |
-      az pipelines run --project ${{parameters.project}} --id ${{parameters.pipelineId}} --branch ${{parameters.buildPipelineBranch}} --org ${{parameters.organization}} --parameters applicationBranch=$(Build.SourceBranch)
-    displayName: 'Trigger Meldingen application pipeline for branch $(Build.SourceBranch)'
-    env:
-      AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+jobs:
+- job: TriggerPipeline
+  allowScriptsAuthAccessToken: true
+  steps:
+    - script: |
+        echo "##vso[task.setvariable variable=AZURE_DEVOPS_EXT_AZURE_DEVOPS_LOG]"true
+        echo "##vso[task.setvariable variable=AZURE_DEVOPS_EXT_PATVAR]$(System.AccessToken)"
+        az devops configure --defaults organization=https://dev.azure.com/CloudCompetenceCenter/ project=SIA
+        az pipelines run --id 4242 --branch refs/heads/master --parameters applicationBranch=refs/heads/main
+      env:
+        AZURE_DEVOPS_EXT_PATVAR: $(System.AccessToken)
