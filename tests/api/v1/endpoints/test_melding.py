@@ -2988,7 +2988,7 @@ class TestMeldingAddContactAction(BaseTokenAuthenticationTest):
         return self.ROUTE_NAME
 
     def get_method(self) -> str:
-        return "POST"
+        return "PATCH"
 
     @override
     def get_json(self) -> dict[str, Any] | None:
@@ -3006,7 +3006,7 @@ class TestMeldingAddContactAction(BaseTokenAuthenticationTest):
     async def test_add_contact(
         self, app: FastAPI, client: AsyncClient, melding: Melding, email: str | None, phone: str | None
     ) -> None:
-        response = await client.post(
+        response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             json={"email": email, "phone": phone},
@@ -3019,7 +3019,7 @@ class TestMeldingAddContactAction(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     async def test_add_contact_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.post(
+        response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=999),
             params={"token": "nonexistingtoken"},
             json={"email": "user@example.com", "phone": "+31612345678"},

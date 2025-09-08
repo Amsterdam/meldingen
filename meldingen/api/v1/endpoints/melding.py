@@ -739,7 +739,7 @@ async def add_location_to_melding(
     return produce_output(melding)
 
 
-@router.post(
+@router.patch(
     "/{melding_id}/contact",
     name="melding:contact-add",
     responses={**not_found_response, **unauthorized_response},
