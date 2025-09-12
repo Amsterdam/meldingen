@@ -111,12 +111,8 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
         if db_item is None:
             raise NotFoundException()
 
-        try:
-            await self._session.delete(db_item)
-            await self._session.commit()
-        except Exception as e:
-            print(e)
-            raise
+        await self._session.delete(db_item)
+        await self._session.commit()
 
     async def count(self) -> int:
         _type = self.get_model_type()
