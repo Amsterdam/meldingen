@@ -77,7 +77,7 @@ jobs:
           docker run -d --rm -p "8003:8003" -e PORT=8003 -e SMTP_HOST=mailpit -e SMTP_PORT=1025 -e NODE_ENV=test --network meldingen_network --network-alias mail-service amsterdam/amsterdam-mail-service:latest
           docker run --rm -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env -e COVERAGE_FILE=/tmp/.coverage ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --cov --cov-fail-under=95 -n auto -v
 
-  Black:a
+  Black:
     needs: build_container_images
     runs-on: ubuntu-latest
     steps:
