@@ -9,6 +9,15 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
 from mailpit.client.api import API
+from meldingen_core import SortingDirection
+from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.statemachine import (
+    BaseMeldingStateMachine,
+    MeldingBackofficeStates,
+    MeldingFormStates,
+    MeldingStates,
+    get_all_backoffice_states,
+)
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
@@ -24,15 +33,6 @@ from starlette.status import (
 from meldingen.actions.melding import MeldingGetPossibleNextStatesAction
 from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question, StaticForm
 from meldingen.repositories import MeldingRepository
-from meldingen_core import SortingDirection
-from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import (
-    BaseMeldingStateMachine,
-    MeldingBackofficeStates,
-    MeldingFormStates,
-    MeldingStates,
-    get_all_backoffice_states,
-)
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -3454,18 +3454,23 @@ class TestMeldingDeleteAsset(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
-    async def test_delete_asset(self, app: FastAPI, client: AsyncClient, melding_with_classification_with_asset_type: Melding) -> None:
+    async def test_delete_asset(
+        self, app: FastAPI, client: AsyncClient, melding_with_classification_with_asset_type: Melding
+    ) -> None:
         assert len(melding_with_classification_with_asset_type.assets) == 1
 
         response = await client.delete(
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification_with_asset_type.id, asset_id=melding_with_classification_with_asset_type.assets[0].id),
+            app.url_path_for(
+                self.get_route_name(),
+                melding_id=melding_with_classification_with_asset_type.id,
+                asset_id=melding_with_classification_with_asset_type.assets[0].id,
+            ),
             params={"token": "supersecrettoken"},
         )
 
         assert response.status_code == HTTP_200_OK
 
         assert len(melding_with_classification_with_asset_type.assets) == 0
-
 
     @pytest.mark.anyio
     async def test_delete_asset_from_melding_that_does_not_exist(self, app: FastAPI, client: AsyncClient) -> None:

@@ -5,6 +5,24 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, Up
 from fastapi.responses import StreamingResponse
 from geojson_pydantic import Feature
 from geojson_pydantic.geometries import Geometry
+from meldingen_core.actions.attachment import AttachmentTypes
+from meldingen_core.actions.melding import (
+    MelderMeldingListQuestionsAnswersAction,
+    MeldingAddAttachmentsAction,
+    MeldingAnswerQuestionsAction,
+    MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
+    MeldingCreateAction,
+    MeldingListQuestionsAnswersAction,
+    MeldingProcessAction,
+    MeldingSubmitLocationAction,
+    MeldingUpdateAction,
+)
+from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import MeldingListFilters
+from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
+from meldingen_core.token import TokenException
+from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -31,10 +49,11 @@ from meldingen.actions.melding import (
     AddLocationToMeldingAction,
     MelderMeldingRetrieveAction,
     MeldingAddAssetAction,
+    MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
     MeldingRetrieveAction,
-    MeldingSubmitAction, MeldingDeleteAssetAction,
+    MeldingSubmitAction,
 )
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (
@@ -63,6 +82,7 @@ from meldingen.dependencies import (
     melding_contact_info_added_action,
     melding_create_action,
     melding_create_output_factory,
+    melding_delete_asset_action,
     melding_delete_attachment_action,
     melding_get_possible_next_states_action,
     melding_list_action,
@@ -80,7 +100,7 @@ from meldingen.dependencies import (
     melding_update_output_factory,
     melding_upload_attachment_action,
     public_id_generator,
-    states_output_factory, melding_delete_asset_action,
+    states_output_factory,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
@@ -112,24 +132,6 @@ from meldingen.schemas.output_factories import (
 )
 from meldingen.schemas.types import GeoJson
 from meldingen.validators import MeldingPrimaryFormValidator
-from meldingen_core.actions.attachment import AttachmentTypes
-from meldingen_core.actions.melding import (
-    MelderMeldingListQuestionsAnswersAction,
-    MeldingAddAttachmentsAction,
-    MeldingAnswerQuestionsAction,
-    MeldingCompleteAction,
-    MeldingContactInfoAddedAction,
-    MeldingCreateAction,
-    MeldingListQuestionsAnswersAction,
-    MeldingProcessAction,
-    MeldingSubmitLocationAction,
-    MeldingUpdateAction,
-)
-from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import MeldingListFilters
-from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
-from meldingen_core.token import TokenException
-from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
