@@ -2,6 +2,8 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from typing import Any, TypeVar
 
+from requests import session
+
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters
@@ -111,8 +113,12 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
         if db_item is None:
             raise NotFoundException()
 
-        await self._session.delete(db_item)
-        await self._session.commit()
+        try:
+            await self._session.delete(db_item)
+            await self._session.commit()
+        except Exception as e:
+            print(e)
+            raise
 
     async def count(self) -> int:
         _type = self.get_model_type()

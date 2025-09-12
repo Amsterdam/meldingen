@@ -5,24 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, Up
 from fastapi.responses import StreamingResponse
 from geojson_pydantic import Feature
 from geojson_pydantic.geometries import Geometry
-from meldingen_core.actions.attachment import AttachmentTypes
-from meldingen_core.actions.melding import (
-    MelderMeldingListQuestionsAnswersAction,
-    MeldingAddAttachmentsAction,
-    MeldingAnswerQuestionsAction,
-    MeldingCompleteAction,
-    MeldingContactInfoAddedAction,
-    MeldingCreateAction,
-    MeldingListQuestionsAnswersAction,
-    MeldingProcessAction,
-    MeldingSubmitLocationAction,
-    MeldingUpdateAction,
-)
-from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import MeldingListFilters
-from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
-from meldingen_core.token import TokenException
-from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -52,7 +34,7 @@ from meldingen.actions.melding import (
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
     MeldingRetrieveAction,
-    MeldingSubmitAction,
+    MeldingSubmitAction, MeldingDeleteAssetAction,
 )
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (
@@ -98,7 +80,7 @@ from meldingen.dependencies import (
     melding_update_output_factory,
     melding_upload_attachment_action,
     public_id_generator,
-    states_output_factory,
+    states_output_factory, melding_delete_asset_action,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
@@ -130,6 +112,24 @@ from meldingen.schemas.output_factories import (
 )
 from meldingen.schemas.types import GeoJson
 from meldingen.validators import MeldingPrimaryFormValidator
+from meldingen_core.actions.attachment import AttachmentTypes
+from meldingen_core.actions.melding import (
+    MelderMeldingListQuestionsAnswersAction,
+    MeldingAddAttachmentsAction,
+    MeldingAnswerQuestionsAction,
+    MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
+    MeldingCreateAction,
+    MeldingListQuestionsAnswersAction,
+    MeldingProcessAction,
+    MeldingSubmitLocationAction,
+    MeldingUpdateAction,
+)
+from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import MeldingListFilters
+from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
+from meldingen_core.token import TokenException
+from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -860,6 +860,27 @@ async def add_asset(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
 
     return produce_output(melding)
+
+
+@router.delete(
+    "/{melding_id}/asset/{asset_id}",
+    name="melding:delete-asset",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def delete_asset(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    asset_id: Annotated[int, Path(description="The id of the asset.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[MeldingDeleteAssetAction, Depends(melding_delete_asset_action)],
+) -> None:
+    try:
+        await action(melding_id, asset_id, token)
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except TokenException as e:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
+
+    return
 
 
 @router.get(
