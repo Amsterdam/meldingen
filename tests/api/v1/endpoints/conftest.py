@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
+from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
 from sqlalchemy import select
@@ -28,7 +29,6 @@ from meldingen.models import (
     StaticFormTypeEnum,
     User,
 )
-from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates
 
 
 @pytest.fixture

@@ -2,13 +2,6 @@ from collections.abc import Sequence
 from typing import override
 
 from fastapi import BackgroundTasks, HTTPException
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
-
-from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
-from meldingen.models import Asset, AssetType, Melding
-from meldingen.repositories import AttributeNotFoundException
-from meldingen.schemas.types import Address, GeoJson
-from meldingen.statemachine import MeldingStateMachine
 from meldingen_core import SortingDirection
 from meldingen_core.actions.melding import MeldingAddAssetAction as BaseMeldingAddAssetAction
 from meldingen_core.actions.melding import MeldingAddContactInfoAction as BaseMeldingAddContactInfoAction
@@ -22,6 +15,13 @@ from meldingen_core.filters import MeldingListFilters
 from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.statemachine import MeldingBackofficeStates
 from meldingen_core.token import TokenVerifier
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+
+from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
+from meldingen.models import Asset, AssetType, Melding
+from meldingen.repositories import AttributeNotFoundException
+from meldingen.schemas.types import Address, GeoJson
+from meldingen.statemachine import MeldingStateMachine
 
 
 class MeldingListAction(BaseMeldingListAction[Melding]):
