@@ -882,8 +882,6 @@ async def delete_asset(
     except TokenException as e:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
 
-    return
-
 
 @router.get(
     "/{melding_id}/next_possible_states",
