@@ -9,15 +9,6 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
 from mailpit.client.api import API
-from meldingen_core import SortingDirection
-from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import (
-    BaseMeldingStateMachine,
-    MeldingBackofficeStates,
-    MeldingFormStates,
-    MeldingStates,
-    get_all_backoffice_states,
-)
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
@@ -33,6 +24,15 @@ from starlette.status import (
 from meldingen.actions.melding import MeldingGetPossibleNextStatesAction
 from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question, StaticForm
 from meldingen.repositories import MeldingRepository
+from meldingen_core import SortingDirection
+from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.statemachine import (
+    BaseMeldingStateMachine,
+    MeldingBackofficeStates,
+    MeldingFormStates,
+    MeldingStates,
+    get_all_backoffice_states,
+)
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -3451,6 +3451,9 @@ class TestMeldingDeleteAsset(BaseTokenAuthenticationTest):
 
     def get_method(self) -> str:
         return "DELETE"
+
+    def get_extra_path_params(self) -> dict[str, Any]:
+        return {"asset_id": 1}
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
