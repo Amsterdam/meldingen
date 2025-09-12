@@ -1,10 +1,10 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import AsyncIterator
 
+from meldingen_core.factories import BaseAssetFactory, BaseAttachmentFactory
 from plugfs.filesystem import Filesystem
 
 from meldingen.models import Asset, AssetType, Attachment, Melding
-from meldingen_core.factories import BaseAssetFactory, BaseAttachmentFactory
 
 
 class AttachmentFactory(BaseAttachmentFactory[Attachment, Melding]):
