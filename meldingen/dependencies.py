@@ -10,25 +10,6 @@ from fastapi import BackgroundTasks, Depends
 from httpx import AsyncClient
 from jsonlogic.resolving import DotReferenceParser, ReferenceParser
 from jwt import PyJWKClient, PyJWT
-from meldingen_core.actions.melding import (
-    MelderMeldingListQuestionsAnswersAction,
-    MeldingAddAttachmentsAction,
-    MeldingAnswerQuestionsAction,
-    MeldingCompleteAction,
-    MeldingContactInfoAddedAction,
-    MeldingCreateAction,
-    MeldingListQuestionsAnswersAction,
-    MeldingProcessAction,
-    MeldingSubmitLocationAction,
-    MeldingUpdateAction,
-)
-from meldingen_core.classification import BaseClassifierAdapter, Classifier
-from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
-from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
-from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import MeldingTransitions
-from meldingen_core.token import BaseTokenGenerator, TokenVerifier
-from meldingen_core.wfs import WfsProviderFactory
 from openai import AsyncOpenAI
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
@@ -83,7 +64,7 @@ from meldingen.actions.melding import (
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
     MeldingRetrieveAction,
-    MeldingSubmitAction,
+    MeldingSubmitAction, MeldingDeleteAssetAction,
 )
 from meldingen.actions.user import (
     UserCreateAction,
@@ -193,6 +174,25 @@ from meldingen.statemachine import (
 )
 from meldingen.token import TokenInvalidator, UrlSafeTokenGenerator
 from meldingen.validators import MediaTypeIntegrityValidator, MediaTypeValidator, MeldingPrimaryFormValidator
+from meldingen_core.actions.melding import (
+    MelderMeldingListQuestionsAnswersAction,
+    MeldingAddAttachmentsAction,
+    MeldingAnswerQuestionsAction,
+    MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
+    MeldingCreateAction,
+    MeldingListQuestionsAnswersAction,
+    MeldingProcessAction,
+    MeldingSubmitLocationAction,
+    MeldingUpdateAction,
+)
+from meldingen_core.classification import BaseClassifierAdapter, Classifier
+from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
+from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
+from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.statemachine import MeldingTransitions
+from meldingen_core.token import BaseTokenGenerator, TokenVerifier
+from meldingen_core.wfs import WfsProviderFactory
 
 
 @lru_cache
@@ -620,6 +620,18 @@ def melding_add_asset_action(
         asset_repository,
         asset_type_repository,
         asset_factory,
+    )
+
+
+def melding_delete_asset_action(
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    asset_repository: Annotated[AssetRepository, Depends(asset_repository)],
+    asset_type_repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+) -> MeldingDeleteAssetAction:
+    return MeldingDeleteAssetAction(
+        token_verifier,
+        asset_repository,
+        asset_type_repository,
     )
 
 
