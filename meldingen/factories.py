@@ -1,10 +1,10 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import AsyncIterator
 
-from meldingen_core.factories import AS, AT, BaseAssetFactory, BaseAttachmentFactory
 from plugfs.filesystem import Filesystem
 
 from meldingen.models import Asset, AssetType, Attachment, Melding
+from meldingen_core.factories import BaseAssetFactory, BaseAttachmentFactory
 
 
 class AttachmentFactory(BaseAttachmentFactory[Attachment, Melding]):
@@ -26,6 +26,6 @@ class AzureFilesystemFactory(BaseFilesystemFactory):
             yield _filesystem
 
 
-class AssetFactory(BaseAssetFactory[Asset, AssetType]):
-    def __call__(self, external_id: str, asset_type: AssetType) -> Asset:
-        return Asset(external_id, asset_type)
+class AssetFactory(BaseAssetFactory[Asset, AssetType, Melding]):
+    def __call__(self, external_id: str, asset_type: AssetType, melding: Melding) -> Asset:
+        return Asset(external_id, asset_type, melding)
