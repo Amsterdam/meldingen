@@ -4538,14 +4538,14 @@ typing-extensions = ">=3.7.4.3"
 
 [[package]]
 name = "types-shapely"
-version = "2.1.0.20250809"
+version = "2.1.0.20250915"
 description = "Typing stubs for shapely"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "types_shapely-2.1.0.20250809-py3-none-any.whl", hash = "sha256:ddd9ba473bb223866762197b7e30b2a10121b5dba65eb00f58a35c57cceeb752"},
-    {file = "types_shapely-2.1.0.20250809.tar.gz", hash = "sha256:d75fa8f9f82f86bcb8cf07fa5f697f9aef3354ad851c5b0853a69e6538a2546d"},
+    {file = "types_shapely-2.1.0.20250915-py3-none-any.whl", hash = "sha256:df703f9f0425ece678194f37fddb0552bf8a1d65d23c517f5b57ab519b339c07"},
+    {file = "types_shapely-2.1.0.20250915.tar.gz", hash = "sha256:3e7d52722414e65b5bd0be5a13f4ec98a2d80315f60f95fc540eb81d8553240f"},
 ]
 
 [package.dependencies]
@@ -5186,4 +5186,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "e97af07ff2789d098a922a9ee6d9dd201945a2004883e8d202b17615a5476e06"
+content-hash = "508b81e7f050edbb163ba24d071b71192f20d0ae0905abdafba711f13d7478b0"
