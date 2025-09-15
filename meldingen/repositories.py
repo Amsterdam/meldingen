@@ -2,21 +2,6 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from typing import Any, List, TypeVar
 
-from meldingen_core import SortingDirection
-from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import MeldingListFilters
-from meldingen_core.repositories import (
-    BaseAnswerRepository,
-    BaseAssetRepository,
-    BaseAssetTypeRepository,
-    BaseAttachmentRepository,
-    BaseClassificationRepository,
-    BaseFormRepository,
-    BaseMeldingRepository,
-    BaseQuestionRepository,
-    BaseRepository,
-    BaseUserRepository,
-)
 from sqlalchemy import ColumnExpressionArgument, Select, delete, desc, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,6 +23,21 @@ from meldingen.models import (
     StaticForm,
     StaticFormTypeEnum,
     User,
+)
+from meldingen_core import SortingDirection
+from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import MeldingListFilters
+from meldingen_core.repositories import (
+    BaseAnswerRepository,
+    BaseAssetRepository,
+    BaseAssetTypeRepository,
+    BaseAttachmentRepository,
+    BaseClassificationRepository,
+    BaseFormRepository,
+    BaseMeldingRepository,
+    BaseQuestionRepository,
+    BaseRepository,
+    BaseUserRepository,
 )
 
 
@@ -182,7 +182,7 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
 
         if expression_arguments is not None:
             for expression in expression_arguments:
-                statement = statement.where(expression)
+                statement = statement.filter(expression)
 
         statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
 
