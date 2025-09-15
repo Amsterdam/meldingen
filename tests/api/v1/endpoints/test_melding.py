@@ -9,6 +9,15 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
 from mailpit.client.api import API
+from meldingen_core import SortingDirection
+from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.statemachine import (
+    BaseMeldingStateMachine,
+    MeldingBackofficeStates,
+    MeldingFormStates,
+    MeldingStates,
+    get_all_backoffice_states,
+)
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
@@ -24,15 +33,6 @@ from starlette.status import (
 from meldingen.actions.melding import MeldingGetPossibleNextStatesAction
 from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question, StaticForm
 from meldingen.repositories import MeldingRepository
-from meldingen_core import SortingDirection
-from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import (
-    BaseMeldingStateMachine,
-    MeldingBackofficeStates,
-    MeldingFormStates,
-    MeldingStates,
-    get_all_backoffice_states,
-)
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -401,29 +401,31 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
             (
                 5,
                 2,
-                ( MeldingStates.SUBMITTED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.COMPLETED,
-                MeldingStates.CLASSIFIED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.PROCESSING,
-                MeldingStates.SUBMITTED,
-                MeldingStates.NEW,
-                MeldingStates.SUBMITTED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.SUBMITTED,
-                MeldingStates.NEW,
-                MeldingStates.NEW,
-                MeldingStates.SUBMITTED,
-                MeldingStates.NEW,
-                MeldingStates.SUBMITTED,),
+                (
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.COMPLETED,
+                    MeldingStates.CLASSIFIED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.PROCESSING,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.NEW,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.NEW,
+                    MeldingStates.NEW,
+                    MeldingStates.SUBMITTED,
+                    MeldingStates.NEW,
+                    MeldingStates.SUBMITTED,
+                ),
             )
         ],
     )
@@ -436,12 +438,19 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         offset: int,
         meldingen_with_different_states: list[Melding],
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"state": MeldingStates.SUBMITTED, "limit": limit, "offset": offset})
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME),
+            params={"state": MeldingStates.SUBMITTED, "limit": limit, "offset": offset},
+        )
 
         assert response.status_code == 200
 
-        submitted_meldingen = [melding for melding in meldingen_with_different_states if melding.state == MeldingStates.SUBMITTED]
-        assert response.headers.get("content-range") == f"melding {offset}-{limit - 1 + offset}/{len(submitted_meldingen)}"
+        submitted_meldingen = [
+            melding for melding in meldingen_with_different_states if melding.state == MeldingStates.SUBMITTED
+        ]
+        assert (
+            response.headers.get("content-range") == f"melding {offset}-{limit - 1 + offset}/{len(submitted_meldingen)}"
+        )
 
         body = response.json()
 

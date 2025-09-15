@@ -5,6 +5,24 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, Up
 from fastapi.responses import StreamingResponse
 from geojson_pydantic import Feature
 from geojson_pydantic.geometries import Geometry
+from meldingen_core.actions.attachment import AttachmentTypes
+from meldingen_core.actions.melding import (
+    MelderMeldingListQuestionsAnswersAction,
+    MeldingAddAttachmentsAction,
+    MeldingAnswerQuestionsAction,
+    MeldingCompleteAction,
+    MeldingContactInfoAddedAction,
+    MeldingCreateAction,
+    MeldingListQuestionsAnswersAction,
+    MeldingProcessAction,
+    MeldingSubmitLocationAction,
+    MeldingUpdateAction,
+)
+from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import MeldingListFilters
+from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
+from meldingen_core.token import TokenException
+from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -37,10 +55,7 @@ from meldingen.actions.melding import (
     MeldingRetrieveAction,
     MeldingSubmitAction,
 )
-from meldingen.api.utils import (
-    PaginationParams,
-    SortParams, pagination_params, sort_param, ContentRangeHeaderAdder
-)
+from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (
     default_response,
     image_data_response,
@@ -77,6 +92,7 @@ from meldingen.dependencies import (
     melding_output_factory,
     melding_primary_form_validator,
     melding_process_action,
+    melding_repository,
     melding_retrieve_action,
     melding_submit_action,
     melding_submit_location_action,
@@ -84,7 +100,7 @@ from meldingen.dependencies import (
     melding_update_output_factory,
     melding_upload_attachment_action,
     public_id_generator,
-    states_output_factory, melding_repository,
+    states_output_factory,
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
@@ -116,24 +132,6 @@ from meldingen.schemas.output_factories import (
 )
 from meldingen.schemas.types import GeoJson
 from meldingen.validators import MeldingPrimaryFormValidator
-from meldingen_core.actions.attachment import AttachmentTypes
-from meldingen_core.actions.melding import (
-    MelderMeldingListQuestionsAnswersAction,
-    MeldingAddAttachmentsAction,
-    MeldingAnswerQuestionsAction,
-    MeldingCompleteAction,
-    MeldingContactInfoAddedAction,
-    MeldingCreateAction,
-    MeldingListQuestionsAnswersAction,
-    MeldingProcessAction,
-    MeldingSubmitLocationAction,
-    MeldingUpdateAction,
-)
-from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import MeldingListFilters
-from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
-from meldingen_core.token import TokenException
-from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -164,10 +162,12 @@ async def create_melding(
 
     return produce_output(melding)
 
+
 async def content_range_header_adder(
-    repo: Annotated[MeldingRepository, Depends(melding_repository)]
-) -> ContentRangeHeaderAdder:
+    repo: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> ContentRangeHeaderAdder[Melding]:
     return ContentRangeHeaderAdder(repo, "melding")
+
 
 @router.get(
     "/",
@@ -178,7 +178,7 @@ async def content_range_header_adder(
 async def list_meldingen(
     response: Response,
     repo: Annotated[MeldingRepository, Depends(melding_repository)],
-    content_range_header_adder: Annotated[ContentRangeHeaderAdder, Depends(content_range_header_adder)],
+    content_range_header_adder: Annotated[ContentRangeHeaderAdder[Melding], Depends(content_range_header_adder)],
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[MeldingListAction, Depends(melding_list_action)],
@@ -215,9 +215,9 @@ async def list_meldingen(
     )
 
     filter_input = MeldingListFilters(
-            area=area,
-            states=states,
-        )
+        area=area,
+        states=states,
+    )
 
     meldingen = await action(
         limit=limit,
