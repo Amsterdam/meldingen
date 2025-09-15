@@ -1,23 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
-from typing import Any, TypeVar
+from typing import Any, TypeVar, List
 
-from meldingen_core import SortingDirection
-from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import MeldingListFilters
-from meldingen_core.repositories import (
-    BaseAnswerRepository,
-    BaseAssetRepository,
-    BaseAssetTypeRepository,
-    BaseAttachmentRepository,
-    BaseClassificationRepository,
-    BaseFormRepository,
-    BaseMeldingRepository,
-    BaseQuestionRepository,
-    BaseRepository,
-    BaseUserRepository,
-)
-from sqlalchemy import Select, delete, desc, select
+from sqlalchemy import Select, delete, desc, select, ColumnExpressionArgument
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Relationship
@@ -38,6 +23,21 @@ from meldingen.models import (
     StaticForm,
     StaticFormTypeEnum,
     User,
+)
+from meldingen_core import SortingDirection
+from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import MeldingListFilters
+from meldingen_core.repositories import (
+    BaseAnswerRepository,
+    BaseAssetRepository,
+    BaseAssetTypeRepository,
+    BaseAttachmentRepository,
+    BaseClassificationRepository,
+    BaseFormRepository,
+    BaseMeldingRepository,
+    BaseQuestionRepository,
+    BaseRepository,
+    BaseUserRepository,
 )
 
 
@@ -114,9 +114,14 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
         await self._session.delete(db_item)
         await self._session.commit()
 
-    async def count(self) -> int:
+    async def count(self, filters: List[ColumnExpressionArgument[bool]] | None = None) -> int:
         _type = self.get_model_type()
         statement = select(func.count(_type.id))
+
+        if filters is not None:
+            for filter_condition in filters:
+                statement = statement.where(filter_condition)
+
         result = await self._session.execute(statement)
 
         return result.scalars().one()
@@ -173,14 +178,11 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         _type = self.get_model_type()
         statement = select(_type)
 
-        area = None if filters is None else filters.area
-        states = None if filters is None else filters.states
+        expression_arguments = self.filter_input_to_expression_arguments(filters)
 
-        if area is not None:
-            statement = statement.filter(func.ST_Contains(func.ST_GeomFromGeoJSON(area), Melding.geo_location))
-
-        if states is not None:
-            statement = statement.filter(Melding.state.in_(states))
+        if expression_arguments is not None:
+            for expression in expression_arguments:
+                statement = statement.where(expression)
 
         statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
 
@@ -199,6 +201,23 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         melding.assets = []
 
         await self.save(melding)
+
+    def filter_input_to_expression_arguments(self, filters: MeldingListFilters | None = None):
+        if filters is None:
+            return None
+
+        expressions: List[ColumnExpressionArgument[bool]] = []
+
+        area = None if filters is None else filters.area
+        states = None if filters is None else filters.states
+
+        if area is not None:
+            expressions.append(func.ST_Contains(func.ST_GeomFromGeoJSON(area), Melding.geo_location))
+
+        if states is not None:
+            expressions.append(Melding.state.in_(states))
+
+        return expressions
 
 
 class UserRepository(BaseSQLAlchemyRepository[User], BaseUserRepository):
