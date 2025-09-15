@@ -1,6 +1,7 @@
-from typing import Annotated, Generic, TypedDict, TypeVar, List
+from typing import Annotated, Generic, List, TypedDict, TypeVar
 
 from fastapi import Depends, HTTPException, Query, Response
+from meldingen_core import SortingDirection
 from pydantic import RootModel, ValidationError
 from sqlalchemy import ColumnExpressionArgument
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
@@ -8,7 +9,6 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 from meldingen.config import settings
 from meldingen.models import BaseDBModel
 from meldingen.repositories import BaseSQLAlchemyRepository
-from meldingen_core import SortingDirection
 
 
 class PaginationParams(TypedDict):
@@ -59,7 +59,7 @@ class ContentRangeHeaderAdder(Generic[T]):
         self,
         response: Response,
         pagination: Annotated[PaginationParams, Depends(pagination_params)],
-        filters: List[ColumnExpressionArgument[bool]] | None = None
+        filters: List[ColumnExpressionArgument[bool]] | None = None,
     ) -> int:
         limit = pagination["limit"] or 0
         offset = pagination["offset"] or 0
@@ -70,8 +70,6 @@ class ContentRangeHeaderAdder(Generic[T]):
 
         return 0
 
-def content_range_header_adder(
-    repository: BaseSQLAlchemyRepository[T],
-    identifier: str
-) -> ContentRangeHeaderAdder[T]:
+
+def content_range_header_adder(repository: BaseSQLAlchemyRepository[T], identifier: str) -> ContentRangeHeaderAdder[T]:
     return ContentRangeHeaderAdder(repository, identifier)

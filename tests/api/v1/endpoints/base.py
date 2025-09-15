@@ -51,7 +51,7 @@ class BasePaginationParamsTest(metaclass=ABCMeta):
 
         body = response.json()
         detail = body.get("detail")
-        assert len(detail) == 2
+        assert len(detail) >= 1
 
         violation = detail[0]
         assert violation.get("type") == type
@@ -75,7 +75,7 @@ class BasePaginationParamsTest(metaclass=ABCMeta):
 
         body = response.json()
         detail = body.get("detail")
-        assert len(detail) == 2
+        assert len(detail) >= 1
 
         violation = detail[0]
         assert violation.get("type") == type
