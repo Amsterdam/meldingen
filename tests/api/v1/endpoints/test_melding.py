@@ -9,15 +9,6 @@ from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
 from httpx import AsyncClient
 from mailpit.client.api import API
-from meldingen_core import SortingDirection
-from meldingen_core.malware import BaseMalwareScanner
-from meldingen_core.statemachine import (
-    BaseMeldingStateMachine,
-    MeldingBackofficeStates,
-    MeldingFormStates,
-    MeldingStates,
-    get_all_backoffice_states,
-)
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
@@ -33,6 +24,15 @@ from starlette.status import (
 from meldingen.actions.melding import MeldingGetPossibleNextStatesAction
 from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question, StaticForm
 from meldingen.repositories import MeldingRepository
+from meldingen_core import SortingDirection
+from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.statemachine import (
+    BaseMeldingStateMachine,
+    MeldingBackofficeStates,
+    MeldingFormStates,
+    MeldingStates,
+    get_all_backoffice_states,
+)
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -393,6 +393,64 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         melding_response = body[0]
 
         assert melding_response.get("text") == melding.text
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "limit, offset, melding_states",
+        [
+            (
+                5,
+                2,
+                ( MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.COMPLETED,
+                MeldingStates.CLASSIFIED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.PROCESSING,
+                MeldingStates.SUBMITTED,
+                MeldingStates.NEW,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.SUBMITTED,
+                MeldingStates.NEW,
+                MeldingStates.NEW,
+                MeldingStates.SUBMITTED,
+                MeldingStates.NEW,
+                MeldingStates.SUBMITTED,),
+            )
+        ],
+    )
+    async def test_list_state_filter_paginated(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        limit: int,
+        offset: int,
+        meldingen_with_different_states: list[Melding],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"state": MeldingStates.SUBMITTED, "limit": limit, "offset": offset})
+
+        assert response.status_code == 200
+
+        submitted_meldingen = [melding for melding in meldingen_with_different_states if melding.state == MeldingStates.SUBMITTED]
+        assert response.headers.get("content-range") == f"melding {offset}-{limit - 1 + offset}/{len(submitted_meldingen)}"
+
+        body = response.json()
+
+        assert len(body) == limit
+
+        melding = meldingen_with_different_states[0]
+        melding_response = body[0]
+
+        assert melding_response.get("state") == melding.state
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
