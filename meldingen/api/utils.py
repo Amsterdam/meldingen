@@ -69,7 +69,3 @@ class ContentRangeHeaderAdder(Generic[T]):
         )
 
         return 0
-
-
-def content_range_header_adder(repository: BaseSQLAlchemyRepository[T], identifier: str) -> ContentRangeHeaderAdder[T]:
-    return ContentRangeHeaderAdder(repository, identifier)
