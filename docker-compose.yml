@@ -148,7 +148,7 @@ services:
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
-      NODE_ENV: development
+      NODE_ENV: production
     depends_on:
       - otel-collector
       - mailpit
