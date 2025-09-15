@@ -62,7 +62,7 @@ pytest-alembic = "^0.12.1"
 pytest-bdd = "^8.1.0"
 pytest-cov = "^6.2.1"
 pytest-xdist = {extras = ["psutil"], version = "^3.8.0"}
-typer = {extras = ["all"], version = "^0.16.0"}
+typer = {extras = ["all"], version = "^0.17.4"}
 types-shapely = "^2.0.0.20241221"
 
 [build-system]
