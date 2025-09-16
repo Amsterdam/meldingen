@@ -24,33 +24,35 @@ from meldingen.dependencies import (
     form_retrieve_action,
     form_retrieve_by_classification_action,
     form_update_action,
+    simple_form_output_factory,
 )
+from meldingen.models import Form
 from meldingen.repositories import FormRepository
 from meldingen.schemas.input import FormInput
 from meldingen.schemas.output import FormOutput, SimpleFormOutput
-from meldingen.schemas.output_factories import FormOutputFactory
+from meldingen.schemas.output_factories import FormOutputFactory, SimpleFormOutputFactory
 
 router = APIRouter()
 
 
-async def _add_content_range_header(
-    response: Response,
-    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+async def content_range_header_adder(
     repository: Annotated[FormRepository, Depends(form_repository)],
-) -> None:
-    await ContentRangeHeaderAdder(repository, "form")(response, pagination)
+) -> ContentRangeHeaderAdder[Form]:
+    return ContentRangeHeaderAdder(repository, "form")
 
 
 @router.get(
     "/",
     name="form:list",
     responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(_add_content_range_header)],
 )
 async def list_form(
+    response: Response,
+    content_range_header_adder: Annotated[ContentRangeHeaderAdder[Form], Depends(content_range_header_adder)],
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[FormListAction, Depends(form_list_action)],
+    produce_output: Annotated[SimpleFormOutputFactory, Depends(simple_form_output_factory)],
 ) -> list[SimpleFormOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
@@ -59,20 +61,9 @@ async def list_form(
         limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
     )
 
-    output = []
-    for db_form in forms:
-        output.append(
-            SimpleFormOutput(
-                id=db_form.id,
-                title=db_form.title,
-                display=db_form.display,
-                classification=db_form.classification_id,
-                created_at=db_form.created_at,
-                updated_at=db_form.updated_at,
-            )
-        )
+    await content_range_header_adder(response, pagination)
 
-    return output
+    return [produce_output(db_form) for db_form in forms]
 
 
 @router.get("/{form_id}", name="form:retrieve", responses={**not_found_response})

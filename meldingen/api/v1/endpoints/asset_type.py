@@ -69,21 +69,21 @@ async def retrieve_asset_type(
     return produce_output(asset_type)
 
 
-async def _add_content_range_header(
-    response: Response,
-    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+async def content_range_header_adder(
     repo: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
-) -> None:
-    await ContentRangeHeaderAdder(repo, "asset-type")(response, pagination)
+) -> ContentRangeHeaderAdder[AssetType]:
+    return ContentRangeHeaderAdder(repo, "asset-type")
 
 
 @router.get(
     "/",
     name="asset-type:list",
     responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
+    dependencies=[Depends(authenticate_user)],
 )
 async def list_asset_types(
+    response: Response,
+    content_range_header_adder: Annotated[ContentRangeHeaderAdder[AssetType], Depends(content_range_header_adder)],
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[AssetTypeListAction, Depends(asset_type_list_action)],
@@ -96,11 +96,9 @@ async def list_asset_types(
         limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
     )
 
-    output = []
-    for asset_type in asset_types:
-        output.append(produce_output(asset_type))
+    await content_range_header_adder(response, pagination)
 
-    return output
+    return [produce_output(asset_type) for asset_type in asset_types]
 
 
 @router.patch(

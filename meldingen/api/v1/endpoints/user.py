@@ -53,21 +53,21 @@ async def create_user(
     return _hydrate_output(db_user)
 
 
-async def _add_content_range_header(
-    response: Response,
-    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+async def content_range_header_adder(
     repo: Annotated[UserRepository, Depends(user_repository)],
-) -> None:
-    await ContentRangeHeaderAdder(repo, "user")(response, pagination)
+) -> ContentRangeHeaderAdder[User]:
+    return ContentRangeHeaderAdder(repo, "user")
 
 
 @router.get(
     "/",
     name="user:list",
     responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
+    dependencies=[Depends(authenticate_user)],
 )
 async def list_users(
+    response: Response,
+    content_range_header: Annotated[ContentRangeHeaderAdder[User], Depends(content_range_header_adder)],
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[UserListAction, Depends(user_list_action)],
@@ -79,11 +79,9 @@ async def list_users(
         limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
     )
 
-    output = []
-    for db_user in users:
-        output.append(_hydrate_output(db_user))
+    await content_range_header(response, pagination)
 
-    return output
+    return [_hydrate_output(db_user) for db_user in users]
 
 
 @router.get(

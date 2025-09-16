@@ -24,18 +24,16 @@ from meldingen.dependencies import (
 )
 from meldingen.models import Classification
 from meldingen.repositories import ClassificationRepository
-from meldingen.schemas.input import ClassificationCreateInput, ClassificationInput, ClassificationUpdateInput
+from meldingen.schemas.input import ClassificationCreateInput, ClassificationUpdateInput
 from meldingen.schemas.output import ClassificationOutput
 
 router = APIRouter()
 
 
-async def _add_content_range_header(
-    response: Response,
-    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+async def content_range_header_adder(
     repo: Annotated[ClassificationRepository, Depends(classification_repository)],
-) -> None:
-    await ContentRangeHeaderAdder(repo, "classification")(response, pagination)
+) -> ContentRangeHeaderAdder[Classification]:
+    return ContentRangeHeaderAdder(repo, "classification")
 
 
 async def _hydrate_output(classification: Classification) -> ClassificationOutput:
@@ -80,9 +78,11 @@ async def create_classification(
     "/",
     name="classification:list",
     responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(_add_content_range_header), Depends(authenticate_user)],
+    dependencies=[Depends(authenticate_user)],
 )
 async def list_classifications(
+    response: Response,
+    content_range_header_adder: Annotated[ContentRangeHeaderAdder[Classification], Depends(content_range_header_adder)],
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[ClassificationListAction, Depends(classification_list_action)],
@@ -94,11 +94,9 @@ async def list_classifications(
         limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
     )
 
-    output = []
-    for classification in classifications:
-        output.append(await _hydrate_output(classification))
+    await content_range_header_adder(response, pagination)
 
-    return output
+    return [await _hydrate_output(classification) for classification in classifications]
 
 
 @router.get(

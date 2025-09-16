@@ -15,6 +15,7 @@ from meldingen.dependencies import (
     static_form_retrieve_action,
     static_form_update_action,
 )
+from meldingen.models import StaticForm
 from meldingen.repositories import StaticFormRepository
 from meldingen.schemas.input import StaticFormInput
 from meldingen.schemas.output import SimpleStaticFormOutput, StaticFormOutput
@@ -23,12 +24,10 @@ from meldingen.schemas.output_factories import SimpleStaticFormOutputFactory, St
 router = APIRouter()
 
 
-async def _add_content_range_header(
-    response: Response,
-    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+async def content_range_header_adder(
     repo: Annotated[StaticFormRepository, Depends(static_form_repository)],
-) -> None:
-    await ContentRangeHeaderAdder(repo, "StaticForm")(response, pagination)
+) -> ContentRangeHeaderAdder[StaticForm]:
+    return ContentRangeHeaderAdder(repo, "StaticForm")
 
 
 @router.get("/{static_form_id}", name="static-form:retrieve", responses={**not_found_response})
@@ -69,9 +68,10 @@ async def update_static_form(
     "/",
     name="static-form:list",
     responses={**not_found_response},
-    dependencies=[Depends(_add_content_range_header)],
 )
 async def list_static_forms(
+    response: Response,
+    content_range_header_adder: Annotated[ContentRangeHeaderAdder[StaticForm], Depends(content_range_header_adder)],
     action: Annotated[StaticFormListAction, Depends(static_form_list_action)],
     produce_output_model: Annotated[SimpleStaticFormOutputFactory, Depends(simple_static_form_output_factory)],
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
@@ -83,5 +83,7 @@ async def list_static_forms(
     forms = await action(
         limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
     )
+
+    await content_range_header_adder(response, pagination)
 
     return [await produce_output_model(db_form) for db_form in forms]
