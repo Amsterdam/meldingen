@@ -70,7 +70,7 @@ async def retrieve_asset_type(
 
 
 async def content_range_header_adder(
-    repo: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+    repo: Annotated[AssetTypeRepository, Depends(asset_type_repository)]b,
 ) -> ContentRangeHeaderAdder[AssetType]:
     return ContentRangeHeaderAdder(repo, "asset-type")
 
