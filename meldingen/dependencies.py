@@ -167,6 +167,7 @@ from meldingen.schemas.output_factories import (
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
     SimpleClassificationOutputFactory,
+    SimpleFormOutputFactory,
     SimpleStaticFormOutputFactory,
     StatesOutputFactory,
     StaticFormCheckboxComponentOutputFactory,
@@ -1215,6 +1216,10 @@ def answer_output_factory() -> AnswerOutputFactory:
 
 def states_output_factory() -> StatesOutputFactory:
     return StatesOutputFactory()
+
+
+def simple_form_output_factory() -> SimpleFormOutputFactory:
+    return SimpleFormOutputFactory()
 
 
 def melding_primary_form_validator(
