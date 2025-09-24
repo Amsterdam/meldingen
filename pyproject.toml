@@ -54,7 +54,7 @@ mailpit-api-client = {extras = ["pytest"], version = "^1.0.0"}
 mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.6.16"
 mkdocstrings = {version = "^0.30.0", extras = ["python"]}
-mypy = "^1.18.1"
+mypy = "^1.18.2"
 mypy-baseline = "^0.7.1"
 pre-commit = "^4.1.0"
 pytest = "^8.4.2"
