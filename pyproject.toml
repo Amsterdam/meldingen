@@ -49,7 +49,7 @@ dependencies = [
 asgi-lifespan = "^2.1.0"
 black = "^25.1.0"
 filelock = "^3.20.0"
-isort = "^6.0.0"
+isort = "^7.0.0"
 mailpit-api-client = {extras = ["pytest"], version = "^1.0.0"}
 mkdocs-literate-nav = "^0.6.1"
 mkdocs-material = "^9.6.20"
