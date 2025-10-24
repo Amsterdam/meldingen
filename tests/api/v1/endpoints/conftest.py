@@ -282,9 +282,7 @@ async def melding_with_assets(
     asset_type: AssetType,
 ) -> Melding:
     for i in range(5):
-        asset = Asset(
-            external_id=f"external_id_{i}", type=asset_type
-        )
+        asset = Asset(external_id=f"external_id_{i}", type=asset_type, melding=melding)
         db_session.add(asset)
         melding.assets.append(asset)
         db_session.add(melding)

@@ -3512,7 +3512,7 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert body.get("phone", "") is None
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token", "asset_type_name"], [("supersecrettoken","my_asset_type")])
+    @pytest.mark.parametrize(["melding_token", "asset_type_name"], [("supersecrettoken", "my_asset_type")])
     async def test_add_asset_already_linked_to_melding(
         self,
         app: FastAPI,
