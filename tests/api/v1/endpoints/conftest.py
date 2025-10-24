@@ -276,6 +276,25 @@ async def melding_with_asset(
 
 
 @pytest.fixture
+async def melding_with_assets(
+    db_session: AsyncSession,
+    melding_with_classification_with_asset_type: Melding,
+    asset_type: AssetType,
+) -> Melding:
+    for i in range(5):
+        asset = Asset(
+            external_id=f"external_id_{i}", type=asset_type, melding=melding_with_classification_with_asset_type
+        )
+        db_session.add(asset)
+        melding_with_classification_with_asset_type.assets.append(asset)
+        db_session.add(melding_with_classification_with_asset_type)
+
+    await db_session.commit()
+
+    return melding_with_classification_with_asset_type
+
+
+@pytest.fixture
 async def melding_with_some_answers(
     db_session: AsyncSession, melding_with_classification: Melding, form_with_multiple_questions: Form
 ) -> Melding:
