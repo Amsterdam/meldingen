@@ -26,6 +26,7 @@ from meldingen_core.classification import BaseClassifierAdapter, Classifier
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.malware import BaseMalwareScanner
+from meldingen_core.managers import RelationshipManager
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from meldingen_core.wfs import WfsProviderFactory
@@ -39,6 +40,7 @@ from plugfs.azure import AzureStorageBlobsAdapter
 from plugfs.filesystem import Adapter, Filesystem
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
+from meldingen.actions.asset import MelderListAssetsAction
 from meldingen.actions.asset_type import (
     AssetTypeCreateAction,
     AssetTypeDeleteAction,
@@ -135,7 +137,7 @@ from meldingen.mail import (
     SendConfirmationMailTask,
 )
 from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwareScanner
-from meldingen.models import Answer, Classification, Melding
+from meldingen.models import Answer, Asset, Classification, Melding
 from meldingen.reclassification import Reclassifier
 from meldingen.repositories import (
     AnswerRepository,
@@ -153,6 +155,7 @@ from meldingen.repositories import (
 from meldingen.schemas.output_factories import (
     AnswerListOutputFactory,
     AnswerOutputFactory,
+    AssetOutputFactory,
     AssetTypeOutputFactory,
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
@@ -414,6 +417,12 @@ def asset_purger(repository: Annotated[MeldingRepository, Depends(melding_reposi
     return AssetPurger(repository)
 
 
+def melding_asset_relationship_manager(
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> RelationshipManager[Melding, Asset]:
+    return RelationshipManager(repository, get_related=lambda melding: melding.awaitable_attrs.assets)
+
+
 def reclassifier(
     answer_purger: Annotated[AnswerPurger, Depends(answer_purger)],
     location_purger: Annotated[LocationPurger, Depends(location_purger)],
@@ -615,6 +624,7 @@ def melding_add_asset_action(
     asset_repository: Annotated[AssetRepository, Depends(asset_repository)],
     asset_type_repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
     asset_factory: Annotated[AssetFactory, Depends(asset_factory)],
+    relationship_manager: Annotated[RelationshipManager[Melding, Asset], Depends(melding_asset_relationship_manager)],
 ) -> MeldingAddAssetAction:
     return MeldingAddAssetAction(
         token_verifier,
@@ -622,6 +632,17 @@ def melding_add_asset_action(
         asset_repository,
         asset_type_repository,
         asset_factory,
+        relationship_manager,
+    )
+
+
+def melder_melding_list_assets_action(
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    relationship_manager: Annotated[RelationshipManager[Melding, Asset], Depends(melding_asset_relationship_manager)],
+) -> MelderListAssetsAction:
+    return MelderListAssetsAction(
+        token_verifier,
+        relationship_manager,
     )
 
 
@@ -1002,6 +1023,10 @@ def static_form_checkbox_output_factory(
     _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
 ) -> StaticFormCheckboxComponentOutputFactory:
     return StaticFormCheckboxComponentOutputFactory(factory, _validate_adder)
+
+
+def asset_output_factory() -> AssetOutputFactory:
+    return AssetOutputFactory()
 
 
 def static_form_radio_factory(

@@ -3511,6 +3511,27 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert body.get("email", "") is None
         assert body.get("phone", "") is None
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_add_asset_already_linked_to_melding(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_asset: Melding,
+    ) -> None:
+        asset = melding_with_asset.assets[0]
+
+        response = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_asset.id),
+            params={"token": "supersecrettoken"},
+            json={"external_id": asset.external_id, "asset_type_id": asset.type_id},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        body = response.json()
+
+        assert body.get("detail") == "The relationship already exists."
+
 
 class TestMeldingDeleteAsset(BaseTokenAuthenticationTest):
     def get_route_name(self) -> str:

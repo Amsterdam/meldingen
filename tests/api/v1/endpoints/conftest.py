@@ -452,9 +452,9 @@ async def classification_with_form(db_session: AsyncSession) -> Classification:
 
 
 @pytest.fixture
-async def classification_with_asset_type(db_session: AsyncSession) -> Classification:
+async def classification_with_asset_type(db_session: AsyncSession, asset_type: AssetType) -> Classification:
     classification = Classification("test_classification")
-    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={})
+    classification.asset_type = asset_type
 
     db_session.add(classification)
     await db_session.commit()
