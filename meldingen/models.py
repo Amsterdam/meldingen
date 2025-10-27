@@ -50,6 +50,7 @@ class AssetType(BaseDBModel, BaseAssetType):
     name: Mapped[str] = mapped_column(String, unique=True)
     class_name: Mapped[str] = mapped_column(String)
     arguments: Mapped[dict[str, Any]] = mapped_column(JSON)
+    max_assets: Mapped[int | None] = mapped_column(Integer, default=None)
 
 
 class Asset(BaseDBModel, BaseAsset):

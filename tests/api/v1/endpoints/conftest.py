@@ -735,10 +735,24 @@ def asset_type_arguments(request: FixtureRequest) -> dict[str, Any]:
 
 
 @pytest.fixture
+def asset_type_max_assets(request: FixtureRequest) -> int:
+    return 10
+
+
+@pytest.fixture
 async def asset_type(
-    db_session: AsyncSession, asset_type_name: str, asset_type_class_name: str, asset_type_arguments: dict[str, Any]
+    db_session: AsyncSession,
+    asset_type_name: str,
+    asset_type_class_name: str,
+    asset_type_arguments: dict[str, Any],
+    asset_type_max_assets: int,
 ) -> AssetType:
-    asset_type = AssetType(name=asset_type_name, class_name=asset_type_class_name, arguments=asset_type_arguments)
+    asset_type = AssetType(
+        name=asset_type_name,
+        class_name=asset_type_class_name,
+        arguments=asset_type_arguments,
+        max_assets=asset_type_max_assets,
+    )
 
     db_session.add(asset_type)
     await db_session.commit()

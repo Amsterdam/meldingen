@@ -210,12 +210,14 @@ class AssetTypeInput(BaseModel):
     name: str
     class_name: str
     arguments: dict[str, Any]
+    max_assets: int | None = None
 
 
 class AssetTypeUpdateInput(BaseModel):
     name: str | None = None
     class_name: str | None = None
     arguments: dict[str, Any] | None = None
+    max_assets: int | None = None
 
 
 class MeldingAssetInput(BaseModel):

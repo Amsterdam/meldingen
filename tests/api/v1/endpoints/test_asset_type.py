@@ -28,7 +28,8 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     @pytest.mark.anyio
     async def test_asset_type_create(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
-            app.url_path_for(self.get_route_name()), json={"name": "bla", "class_name": "bla.bla", "arguments": {}}
+            app.url_path_for(self.get_route_name()),
+            json={"name": "bla", "class_name": "bla.bla", "arguments": {}, "max_assets": 5},
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -38,6 +39,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         assert body.get("name") == "bla"
         assert body.get("class_name") == "bla.bla"
         assert body.get("arguments") == {}
+        assert body.get("max_assets") == 5
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
@@ -194,6 +196,7 @@ class TestRetrieveAssetType(BaseUnauthorizedTest):
         assert body.get("id") > 0
         assert body.get("name") == "test_asset_type"
         assert body.get("class_name") == "test.AssetTypeClassName"
+        assert body.get("max_assets") == 10
         assert body.get("arguments") == {}
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
@@ -498,7 +501,12 @@ class TestUpdateAssetType(BaseUnauthorizedTest):
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.get_route_name(), asset_type_id=asset_type.id),
-            json={"name": "bla", "class_name": "bla.bla", "arguments": {"base_url": "http://localhost"}},
+            json={
+                "name": "bla",
+                "class_name": "bla.bla",
+                "arguments": {"base_url": "http://localhost"},
+                "max_assets": 15,
+            },
         )
 
         assert response.status_code == HTTP_200_OK
@@ -508,6 +516,7 @@ class TestUpdateAssetType(BaseUnauthorizedTest):
         assert body.get("name") == "bla"
         assert body.get("class_name") == "bla.bla"
         assert body.get("arguments") == {"base_url": "http://localhost"}
+        assert body.get("max_assets") == 15
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
