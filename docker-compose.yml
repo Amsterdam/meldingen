@@ -138,6 +138,9 @@ services:
     ports:
       - "8025:8025"
       - "1025:1025"
+    environment:
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      MP_SMTP_AUTH: "test_smtp_user:smtp_secret"
     networks:
       - meldingen_network
 
@@ -149,6 +152,8 @@ services:
       SMTP_PORT: 1025
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       NODE_ENV: production
+      SMTP_USER: test_smtp_user
+      SMTP_PASS: smtp_secret
     depends_on:
       - otel-collector
       - mailpit
