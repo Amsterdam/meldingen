@@ -525,7 +525,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         assert body.get("name") == classification.name
         assert body.get("asset_type") == asset_type.id
 
-    @pytest.mark.parametrize("asset_type_name", ["test_asset_type_"])
+    @pytest.mark.parametrize("asset_type_name", ["other_asset_type"])
     @pytest.mark.anyio
     async def test_update_classification_replace_existing_asset_type(
         self,

@@ -20,6 +20,7 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters
+from meldingen_core.managers import RelationshipExistsException
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
 from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
@@ -36,6 +37,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
+from meldingen.actions.asset import MelderListAssetsAction
 from meldingen.actions.attachment import (
     DeleteAttachmentAction,
     ListAttachmentsAction,
@@ -67,7 +69,9 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
     answer_output_factory,
+    asset_output_factory,
     melder_melding_download_attachment_action,
+    melder_melding_list_assets_action,
     melder_melding_list_attachments_action,
     melder_melding_list_questions_and_answers_action,
     melder_melding_retrieve_action,
@@ -104,7 +108,7 @@ from meldingen.dependencies import (
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
-from meldingen.models import Answer, Attachment, Classification, Melding
+from meldingen.models import Answer, Asset, Attachment, Classification, Melding
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas.input import (
     AnswerInput,
@@ -116,6 +120,7 @@ from meldingen.schemas.input import (
 from meldingen.schemas.output import (
     AnswerOutput,
     AnswerQuestionOutput,
+    AssetOutput,
     AttachmentOutput,
     MeldingCreateOutput,
     MeldingOutput,
@@ -125,6 +130,7 @@ from meldingen.schemas.output import (
 from meldingen.schemas.output_factories import (
     AnswerListOutputFactory,
     AnswerOutputFactory,
+    AssetOutputFactory,
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
@@ -867,8 +873,35 @@ async def add_asset(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
     except TokenException as e:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
+    except RelationshipExistsException as e:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     return produce_output(melding)
+
+
+@router.get(
+    "/{melding_id}/assets",
+    name="melding:assets",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def melder_list_assets(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[MelderListAssetsAction, Depends(melder_melding_list_assets_action)],
+    produce_output: Annotated[AssetOutputFactory, Depends(asset_output_factory)],
+) -> list[AssetOutput]:
+    try:
+        assets = await action(melding_id, token)
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except TokenException as e:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
+
+    output = []
+    for asset in assets:
+        output.append(produce_output(asset))
+
+    return output
 
 
 @router.delete(

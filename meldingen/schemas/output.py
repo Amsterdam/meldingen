@@ -238,5 +238,9 @@ class AssetTypeOutput(BaseOutputModel):
     arguments: dict[str, Any]
 
 
+class AssetOutput(BaseOutputModel):
+    external_id: str
+
+
 class StatesOutput(BaseModel):
     states: list[str]
