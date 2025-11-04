@@ -47,7 +47,9 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     async def test_asset_type_create_without_class_name(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.post(app.url_path_for(self.get_route_name()), json={"name": "bla", "arguments": {}})
+        response = await client.post(
+            app.url_path_for(self.get_route_name()), json={"name": "bla", "arguments": {}, "max_assets": 5}
+        )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -64,7 +66,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     @pytest.mark.anyio
     async def test_asset_type_create_without_name(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
-            app.url_path_for(self.get_route_name()), json={"class_name": "bla.bla", "arguments": {}}
+            app.url_path_for(self.get_route_name()), json={"class_name": "bla.bla", "arguments": {}, "max_assets": 3}
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -80,11 +82,31 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         assert error.get("msg") == "Field required"
 
     @pytest.mark.anyio
+    async def test_asset_type_create_without_max_assets(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.get_route_name()), json={"name": "name", "class_name": "bla.bla", "arguments": {}}
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        error = detail[0]
+        assert error.get("type") == "missing"
+        assert error.get("loc") == ["body", "max_assets"]
+        assert error.get("msg") == "Field required"
+
+    @pytest.mark.anyio
     async def test_asset_type_create_without_arguments(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
         response = await client.post(
-            app.url_path_for(self.get_route_name()), json={"name": "name", "class_name": "bla.bla"}
+            app.url_path_for(self.get_route_name()), json={"name": "name", "class_name": "bla.bla", "max_assets": 3}
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -103,7 +125,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     async def test_asset_type_create_without_name_and_class_name(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.post(app.url_path_for(self.get_route_name()), json={"arguments": {}})
+        response = await client.post(app.url_path_for(self.get_route_name()), json={"arguments": {}, "max_assets": 3})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -126,7 +148,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     async def test_asset_type_create_without_name_class_name_and_arguments(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.post(app.url_path_for(self.get_route_name()), json={})
+        response = await client.post(app.url_path_for(self.get_route_name()), json={"max_assets": 3})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -151,12 +173,45 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         assert error.get("msg") == "Field required"
 
     @pytest.mark.anyio
+    async def test_asset_type_create_without_name_class_name_max_assets_and_arguments(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(app.url_path_for(self.get_route_name()), json={})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+
+        detail = body.get("detail")
+        assert len(detail) == 4
+
+        error = detail[0]
+        assert error.get("type") == "missing"
+        assert error.get("loc") == ["body", "name"]
+        assert error.get("msg") == "Field required"
+
+        error = detail[1]
+        assert error.get("type") == "missing"
+        assert error.get("loc") == ["body", "class_name"]
+        assert error.get("msg") == "Field required"
+
+        error = detail[2]
+        assert error.get("type") == "missing"
+        assert error.get("loc") == ["body", "arguments"]
+        assert error.get("msg") == "Field required"
+
+        error = detail[3]
+        assert error.get("type") == "missing"
+        assert error.get("loc") == ["body", "max_assets"]
+        assert error.get("msg") == "Field required"
+
+    @pytest.mark.anyio
     async def test_asset_type_create_name_is_already_in_use(
         self, app: FastAPI, client: AsyncClient, auth_user: None, asset_type: AssetType
     ) -> None:
         response = await client.post(
             app.url_path_for(self.get_route_name()),
-            json={"name": asset_type.name, "class_name": "bla.bla", "arguments": {}},
+            json={"name": asset_type.name, "class_name": "bla.bla", "arguments": {}, "max_assets": 5},
         )
 
         assert response.status_code == HTTP_409_CONFLICT

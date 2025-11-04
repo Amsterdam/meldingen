@@ -9,7 +9,6 @@ from meldingen.repositories import AnswerRepository, FormRepository
 # guards
 class HasLocation(BaseGuard[Melding]):
     async def __call__(self, obj: Melding) -> bool:
-        return True
         return obj.geo_location is not None
 
 
@@ -22,7 +21,6 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
         self._form_repository = form_repository
 
     async def __call__(self, obj: Melding) -> bool:
-        return True
         assert obj.classification_id is not None
 
         try:
@@ -96,7 +94,6 @@ class SubmitLocation(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
         return [
-            # MeldingStates.CLASSIFIED,
             MeldingStates.QUESTIONS_ANSWERED,
             MeldingStates.LOCATION_SUBMITTED,
             MeldingStates.ATTACHMENTS_ADDED,
