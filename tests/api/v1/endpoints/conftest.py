@@ -471,7 +471,7 @@ async def classification_with_form(db_session: AsyncSession) -> Classification:
 @pytest.fixture
 async def classification_with_asset_type(db_session: AsyncSession) -> Classification:
     classification = Classification("test_classification")
-    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={})
+    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={}, max_assets=3)
 
     db_session.add(classification)
     await db_session.commit()
@@ -482,7 +482,7 @@ async def classification_with_asset_type(db_session: AsyncSession) -> Classifica
 @pytest.fixture
 async def classification_with_asset_type_and_form(db_session: AsyncSession) -> Classification:
     classification = Classification("test_classification")
-    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={})
+    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={}, max_assets=3)
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
 
     db_session.add(form)
@@ -781,7 +781,7 @@ async def asset_type(
 async def asset_types(db_session: AsyncSession) -> list[AssetType]:
     asset_types = []
     for i in range(10):
-        asset_type = AssetType(f"{i}", f"package.module.ClassName{i}", {})
+        asset_type = AssetType(f"{i}", f"package.module.ClassName{i}", {}, 3)
         db_session.add(asset_type)
         asset_types.append(asset_type)
 

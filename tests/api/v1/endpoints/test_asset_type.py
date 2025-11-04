@@ -425,7 +425,7 @@ class TestUpdateAssetType(BaseUnauthorizedTest):
     async def test_update_asset_type_name_already_in_use(
         self, app: FastAPI, client: AsyncClient, asset_type: AssetType, auth_user: None, db_session: AsyncSession
     ) -> None:
-        second_asset_type = AssetType("bla", "bla.bla", {})
+        second_asset_type = AssetType("bla", "bla.bla", {}, 3)
         db_session.add(second_asset_type)
         await db_session.commit()
 
