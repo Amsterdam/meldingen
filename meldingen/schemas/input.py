@@ -210,7 +210,7 @@ class AssetTypeInput(BaseModel):
     name: str
     class_name: str
     arguments: dict[str, Any]
-    max_assets: int | None = None
+    max_assets: int
 
 
 class AssetTypeUpdateInput(BaseModel):
