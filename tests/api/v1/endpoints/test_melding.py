@@ -3511,6 +3511,70 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert body.get("email", "") is None
         assert body.get("phone", "") is None
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token", "asset_type_name"], [("supersecrettoken", "my_asset_type")])
+    async def test_add_asset_already_linked_to_melding(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_asset: Melding,
+    ) -> None:
+        asset = melding_with_asset.assets[0]
+
+        response = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_asset.id),
+            params={"token": "supersecrettoken"},
+            json={"external_id": asset.external_id, "asset_type_id": asset.type_id},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        body = response.json()
+
+        assert body.get("detail") == "The relationship already exists."
+
+
+class TestMeldingListAssets(BaseTokenAuthenticationTest):
+    ROUTE_NAME: Final[str] = "melding:assets"
+    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return "GET"
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_list_assets(
+        self, app: FastAPI, client: AsyncClient, melding_with_assets: Melding, auth_user: None
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_assets.id), params={"token": "supersecrettoken"}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        assets = await melding_with_assets.awaitable_attrs.assets
+        body = response.json()
+
+        assert len(assets) == len(body)
+
+    @pytest.mark.anyio
+    async def test_list_assets_with_non_existing_melding(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=123), params={"token": "supersecrettoken"}
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+        body = response.json()
+
+        assert body.get("detail") == "Melding not found"
+
 
 class TestMeldingDeleteAsset(BaseTokenAuthenticationTest):
     def get_route_name(self) -> str:

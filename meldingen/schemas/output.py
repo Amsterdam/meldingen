@@ -239,5 +239,9 @@ class AssetTypeOutput(BaseOutputModel):
     max_assets: int
 
 
+class AssetOutput(BaseOutputModel):
+    external_id: str
+
+
 class StatesOutput(BaseModel):
     states: list[str]

@@ -4,6 +4,7 @@ from typing import Union
 from meldingen.location import LocationOutputTransformer
 from meldingen.models import (
     Answer,
+    Asset,
     AssetType,
     BaseFormIoValuesComponent,
     Classification,
@@ -23,6 +24,7 @@ from meldingen.models import (
 from meldingen.schemas.output import (
     AnswerOutput,
     AnswerQuestionOutput,
+    AssetOutput,
     AssetTypeOutput,
     BaseFormComponentOutput,
     FormCheckboxComponentOutput,
@@ -707,4 +709,14 @@ class SimpleFormOutputFactory:
             classification=form.classification_id,
             created_at=form.created_at,
             updated_at=form.updated_at,
+        )
+
+
+class AssetOutputFactory:
+    def __call__(self, asset: Asset) -> AssetOutput:
+        return AssetOutput(
+            id=asset.id,
+            external_id=asset.external_id,
+            created_at=asset.created_at,
+            updated_at=asset.updated_at,
         )
