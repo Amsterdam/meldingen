@@ -236,6 +236,7 @@ class AssetTypeOutput(BaseOutputModel):
     name: str
     class_name: str
     arguments: dict[str, Any]
+    max_assets: int
 
 
 class AssetOutput(BaseOutputModel):

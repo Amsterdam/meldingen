@@ -471,7 +471,7 @@ async def classification_with_form(db_session: AsyncSession) -> Classification:
 @pytest.fixture
 async def classification_with_asset_type(db_session: AsyncSession) -> Classification:
     classification = Classification("test_classification")
-    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={})
+    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={}, max_assets=3)
 
     db_session.add(classification)
     await db_session.commit()
@@ -482,7 +482,7 @@ async def classification_with_asset_type(db_session: AsyncSession) -> Classifica
 @pytest.fixture
 async def classification_with_asset_type_and_form(db_session: AsyncSession) -> Classification:
     classification = Classification("test_classification")
-    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={})
+    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={}, max_assets=3)
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
 
     db_session.add(form)
@@ -752,10 +752,24 @@ def asset_type_arguments(request: FixtureRequest) -> dict[str, Any]:
 
 
 @pytest.fixture
+def asset_type_max_assets(request: FixtureRequest) -> int:
+    return 10
+
+
+@pytest.fixture
 async def asset_type(
-    db_session: AsyncSession, asset_type_name: str, asset_type_class_name: str, asset_type_arguments: dict[str, Any]
+    db_session: AsyncSession,
+    asset_type_name: str,
+    asset_type_class_name: str,
+    asset_type_arguments: dict[str, Any],
+    asset_type_max_assets: int,
 ) -> AssetType:
-    asset_type = AssetType(name=asset_type_name, class_name=asset_type_class_name, arguments=asset_type_arguments)
+    asset_type = AssetType(
+        name=asset_type_name,
+        class_name=asset_type_class_name,
+        arguments=asset_type_arguments,
+        max_assets=asset_type_max_assets,
+    )
 
     db_session.add(asset_type)
     await db_session.commit()
@@ -767,7 +781,7 @@ async def asset_type(
 async def asset_types(db_session: AsyncSession) -> list[AssetType]:
     asset_types = []
     for i in range(10):
-        asset_type = AssetType(f"{i}", f"package.module.ClassName{i}", {})
+        asset_type = AssetType(f"{i}", f"package.module.ClassName{i}", {}, 3)
         db_session.add(asset_type)
         asset_types.append(asset_type)
 
