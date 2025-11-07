@@ -368,8 +368,14 @@ def public_id_generator() -> PublicIdGenerator:
     return PublicIdGenerator()
 
 
-def simple_classification_output_factory() -> SimpleClassificationOutputFactory:
-    return SimpleClassificationOutputFactory()
+def asset_type_output_factory() -> AssetTypeOutputFactory:
+    return AssetTypeOutputFactory()
+
+
+def simple_classification_output_factory(
+    asset_type_output_factory: Annotated[AssetTypeOutputFactory, Depends(asset_type_output_factory)],
+) -> SimpleClassificationOutputFactory:
+    return SimpleClassificationOutputFactory(asset_type_output_factory)
 
 
 def melding_create_output_factory(
@@ -1188,10 +1194,6 @@ def user_update_action(repository: Annotated[UserRepository, Depends(user_reposi
 
 def user_delete_action(repository: Annotated[UserRepository, Depends(user_repository)]) -> UserDeleteAction:
     return UserDeleteAction(repository)
-
-
-def asset_type_output_factory() -> AssetTypeOutputFactory:
-    return AssetTypeOutputFactory()
 
 
 def asset_type_create_action(

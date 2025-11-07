@@ -76,20 +76,20 @@ class TestMeldingCreate:
         assert data.get("public_id") == "MELPUB"
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_name,", ["classification_name"], indirect=True)
     async def test_create_melding_with_classification(
-        self, app: FastAPI, client: AsyncClient, classification: Classification
+        self, app: FastAPI, client: AsyncClient, classification_with_asset_type: Classification
     ) -> None:
-        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "classification_name"})
+        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "test_classification"})
 
         assert response.status_code == HTTP_201_CREATED
 
         data = response.json()
         assert data.get("id") is not None
-        assert data.get("text") == "classification_name"
+        assert data.get("text") == "test_classification"
         assert data.get("state") == MeldingStates.CLASSIFIED
-        assert data.get("classification").get("id") == classification.id
-        assert data.get("classification").get("name") == classification.name
+        assert data.get("classification").get("id") == classification_with_asset_type.id
+        assert data.get("classification").get("name") == classification_with_asset_type.name
+        assert data.get("classification").get("asset_type").get("name") == "test_asset_type"
 
     @pytest.mark.anyio
     async def test_create_melding_text_minimum_length_violation(self, app: FastAPI, client: AsyncClient) -> None:

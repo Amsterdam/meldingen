@@ -547,7 +547,24 @@ class FormOutputFactory:
         )
 
 
+class AssetTypeOutputFactory:
+    def __call__(self, asset_type: AssetType) -> AssetTypeOutput:
+        return AssetTypeOutput(
+            id=asset_type.id,
+            name=asset_type.name,
+            class_name=asset_type.class_name,
+            max_assets=asset_type.max_assets,
+            arguments=asset_type.arguments,
+            created_at=asset_type.created_at,
+            updated_at=asset_type.updated_at,
+        )
+
+
 class SimpleClassificationOutputFactory:
+    _asset_type: AssetTypeOutputFactory
+
+    def __init__(self, asset_type: AssetTypeOutputFactory):
+        self._asset_type = asset_type
 
     def __call__(self, classification: Classification | None) -> SimpleClassificationOutput | None:
         if classification is None:
@@ -556,6 +573,7 @@ class SimpleClassificationOutputFactory:
         return SimpleClassificationOutput(
             id=classification.id,
             name=classification.name,
+            asset_type=self._asset_type(classification.asset_type) if classification.asset_type else None,
             created_at=classification.created_at,
             updated_at=classification.updated_at,
         )
@@ -675,19 +693,6 @@ class AnswerListOutputFactory:
         _sorted = dict(sorted(flattened.items()))
 
         return [*_sorted.values()]
-
-
-class AssetTypeOutputFactory:
-    def __call__(self, asset_type: AssetType) -> AssetTypeOutput:
-        return AssetTypeOutput(
-            id=asset_type.id,
-            name=asset_type.name,
-            class_name=asset_type.class_name,
-            max_assets=asset_type.max_assets,
-            arguments=asset_type.arguments,
-            created_at=asset_type.created_at,
-            updated_at=asset_type.updated_at,
-        )
 
 
 class AnswerOutputFactory:
