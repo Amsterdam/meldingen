@@ -40,7 +40,7 @@ from plugfs.azure import AzureStorageBlobsAdapter
 from plugfs.filesystem import Adapter, Filesystem
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-from meldingen.actions.asset import MelderListAssetsAction
+from meldingen.actions.asset import ListAssetsAction, MelderListAssetsAction
 from meldingen.actions.asset_type import (
     AssetTypeCreateAction,
     AssetTypeDeleteAction,
@@ -642,6 +642,16 @@ def melder_melding_list_assets_action(
 ) -> MelderListAssetsAction:
     return MelderListAssetsAction(
         token_verifier,
+        relationship_manager,
+    )
+
+
+def melding_list_assets_action(
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    relationship_manager: Annotated[RelationshipManager[Melding, Asset], Depends(melding_asset_relationship_manager)],
+) -> ListAssetsAction:
+    return ListAssetsAction(
+        melding_repository,
         relationship_manager,
     )
 
