@@ -29,11 +29,20 @@ class BaseFormOutput(BaseOutputModel):
     display: str
 
 
+class AssetTypeOutput(BaseOutputModel):
+    name: str
+    class_name: str
+    arguments: dict[str, Any]
+    max_assets: int
+
+
 class SimpleClassificationOutput(BaseOutputModel):
     name: str
+    asset_type: AssetTypeOutput | None = Field(default=None)
 
 
-class ClassificationOutput(SimpleClassificationOutput):
+class ClassificationOutput(BaseOutputModel):
+    name: str
     form: int | None = None
     asset_type: int | None = None
 
@@ -230,13 +239,6 @@ class AttachmentOutput(BaseOutputModel):
 class UserOutput(BaseOutputModel):
     email: str
     username: str
-
-
-class AssetTypeOutput(BaseOutputModel):
-    name: str
-    class_name: str
-    arguments: dict[str, Any]
-    max_assets: int
 
 
 class AssetOutput(BaseOutputModel):
