@@ -37,7 +37,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from meldingen.actions.asset import MelderListAssetsAction
+from meldingen.actions.asset import ListAssetsAction, MelderListAssetsAction
 from meldingen.actions.attachment import (
     DeleteAttachmentAction,
     ListAttachmentsAction,
@@ -90,6 +90,7 @@ from meldingen.dependencies import (
     melding_delete_attachment_action,
     melding_get_possible_next_states_action,
     melding_list_action,
+    melding_list_assets_action,
     melding_list_attachments_action,
     melding_list_questions_and_answers_action,
     melding_list_questions_and_answers_output_factory,
@@ -880,8 +881,8 @@ async def add_asset(
 
 
 @router.get(
-    "/{melding_id}/assets",
-    name="melding:assets",
+    "/{melding_id}/assets/melder",
+    name="melding:assets_melder",
     responses={**not_found_response, **unauthorized_response},
 )
 async def melder_list_assets(
@@ -896,6 +897,29 @@ async def melder_list_assets(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
     except TokenException as e:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
+
+    output = []
+    for asset in assets:
+        output.append(produce_output(asset))
+
+    return output
+
+
+@router.get(
+    "/{melding_id}/assets",
+    name="melding:assets",
+    dependencies=[Depends(authenticate_user)],
+    responses={**not_found_response, **unauthorized_response},
+)
+async def list_assets(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    action: Annotated[ListAssetsAction, Depends(melding_list_assets_action)],
+    produce_output: Annotated[AssetOutputFactory, Depends(asset_output_factory)],
+) -> list[AssetOutput]:
+    try:
+        assets = await action(melding_id)
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
 
     output = []
     for asset in assets:
