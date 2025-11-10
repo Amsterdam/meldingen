@@ -2542,8 +2542,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feat-6854/add-icon-path-asset-type"
-resolved_reference = "5d38cc647b6cb2e889b33854ce1fe06661a1f4f2"
+reference = "HEAD"
+resolved_reference = "bd3ef239463a2ea274f0f30433006fbb8cebc2da"
 
 [[package]]
 name = "mergedeep"
@@ -5738,4 +5738,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "eb57e5de645a5bccffe820d0b10212e8f71609172defe151f76a145fc17223fa"
+content-hash = "df8e3eef99486304fca18a2fe2ffbc7ed34a1f991de5f5dc21ef58030d73e8cc"
