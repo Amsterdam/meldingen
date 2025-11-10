@@ -3590,7 +3590,6 @@ class TestMeldingListAssets(BaseUnauthorizedTest):
         return self.PATH_PARAMS
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
     async def test_list_assets(
         self, app: FastAPI, client: AsyncClient, melding_with_assets: Melding, auth_user: None
     ) -> None:
