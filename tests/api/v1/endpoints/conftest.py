@@ -471,7 +471,9 @@ async def classification_with_form(db_session: AsyncSession) -> Classification:
 @pytest.fixture
 async def classification_with_asset_type(db_session: AsyncSession) -> Classification:
     classification = Classification("test_classification")
-    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={}, max_assets=3)
+    classification.asset_type = AssetType(
+        name="test_asset_type", class_name="test_class", arguments={}, max_assets=3, icon_path="/path/to/icon.svg"
+    )
 
     db_session.add(classification)
     await db_session.commit()
@@ -482,7 +484,9 @@ async def classification_with_asset_type(db_session: AsyncSession) -> Classifica
 @pytest.fixture
 async def classification_with_asset_type_and_form(db_session: AsyncSession) -> Classification:
     classification = Classification("test_classification")
-    classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={}, max_assets=3)
+    classification.asset_type = AssetType(
+        name="test_asset_type", class_name="test_class", arguments={}, max_assets=3, icon_path="/path/to/icon.svg"
+    )
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
 
     db_session.add(form)
@@ -757,18 +761,28 @@ def asset_type_max_assets(request: FixtureRequest) -> int:
 
 
 @pytest.fixture
+def asset_type_icon_path(request: FixtureRequest) -> str:
+    if hasattr(request, "param"):
+        return str(request.param)
+
+    return "/path/to/icon.png"
+
+
+@pytest.fixture
 async def asset_type(
     db_session: AsyncSession,
     asset_type_name: str,
     asset_type_class_name: str,
     asset_type_arguments: dict[str, Any],
     asset_type_max_assets: int,
+    asset_type_icon_path: str,
 ) -> AssetType:
     asset_type = AssetType(
         name=asset_type_name,
         class_name=asset_type_class_name,
         arguments=asset_type_arguments,
         max_assets=asset_type_max_assets,
+        icon_path=asset_type_icon_path,
     )
 
     db_session.add(asset_type)
@@ -781,7 +795,7 @@ async def asset_type(
 async def asset_types(db_session: AsyncSession) -> list[AssetType]:
     asset_types = []
     for i in range(10):
-        asset_type = AssetType(f"{i}", f"package.module.ClassName{i}", {}, 3)
+        asset_type = AssetType(f"{i}", f"package.module.ClassName{i}", {}, 3, "/path/to/icon-{i}.svg")
         db_session.add(asset_type)
         asset_types.append(asset_type)
 

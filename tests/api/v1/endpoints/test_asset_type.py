@@ -29,7 +29,13 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     async def test_asset_type_create(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
             app.url_path_for(self.get_route_name()),
-            json={"name": "bla", "class_name": "bla.bla", "arguments": {}, "max_assets": 5},
+            json={
+                "name": "bla",
+                "class_name": "bla.bla",
+                "arguments": {},
+                "max_assets": 5,
+                "icon_path": "/path/to/icon.svg",
+            },
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -40,6 +46,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         assert body.get("class_name") == "bla.bla"
         assert body.get("arguments") == {}
         assert body.get("max_assets") == 5
+        assert body.get("icon_path") == "/path/to/icon.svg"
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
@@ -48,7 +55,8 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
         response = await client.post(
-            app.url_path_for(self.get_route_name()), json={"name": "bla", "arguments": {}, "max_assets": 5}
+            app.url_path_for(self.get_route_name()),
+            json={"name": "bla", "arguments": {}, "max_assets": 5, "icon_path": "/path/to/icon.svg"},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -66,7 +74,8 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     @pytest.mark.anyio
     async def test_asset_type_create_without_name(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
-            app.url_path_for(self.get_route_name()), json={"class_name": "bla.bla", "arguments": {}, "max_assets": 3}
+            app.url_path_for(self.get_route_name()),
+            json={"class_name": "bla.bla", "arguments": {}, "icon_path": "/path/to/icon.svg", "max_assets": 3},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -86,7 +95,8 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
         response = await client.post(
-            app.url_path_for(self.get_route_name()), json={"name": "name", "class_name": "bla.bla", "arguments": {}}
+            app.url_path_for(self.get_route_name()),
+            json={"name": "name", "class_name": "bla.bla", "icon_path": "/path/to/icon.svg", "arguments": {}},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -106,7 +116,8 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
         response = await client.post(
-            app.url_path_for(self.get_route_name()), json={"name": "name", "class_name": "bla.bla", "max_assets": 3}
+            app.url_path_for(self.get_route_name()),
+            json={"name": "name", "class_name": "bla.bla", "icon_path": "/path/to/icon.svg", "max_assets": 3},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -125,7 +136,10 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     async def test_asset_type_create_without_name_and_class_name(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.post(app.url_path_for(self.get_route_name()), json={"arguments": {}, "max_assets": 3})
+        response = await client.post(
+            app.url_path_for(self.get_route_name()),
+            json={"arguments": {}, "max_assets": 3, "icon_path": "/path/to/icon.svg"},
+        )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -148,7 +162,9 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     async def test_asset_type_create_without_name_class_name_and_arguments(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.post(app.url_path_for(self.get_route_name()), json={"max_assets": 3})
+        response = await client.post(
+            app.url_path_for(self.get_route_name()), json={"max_assets": 3, "icon_path": "/path/to/icon.svg"}
+        )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -173,7 +189,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         assert error.get("msg") == "Field required"
 
     @pytest.mark.anyio
-    async def test_asset_type_create_without_name_class_name_max_assets_and_arguments(
+    async def test_asset_type_create_without_name_class_name_max_assets_icon_path_and_arguments(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
         response = await client.post(app.url_path_for(self.get_route_name()), json={})
@@ -183,7 +199,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         body = response.json()
 
         detail = body.get("detail")
-        assert len(detail) == 4
+        assert len(detail) == 5
 
         error = detail[0]
         assert error.get("type") == "missing"
@@ -205,13 +221,24 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         assert error.get("loc") == ["body", "max_assets"]
         assert error.get("msg") == "Field required"
 
+        error = detail[4]
+        assert error.get("type") == "missing"
+        assert error.get("loc") == ["body", "icon_path"]
+        assert error.get("msg") == "Field required"
+
     @pytest.mark.anyio
     async def test_asset_type_create_name_is_already_in_use(
         self, app: FastAPI, client: AsyncClient, auth_user: None, asset_type: AssetType
     ) -> None:
         response = await client.post(
             app.url_path_for(self.get_route_name()),
-            json={"name": asset_type.name, "class_name": "bla.bla", "arguments": {}, "max_assets": 5},
+            json={
+                "name": asset_type.name,
+                "class_name": "bla.bla",
+                "arguments": {},
+                "max_assets": 5,
+                "icon_path": "/path/to/icon.svg",
+            },
         )
 
         assert response.status_code == HTTP_409_CONFLICT
@@ -220,6 +247,26 @@ class TestCreateAssetType(BaseUnauthorizedTest):
         assert (
             data.get("detail") == "The requested operation could not be completed due to a conflict with existing data."
         )
+
+    @pytest.mark.anyio
+    async def test_asset_type_create_without_icon_path(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.get_route_name()),
+            json={"name": "bla", "class_name": "bla.bla", "arguments": {}, "max_assets": 5},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        body = response.json()
+
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        error = detail[0]
+        assert error.get("type") == "missing"
+        assert error.get("loc") == ["body", "icon_path"]
+        assert error.get("msg") == "Field required"
 
 
 class TestRetrieveAssetType(BaseUnauthorizedTest):
@@ -480,7 +527,7 @@ class TestUpdateAssetType(BaseUnauthorizedTest):
     async def test_update_asset_type_name_already_in_use(
         self, app: FastAPI, client: AsyncClient, asset_type: AssetType, auth_user: None, db_session: AsyncSession
     ) -> None:
-        second_asset_type = AssetType("bla", "bla.bla", {}, 3)
+        second_asset_type = AssetType("bla", "bla.bla", {}, 3, "/path/to/icon.svg")
         db_session.add(second_asset_type)
         await db_session.commit()
 
@@ -510,6 +557,8 @@ class TestUpdateAssetType(BaseUnauthorizedTest):
         assert body.get("name") == "bla"
         assert body.get("class_name") == "test.AssetTypeClassName"
         assert body.get("arguments") == {}
+        assert body.get("max_assets") == asset_type.max_assets
+        assert body.get("icon_path") == asset_type.icon_path
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
@@ -528,6 +577,8 @@ class TestUpdateAssetType(BaseUnauthorizedTest):
         assert body.get("name") == "test_asset_type"
         assert body.get("class_name") == "bla"
         assert body.get("arguments") == {}
+        assert body.get("max_assets") == asset_type.max_assets
+        assert body.get("icon_path") == asset_type.icon_path
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
@@ -547,6 +598,8 @@ class TestUpdateAssetType(BaseUnauthorizedTest):
         assert body.get("name") == "test_asset_type"
         assert body.get("class_name") == "test.AssetTypeClassName"
         assert body.get("arguments") == {"base_url": "http://localhost"}
+        assert body.get("max_assets") == asset_type.max_assets
+        assert body.get("icon_path") == asset_type.icon_path
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
@@ -572,6 +625,7 @@ class TestUpdateAssetType(BaseUnauthorizedTest):
         assert body.get("class_name") == "bla.bla"
         assert body.get("arguments") == {"base_url": "http://localhost"}
         assert body.get("max_assets") == 15
+        assert body.get("icon_path") == asset_type.icon_path
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 

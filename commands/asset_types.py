@@ -12,11 +12,15 @@ from meldingen.schemas.input import AssetTypeInput
 app = typer.Typer()
 
 
-async def async_add_asset_type(name: str, class_name: str, arguments: dict[str, Any], max_assets: int) -> None:
+async def async_add_asset_type(
+    name: str, class_name: str, arguments: dict[str, Any], max_assets: int, icon_path: str
+) -> None:
     async for session in database_session(database_session_manager(database_engine())):
         asset_type_repository = AssetTypeRepository(session)
 
-        asset_type_input = AssetTypeInput(name=name, class_name=class_name, arguments=arguments, max_assets=max_assets)
+        asset_type_input = AssetTypeInput(
+            name=name, class_name=class_name, arguments=arguments, max_assets=max_assets, icon_path=icon_path
+        )
         asset_type = AssetType(**asset_type_input.model_dump())
 
         try:
@@ -29,9 +33,9 @@ async def async_add_asset_type(name: str, class_name: str, arguments: dict[str, 
 
 
 @app.command()
-def add(name: str, class_name: str, max_assets: int, base_url: str | None) -> None:
+def add(name: str, class_name: str, max_assets: int, icon_path: str, base_url: str | None) -> None:
     arguments = {"base_url": base_url} if base_url else {}
-    asyncio.run(async_add_asset_type(name, class_name, arguments, max_assets))
+    asyncio.run(async_add_asset_type(name, class_name, arguments, max_assets, icon_path))
 
 
 if __name__ == "__main__":

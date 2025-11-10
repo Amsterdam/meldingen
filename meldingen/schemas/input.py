@@ -211,6 +211,7 @@ class AssetTypeInput(BaseModel):
     class_name: str
     arguments: dict[str, Any]
     max_assets: int
+    icon_path: str
 
 
 class AssetTypeUpdateInput(BaseModel):

@@ -554,6 +554,7 @@ class AssetTypeOutputFactory:
             name=asset_type.name,
             class_name=asset_type.class_name,
             max_assets=asset_type.max_assets,
+            icon_path=asset_type.icon_path,
             arguments=asset_type.arguments,
             created_at=asset_type.created_at,
             updated_at=asset_type.updated_at,
