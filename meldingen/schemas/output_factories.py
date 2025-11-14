@@ -564,16 +564,18 @@ class SimpleClassificationOutputFactory:
     _asset_type: AssetTypeOutputFactory
 
     def __init__(self, asset_type: AssetTypeOutputFactory):
-        self._asset_type = asset_type
+        self._output_asset_type = asset_type
 
-    def __call__(self, classification: Classification | None) -> SimpleClassificationOutput | None:
+    async def __call__(self, classification: Classification | None) -> SimpleClassificationOutput | None:
         if classification is None:
             return None
+
+        asset_type = await classification.awaitable_attrs.asset_type
 
         return SimpleClassificationOutput(
             id=classification.id,
             name=classification.name,
-            asset_type=self._asset_type(classification.asset_type) if classification.asset_type else None,
+            asset_type=self._output_asset_type(asset_type) if asset_type else None,
             created_at=classification.created_at,
             updated_at=classification.updated_at,
         )
@@ -587,20 +589,22 @@ class MeldingOutputFactory:
         self, location_transformer: LocationOutputTransformer, classification: SimpleClassificationOutputFactory
     ):
         self._transform_location = location_transformer
-        self._classification = classification
+        self._output_classification = classification
 
-    def __call__(self, melding: Melding) -> MeldingOutput:
+    async def __call__(self, melding: Melding) -> MeldingOutput:
         if melding.geo_location is None:
             geojson = None
         else:
             geojson = self._transform_location(melding.geo_location)
+
+        classification = await melding.awaitable_attrs.classification
 
         return MeldingOutput(
             id=melding.id,
             public_id=melding.public_id,
             text=melding.text,
             state=melding.state,
-            classification=self._classification(melding.classification),
+            classification=await self._output_classification(classification),
             created_at=melding.created_at,
             updated_at=melding.updated_at,
             geo_location=geojson,
@@ -618,15 +622,17 @@ class MeldingCreateOutputFactory:
     _classification: SimpleClassificationOutputFactory
 
     def __init__(self, classification: SimpleClassificationOutputFactory):
-        self._classification = classification
+        self._output_classification = classification
 
-    def __call__(self, melding: Melding) -> MeldingCreateOutput:
+    async def __call__(self, melding: Melding) -> MeldingCreateOutput:
+        classification = await melding.awaitable_attrs.classification
+
         return MeldingCreateOutput(
             id=melding.id,
             public_id=melding.public_id,
             text=melding.text,
             state=melding.state,
-            classification=self._classification(melding.classification),
+            classification=await self._output_classification(classification),
             token=melding.token,
             created_at=melding.created_at,
             updated_at=melding.updated_at,
@@ -635,26 +641,28 @@ class MeldingCreateOutputFactory:
 
 class MeldingUpdateOutputFactory(MeldingOutputFactory):
     _transform_location: LocationOutputTransformer
-    _classification: SimpleClassificationOutputFactory
+    _output_classification: SimpleClassificationOutputFactory
 
     def __init__(
         self, location_transformer: LocationOutputTransformer, classification: SimpleClassificationOutputFactory
     ):
         self._transform_location = location_transformer
-        self._classification = classification
+        self._output_classification = classification
 
-    def __call__(self, melding: Melding) -> MeldingUpdateOutput:
+    async def __call__(self, melding: Melding) -> MeldingUpdateOutput:
         if melding.geo_location is None:
             geojson = None
         else:
             geojson = self._transform_location(melding.geo_location)
+
+        classification = await melding.awaitable_attrs.classification
 
         return MeldingUpdateOutput(
             id=melding.id,
             public_id=melding.public_id,
             text=melding.text,
             state=melding.state,
-            classification=self._classification(melding.classification),
+            classification=await self._output_classification(classification),
             created_at=melding.created_at,
             updated_at=melding.updated_at,
             geo_location=geojson,
