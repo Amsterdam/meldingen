@@ -665,12 +665,12 @@ def melding_list_assets_action(
 def melding_delete_asset_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     asset_repository: Annotated[AssetRepository, Depends(asset_repository)],
-    asset_type_repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+    relationship_manager: Annotated[RelationshipManager[Melding, Asset], Depends(melding_asset_relationship_manager)],
 ) -> MeldingDeleteAssetAction:
     return MeldingDeleteAssetAction(
         token_verifier,
         asset_repository,
-        asset_type_repository,
+        relationship_manager,
     )
 
 
