@@ -167,7 +167,7 @@ async def create_melding(
 
         break
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 async def content_range_header_adder(
@@ -235,7 +235,7 @@ async def list_meldingen(
     )
     output = []
     for melding in meldingen:
-        output.append(produce_output(melding))
+        output.append(await produce_output(melding))
 
     filters = repo.filter_input_to_expression_arguments(filter_input)
 
@@ -260,7 +260,7 @@ async def retrieve_melding(
     if not melding:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.get(
@@ -281,7 +281,7 @@ async def retrieve_melding_melder(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.patch(
@@ -309,7 +309,7 @@ async def update_melding(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.put(
@@ -339,7 +339,7 @@ async def answer_questions(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.put(
@@ -367,7 +367,7 @@ async def add_attachments(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.put(
@@ -397,7 +397,7 @@ async def submit_location(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.put(
@@ -425,7 +425,7 @@ async def melding_submit(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.put(
@@ -451,7 +451,7 @@ async def process_melding(
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.put(
@@ -482,7 +482,7 @@ async def complete_melding(
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.post(
@@ -752,7 +752,7 @@ async def add_location_to_melding(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.patch(
@@ -776,7 +776,7 @@ async def add_contact_to_melding(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.put(
@@ -804,7 +804,7 @@ async def add_contact_info(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.get(
@@ -877,7 +877,7 @@ async def add_asset(
     except RelationshipExistsException as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
-    return produce_output(melding)
+    return await produce_output(melding)
 
 
 @router.get(
