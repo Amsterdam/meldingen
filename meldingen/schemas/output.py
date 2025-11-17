@@ -5,7 +5,8 @@ from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field, fie
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
-from meldingen.schemas.types import GeoJson, PhoneNumber
+from meldingen.schemas.types import GeoJson, PhoneNumber, FormIOConditional
+
 
 ### Form.io ###
 
@@ -165,6 +166,7 @@ class BaseFormComponentOutput(BaseModel):
     position: int
 
     validate_: FormComponentOutputValidate | None = Field(alias="validate", default=None)
+    conditional: FormIOConditional | None = Field(default=None)
 
 
 class StaticFormTextAreaComponentOutput(BaseFormComponentOutput):
