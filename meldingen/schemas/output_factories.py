@@ -339,7 +339,6 @@ class FormTextAreaComponentOutputFactory:
             max_char_count=component.max_char_count,
             position=component.position,
             question=question.id,
-            conditional=component.conditional,
         )
 
         await self._add_validate(component, output)
@@ -364,7 +363,6 @@ class FormTextFieldInputComponentOutputFactory:
             input=component.input,
             position=component.position,
             question=question.id,
-            conditional=component.conditional,
         )
 
         await self._add_validate(component, output)
@@ -392,7 +390,6 @@ class FormCheckboxComponentOutputFactory:
             position=component.position,
             values=await self._values(component),
             question=question.id,
-            conditional=component.conditional,
         )
 
         await self._add_validate(component, output)
@@ -420,7 +417,6 @@ class FormRadioComponentOutputFactory:
             position=component.position,
             values=await self._values(component),
             question=question.id,
-            conditional=component.conditional,
         )
 
         await self._add_validate(component, output)
@@ -450,7 +446,6 @@ class FormSelectComponentOutputFactory:
             placeholder=component.placeholder,
             data=await self._data(component),
             question=question.id,
-            conditional=component.conditional,
         )
 
         await self._add_validate(component, output)

@@ -32,9 +32,3 @@ class PhoneNumber(PydanticPhoneNumber):
     # Will return:
     # +31612345678
     # +31201234567
-
-
-class FormIOConditional(BaseModel):
-    show: bool
-    when: str
-    eq: str | int | float | bool | None

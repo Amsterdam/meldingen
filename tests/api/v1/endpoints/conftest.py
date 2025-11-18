@@ -508,15 +508,7 @@ def is_required(request: FixtureRequest) -> bool:
 
 
 @pytest.fixture
-def conditional(request: FixtureRequest) -> dict[str, Any] | None:
-    if hasattr(request, "param"):
-        return dict(request.param)
-    else:
-        return {"show": True, "when": "A", "eq": "B"}
-
-
-@pytest.fixture
-async def form(db_session: AsyncSession, form_title: str, conditional: dict[str, Any]) -> Form:
+async def form(db_session: AsyncSession, form_title: str) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
     component = FormIoTextAreaComponent(
@@ -527,7 +519,6 @@ async def form(db_session: AsyncSession, form_title: str, conditional: dict[str,
         input=True,
         auto_expand=True,
         max_char_count=255,
-        conditional=conditional,
     )
 
     components = await form.awaitable_attrs.components
