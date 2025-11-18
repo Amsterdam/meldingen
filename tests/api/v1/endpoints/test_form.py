@@ -78,6 +78,7 @@ class BaseFormTest:
         assert data.get("key") == component.key
         assert data.get("type") == component.type
         assert data.get("input") == component.input
+        assert data.get("conditional") == component.conditional
 
         values_data = data.get("values", [])
         assert isinstance(values_data, list)  # This is here for mypy
@@ -95,6 +96,7 @@ class BaseFormTest:
 
         assert data.get("position") == component.position
         assert data.get("question") == component.question_id
+        assert data.get("conditional") == component.conditional
 
         validate = data.get("validate")
         assert validate is not None
