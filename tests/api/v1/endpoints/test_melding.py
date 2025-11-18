@@ -3482,6 +3482,25 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert body.get("phone", "") is None
 
     @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token", "asset_type_max_assets"], [("supersecrettoken", 5)])
+    async def test_add_asset_when_limit_is_reached(
+        self, app: FastAPI, client: AsyncClient, melding_with_assets: Melding, asset_type: AssetType
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
+            params={"token": "supersecrettoken"},
+            json={"external_id": "my_external_id", "asset_type_id": asset_type.id},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        body = response.json()
+
+        assert (
+            body.get("detail")
+            == "Melding with id 1 already has the maximum number of assets for asset type test_asset_type associated"
+        )
+
+    @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
     async def test_add_asset_that_already_exists(
         self, app: FastAPI, client: AsyncClient, melding: Melding, asset: Asset

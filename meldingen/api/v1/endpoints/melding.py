@@ -18,7 +18,7 @@ from meldingen_core.actions.melding import (
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
-from meldingen_core.exceptions import NotFoundException
+from meldingen_core.exceptions import LimitReachedException, NotFoundException
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.managers import RelationshipExistsException
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
@@ -875,6 +875,8 @@ async def add_asset(
     except TokenException as e:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
     except RelationshipExistsException as e:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except LimitReachedException as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     return await produce_output(melding)
