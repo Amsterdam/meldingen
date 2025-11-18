@@ -216,6 +216,7 @@ class FormIoQuestionComponent(FormIoComponent):
     jsonlogic: Mapped[str | None] = mapped_column(String(), nullable=True, default=None)
     required: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
     required_error_message: Mapped[str | None] = mapped_column(String(), nullable=True, default=None)
+    conditional: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True, default=None)
 
     @declared_attr
     def question(self) -> Mapped[Union["Question", None]]:
