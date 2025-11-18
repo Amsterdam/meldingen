@@ -47,7 +47,7 @@ dependencies = [
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2.1.0"
-black = "^25.1.0"
+black = "^25.11.0"
 filelock = "^3.20.0"
 isort = "^7.0.0"
 mailpit-api-client = {extras = ["pytest"], version = "^1.0.0"}
