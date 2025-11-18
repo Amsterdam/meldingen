@@ -3498,7 +3498,7 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert (
             body.get("detail")
             == "Melding with id "
-            + melding_with_assets.id
+            + str(melding_with_assets.id)
             + " already has the maximum number of assets for asset type test_asset_type associated"
         )
 
