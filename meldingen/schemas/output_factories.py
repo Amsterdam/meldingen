@@ -528,6 +528,7 @@ class FormComponentOutputFactory:
             input=component.input,
             position=component.position,
             components=children_output,
+            conditional=component.conditional,
         )
 
 

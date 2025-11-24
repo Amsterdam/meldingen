@@ -55,6 +55,7 @@ class BaseFormTest:
         assert data.get("key") == component.key
         assert data.get("type") == component.type
         assert data.get("input") == component.input
+        assert data.get("conditional") == component.conditional
 
         component_data = data.get("components", [])
         assert isinstance(component_data, list)  # This is here for mypy
@@ -899,6 +900,153 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         )
 
     @pytest.mark.anyio
+    async def test_update_form_with_conditionals(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form: Form,
+    ) -> None:
+        new_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "components": [
+                {
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": "textarea",
+                    "input": True,
+                    "autoExpand": False,
+                    "maxCharCount": None,
+                },
+                {
+                    "title": "Panel title",
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "conditional": {
+                        "show": True,
+                        "when": "heeft-u-meer-informatie",
+                        "eq": "ja",
+                    },
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": "textarea",
+                            "conditional": {
+                                "show": True,
+                                "when": "heeft-u-meer-informatie",
+                                "eq": "ja",
+                            },
+                            "input": True,
+                            "autoExpand": True,
+                            "maxCharCount": 255,
+                        },
+                    ],
+                },
+                {
+                    "title": "Panel title",
+                    "label": "panel-2",
+                    "key": "panel-2",
+                    "type": "panel",
+                    "input": False,
+                    "conditional": {
+                        "show": True,
+                        "when": "heeft-u-meer-informatie",
+                        "eq": "nee",
+                    },
+                    "components": [
+                        {
+                            "label": "Selecteer een optie?",
+                            "description": "",
+                            "key": "selecteer-een-optie",
+                            "type": "selectboxes",
+                            "input": True,
+                            "conditional": {
+                                "show": True,
+                                "when": "heeft-u-meer-informatie",
+                                "eq": "nee",
+                            },
+                            "values": [
+                                {
+                                    "label": "Optie #1",
+                                    "value": "option-1",
+                                },
+                                {
+                                    "label": "Optie #2",
+                                    "value": "option-2",
+                                },
+                                {
+                                    "label": "Optie #3",
+                                    "value": "option-3",
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "title": "Panel title",
+                    "label": "panel-3",
+                    "key": "panel-3",
+                    "type": "panel",
+                    "input": False,
+                    "conditional": {
+                        "show": True,
+                        "when": "waarom-meld-u-dit-bij-ons",
+                        "eq": "vanwege reden x",
+                    },
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": FormIoComponentTypeEnum.select,
+                            "input": True,
+                            "widget": "html5",
+                            "placeholder": "This is a placeholder value",
+                            "conditional": {
+                                "show": True,
+                                "when": "waarom-meld-u-dit-bij-ons",
+                                "eq": "vanwege reden x",
+                            },
+                            "data": {
+                                "values": [
+                                    {"label": "label1", "value": "value1"},
+                                    {"label": "label2", "value": "value2"},
+                                ]
+                            },
+                        },
+                    ],
+                },
+            ],
+        }
+
+        assert form.title != new_data["title"]
+        assert form.display != new_data["display"]
+        form_components = await form.awaitable_attrs.components
+        assert len(form_components) != len(new_data["components"])
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+
+        assert data.get("id") == form.id
+        assert data["title"] == new_data["title"]
+        assert data["display"] == new_data["display"]
+        assert data.get("classification", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+
+        components = await form.awaitable_attrs.components
+        await self._assert_components(data.get("components"), components)
+
+    @pytest.mark.anyio
     async def test_update_form_values(
         self,
         app: FastAPI,
@@ -1327,6 +1475,11 @@ class TestFormCreate(BaseUnauthorizedTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
+                    "conditional": {
+                        "show": True,
+                        "when": "somefield",
+                        "eq": "somevalue",
+                    },
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
@@ -1334,6 +1487,11 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "key": "waarom-meld-u-dit-bij-ons",
                             "type": FormIoComponentTypeEnum.text_field,
                             "input": True,
+                            "conditional": {
+                                "show": True,
+                                "when": "otherfield",
+                                "eq": "othervalue",
+                            },
                             "validate": {
                                 "required": True,
                                 "required_error_message": "U moet vertellen waarom u dit bij ons meldt!",
@@ -1368,6 +1526,11 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert panel.get("label") == "panel-1"
         assert panel.get("key") == "panel"
         assert panel.get("type") == "panel"
+        assert panel.get("conditional") == {
+            "show": True,
+            "when": "somefield",
+            "eq": "somevalue",
+        }
         assert not panel.get("input")
 
         panel_components: list[dict[str, Any]] = components[0].get("components")
@@ -1379,6 +1542,11 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert text_field.get("type") == FormIoComponentTypeEnum.text_field
         assert text_field.get("input")
         assert text_field.get("question") is not None
+        assert text_field.get("conditional") == {
+            "show": True,
+            "when": "otherfield",
+            "eq": "othervalue",
+        }
         validate = text_field.get("validate")
         assert validate is not None
         assert validate.get("required") is True
@@ -1396,6 +1564,11 @@ class TestFormCreate(BaseUnauthorizedTest):
                     "key": "panel",
                     "type": FormIoComponentTypeEnum.panel,
                     "input": False,
+                    "conditional": {
+                        "show": True,
+                        "when": "somefield",
+                        "eq": "somevalue",
+                    },
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
@@ -1405,6 +1578,11 @@ class TestFormCreate(BaseUnauthorizedTest):
                             "input": True,
                             "widget": "html5",
                             "placeholder": "This is a placeholder value",
+                            "conditional": {
+                                "show": True,
+                                "when": "otherfield",
+                                "eq": "othervalue",
+                            },
                             "data": {
                                 "values": [
                                     {"label": "label1", "value": "value1"},
@@ -1436,6 +1614,11 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert panel.get("key") == "panel"
         assert panel.get("type") == FormIoComponentTypeEnum.panel
         assert panel.get("input") is False
+        assert panel.get("conditional") == {
+            "show": True,
+            "when": "somefield",
+            "eq": "somevalue",
+        }
 
         panel_components = panel.get("components")
         assert len(panel_components) == 1
@@ -1449,6 +1632,11 @@ class TestFormCreate(BaseUnauthorizedTest):
         assert select.get("question") is not None
         assert select.get("widget") == "html5"
         assert select.get("placeholder") == "This is a placeholder value"
+        assert select.get("conditional") == {
+            "show": True,
+            "when": "otherfield",
+            "eq": "othervalue",
+        }
 
         select_data = select.get("data")
         assert select_data is not None
