@@ -21,8 +21,10 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, HTMLResponse
 from starlette.status import HTTP_409_CONFLICT
+from scalar_fastapi import get_scalar_api_reference
+
 
 from meldingen.api.v1.api import api_router
 from meldingen.config import settings
@@ -87,3 +89,13 @@ if os.getenv("CI") is None:
     set_meter_provider(MeterProvider((metric_reader,)))
 
     FastAPIInstrumentor.instrument_app(app)
+
+
+@app.get("/scalar", include_in_schema=False)
+async def scalar_html():
+    return get_scalar_api_reference(
+        # Your OpenAPI document
+        openapi_url=app.openapi_url,
+        # Avoid CORS issues (optional)
+        scalar_proxy_url="https://proxy.scalar.com",
+    )
