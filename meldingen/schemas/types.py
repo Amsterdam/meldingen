@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Annotated
 
 from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from geojson_pydantic import Point
@@ -36,5 +36,5 @@ class PhoneNumber(PydanticPhoneNumber):
 
 class FormIOConditional(BaseModel):
     show: bool
-    when: constr(min_length=1, strip_whitespace=True)
+    when: Annotated[str, constr(min_length=1, strip_whitespace=True)]
     eq: str | int | float | bool | None

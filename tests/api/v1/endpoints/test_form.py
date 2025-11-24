@@ -1047,7 +1047,9 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         await self._assert_components(data.get("components"), components)
 
     @pytest.mark.anyio
-    async def test_update_form_with_conditional_empty_when(self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form) -> None:
+    async def test_update_form_with_conditional_empty_when(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form
+    ) -> None:
         new_data = {
             "title": "Formulier #1",
             "display": "wizard",
@@ -1090,9 +1092,10 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert violation.get("loc") == ["body", "components", 1, "panel", "conditional", "when"]
         assert violation.get("msg") == "String should have at least 1 character"
 
-
     @pytest.mark.anyio
-    async def test_update_form_with_conditional_missing_elements(self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form) -> None:
+    async def test_update_form_with_conditional_missing_elements(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form
+    ) -> None:
         new_data = {
             "title": "Formulier #1",
             "display": "wizard",
@@ -1139,12 +1142,17 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             assert loc in expected_violations
             assert violation.get("msg") == expected_violations[loc]
 
-    
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         "invalid_eq",
-        [[], {},],)
-    async def test_update_form_conditional_with_invalid_eq_type(self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form, invalid_eq: Any) -> None:
+        [
+            [],
+            {},
+        ],
+    )
+    async def test_update_form_conditional_with_invalid_eq_type(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form, invalid_eq: Any
+    ) -> None:
         new_data = {
             "title": "Formulier #1",
             "display": "wizard",
@@ -1193,8 +1201,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             loc = tuple(violation.get("loc"))
             assert loc in expected_violations
             assert violation.get("msg") == expected_violations[loc]
-
-
 
     @pytest.mark.anyio
     async def test_update_form_values(
