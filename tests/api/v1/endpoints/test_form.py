@@ -915,7 +915,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "label": "Heeft u meer informatie die u met ons wilt delen?",
                     "description": "Help tekst bij de vraag.",
                     "key": "heeft-u-meer-informatie",
-                    "type": "textarea",
+                    "type": FormIoComponentTypeEnum.text_area,
                     "input": True,
                     "autoExpand": False,
                     "maxCharCount": None,
