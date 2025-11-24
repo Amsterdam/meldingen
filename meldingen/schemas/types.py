@@ -1,4 +1,4 @@
-from typing import Any, Annotated
+from typing import Annotated, Any
 
 from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from geojson_pydantic import Point
