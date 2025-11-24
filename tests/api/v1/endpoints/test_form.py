@@ -1371,7 +1371,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             i = i + 1
 
 
-class TestFormCreate(BaseUnauthorizedTest):
+class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
     ROUTE_NAME: Final[str] = "form:create"
     METHOD: Final[str] = "POST"
 
@@ -1804,6 +1804,162 @@ class TestFormCreate(BaseUnauthorizedTest):
             assert value.get("label") == f"label{i}"
             assert value.get("value") == f"value{i}"
             i = i + 1
+
+    @pytest.mark.anyio
+    async def test_create_form_with_conditional_empty_when(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        form_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "components": [
+                {
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": FormIoComponentTypeEnum.text_area,
+                    "input": True,
+                    "autoExpand": False,
+                    "maxCharCount": None,
+                },
+                {
+                    "title": "Panel title",
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "conditional": {
+                        "show": True,
+                        "when": " ",
+                        "eq": "ja",
+                    },
+                    "components": [],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=form_data)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "string_too_short"
+        assert violation.get("loc") == ["body", "components", 1, "panel", "conditional", "when"]
+        assert violation.get("msg") == "String should have at least 1 character"
+
+    @pytest.mark.anyio
+    async def test_create_form_with_conditional_missing_elements(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form
+    ) -> None:
+        form_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "components": [
+                {
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": FormIoComponentTypeEnum.text_area,
+                    "input": True,
+                    "autoExpand": False,
+                    "maxCharCount": None,
+                },
+                {
+                    "title": "Panel title",
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "conditional": {
+                        # Missing 'show', 'when', 'eq' keys
+                    },
+                    "components": [],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=form_data)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 3
+
+        expected_violations = {
+            ("body", "components", 1, "panel", "conditional", "show"): "Field required",
+            ("body", "components", 1, "panel", "conditional", "when"): "Field required",
+            ("body", "components", 1, "panel", "conditional", "eq"): "Field required",
+        }
+
+        for violation in detail:
+            loc = tuple(violation.get("loc"))
+            assert loc in expected_violations
+            assert violation.get("msg") == expected_violations[loc]
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "invalid_eq",
+        [
+            [],
+            {},
+        ],
+    )
+    async def test_create_form_conditional_with_invalid_eq_type(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form, invalid_eq: Any
+    ) -> None:
+        form_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "components": [
+                {
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": FormIoComponentTypeEnum.text_area,
+                    "input": True,
+                    "autoExpand": False,
+                    "maxCharCount": None,
+                },
+                {
+                    "title": "Panel title",
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "conditional": {
+                        "show": True,
+                        "when": "heeft-u-meer-informatie",
+                        "eq": invalid_eq,
+                    },
+                    "components": [],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=form_data)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 4
+
+        expected_violations = {
+            ("body", "components", 1, "panel", "conditional", "eq", "str"): "Input should be a valid string",
+            ("body", "components", 1, "panel", "conditional", "eq", "int"): "Input should be a valid integer",
+            ("body", "components", 1, "panel", "conditional", "eq", "float"): "Input should be a valid number",
+            ("body", "components", 1, "panel", "conditional", "eq", "bool"): "Input should be a valid boolean",
+        }
+
+        for violation in detail:
+            loc = tuple(violation.get("loc"))
+            assert loc in expected_violations
+            assert violation.get("msg") == expected_violations[loc]
 
     @pytest.mark.anyio
     async def test_create_form_with_classification(
