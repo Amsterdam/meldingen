@@ -5,7 +5,7 @@ from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
 from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
-from meldingen.schemas.types import PhoneNumber
+from meldingen.schemas.types import FormIOConditional, PhoneNumber
 from meldingen.validators import create_non_match_validator
 
 
@@ -111,6 +111,7 @@ class FormPanelComponentInput(BaseModel):
     key: Annotated[str, Field(min_length=3)]
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.panel)]
     input: bool = False
+    conditional: FormIOConditional | None = Field(default=None)
 
     components: list[
         Annotated[
@@ -144,6 +145,7 @@ class FormComponentInput(BaseModel):
     type: Annotated[FormIoComponentTypeEnum, Field(), AfterValidator(panel_not_allowed)]
     input: bool
     validate_: FormComponentInputValidate | None = Field(default=None, alias="validate")
+    conditional: FormIOConditional | None = Field(default=None)
 
 
 class FormTextAreaComponentInput(FormComponentInput):

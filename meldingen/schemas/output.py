@@ -120,6 +120,7 @@ class BaseFormPanelComponentOutput(BaseModel):
     input: bool
 
     position: int
+    conditional: FormIOConditional | None = Field(default=None)
 
 
 class StaticFormPanelComponentOutput(BaseFormPanelComponentOutput):

@@ -553,7 +553,7 @@ def jsonlogic(request: FixtureRequest) -> str | None:
 
 @pytest.fixture
 async def form_with_classification(
-    db_session: AsyncSession, form_title: str, jsonlogic: str | None, is_required: bool
+    db_session: AsyncSession, form_title: str, jsonlogic: str | None, is_required: bool, conditional: dict[str, Any]
 ) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
@@ -563,6 +563,7 @@ async def form_with_classification(
         key="page1",
         input=False,
         type=FormIoComponentTypeEnum.panel,
+        conditional=conditional,
     )
 
     component = FormIoTextAreaComponent(
@@ -575,6 +576,7 @@ async def form_with_classification(
         max_char_count=255,
         jsonlogic=jsonlogic,
         required=is_required,
+        conditional=conditional,
     )
 
     panel_components = await panel.awaitable_attrs.components
