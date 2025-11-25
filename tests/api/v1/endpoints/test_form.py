@@ -19,6 +19,7 @@ from meldingen.models import (
     FormIoCheckBoxComponent,
     FormIoComponentTypeEnum,
     FormIoComponentValue,
+    FormIoDateComponent,
     FormIoPanelComponent,
     FormIoQuestionComponent,
     FormIoRadioComponent,
@@ -45,6 +46,9 @@ class BaseFormTest:
             elif component.type in [FormIoComponentTypeEnum.checkbox, FormIoComponentTypeEnum.radio]:
                 assert isinstance(component, (FormIoCheckBoxComponent, FormIoRadioComponent))
                 await self._assert_value_component(component_data, component)
+            elif component.type == FormIoComponentTypeEnum.date:
+                assert isinstance(component, FormIoDateComponent)
+                await self._assert_date_component(component_data, component)
             else:
                 assert isinstance(component, FormIoQuestionComponent)
                 await self._assert_component(component_data, component)
@@ -87,6 +91,10 @@ class BaseFormTest:
         values = await component.awaitable_attrs.values
         if values:
             await self._assert_component_values(values_data, values)
+
+    async def _assert_date_component(self, data: dict[str, Any], component: FormIoDateComponent) -> None:
+        assert data.get("day_range") == component.day_range
+        await self._assert_component(data, component)
 
     async def _assert_component(self, data: dict[str, Any], component: FormIoQuestionComponent) -> None:
         assert data.get("label") == component.label
@@ -370,6 +378,22 @@ class TestFormRetrieve(BaseFormTest):
 
         body = response.json()
         assert body.get("detail") == "Not Found"
+
+    @pytest.mark.anyio
+    async def test_retrieve_form_with_date_component(
+        self, app: FastAPI, client: AsyncClient, form_with_date_component: Form
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=form_with_date_component.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert data.get("id") == form_with_date_component.id
+        assert data.get("title") == form_with_date_component.title
+        assert data.get("display") == form_with_date_component.display
+        assert len(data.get("components")) == len(await form_with_date_component.awaitable_attrs.components)
+
+        await self._assert_components(data.get("components"), await form_with_date_component.awaitable_attrs.components)
 
 
 class TestFormDelete(BaseUnauthorizedTest):

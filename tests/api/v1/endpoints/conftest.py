@@ -20,6 +20,7 @@ from meldingen.models import (
     Classification,
     Form,
     FormIoComponentTypeEnum,
+    FormIoDateComponent,
     FormIoFormDisplayEnum,
     FormIoPanelComponent,
     FormIoTextAreaComponent,
@@ -549,6 +550,69 @@ def jsonlogic(request: FixtureRequest) -> str | None:
         return str(request.param)
     else:
         return None
+
+
+@pytest.fixture
+def form_panel(db_session: AsyncSession) -> FormIoPanelComponent:
+    panel = FormIoPanelComponent(
+        title="Panel 1",
+        label="Page 1",
+        key="page1",
+        input=False,
+        type=FormIoComponentTypeEnum.panel,
+    )
+    db_session.add(panel)
+    return panel
+
+
+@pytest.fixture
+def formio_date_component_day_range(request: FixtureRequest) -> int:
+    if hasattr(request, "param"):
+        return int(request.param)
+    else:
+        return 7
+
+
+@pytest.fixture
+def formio_date_component(db_session: AsyncSession, formio_date_component_day_range: int) -> FormIoDateComponent:
+    component = FormIoDateComponent(
+        label="Datum",
+        description="",
+        key="datum",
+        type=FormIoComponentTypeEnum.date,
+        input=True,
+        day_range=formio_date_component_day_range,
+    )
+    db_session.add(component)
+    return component
+
+
+@pytest.fixture
+async def form_with_date_component(
+    db_session: AsyncSession,
+    form_title: str,
+    form_panel: FormIoPanelComponent,
+    formio_date_component: FormIoDateComponent,
+    conditional: dict[str, Any],
+) -> Form:
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
+
+    formio_date_component.conditional = conditional
+
+    form_components = await form.awaitable_attrs.components
+    form_components.append(form_panel)
+
+    panel_components = await form_panel.awaitable_attrs.components
+    panel_components.append(formio_date_component)
+
+    question = Question(text="Vanaf welke dag speelt dit?", form=form)
+
+    formio_date_component.question = question
+
+    db_session.add(form)
+    await db_session.commit()
+
+    return form
 
 
 @pytest.fixture

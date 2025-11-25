@@ -11,6 +11,7 @@ from meldingen.models import (
     Form,
     FormIoCheckBoxComponent,
     FormIoComponent,
+    FormIoDateComponent,
     FormIoPanelComponent,
     FormIoQuestionComponent,
     FormIoRadioComponent,
@@ -30,6 +31,7 @@ from meldingen.schemas.output import (
     FormCheckboxComponentOutput,
     FormComponentOutputValidate,
     FormComponentValueOutput,
+    FormDateComponentOutput,
     FormOutput,
     FormPanelComponentOutput,
     FormRadioComponentOutput,
@@ -458,12 +460,39 @@ class FormSelectComponentOutputFactory:
         return output
 
 
+class FormDateComponentOutputFactory:
+    _add_validate: ValidateAdder
+
+    def __init__(self, validate_adder: ValidateAdder):
+        self._add_validate = validate_adder
+
+    async def __call__(self, component: FormIoDateComponent) -> FormDateComponentOutput:
+        question = await component.awaitable_attrs.question
+
+        output = FormDateComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            position=component.position,
+            question=question.id,
+            conditional=component.conditional,
+            day_range=component.day_range,
+        )
+
+        await self._add_validate(component, output)
+
+        return output
+
+
 class FormComponentOutputFactory:
     _text_area_component: FormTextAreaComponentOutputFactory
     _text_field_component: FormTextFieldInputComponentOutputFactory
     _checkbox_component: FormCheckboxComponentOutputFactory
     _radio_component: FormRadioComponentOutputFactory
     _select_component: FormSelectComponentOutputFactory
+    _date_component: FormDateComponentOutputFactory
 
     def __init__(
         self,
@@ -472,12 +501,14 @@ class FormComponentOutputFactory:
         checkbox_factory: FormCheckboxComponentOutputFactory,
         radio_factory: FormRadioComponentOutputFactory,
         select_factory: FormSelectComponentOutputFactory,
+        date_factory: FormDateComponentOutputFactory,
     ):
         self._text_area_component = text_area_factory
         self._text_field_component = text_field_factory
         self._checkbox_component = checkbox_factory
         self._radio_component = radio_factory
         self._select_component = select_factory
+        self._date_component = date_factory
 
     async def __call__(self, components: list[FormIoComponent]) -> list[
         Union[
@@ -487,6 +518,7 @@ class FormComponentOutputFactory:
             FormCheckboxComponentOutput,
             FormRadioComponentOutput,
             FormSelectComponentOutput,
+            FormDateComponentOutput,
         ]
     ]:
         output_components: list[
@@ -497,6 +529,7 @@ class FormComponentOutputFactory:
                 FormCheckboxComponentOutput,
                 FormRadioComponentOutput,
                 FormSelectComponentOutput,
+                FormDateComponentOutput,
             ]
         ] = []
         for component in components:
@@ -512,6 +545,8 @@ class FormComponentOutputFactory:
                 output_components.append(await self._radio_component(component))
             elif isinstance(component, FormIoSelectComponent):
                 output_components.append(await self._select_component(component))
+            elif isinstance(component, FormIoDateComponent):
+                output_components.append(await self._date_component(component))
 
         return output_components
 
