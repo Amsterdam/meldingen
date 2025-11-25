@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated, Any, Union
 
 from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field, field_serializer
-from pydantic.alias_generators import to_camel, to_snake
+from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
 from meldingen.schemas.types import FormIOConditional, GeoJson, PhoneNumber
@@ -224,10 +224,6 @@ class FormSelectComponentOutput(StaticFormSelectComponentOutput):
 
 
 class FormDateComponentOutput(BaseFormComponentOutput):
-    # Convert to snake because the parent converts to camel.
-    # day_range is not a FormIO standard property, so no nee
-    model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_snake))
-
     day_range: int | None = Field(default=None)
     question: int
 

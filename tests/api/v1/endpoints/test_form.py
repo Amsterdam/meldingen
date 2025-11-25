@@ -93,7 +93,7 @@ class BaseFormTest:
             await self._assert_component_values(values_data, values)
 
     async def _assert_date_component(self, data: dict[str, Any], component: FormIoDateComponent) -> None:
-        assert data.get("day_range") == component.day_range
+        assert data.get("dayRange") == component.day_range
         await self._assert_component(data, component)
 
     async def _assert_component(self, data: dict[str, Any], component: FormIoQuestionComponent) -> None:
