@@ -230,7 +230,7 @@ class FormDateComponentOutput(BaseFormComponentOutput):
     question: int
 
 
-class FormTimeComponentOutput(StaticFormRadioComponentOutput):
+class FormTimeComponentOutput(BaseFormComponentOutput):
     question: int
 
 
