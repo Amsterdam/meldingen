@@ -7,6 +7,8 @@ migrations/versions/cd7033b17112_update_form_component_types_enum.py:0: error: M
 migrations/versions/cd7033b17112_update_form_component_types_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/ca3e63fcdb25_date_question_component.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/ca3e63fcdb25_date_question_component.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
+migrations/versions/73c1a14b1f62_time_question_component.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
+migrations/versions/73c1a14b1f62_time_question_component.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/102eaa13b8d8_add_select_component_type_to_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/102eaa13b8d8_add_select_component_type_to_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/a4c7c0e946d2_geolocation_column.py:0: error: Module has no attribute "add_geospatial_column"  [attr-defined]
