@@ -105,6 +105,7 @@ class FormOutput(SimpleFormOutput):
             "FormCheckboxComponentOutput",
             "FormRadioComponentOutput",
             "FormSelectComponentOutput",
+            "FormDateComponentOutput",
         ]
     ]
 
@@ -143,6 +144,7 @@ class FormPanelComponentOutput(BaseFormPanelComponentOutput):
             "FormCheckboxComponentOutput",
             "FormRadioComponentOutput",
             "FormSelectComponentOutput",
+            "FormDateComponentOutput",
         ]
     ]
 
@@ -218,6 +220,11 @@ class FormRadioComponentOutput(StaticFormRadioComponentOutput):
 
 
 class FormSelectComponentOutput(StaticFormSelectComponentOutput):
+    question: int
+
+
+class FormDateComponentOutput(BaseFormComponentOutput):
+    day_range: int | None = Field(default=None)
     question: int
 
 
