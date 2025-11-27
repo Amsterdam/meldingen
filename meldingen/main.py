@@ -35,7 +35,7 @@ def get_application() -> FastAPI:
         title=settings.project_name,
         prefix=settings.url_prefix,
         swagger_ui_init_oauth={
-            "clientId": settings.auth_audience,
+            "clientId": settings.auth_client_id,
             "scopes": settings.auth_scopes,
             "usePkceWithAuthorizationCodeGrant": True,
         },
