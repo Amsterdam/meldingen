@@ -75,6 +75,10 @@ def component_discriminator(value: Any) -> str | None:
         return FormIoComponentTypeEnum.checkbox
     elif isinstance(value, FormSelectComponentInput):
         return FormIoComponentTypeEnum.select
+    elif isinstance(value, FormDateComponentInput):
+        return FormIoComponentTypeEnum.date
+    elif isinstance(value, FormTimeComponentInput):
+        return FormIoComponentTypeEnum.time
 
     return None
 
@@ -86,6 +90,8 @@ FormComponent = Union[
     Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
     Annotated["FormCheckboxComponentInput", Tag(FormIoComponentTypeEnum.checkbox)],
     Annotated["FormSelectComponentInput", Tag(FormIoComponentTypeEnum.select)],
+    Annotated["FormDateComponentInput", Tag(FormIoComponentTypeEnum.date)],
+    Annotated["FormTimeComponentInput", Tag(FormIoComponentTypeEnum.time)],
 ]
 
 
@@ -121,6 +127,8 @@ class FormPanelComponentInput(BaseModel):
                 Annotated["FormRadioComponentInput", Tag(FormIoComponentTypeEnum.radio)],
                 Annotated["FormCheckboxComponentInput", Tag(FormIoComponentTypeEnum.checkbox)],
                 Annotated["FormSelectComponentInput", Tag(FormIoComponentTypeEnum.select)],
+                Annotated["FormDateComponentInput", Tag(FormIoComponentTypeEnum.date)],
+                Annotated["FormTimeComponentInput", Tag(FormIoComponentTypeEnum.time)],
             ],
             Discriminator(component_discriminator),
         ]
@@ -192,6 +200,19 @@ class FormSelectComponentInput(FormComponentInput):
     widget: str
     placeholder: str
     data: FormSelectComponentDataInput
+
+
+class FormDateComponentInput(FormComponentInput):
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
+
+    type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.date)]
+    day_range: int
+
+
+class FormTimeComponentInput(FormComponentInput):
+    model_config = ConfigDict(alias_generator=AliasGenerator(alias=to_camel), extra="forbid")
+
+    type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.time)]
 
 
 class AnswerInput(BaseModel):

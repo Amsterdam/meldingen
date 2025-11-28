@@ -17,6 +17,7 @@ from meldingen.models import (
     FormIoCheckBoxComponent,
     FormIoComponentTypeEnum,
     FormIoComponentValue,
+    FormIoDateComponent,
     FormIoPanelComponent,
     FormIoQuestionComponent,
     FormIoRadioComponent,
@@ -25,6 +26,7 @@ from meldingen.models import (
     FormIoSelectComponentValue,
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
+    FormIoTimeComponent,
     Melding,
     Question,
     StaticForm,
@@ -146,6 +148,14 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
                     text_field_component = FormIoTextFieldComponent(**component_values)
                     parent_components.append(text_field_component)
                     await self._create_question(text_field_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.date:
+                    date_component = FormIoDateComponent(**component_values)
+                    parent_components.append(date_component)
+                    await self._create_question(date_component)
+                elif component_values.get("type") == FormIoComponentTypeEnum.time:
+                    time_component = FormIoTimeComponent(**component_values)
+                    parent_components.append(time_component)
+                    await self._create_question(time_component)
                 else:
                     raise Exception(f"Unsupported component type: {component_values.get('type')}")
 
