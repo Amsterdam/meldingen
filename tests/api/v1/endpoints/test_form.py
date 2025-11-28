@@ -395,6 +395,22 @@ class TestFormRetrieve(BaseFormTest):
 
         await self._assert_components(data.get("components"), await form_with_date_component.awaitable_attrs.components)
 
+    @pytest.mark.anyio
+    async def test_retrieve_form_with_time_component(
+        self, app: FastAPI, client: AsyncClient, form_with_time_component: Form
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=form_with_time_component.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert data.get("id") == form_with_time_component.id
+        assert data.get("title") == form_with_time_component.title
+        assert data.get("display") == form_with_time_component.display
+        assert len(data.get("components")) == len(await form_with_time_component.awaitable_attrs.components)
+
+        await self._assert_components(data.get("components"), await form_with_time_component.awaitable_attrs.components)
+
 
 class TestFormDelete(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "form:delete"
