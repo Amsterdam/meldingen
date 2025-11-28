@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     token_url: str
     issuer_url: str
     auth_audience: str
+    auth_scopes: list[str]
+    auth_client_id: str
+    auth_identifier_field: str
 
     # CORS
     cors_allow_origins: list[str]
