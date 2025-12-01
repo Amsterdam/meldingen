@@ -24,6 +24,7 @@ from meldingen.models import (
     FormIoFormDisplayEnum,
     FormIoPanelComponent,
     FormIoTextAreaComponent,
+    FormIoTimeComponent,
     Melding,
     Question,
     StaticForm,
@@ -608,6 +609,47 @@ async def form_with_date_component(
     question = Question(text="Vanaf welke dag speelt dit?", form=form)
 
     formio_date_component.question = question
+
+    db_session.add(form)
+    await db_session.commit()
+
+    return form
+
+
+@pytest.fixture
+def formio_time_component(db_session: AsyncSession) -> FormIoTimeComponent:
+    component = FormIoTimeComponent(
+        label="Tijd",
+        description="",
+        key="tijd",
+        type=FormIoComponentTypeEnum.time,
+        input=True,
+    )
+    db_session.add(component)
+    return component
+
+
+@pytest.fixture
+async def form_with_time_component(
+    db_session: AsyncSession,
+    form_title: str,
+    form_panel: FormIoPanelComponent,
+    formio_time_component: FormIoTimeComponent,
+    conditional: dict[str, Any],
+) -> Form:
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
+
+    formio_time_component.conditional = conditional
+
+    form_components = await form.awaitable_attrs.components
+    form_components.append(form_panel)
+
+    panel_components = await form_panel.awaitable_attrs.components
+    panel_components.append(formio_time_component)
+
+    question = Question(text="Hoe laat was dit?", form=form)
+
+    formio_time_component.question = question
 
     db_session.add(form)
     await db_session.commit()

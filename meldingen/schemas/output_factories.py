@@ -19,6 +19,7 @@ from meldingen.models import (
     FormIoSelectComponentData,
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
+    FormIoTimeComponent,
     Melding,
     StaticForm,
 )
@@ -39,6 +40,7 @@ from meldingen.schemas.output import (
     FormSelectComponentOutput,
     FormTextAreaComponentOutput,
     FormTextFieldInputComponentOutput,
+    FormTimeComponentOutput,
     MeldingCreateOutput,
     MeldingOutput,
     MeldingUpdateOutput,
@@ -486,6 +488,31 @@ class FormDateComponentOutputFactory:
         return output
 
 
+class FormTimeComponentOutputFactory:
+    _add_validate: ValidateAdder
+
+    def __init__(self, validate_adder: ValidateAdder):
+        self._add_validate = validate_adder
+
+    async def __call__(self, component: FormIoTimeComponent) -> FormTimeComponentOutput:
+        question = await component.awaitable_attrs.question
+
+        output = FormTimeComponentOutput(
+            label=component.label,
+            description=component.description,
+            key=component.key,
+            type=component.type,
+            input=component.input,
+            position=component.position,
+            question=question.id,
+            conditional=component.conditional,
+        )
+
+        await self._add_validate(component, output)
+
+        return output
+
+
 class FormComponentOutputFactory:
     _text_area_component: FormTextAreaComponentOutputFactory
     _text_field_component: FormTextFieldInputComponentOutputFactory
@@ -493,6 +520,7 @@ class FormComponentOutputFactory:
     _radio_component: FormRadioComponentOutputFactory
     _select_component: FormSelectComponentOutputFactory
     _date_component: FormDateComponentOutputFactory
+    _time_component: FormTimeComponentOutputFactory
 
     def __init__(
         self,
@@ -502,6 +530,7 @@ class FormComponentOutputFactory:
         radio_factory: FormRadioComponentOutputFactory,
         select_factory: FormSelectComponentOutputFactory,
         date_factory: FormDateComponentOutputFactory,
+        time_factory: FormTimeComponentOutputFactory,
     ):
         self._text_area_component = text_area_factory
         self._text_field_component = text_field_factory
@@ -509,6 +538,7 @@ class FormComponentOutputFactory:
         self._radio_component = radio_factory
         self._select_component = select_factory
         self._date_component = date_factory
+        self._time_component = time_factory
 
     async def __call__(self, components: list[FormIoComponent]) -> list[
         Union[
@@ -519,6 +549,7 @@ class FormComponentOutputFactory:
             FormRadioComponentOutput,
             FormSelectComponentOutput,
             FormDateComponentOutput,
+            FormTimeComponentOutput,
         ]
     ]:
         output_components: list[
@@ -530,6 +561,7 @@ class FormComponentOutputFactory:
                 FormRadioComponentOutput,
                 FormSelectComponentOutput,
                 FormDateComponentOutput,
+                FormTimeComponentOutput,
             ]
         ] = []
         for component in components:
@@ -547,6 +579,8 @@ class FormComponentOutputFactory:
                 output_components.append(await self._select_component(component))
             elif isinstance(component, FormIoDateComponent):
                 output_components.append(await self._date_component(component))
+            elif isinstance(component, FormIoTimeComponent):
+                output_components.append(await self._time_component(component))
 
         return output_components
 

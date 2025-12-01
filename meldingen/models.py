@@ -136,6 +136,7 @@ class FormIoComponentTypeEnum(enum.StrEnum):
     radio = "radio"
     select = "select"
     date = "date"
+    time = "time"
 
 
 class FormIoComponent(AsyncAttrs, BaseDBModel):
@@ -353,6 +354,15 @@ class FormIoDateComponent(FormIoQuestionComponent):
     def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_identity": FormIoComponentTypeEnum.date,
+        }
+
+
+class FormIoTimeComponent(FormIoQuestionComponent):
+    # A component that allows the user to select a time of day.
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": FormIoComponentTypeEnum.time,
         }
 
 

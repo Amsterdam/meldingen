@@ -395,6 +395,22 @@ class TestFormRetrieve(BaseFormTest):
 
         await self._assert_components(data.get("components"), await form_with_date_component.awaitable_attrs.components)
 
+    @pytest.mark.anyio
+    async def test_retrieve_form_with_time_component(
+        self, app: FastAPI, client: AsyncClient, form_with_time_component: Form
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, form_id=form_with_time_component.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert data.get("id") == form_with_time_component.id
+        assert data.get("title") == form_with_time_component.title
+        assert data.get("display") == form_with_time_component.display
+        assert len(data.get("components")) == len(await form_with_time_component.awaitable_attrs.components)
+
+        await self._assert_components(data.get("components"), await form_with_time_component.awaitable_attrs.components)
+
 
 class TestFormDelete(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "form:delete"
@@ -920,7 +936,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
             "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
             "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>, "
-            "<FormIoComponentTypeEnum.select: 'select'>"
+            "<FormIoComponentTypeEnum.select: 'select'>, <FormIoComponentTypeEnum.date: 'date'>, <FormIoComponentTypeEnum.time: 'time'>"
         )
 
     @pytest.mark.anyio
@@ -2198,8 +2214,187 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
             == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
             "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
             "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>, "
-            "<FormIoComponentTypeEnum.select: 'select'>"
+            "<FormIoComponentTypeEnum.select: 'select'>, <FormIoComponentTypeEnum.date: 'date'>, <FormIoComponentTypeEnum.time: 'time'>"
         )
+
+    @pytest.mark.anyio
+    async def test_create_form_with_time_field(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "title": "Panel title",
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "conditional": {
+                        "show": True,
+                        "when": "somefield",
+                        "eq": "somevalue",
+                    },
+                    "components": [
+                        {
+                            "label": "Hoe laat was dit?",
+                            "description": "",
+                            "key": "hoe-laat-was-dit",
+                            "type": FormIoComponentTypeEnum.time,
+                            "input": True,
+                            "conditional": {
+                                "show": True,
+                                "when": "otherfield",
+                                "eq": "othervalue",
+                            },
+                            "validate": {
+                                "required": True,
+                                "required_error_message": "U moet vertellen hoe laat het was!",
+                            },
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        _id = data.get("id", 0)
+        assert isinstance(_id, int)
+        assert _id > 0
+        assert data.get("title") == "Formulier #1"
+        assert data.get("display") == "form"
+        assert data.get("classification", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+
+        components = data.get("components")
+        assert isinstance(components, list)
+        assert components is not None
+        assert len(components) == 1
+
+        panel: dict[str, Any] = components[0]
+        assert panel.get("title") == "Panel title"
+        assert panel.get("label") == "panel-1"
+        assert panel.get("key") == "panel"
+        assert panel.get("type") == "panel"
+        assert panel.get("conditional") == {
+            "show": True,
+            "when": "somefield",
+            "eq": "somevalue",
+        }
+        assert not panel.get("input")
+
+        panel_components: list[dict[str, Any]] = components[0].get("components")
+
+        text_field: dict[str, Any] = panel_components[0]
+        assert text_field.get("label") == "Hoe laat was dit?"
+        assert text_field.get("description") == ""
+        assert text_field.get("key") == "hoe-laat-was-dit"
+        assert text_field.get("type") == FormIoComponentTypeEnum.time
+        assert text_field.get("input")
+        assert text_field.get("question") is not None
+        assert text_field.get("conditional") == {
+            "show": True,
+            "when": "otherfield",
+            "eq": "othervalue",
+        }
+        validate = text_field.get("validate")
+        assert validate is not None
+        assert validate.get("required") is True
+        assert validate.get("required_error_message") == "U moet vertellen hoe laat het was!"
+
+    @pytest.mark.anyio
+    async def test_create_form_with_date_field(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        data = {
+            "title": "Formulier #1",
+            "display": "form",
+            "components": [
+                {
+                    "title": "Panel title",
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "conditional": {
+                        "show": True,
+                        "when": "somefield",
+                        "eq": "somevalue",
+                    },
+                    "components": [
+                        {
+                            "label": "Welke dag was dit?",
+                            "description": "",
+                            "key": "welke-dag-was-dit",
+                            "dayRange": 5,
+                            "type": FormIoComponentTypeEnum.date,
+                            "input": True,
+                            "conditional": {
+                                "show": True,
+                                "when": "otherfield",
+                                "eq": "othervalue",
+                            },
+                            "validate": {
+                                "required": True,
+                                "required_error_message": "U moet vertellen welke dag het was!",
+                            },
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        _id = data.get("id", 0)
+        assert isinstance(_id, int)
+        assert _id > 0
+        assert data.get("title") == "Formulier #1"
+        assert data.get("display") == "form"
+        assert data.get("classification", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+
+        components = data.get("components")
+        assert isinstance(components, list)
+        assert components is not None
+        assert len(components) == 1
+
+        panel: dict[str, Any] = components[0]
+        assert panel.get("title") == "Panel title"
+        assert panel.get("label") == "panel-1"
+        assert panel.get("key") == "panel"
+        assert panel.get("type") == "panel"
+        assert panel.get("conditional") == {
+            "show": True,
+            "when": "somefield",
+            "eq": "somevalue",
+        }
+        assert not panel.get("input")
+
+        panel_components: list[dict[str, Any]] = components[0].get("components")
+
+        text_field: dict[str, Any] = panel_components[0]
+        assert text_field.get("label") == "Welke dag was dit?"
+        assert text_field.get("description") == ""
+        assert text_field.get("key") == "welke-dag-was-dit"
+        assert text_field.get("type") == FormIoComponentTypeEnum.date
+        assert text_field.get("input")
+        assert text_field.get("question") is not None
+        assert text_field.get("conditional") == {
+            "show": True,
+            "when": "otherfield",
+            "eq": "othervalue",
+        }
+        validate = text_field.get("validate")
+        assert validate is not None
+        assert validate.get("required") is True
+        assert validate.get("required_error_message") == "U moet vertellen welke dag het was!"
 
 
 class TestFormClassification:

@@ -40,6 +40,7 @@ def get_application() -> FastAPI:
             "usePkceWithAuthorizationCodeGrant": True,
         },
         swagger_ui_parameters={"deepLinking": False},
+        docs_url="/swagger",
     )
     application.include_router(api_router)
 
