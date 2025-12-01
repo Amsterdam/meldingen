@@ -5,7 +5,7 @@ from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
 from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
-from meldingen.schemas.types import FormIOConditional, PhoneNumber
+from meldingen.schemas.types import FormIOConditional, PhoneNumber, NonEmptyStrippedStr
 from meldingen.validators import create_non_match_validator
 
 
@@ -214,9 +214,12 @@ class FormTimeComponentInput(FormComponentInput):
 
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.time)]
 
-
+# TODO change to TextAnswerInput
 class AnswerInput(BaseModel):
-    text: str = Field(min_length=1)
+    # type
+    ...
+class TextAnswerInput(AnswerInput):
+    text: NonEmptyStrippedStr
 
 
 class MailPreviewInput(BaseModel):

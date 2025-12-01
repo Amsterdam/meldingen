@@ -1,4 +1,5 @@
 import enum
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional, Union
 
@@ -435,15 +436,41 @@ class Question(AsyncAttrs, BaseDBModel, BaseQuestion):
     component: Mapped[FormIoQuestionComponent | None] = relationship(default=None)
 
 
-class Answer(AsyncAttrs, BaseDBModel, BaseAnswer):
-    text: Mapped[str] = mapped_column(String())
+class AnswerTypeEnum(enum.StrEnum):
+    text = "text"
+
+
+class Answer(AsyncAttrs, BaseDBModel):
+    @declared_attr.directive
+    def __tablename__(cls) -> str:
+        return "answer"
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_on": "type",
+        }
 
     question_id: Mapped[int] = mapped_column(ForeignKey("question.id"), init=False)
     question: Mapped[Question] = relationship()
 
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
     melding: Mapped[Melding] = relationship()
+    type: Mapped[str] = mapped_column(
+        Enum(AnswerTypeEnum, name="answer_type"), default=AnswerTypeEnum.text
+    )
 
+
+class TextAnswer(Answer, BaseAnswer):
+    __table_args__ = {"extend_existing": True}
+
+    text: Mapped[str] = mapped_column(String(),  nullable="True")
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": AnswerTypeEnum.text,
+        }
 
 class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     file_path: Mapped[str] = mapped_column(String(), init=False)

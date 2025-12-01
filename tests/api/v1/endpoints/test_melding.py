@@ -3225,7 +3225,6 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         return {"melding_id": 1}
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
     async def test_list_answers_melding_without_answers(
         self, app: FastAPI, client: AsyncClient, melding: Melding, auth_user: None
     ) -> None:
@@ -3242,14 +3241,12 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         assert len(body) == 0
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
     async def test_list_answers(
-        self, app: FastAPI, client: AsyncClient, melding_with_answers: Melding, auth_user: None
+        self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding, auth_user: None
     ) -> None:
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_answers.id),
-            params={"token": melding_with_answers.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id),
         )
 
         assert response.status_code == HTTP_200_OK
