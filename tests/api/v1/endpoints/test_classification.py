@@ -10,7 +10,7 @@ from starlette.status import (
     HTTP_204_NO_CONTENT,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
-    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
 from meldingen.models import AssetType, Classification, Form
@@ -76,7 +76,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
     ) -> None:
         response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": ""})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         data = response.json()
         detail = data.get("detail")
@@ -322,7 +322,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"sort": '["form", "ASC"]'})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -591,7 +591,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
     ) -> None:
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification_id))
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")

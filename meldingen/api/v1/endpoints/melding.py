@@ -33,8 +33,8 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
-    HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_413_CONTENT_TOO_LARGE,
+    HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
 from meldingen.actions.asset import ListAssetsAction, MelderListAssetsAction
@@ -207,7 +207,7 @@ async def list_meldingen(
         try:
             feature: Feature[Geometry, dict[str, Any] | BaseModel] = Feature.model_validate_json(in_area)
         except ValidationError as e:
-            raise HTTPException(HTTP_422_UNPROCESSABLE_ENTITY, e.errors()) from e
+            raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, e.errors()) from e
 
         if feature.geometry is not None:
             area = feature.geometry.model_dump_json()
@@ -541,7 +541,11 @@ async def answer_additional_question(
                 "description": "",
                 "content": {
                     "application/json": {
-                        "example": {"detail": [{"msg": "Answer does not belong to the melding."}]},
+                        "examples": {
+                            "The answer does not belong to the melding.": {
+                                "value": {"detail": "Answer does not belong to the melding"}
+                            },
+                        },
                     },
                 },
             },
@@ -597,9 +601,15 @@ def _hydrate_attachment_output(attachment: Attachment) -> AttachmentOutput:
                     },
                 },
             },
-            HTTP_413_REQUEST_ENTITY_TOO_LARGE: {
+            HTTP_413_CONTENT_TOO_LARGE: {
                 "description": "Uploading attachment that is too large.",
-                "content": {"application/json": {"example": {"detail": "Allowed content size exceeded"}}},
+                "content": {
+                    "application/json": {
+                        "examples": {
+                            "Allowed content size exceeded": {"value": {"detail": "Allowed content size exceeded"}}
+                        }
+                    }
+                },
             },
         },
     },

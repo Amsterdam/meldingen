@@ -11,7 +11,7 @@ from starlette.status import (
     HTTP_204_NO_CONTENT,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
-    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
 from meldingen.models import AssetType
@@ -51,7 +51,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
             app.url_path_for(self.get_route_name()), json={"name": "bla", "arguments": {}, "max_assets": 5}
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
 
@@ -69,7 +69,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
             app.url_path_for(self.get_route_name()), json={"class_name": "bla.bla", "arguments": {}, "max_assets": 3}
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
 
@@ -89,7 +89,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
             app.url_path_for(self.get_route_name()), json={"name": "name", "class_name": "bla.bla", "arguments": {}}
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
 
@@ -109,7 +109,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
             app.url_path_for(self.get_route_name()), json={"name": "name", "class_name": "bla.bla", "max_assets": 3}
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
 
@@ -127,7 +127,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     ) -> None:
         response = await client.post(app.url_path_for(self.get_route_name()), json={"arguments": {}, "max_assets": 3})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
 
@@ -150,7 +150,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     ) -> None:
         response = await client.post(app.url_path_for(self.get_route_name()), json={"max_assets": 3})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
 
@@ -178,7 +178,7 @@ class TestCreateAssetType(BaseUnauthorizedTest):
     ) -> None:
         response = await client.post(app.url_path_for(self.get_route_name()), json={})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
 

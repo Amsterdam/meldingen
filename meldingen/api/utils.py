@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, Query, Response
 from meldingen_core import SortingDirection
 from pydantic import RootModel, ValidationError
 from sqlalchemy import ColumnExpressionArgument
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.config import settings
 from meldingen.models import BaseDBModel
@@ -41,7 +41,7 @@ def sort_param(sort: Annotated[str, Query()] = f'["id","{SortingDirection.ASC}"]
         for error in errors:
             error["loc"] = ("query", "sort")
 
-        raise HTTPException(HTTP_422_UNPROCESSABLE_ENTITY, errors)
+        raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, errors)
 
 
 T = TypeVar("T", bound=BaseDBModel)

@@ -10,7 +10,7 @@ from starlette.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
-    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
 from meldingen.models import (
@@ -870,7 +870,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -921,7 +921,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -1121,7 +1121,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -1165,7 +1165,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -1224,7 +1224,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -1880,7 +1880,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.post(app.url_path_for(self.ROUTE_NAME), json=form_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -1924,7 +1924,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.post(app.url_path_for(self.ROUTE_NAME), json=form_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -1983,7 +1983,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.post(app.url_path_for(self.ROUTE_NAME), json=form_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -2069,7 +2069,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
             app.url_path_for(self.ROUTE_NAME), json={"title": title, "display": display, "components": []}
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         data = response.json()
         detail = data.get("detail")
@@ -2087,7 +2087,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
             json={"title": "title", "display": "form", "classification": 0, "components": []},
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -2138,7 +2138,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -2199,7 +2199,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.post(app.url_path_for(self.ROUTE_NAME), json=data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -2410,7 +2410,7 @@ class TestFormClassification:
     async def test_form_classification_id_validation(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME, classification_id=0))
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")

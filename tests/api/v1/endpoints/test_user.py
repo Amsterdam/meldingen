@@ -11,7 +11,7 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
-    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
 from meldingen.models import User
@@ -51,7 +51,7 @@ class TestUserCreate(BaseUnauthorizedTest):
             app.url_path_for(self.ROUTE_NAME), json={"username": "", "email": "user@example.com"}
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         data = response.json()
         detail = data.get("detail")
@@ -68,7 +68,7 @@ class TestUserCreate(BaseUnauthorizedTest):
             app.url_path_for(self.ROUTE_NAME), json={"username": "meldingen_user", "email": "user.example.com"}
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         data = response.json()
         detail = data.get("detail")
@@ -380,7 +380,7 @@ class TestUserDelete(BaseUnauthorizedTest):
     async def test_delete_invalid_id(self, app: FastAPI, client: AsyncClient, auth_user: None, user_id: int) -> None:
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, user_id=user_id))
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -437,7 +437,7 @@ class TestUserUpdate(BaseUnauthorizedTest):
     ) -> None:
         response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=user.id), json={"username": "ab"})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         data = response.json()
         detail = data.get("detail")
@@ -462,7 +462,7 @@ class TestUserUpdate(BaseUnauthorizedTest):
     ) -> None:
         response = await client.patch(app.url_path_for(self.ROUTE_NAME, user_id=user.id), json=invalid_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
     @pytest.mark.anyio
     async def test_update_non_existing_user(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
