@@ -68,6 +68,39 @@ def get_application() -> FastAPI:
 
 app = get_application()
 
+from fastapi.openapi.utils import get_openapi
+from meldingen.config import settings
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version="1.0.0",
+        description="Your API description",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "oauth2": {
+            "type": "oauth2",
+            "flows": {
+                "authorizationCode": {
+                    "authorizationUrl": settings.auth_url,
+                    "tokenUrl": settings.token_url,
+                    "scopes": {scope: "" for scope in settings.auth_scopes},
+
+                }
+            }
+        }
+    }
+    openapi_schema["security"] = [{"oauth2": [
+
+    ]}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
 if os.getenv("CI") is None:
     # OpenTelemetry
     resource = Resource(attributes={SERVICE_NAME: settings.opentelemetry_service_name})
