@@ -34,6 +34,7 @@ def get_application() -> FastAPI:
         debug=settings.debug,
         title=settings.project_name,
         prefix=settings.url_prefix,
+        docs_url="/swagger",
     )
     application.include_router(api_router)
 

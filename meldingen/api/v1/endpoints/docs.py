@@ -5,7 +5,7 @@ from starlette.responses import HTMLResponse
 router = APIRouter()
 
 
-@router.get("/scalar", include_in_schema=False, response_class=HTMLResponse, name="docs:scalar")
+@router.get("/", include_in_schema=False, response_class=HTMLResponse, name="docs:scalar")
 async def scalar_api_reference(request: Request) -> HTMLResponse:
     return get_scalar_api_reference(
         openapi_url=request.app.openapi_url,
