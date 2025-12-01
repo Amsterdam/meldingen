@@ -4,3 +4,5 @@ __pycache__/
 .env*
 .coverage
 .devcontainer/
+
+!.env.example*

@@ -34,6 +34,12 @@ def get_application() -> FastAPI:
         debug=settings.debug,
         title=settings.project_name,
         prefix=settings.url_prefix,
+        swagger_ui_init_oauth={
+            "clientId": settings.auth_client_id,
+            "scopes": settings.auth_scopes,
+            "usePkceWithAuthorizationCodeGrant": True,
+        },
+        swagger_ui_parameters={"deepLinking": False},
         docs_url="/swagger",
     )
     application.include_router(api_router)
