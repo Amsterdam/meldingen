@@ -29,7 +29,7 @@ from meldingen.models import (
     Question,
     StaticForm,
     StaticFormTypeEnum,
-    User,
+    User, AnswerTypeEnum,
 )
 
 
@@ -246,7 +246,7 @@ async def form_with_multiple_questions(
 
 
 @pytest.fixture
-async def melding_with_answers(
+async def melding_with_text_answers(
     db_session: AsyncSession, melding_with_classification: Melding, form_with_multiple_questions: Form
 ) -> Melding:
     questions = await form_with_multiple_questions.awaitable_attrs.questions
@@ -258,6 +258,7 @@ async def melding_with_answers(
                 text=f"Answer {i}",
                 melding=melding_with_classification,
                 question=questions[i],
+                type=AnswerTypeEnum.text,
             )
         )
 
