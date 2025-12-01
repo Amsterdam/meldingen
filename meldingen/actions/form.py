@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction, BaseRetrieveAction
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenVerifier
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.actions.base import BaseListAction
 from meldingen.exceptions import MeldingNotClassifiedException
@@ -312,7 +312,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
                 self._jsonlogic_validate(form_component.jsonlogic, answer_data)
             except JSONLogicValidationException as e:
                 raise HTTPException(
-                    status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
                 ) from e
 
@@ -360,7 +360,7 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
                 self._jsonlogic_validate(form_component.jsonlogic, {"text": text})
             except JSONLogicValidationException as e:
                 raise HTTPException(
-                    status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
                 ) from e
 

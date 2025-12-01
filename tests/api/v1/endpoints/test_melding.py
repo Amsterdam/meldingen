@@ -26,8 +26,8 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
-    HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_413_CONTENT_TOO_LARGE,
+    HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
 from meldingen.actions.melding import MeldingGetPossibleNextStatesAction
@@ -95,7 +95,7 @@ class TestMeldingCreate:
     async def test_create_melding_text_minimum_length_violation(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": ""})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         data = response.json()
         detail = data.get("detail")
@@ -127,7 +127,7 @@ class TestMeldingCreate:
 
         response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": text})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         data = response.json()
         detail = data.get("detail")
@@ -357,7 +357,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"in_area": "not_geo_json"})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -829,7 +829,7 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
             json=self.get_json(),
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
 
@@ -1266,7 +1266,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
             json={"text": text},
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         data = response.json()
         detail = data.get("detail")
@@ -1890,7 +1890,7 @@ class TestMeldingQuestionAnswer:
             json=data,
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
         body = response.json()
         msg = body.get("detail")[0].get("msg")
         assert msg == validation_err_message
@@ -1978,7 +1978,7 @@ class TestMeldingQuestionAnswer:
             json=data,
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
 
@@ -2178,7 +2178,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             json={"text": "This is another answer"},
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -2330,7 +2330,7 @@ class TestMeldingUploadAttachment:
             headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
         )
 
-        assert response.status_code == HTTP_413_REQUEST_ENTITY_TOO_LARGE
+        assert response.status_code == HTTP_413_CONTENT_TOO_LARGE
         assert response.json().get("detail") == "Allowed content size exceeded"
 
     @pytest.mark.anyio
@@ -2464,7 +2464,7 @@ class TestMeldingUploadAttachment:
             headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
 
@@ -3007,7 +3007,7 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
             json=geojson,
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -3038,7 +3038,7 @@ class TestAddLocationToMeldingAction(BaseTokenAuthenticationTest):
             json=geojson,
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")

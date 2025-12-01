@@ -15,7 +15,7 @@ from meldingen_core.filters import MeldingListFilters
 from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.statemachine import MeldingBackofficeStates
 from meldingen_core.token import TokenVerifier
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
 from meldingen.models import Asset, AssetType, Melding
@@ -45,7 +45,7 @@ class MeldingListAction(BaseMeldingListAction[Melding]):
             )
         except AttributeNotFoundException as e:
             raise HTTPException(
-                HTTP_422_UNPROCESSABLE_ENTITY,
+                HTTP_422_UNPROCESSABLE_CONTENT,
                 [{"loc": ("query", "sort"), "msg": e.message, "type": "attribute_not_found"}],
             )
 

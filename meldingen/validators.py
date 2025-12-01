@@ -11,7 +11,7 @@ from meldingen_core.validators import (
     MediaTypeNotAllowed,
 )
 from pydantic_media_type import MediaType
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
 from meldingen.models import StaticFormTypeEnum
@@ -99,6 +99,6 @@ class MeldingPrimaryFormValidator:
             logger.warning("The primary form seems to be missing!")
         except JSONLogicValidationException as e:
             raise HTTPException(
-                status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
             ) from e

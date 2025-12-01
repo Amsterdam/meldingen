@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_422_UNPROCESSABLE_CONTENT
 
 
 class BaseUnauthorizedTest(metaclass=ABCMeta):
@@ -47,7 +47,7 @@ class BasePaginationParamsTest(metaclass=ABCMeta):
     ) -> None:
         response = await client.get(app.url_path_for(self.get_route_name()), params={"limit": limit})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -71,7 +71,7 @@ class BasePaginationParamsTest(metaclass=ABCMeta):
     ) -> None:
         response = await client.get(app.url_path_for(self.get_route_name()), params={"offset": offset})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -91,7 +91,7 @@ class BaseSortParamsTest(metaclass=ABCMeta):
     async def test_list_sort_invalid_json(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.get(app.url_path_for(self.get_route_name()), params={"sort": '["id", "ASC", "bla"'})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -106,7 +106,7 @@ class BaseSortParamsTest(metaclass=ABCMeta):
     async def test_list_sort_invalid_json_array(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.get(app.url_path_for(self.get_route_name()), params={"sort": '["id", "ASC", "bla"]'})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -121,7 +121,7 @@ class BaseSortParamsTest(metaclass=ABCMeta):
     async def test_list_sort_invalid_direction(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.get(app.url_path_for(self.get_route_name()), params={"sort": '["id", "ASCC"]'})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")
@@ -138,7 +138,7 @@ class BaseSortParamsTest(metaclass=ABCMeta):
             app.url_path_for(self.get_route_name()), params={"sort": '["very_unlikely_attribute_name", "ASC"]'}
         )
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
         body = response.json()
         detail = body.get("detail")

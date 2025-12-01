@@ -4,7 +4,7 @@ from typing import TypeVar
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseListAction as BaseCoreListAction
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.repositories import AttributeNotFoundException
 
@@ -26,6 +26,6 @@ class BaseListAction(BaseCoreListAction[T]):
             )
         except AttributeNotFoundException as e:
             raise HTTPException(
-                HTTP_422_UNPROCESSABLE_ENTITY,
+                HTTP_422_UNPROCESSABLE_CONTENT,
                 [{"loc": ("query", "sort"), "msg": e.message, "type": "attribute_not_found"}],
             )
