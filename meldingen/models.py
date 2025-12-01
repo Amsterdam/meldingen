@@ -135,6 +135,8 @@ class FormIoComponentTypeEnum(enum.StrEnum):
     checkbox = "selectboxes"
     radio = "radio"
     select = "select"
+    date = "date"
+    time = "time"
 
 
 class FormIoComponent(AsyncAttrs, BaseDBModel):
@@ -336,6 +338,32 @@ class FormIoComponentValue(BaseDBModel, BaseFormIoComponentValue):
         back_populates="values",
         default=None,
     )
+
+
+class FormIoDateComponent(FormIoQuestionComponent):
+    # A component that allows the user to select a date in the past or today.
+    __table_args__ = {"extend_existing": True}
+
+    """
+    The amount of days a date in the past can be selected from today.
+    For example, if today is 2024-01-10 and day_range is 7, the user can select dates from 2024-01-03 to 2024-01-10.
+    """
+    day_range: Mapped[int | None] = mapped_column(Integer(), nullable=True, default=None)
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": FormIoComponentTypeEnum.date,
+        }
+
+
+class FormIoTimeComponent(FormIoQuestionComponent):
+    # A component that allows the user to select a time of day.
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": FormIoComponentTypeEnum.time,
+        }
 
 
 class FormIoFormDisplayEnum(enum.StrEnum):

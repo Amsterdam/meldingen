@@ -54,14 +54,14 @@ async def authenticate_user(
             algorithms=["RS256"],
             audience=settings.auth_audience,
             issuer=settings.issuer_url,
-            options={"require": ["exp", "aud", "iss", "email"]},
+            options={"require": ["exp", "aud", "iss", settings.auth_identifier_field]},
         )
     except (ExpiredSignatureError, InvalidIssuerError, InvalidAudienceError):
         raise InvalidTokenException()
     except MissingRequiredClaimError:
         raise InvalidRequestException()
 
-    email = payload.get("email")
+    email = payload.get(settings.auth_identifier_field)
 
     try:
         return await user_repository.find_by_email(email)

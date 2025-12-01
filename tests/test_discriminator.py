@@ -5,11 +5,13 @@ import pytest
 from meldingen.models import FormIoComponentTypeEnum
 from meldingen.schemas.input import (
     FormCheckboxComponentInput,
+    FormDateComponentInput,
     FormPanelComponentInput,
     FormRadioComponentInput,
     FormSelectComponentInput,
     FormTextAreaComponentInput,
     FormTextFieldComponentInput,
+    FormTimeComponentInput,
     component_discriminator,
 )
 
@@ -78,3 +80,17 @@ def test_component_discriminator_select() -> None:
     )
 
     assert result == FormIoComponentTypeEnum.select
+
+
+def test_component_discriminator_date() -> None:
+    result = component_discriminator(
+        FormDateComponentInput(label="abc", description="abc", key="abc", input=True, dayRange=5)
+    )
+
+    assert result == FormIoComponentTypeEnum.date
+
+
+def test_component_discriminator_time() -> None:
+    result = component_discriminator(FormTimeComponentInput(label="abc", description="abc", key="abc", input=True))
+
+    assert result == FormIoComponentTypeEnum.time

@@ -160,12 +160,14 @@ from meldingen.schemas.output_factories import (
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
     FormComponentValueOutputFactory,
+    FormDateComponentOutputFactory,
     FormOutputFactory,
     FormRadioComponentOutputFactory,
     FormSelectComponentDataOutputFactory,
     FormSelectComponentOutputFactory,
     FormTextAreaComponentOutputFactory,
     FormTextFieldInputComponentOutputFactory,
+    FormTimeComponentOutputFactory,
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
@@ -1122,12 +1124,26 @@ def form_select_factory(
     return FormSelectComponentOutputFactory(factory, _validate_adder)
 
 
+def form_date_output_factory(
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
+) -> FormDateComponentOutputFactory:
+    return FormDateComponentOutputFactory(_validate_adder)
+
+
+def form_time_output_factory(
+    _validate_adder: Annotated[ValidateAdder, Depends(validate_adder)],
+) -> FormTimeComponentOutputFactory:
+    return FormTimeComponentOutputFactory(_validate_adder)
+
+
 def form_component_output_factory(
     text_area_factory: Annotated[FormTextAreaComponentOutputFactory, Depends(form_text_area_output_factory)],
     text_field_factory: Annotated[FormTextFieldInputComponentOutputFactory, Depends(form_text_field_input_factory)],
     checkbox_factory: Annotated[FormCheckboxComponentOutputFactory, Depends(form_checkbox_output_factory)],
     radio_factory: Annotated[FormRadioComponentOutputFactory, Depends(form_radio_factory)],
     select_factory: Annotated[FormSelectComponentOutputFactory, Depends(form_select_factory)],
+    date_factory: Annotated[FormDateComponentOutputFactory, Depends(form_date_output_factory)],
+    time_factory: Annotated[FormTimeComponentOutputFactory, Depends(form_time_output_factory)],
 ) -> FormComponentOutputFactory:
     return FormComponentOutputFactory(
         text_area_factory,
@@ -1135,6 +1151,8 @@ def form_component_output_factory(
         checkbox_factory,
         radio_factory,
         select_factory,
+        date_factory,
+        time_factory,
     )
 
 
