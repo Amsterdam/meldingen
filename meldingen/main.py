@@ -25,8 +25,9 @@ from starlette.responses import JSONResponse
 from starlette.status import HTTP_409_CONFLICT
 
 from meldingen.api.v1.api import api_router
-from meldingen.config import settings
 from meldingen.middleware import ContentSizeLimitMiddleware
+from fastapi.openapi.utils import get_openapi
+from meldingen.config import settings
 
 
 def get_application() -> FastAPI:
@@ -65,19 +66,15 @@ def get_application() -> FastAPI:
 
     return application
 
-
 app = get_application()
-
-from fastapi.openapi.utils import get_openapi
-from meldingen.config import settings
 
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
+
     openapi_schema = get_openapi(
         title=app.title,
         version="1.0.0",
-        description="Your API description",
         routes=app.routes,
     )
     openapi_schema["components"]["securitySchemes"] = {
