@@ -19,6 +19,7 @@ async def scalar_api_reference(request: Request) -> HTMLResponse:
                             "x-scalar-client-id": settings.auth_client_id,
                             "selectedScopes": settings.auth_scopes,
                             "x-usePkce": "SHA-256",
+                            "x-scalar-redirect-uri": f"{request.base_url}docs/oauth2-redirect"
                         }
                     }
                 }
