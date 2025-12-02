@@ -2042,7 +2042,7 @@ class TestMeldingQuestionAnswer:
             "jsonlogic",
         ],
     )
-    async def test_answer_question(
+    async def test_answer_question_with_classification_mismatch(
         self,
         app: FastAPI,
         client: AsyncClient,
