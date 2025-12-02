@@ -3533,6 +3533,53 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert body.get("phone", "") is None
 
     @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token", "asset_type_max_assets"], [("supersecrettoken", 2)])
+    async def test_can_add_third_asset_with_max_two_after_deleting_an_asset(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, asset_type: AssetType
+    ) -> None:
+        response1 = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+            json={"external_id": "my_external_id", "asset_type_id": asset_type.id},
+        )
+        assert response1.status_code == HTTP_200_OK
+        response2 = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+            json={"external_id": "my_external_id_2", "asset_type_id": asset_type.id},
+        )
+        assert response2.status_code == HTTP_200_OK
+
+        # Third time should fail because max_assets is 2
+        response3 = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+            json={"external_id": "my_external_id_3", "asset_type_id": asset_type.id},
+        )
+
+        assert response3.status_code == HTTP_400_BAD_REQUEST
+
+        # Now delete one asset
+        body = response2.json()
+        delete_response = await client.delete(
+            app.url_path_for(
+                "melding:delete-asset",
+                melding_id=melding.id,
+                asset_id=body.get("id"),
+            ),
+            params={"token": "supersecrettoken"},
+        )
+        assert delete_response.status_code == HTTP_200_OK
+
+        # third one should now pass because one is deleted
+        response = await client.post(
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+            json={"external_id": "my_external_id_3", "asset_type_id": asset_type.id},
+        )
+        assert response.status_code == HTTP_200_OK
+
+    @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token", "asset_type_max_assets"], [("supersecrettoken", 5)])
     async def test_add_asset_when_limit_is_reached(
         self, app: FastAPI, client: AsyncClient, melding_with_assets: Melding, asset_type: AssetType
