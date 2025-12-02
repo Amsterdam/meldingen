@@ -3533,18 +3533,19 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert body.get("phone", "") is None
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token", "asset_type_max_assets"], [("supersecrettoken", 2)])
+    @pytest.mark.parametrize(["melding_token", "asset_type_max_assets"], [("supersecrettoken", 7)])
     async def test_can_add_third_asset_with_max_two_after_deleting_an_asset(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, asset_type: AssetType
+        self, app: FastAPI, client: AsyncClient, melding_with_assets: Melding, asset_type: AssetType
     ) -> None:
         response1 = await client.post(
-            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
             params={"token": "supersecrettoken"},
             json={"external_id": "my_external_id", "asset_type_id": asset_type.id},
         )
         assert response1.status_code == HTTP_200_OK
+
         response2 = await client.post(
-            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
             params={"token": "supersecrettoken"},
             json={"external_id": "my_external_id_2", "asset_type_id": asset_type.id},
         )
@@ -3552,20 +3553,18 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
 
         # Third time should fail because max_assets is 2
         response3 = await client.post(
-            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
             params={"token": "supersecrettoken"},
             json={"external_id": "my_external_id_3", "asset_type_id": asset_type.id},
         )
 
         assert response3.status_code == HTTP_400_BAD_REQUEST
 
-        # Now delete one asset
-        body = response2.json()
         delete_response = await client.delete(
             app.url_path_for(
                 "melding:delete-asset",
-                melding_id=melding.id,
-                asset_id=body.get("id"),
+                melding_id=melding_with_assets.id,
+                asset_id=melding_with_assets.assets[0].id,
             ),
             params={"token": "supersecrettoken"},
         )
@@ -3573,7 +3572,7 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
 
         # third one should now pass because one is deleted
         response = await client.post(
-            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
             params={"token": "supersecrettoken"},
             json={"external_id": "my_external_id_3", "asset_type_id": asset_type.id},
         )
