@@ -85,14 +85,13 @@ def custom_openapi():
                     "authorizationUrl": settings.auth_url,
                     "tokenUrl": settings.token_url,
                     "scopes": {scope: "" for scope in settings.auth_scopes},
-
                 }
             }
         }
     }
-    openapi_schema["security"] = [{"oauth2": [
-
-    ]}]
+    openapi_schema["security"] = [
+        {"oauth2": []}
+    ]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
