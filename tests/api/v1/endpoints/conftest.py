@@ -697,10 +697,12 @@ async def form_with_classification(
 
     component.question = question
 
-    result = await db_session.execute(select(Classification).where(Classification.name == "test_classification"))
+    classification_name = "test_classification"
+
+    result = await db_session.execute(select(Classification).where(Classification.name == classification_name))
     classification = result.scalars().one_or_none()
     if classification is None:
-        classification = Classification("test_classification")
+        classification = Classification(classification_name)
         db_session.add(classification)
 
     form.classification = classification

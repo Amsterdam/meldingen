@@ -304,6 +304,18 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         if form is None:
             raise NotFoundException()
 
+        form_classification = await form.awaitable_attrs.classification
+        if form_classification is None:
+            raise NotFoundException()
+
+        melding_classification = await melding.awaitable_attrs.classification
+
+        if melding_classification != form_classification:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail=[{"msg": "Form classification is not the same as melding classification"}],
+            )
+
         # Store the answer
         answer_data = answer_input.model_dump(by_alias=True)
         form_component = await self._component_repository.find_component_by_question_id(question.id)

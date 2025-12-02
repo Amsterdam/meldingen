@@ -2025,6 +2025,57 @@ class TestMeldingQuestionAnswer:
         assert body.get("detail") == "Melding not classified"
 
     @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name", "jsonlogic"],
+        [
+            (
+                "klacht over iets",
+                MeldingStates.CLASSIFIED,
+                "supersecuretoken",
+                # Creating a melding with a different classification. The form has the classification "test_classification".
+                "test_classification_non_matching",
+                '{"==":[{"var": "text"}, "dit is het antwoord op de vraag"]}',
+            ),
+        ],
+        indirect=[
+            "classification_name",
+            "jsonlogic",
+        ],
+    )
+    async def test_answer_question(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+    ) -> None:
+        components = await form_with_classification.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        text = "dit is het antwoord op de vraag"
+        data = {"text": text}
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE, melding_id=melding_with_classification.id, question_id=question.id
+            ),
+            params={"token": "supersecuretoken"},
+            json=data,
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        data = response.json()
+        assert data.get("detail")[0].get("msg") == "Form classification is not the same as melding classification"
+
+    @pytest.mark.anyio
     async def test_answer_question_does_not_exists(
         self,
         app: FastAPI,
