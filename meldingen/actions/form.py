@@ -9,6 +9,7 @@ from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_
 
 from meldingen.actions.base import BaseListAction
 from meldingen.exceptions import MeldingNotClassifiedException
+from meldingen.factories import AnswerFactory
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
 from meldingen.models import (
     Answer,
@@ -39,7 +40,8 @@ from meldingen.repositories import (
     QuestionRepository,
     StaticFormRepository,
 )
-from meldingen.schemas.input import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, StaticFormInput
+from meldingen.schemas.input import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, StaticFormInput, \
+    AnswerInputUnion
 
 
 class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
