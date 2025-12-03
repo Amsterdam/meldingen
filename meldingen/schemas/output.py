@@ -235,14 +235,16 @@ class FormTimeComponentOutput(BaseFormComponentOutput):
     question: int
 
 
-class TextAnswerOutput(BaseOutputModel):
+class AnswerOutput(BaseOutputModel):
+    type: str
+
+
+class TextAnswerOutput(AnswerOutput):
     text: str
-    type: AnswerTypeEnum.text
 
 
-class TimeAnswerOutput(BaseOutputModel):
+class TimeAnswerOutput(AnswerOutput):
     time: str
-    type: AnswerTypeEnum.time
 
 
 AnswerOutputUnion = Union[TextAnswerOutput, TimeAnswerOutput]
@@ -253,7 +255,7 @@ class QuestionOutput(BaseOutputModel):
 
 
 class AnswerQuestionOutput(BaseOutputModel):
-    text: str
+    answer: AnswerOutputUnion
     question: QuestionOutput
 
 
