@@ -23,9 +23,11 @@ from meldingen.models import (
     FormIoTimeComponent,
     Melding,
     StaticForm,
+    TextAnswer,
+    TimeAnswer,
 )
 from meldingen.schemas.output import (
-    AnswerOutput,
+    AnswerOutputUnion,
     AnswerQuestionOutput,
     AssetOutput,
     AssetTypeOutput,
@@ -57,6 +59,8 @@ from meldingen.schemas.output import (
     StaticFormSelectComponentOutput,
     StaticFormTextAreaComponentOutput,
     StaticFormTextFieldInputComponentOutput,
+    TextAnswerOutput,
+    TimeAnswerOutput,
 )
 
 
@@ -753,7 +757,37 @@ class MeldingUpdateOutputFactory(MeldingOutputFactory):
         )
 
 
+class TextAnswerOutputFactory:
+    def __call__(self, answer: TextAnswer) -> TextAnswerOutput:
+        return TextAnswerOutput(
+            id=answer.id, type=answer.type, text=answer.text, created_at=answer.created_at, updated_at=answer.updated_at
+        )
+
+
+class TimeAnswerOutputFactory:
+    def __call__(self, answer: TimeAnswer) -> TimeAnswerOutput:
+        return TimeAnswerOutput(
+            id=answer.id, type=answer.type, time=answer.time, created_at=answer.created_at, updated_at=answer.updated_at
+        )
+
+
+class AnswerOutputFactory:
+    def __call__(self, answer: Answer) -> AnswerOutputUnion:
+        match answer:
+            case TextAnswer():
+                return TextAnswerOutputFactory()(answer)
+            case TimeAnswer():
+                return TimeAnswerOutputFactory()(answer)
+            case _:
+                raise Exception(f"Unsupported answer type: {type(answer)}")
+
+
 class AnswerListOutputFactory:
+    _output_answer: AnswerOutputFactory
+
+    def __init__(self, answer_output_factory: AnswerOutputFactory):
+        self._output_answer = answer_output_factory
+
     async def __call__(self, answers: Sequence[Answer]) -> list[AnswerQuestionOutput]:
         flattened = {}
         for answer in answers:
@@ -762,10 +796,7 @@ class AnswerListOutputFactory:
             panel = await component.awaitable_attrs.parent
 
             flattened[int(f"{panel.position}00000{component.position}")] = AnswerQuestionOutput(
-                id=answer.id,
-                text=answer.text,
-                created_at=answer.created_at,
-                updated_at=answer.updated_at,
+                answer=self._output_answer(answer),
                 question=QuestionOutput(
                     id=question.id,
                     text=question.text,
@@ -777,11 +808,6 @@ class AnswerListOutputFactory:
         _sorted = dict(sorted(flattened.items()))
 
         return [*_sorted.values()]
-
-
-class AnswerOutputFactory:
-    def __call__(self, answer: Answer) -> AnswerOutput:
-        return AnswerOutput(id=answer.id, text=answer.text, created_at=answer.created_at, updated_at=answer.updated_at)
 
 
 class StatesOutputFactory:
