@@ -1,11 +1,12 @@
+from abc import ABC, ABCMeta, abstractmethod
 from typing import Annotated, Any, Union
 
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
-from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
-from meldingen.schemas.types import FormIOConditional, PhoneNumber, NonEmptyStrippedStr
+from meldingen.models import AnswerTypeEnum, FormIoComponentTypeEnum, FormIoFormDisplayEnum, TextAnswer
+from meldingen.schemas.types import FormIOConditional, PhoneNumber, StrippedStr
 from meldingen.validators import create_non_match_validator
 
 
@@ -214,12 +215,51 @@ class FormTimeComponentInput(FormComponentInput):
 
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.time)]
 
-# TODO change to TextAnswerInput
-class AnswerInput(BaseModel):
-    # type
-    ...
+
+class AnswerInput(BaseModel, metaclass=ABCMeta):
+    @property
+    @abstractmethod
+    def answer_value(self) -> str:
+        """Return a flat value representing the answer.
+        Used to parse JSON logic"""
+        pass
+
+
 class TextAnswerInput(AnswerInput):
-    text: NonEmptyStrippedStr
+    text: StrippedStr = Field(min_length=1)
+    type: Annotated[AnswerTypeEnum, Field(AnswerTypeEnum.text)]
+
+    @property
+    def answer_value(self) -> str:
+        return self.text
+
+
+class TimeAnswerInput(AnswerInput):
+    time: StrippedStr = Field(pattern=r"^\d{2}:\d{2}$")
+    type: Annotated[AnswerTypeEnum, Field(AnswerTypeEnum.time)]
+
+    @property
+    def answer_value(self) -> str:
+        return self.time
+
+
+def answer_discriminator(value: Any) -> str | None:
+    if isinstance(value, dict):
+        return value.get("type")
+    elif isinstance(value, TextAnswerInput):
+        return AnswerTypeEnum.text
+    elif isinstance(value, TimeAnswerInput):
+        return AnswerTypeEnum.time
+    return None
+
+
+AnswerInputUnion = Annotated[
+    Union[
+        Annotated[TextAnswerInput, Tag(AnswerTypeEnum.text)],
+        Annotated[TimeAnswerInput, Tag(AnswerTypeEnum.time)],
+    ],
+    Discriminator(answer_discriminator),
+]
 
 
 class MailPreviewInput(BaseModel):
