@@ -53,6 +53,14 @@ def get_application() -> FastAPI:
             content={"detail": "The requested operation could not be completed due to a conflict with existing data."},
         )
 
+    @application.exception_handler(Exception)
+    async def internal_server_error_handler(request: Request, exc: Exception) -> JSONResponse:
+        print(f"Internal server error: {exc}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Internal server error: {exc}"},
+        )
+
     application.add_middleware(ContentSizeLimitMiddleware, max_size=settings.content_size_limit)
     application.add_middleware(CorrelationIdMiddleware)
 

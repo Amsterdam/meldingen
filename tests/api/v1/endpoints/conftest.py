@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from meldingen.authentication import authenticate_user
 from meldingen.models import (
     Answer,
+    AnswerTypeEnum,
     Asset,
     AssetType,
     Attachment,
@@ -29,7 +30,8 @@ from meldingen.models import (
     Question,
     StaticForm,
     StaticFormTypeEnum,
-    User, AnswerTypeEnum,
+    TextAnswer,
+    User,
 )
 
 
@@ -254,7 +256,7 @@ async def melding_with_text_answers(
     numbers = [6, 3, 2, 9, 7, 1, 8, 4, 5, 0]
     for i in numbers:
         db_session.add(
-            Answer(
+            TextAnswer(
                 text=f"Answer {i}",
                 melding=melding_with_classification,
                 question=questions[i],
@@ -328,10 +330,11 @@ async def melding_with_some_answers(
     numbers = [6, 3, 2, 9, 7]
     for i in numbers:
         db_session.add(
-            Answer(
+            TextAnswer(
                 text=f"Answer {i}",
                 melding=melding_with_classification,
                 question=questions[i],
+                type=AnswerTypeEnum.text,
             )
         )
 
