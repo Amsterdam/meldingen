@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction, BaseRetrieveAction
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenVerifier
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.actions.base import BaseListAction
 from meldingen.exceptions import MeldingNotClassifiedException
