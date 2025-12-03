@@ -31,7 +31,19 @@ from starlette.status import (
 )
 
 from meldingen.actions.melding import MeldingGetPossibleNextStatesAction
-from meldingen.models import Answer, Asset, AssetType, Attachment, Classification, Form, Melding, Question, StaticForm
+from meldingen.models import (
+    Answer,
+    AnswerTypeEnum,
+    Asset,
+    AssetType,
+    Attachment,
+    Classification,
+    Form,
+    Melding,
+    Question,
+    StaticForm,
+    TextAnswer,
+)
 from meldingen.repositories import MeldingRepository
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -945,12 +957,12 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_answers: Melding,
+        melding_with_text_answers: Melding,
         db_session: AsyncSession,
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_answers.id),
-            params={"token": melding_with_answers.token},
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_text_answers.id),
+            params={"token": melding_with_text_answers.token},
             json={"text": "classification2"},
         )
 
@@ -959,7 +971,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         body = response.json()
         assert body.get("classification", "") is None
 
-        results = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_answers.id))
+        results = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_text_answers.id))
         answers = results.scalars().all()
 
         assert len(answers) == 0
@@ -973,7 +985,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_answers: Melding,
+        melding_with_text_answers: Melding,
         db_session: AsyncSession,
     ) -> None:
         classification2 = Classification("classification2")
@@ -981,8 +993,8 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         await db_session.commit()
 
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_answers.id),
-            params={"token": melding_with_answers.token},
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_text_answers.id),
+            params={"token": melding_with_text_answers.token},
             json={"text": "classification2"},
         )
 
@@ -992,7 +1004,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         assert body.get("classification").get("id") == classification2.id
         assert body.get("classification").get("name") == classification2.name
 
-        results = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_answers.id))
+        results = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_text_answers.id))
         answers = results.scalars().all()
 
         assert len(answers) == 0
@@ -1006,12 +1018,12 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_answers: Melding,
+        melding_with_text_answers: Melding,
         db_session: AsyncSession,
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_answers.id),
-            params={"token": melding_with_answers.token},
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_text_answers.id),
+            params={"token": melding_with_text_answers.token},
             json={"text": "classification1"},
         )
 
@@ -1020,7 +1032,7 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         body = response.json()
         assert body.get("classification").get("name") == "classification1"
 
-        results = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_answers.id))
+        results = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_text_answers.id))
         answers = results.scalars().all()
 
         assert len(answers) == 10
@@ -1349,11 +1361,12 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_answers: Melding,
+        melding_with_text_answers: Melding,
     ) -> None:
 
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_answers.id), params={"token": "supersecrettoken"}
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_text_answers.id),
+            params={"token": "supersecrettoken"},
         )
 
         assert response.status_code == HTTP_200_OK
@@ -1361,8 +1374,8 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
-        assert body.get("created_at") == melding_with_answers.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
-        assert body.get("updated_at") == melding_with_answers.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("created_at") == melding_with_text_answers.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding_with_text_answers.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     async def test_answer_questions_not_found(self, app: FastAPI, client: AsyncClient) -> None:
@@ -1761,7 +1774,7 @@ class TestMeldingQuestionAnswer:
         assert isinstance(question, Question)
 
         text = "dit is het antwoord op de vraag"
-        data = {"text": text}
+        data = {"text": text, "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -1817,7 +1830,7 @@ class TestMeldingQuestionAnswer:
         await db_session.delete(panel_components[0])
         await db_session.commit()
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -1880,7 +1893,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -1912,7 +1925,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=999, question_id=question.id),
@@ -1943,7 +1956,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
@@ -1971,7 +1984,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
@@ -2010,7 +2023,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
@@ -2082,7 +2095,7 @@ class TestMeldingQuestionAnswer:
         client: AsyncClient,
         melding: Melding,
     ) -> None:
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=999),
@@ -2114,7 +2127,7 @@ class TestMeldingQuestionAnswer:
         db_session.add(question)
         await db_session.commit()
 
-        data = {"text": "Ja, dit is een vraag"}
+        data = {"text": "Ja, dit is een vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -2139,7 +2152,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
     @override
     def get_json(self) -> dict[str, Any] | None:
-        return {"text": "This is the answer"}
+        return {"text": "This is the answer", "type": AnswerTypeEnum.text}
 
     @override
     def get_extra_path_params(self) -> dict[str, Any]:
@@ -2218,7 +2231,12 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         questions = await form_with_classification.awaitable_attrs.questions
         assert len(questions) == 1
 
-        answer = Answer(text="This is the answer", question=questions[0], melding=melding_with_classification)
+        answer = TextAnswer(
+            text="This is the answer",
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.text,
+        )
         db_session.add(answer)
         await db_session.commit()
 
@@ -2226,7 +2244,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"text": "This is another answer"},
+            json={"text": "This is another answer", "type": AnswerTypeEnum.text},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2260,7 +2278,12 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         questions = await form_with_classification.awaitable_attrs.questions
         assert len(questions) == 1
 
-        answer = Answer(text="This is the answer", question=questions[0], melding=melding_with_classification)
+        answer = TextAnswer(
+            text="This is the answer",
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.text,
+        )
         db_session.add(answer)
         await db_session.commit()
 
@@ -2268,7 +2291,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"text": "This is another answer"},
+            json={"text": "This is another answer", "type": AnswerTypeEnum.text},
         )
 
         assert response.status_code == HTTP_200_OK
@@ -3313,11 +3336,11 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
-    async def test_list_answers(self, app: FastAPI, client: AsyncClient, melding_with_answers: Melding) -> None:
+    async def test_list_answers(self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding) -> None:
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_answers.id),
-            params={"token": melding_with_answers.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id),
+            params={"token": melding_with_text_answers.token},
         )
 
         assert response.status_code == HTTP_200_OK

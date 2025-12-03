@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction, BaseRetrieveAction
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenVerifier
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 from meldingen.actions.base import BaseListAction
 from meldingen.exceptions import MeldingNotClassifiedException
@@ -261,6 +261,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
     _question_repository: QuestionRepository
     _component_repository: FormIoQuestionComponentRepository
     _jsonlogic_validate: JSONLogicValidator
+    _create_answer: AnswerFactory
 
     def __init__(
         self,
@@ -269,14 +270,16 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         question_repository: QuestionRepository,
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
+        answer_factory: AnswerFactory,
     ):
         super().__init__(repository)
         self._token_verifier = token_verifier
         self._question_repository = question_repository
         self._component_repository = component_repository
         self._jsonlogic_validate = jsonlogic_validator
+        self._create_answer = answer_factory
 
-    async def __call__(self, melding_id: int, token: str, question_id: int, answer_input: AnswerInput) -> Answer:
+    async def __call__(self, melding_id: int, token: str, question_id: int, answer_input: AnswerInputUnion) -> Answer:
         """
         Create and store an Answer in the database, subject to several conditions:
 
@@ -318,17 +321,18 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
 
         # Store the answer
         answer_data = answer_input.model_dump(by_alias=True)
+        # Evaluate JSONLogic if present
         form_component = await self._component_repository.find_component_by_question_id(question.id)
         if form_component.jsonlogic is not None:
             try:
-                self._jsonlogic_validate(form_component.jsonlogic, answer_data)
+                self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.answer_value})
             except JSONLogicValidationException as e:
                 raise HTTPException(
-                    status_code=HTTP_422_UNPROCESSABLE_CONTENT,
+                    status_code=HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
                 ) from e
 
-        answer = Answer(**answer_data, melding=melding, question=question)
+        answer = self._create_answer(answer_input, melding, question)
 
         await self._repository.save(answer)
 
@@ -372,7 +376,7 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
                 self._jsonlogic_validate(form_component.jsonlogic, {"text": text})
             except JSONLogicValidationException as e:
                 raise HTTPException(
-                    status_code=HTTP_422_UNPROCESSABLE_CONTENT,
+                    status_code=HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
                 ) from e
 

@@ -27,6 +27,7 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
+    Time,
     UniqueConstraint,
     func,
 )
@@ -438,9 +439,13 @@ class Question(AsyncAttrs, BaseDBModel, BaseQuestion):
 
 class AnswerTypeEnum(enum.StrEnum):
     text = "text"
+    time = "time"
 
 
-class Answer(AsyncAttrs, BaseDBModel):
+class Answer(AsyncAttrs, BaseDBModel, kw_only=True):
+    """This class uses kw_only to bypass the issue where fields with default values
+    cannot come before fields without default values in the generated __init__ method."""
+
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return "answer"
@@ -456,21 +461,35 @@ class Answer(AsyncAttrs, BaseDBModel):
 
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
     melding: Mapped[Melding] = relationship()
-    type: Mapped[str] = mapped_column(
-        Enum(AnswerTypeEnum, name="answer_type"), default=AnswerTypeEnum.text
-    )
+    type: Mapped[str] = mapped_column(Enum(AnswerTypeEnum, name="answer_type"), default=AnswerTypeEnum.text)
 
 
 class TextAnswer(Answer, BaseAnswer):
     __table_args__ = {"extend_existing": True}
 
-    text: Mapped[str] = mapped_column(String(),  nullable="True")
+    text: Mapped[str] = mapped_column(String(), nullable="True")
 
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_identity": AnswerTypeEnum.text,
         }
+
+
+class TimeAnswer(Answer, BaseAnswer):
+    """Answer type for time values. Without timezone info,
+    because it should always display the local time."""
+
+    __table_args__ = {"extend_existing": True}
+
+    time: Mapped[str] = mapped_column(String(), nullable="True")
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": AnswerTypeEnum.time,
+        }
+
 
 class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     file_path: Mapped[str] = mapped_column(String(), init=False)
