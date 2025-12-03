@@ -1009,10 +1009,6 @@ def melding_get_possible_next_states_action(
     return MeldingGetPossibleNextStatesAction(state_machine, repository)
 
 
-def melding_list_questions_and_answers_output_factory() -> AnswerListOutputFactory:
-    return AnswerListOutputFactory()
-
-
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:
     return FormComponentValueOutputFactory()
 
@@ -1292,6 +1288,14 @@ def wfs_retrieve_action(
 
 def answer_output_factory() -> AnswerOutputFactory:
     return AnswerOutputFactory()
+
+
+def melding_list_questions_and_answers_output_factory(
+    answer_output_factory: Annotated[AnswerFactory, Depends(answer_output_factory)],
+) -> AnswerListOutputFactory:
+    return AnswerListOutputFactory(
+        answer_output_factory,
+    )
 
 
 def states_output_factory() -> StatesOutputFactory:

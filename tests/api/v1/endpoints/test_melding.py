@@ -3289,6 +3289,7 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         answer = body[0]
         assert answer.get("id") > 0
         assert answer.get("text") == "Answer 0"
+        assert answer.get("type") == AnswerTypeEnum.text
         assert answer.get("created_at") is not None
         assert answer.get("updated_at") is not None
 
