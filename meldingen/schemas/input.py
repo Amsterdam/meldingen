@@ -221,7 +221,7 @@ class AnswerInput(BaseModel, metaclass=ABCMeta):
     @abstractmethod
     def answer_value(self) -> str:
         """Return a flat value representing the answer.
-        Used to parse JSON logic"""
+        Used to parse JSON logic and conditionals"""
         pass
 
 

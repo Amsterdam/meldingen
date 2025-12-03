@@ -120,7 +120,7 @@ from meldingen.schemas.input import (
     MeldingInput,
 )
 from meldingen.schemas.output import (
-    AnswerOutput,
+    AnswerOutputUnion,
     AnswerQuestionOutput,
     AssetOutput,
     AttachmentOutput,
@@ -518,7 +518,7 @@ async def answer_additional_question(
     answer_input: AnswerInputUnion,
     action: Annotated[AnswerCreateAction, Depends(melding_answer_create_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
-) -> AnswerOutput:
+) -> AnswerOutputUnion:
     try:
         answer = await action(melding_id, token, question_id, answer_input)
     except NotFoundException:
@@ -560,7 +560,7 @@ async def update_answer(
     answer_input: AnswerInputUnion,
     action: Annotated[AnswerUpdateAction, Depends(melding_answer_update_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
-) -> AnswerOutput:
+) -> AnswerOutputUnion:
     try:
         answer = await action(melding_id, token, answer_id, answer_input)
     except NotFoundException:
