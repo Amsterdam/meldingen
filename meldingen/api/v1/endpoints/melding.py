@@ -113,6 +113,7 @@ from meldingen.models import Answer, Asset, Attachment, Classification, Melding
 from meldingen.repositories import MeldingRepository
 from meldingen.schemas.input import (
     AnswerInput,
+    AnswerInputUnion,
     CompleteMeldingInput,
     MeldingAssetInput,
     MeldingContactInput,
@@ -514,7 +515,7 @@ async def answer_additional_question(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     question_id: Annotated[int, Path(description="The id of the question.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    answer_input: AnswerInput,
+    answer_input: AnswerInputUnion,
     action: Annotated[AnswerCreateAction, Depends(melding_answer_create_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutput:
@@ -556,12 +557,12 @@ async def update_answer(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     answer_id: Annotated[int, Path(description="The id of the answer.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    answer_input: AnswerInput,
+    answer_input: AnswerInputUnion,
     action: Annotated[AnswerUpdateAction, Depends(melding_answer_update_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutput:
     try:
-        answer = await action(melding_id, token, answer_id, answer_input.text)
+        answer = await action(melding_id, token, answer_id, answer_input)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:

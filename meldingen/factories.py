@@ -4,7 +4,8 @@ from collections.abc import AsyncIterator
 from meldingen_core.factories import BaseAssetFactory, BaseAttachmentFactory
 from plugfs.filesystem import Filesystem
 
-from meldingen.models import Asset, AssetType, Attachment, Melding
+from meldingen.models import Answer, Asset, AssetType, Attachment, Melding, Question, TextAnswer, TimeAnswer
+from meldingen.schemas.input import AnswerInputUnion
 
 
 class AttachmentFactory(BaseAttachmentFactory[Attachment, Melding]):
@@ -29,3 +30,22 @@ class AzureFilesystemFactory(BaseFilesystemFactory):
 class AssetFactory(BaseAssetFactory[Asset, AssetType, Melding]):
     def __call__(self, external_id: str, asset_type: AssetType, melding: Melding) -> Asset:
         return Asset(external_id, asset_type, melding)
+
+
+class UnsupportedAnswerTypeException(Exception):
+    """Raised when an unsupported answer type is provided."""
+
+    pass
+
+
+class AnswerFactory:
+
+    def __call__(self, answer_input: AnswerInputUnion, melding: Melding, question: Question) -> Answer:
+
+        match answer_input.type:
+            case "text":
+                return TextAnswer(text=answer_input.text, melding=melding, question=question)
+            case "time":
+                return TimeAnswer(time=answer_input.time, melding=melding, question=question)
+            case _:
+                raise UnsupportedAnswerTypeException(f"Unsupported answer type: {answer_input.type}")
