@@ -137,7 +137,7 @@ from meldingen.mail import (
     SendConfirmationMailTask,
 )
 from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwareScanner
-from meldingen.models import Answer, Asset, Classification, Melding
+from meldingen.models import Answer, Asset, AssetType, Classification, Melding
 from meldingen.reclassification import Reclassifier
 from meldingen.repositories import (
     AnswerRepository,

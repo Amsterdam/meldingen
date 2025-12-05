@@ -3500,15 +3500,19 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_404_NOT_FOUND
 
         body = response.json()
-        assert body.get("detail") == "Failed to find asset type with id 123"
+        assert body.get("detail") == "Failed to find asset type for melding"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
     async def test_add_asset_that_does_not_exist(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, asset_type: AssetType
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_assets: Melding,
+        asset_type: AssetType,
     ) -> None:
         response = await client.post(
-            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
             params={"token": "supersecrettoken"},
             json={"external_id": "my_external_id", "asset_type_id": asset_type.id},
         )
@@ -3522,7 +3526,7 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert body.get("public_id") == "PUBMEL"
         assert body.get("text") == "This is a test melding."
         assert body.get("state") == "new"
-        assert body.get("classification", "") is None
+        assert body.get("classification", "") is not None
         assert body.get("geo_location", "") is None
         assert body.get("street", "") is None
         assert body.get("house_number", "") is None
@@ -3535,17 +3539,25 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token", "asset_type_max_assets"], [("supersecrettoken", 7)])
     async def test_can_add_third_asset_with_max_two_after_deleting_an_asset(
-        self, app: FastAPI, client: AsyncClient, melding_with_assets: Melding, asset_type: AssetType
+        self, app: FastAPI, client: AsyncClient, melding_with_assets_with_classification_and_asset_type: Melding
     ) -> None:
+        assert melding_with_assets_with_classification_and_asset_type.classification is not None
+        assert melding_with_assets_with_classification_and_asset_type.classification.asset_type is not None
+
+        asset_type = melding_with_assets_with_classification_and_asset_type.classification.asset_type
         response1 = await client.post(
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
+            app.url_path_for(
+                self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
+            ),
             params={"token": "supersecrettoken"},
             json={"external_id": "my_external_id", "asset_type_id": asset_type.id},
         )
         assert response1.status_code == HTTP_200_OK
 
         response2 = await client.post(
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
+            app.url_path_for(
+                self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
+            ),
             params={"token": "supersecrettoken"},
             json={"external_id": "my_external_id_2", "asset_type_id": asset_type.id},
         )
@@ -3553,7 +3565,9 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
 
         # Third time should fail because max_assets is 2
         response3 = await client.post(
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
+            app.url_path_for(
+                self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
+            ),
             params={"token": "supersecrettoken"},
             json={"external_id": "my_external_id_3", "asset_type_id": asset_type.id},
         )
@@ -3563,8 +3577,8 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         delete_response = await client.delete(
             app.url_path_for(
                 "melding:delete-asset",
-                melding_id=melding_with_assets.id,
-                asset_id=melding_with_assets.assets[0].id,
+                melding_id=melding_with_assets_with_classification_and_asset_type.id,
+                asset_id=melding_with_assets_with_classification_and_asset_type.assets[0].id,
             ),
             params={"token": "supersecrettoken"},
         )
@@ -3572,7 +3586,9 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
 
         # third one should now pass because one is deleted
         response = await client.post(
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
+            app.url_path_for(
+                self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
+            ),
             params={"token": "supersecrettoken"},
             json={"external_id": "my_external_id_3", "asset_type_id": asset_type.id},
         )
@@ -3602,10 +3618,11 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
     async def test_add_asset_that_already_exists(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, asset: Asset
+        self, app: FastAPI, client: AsyncClient, melding_with_classification_with_asset_type: Melding, asset: Asset
     ) -> None:
+
         response = await client.post(
-            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification_with_asset_type.id),
             params={"token": "supersecrettoken"},
             json={"external_id": asset.external_id, "asset_type_id": asset.type_id},
         )
@@ -3619,7 +3636,7 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         assert body.get("public_id") == "PUBMEL"
         assert body.get("text") == "This is a test melding."
         assert body.get("state") == "new"
-        assert body.get("classification", "") is None
+        assert body.get("classification", "") is not None
         assert body.get("geo_location", "") is None
         assert body.get("street", "") is None
         assert body.get("house_number", "") is None
