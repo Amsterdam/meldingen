@@ -1,7 +1,7 @@
 import logging
 from typing import Annotated, Any, AsyncIterator, Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from geojson_pydantic import Feature
 from geojson_pydantic.geometries import Geometry
@@ -25,7 +25,7 @@ from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, 
 from meldingen_core.token import TokenException
 from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 from sqlalchemy.exc import IntegrityError
 from starlette.status import (
     HTTP_200_OK,
@@ -70,6 +70,7 @@ from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
     answer_output_factory,
     asset_output_factory,
+    form_io_question_component_repository,
     melder_melding_download_attachment_action,
     melder_melding_list_assets_action,
     melder_melding_list_attachments_action,
@@ -109,15 +110,15 @@ from meldingen.dependencies import (
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
-from meldingen.models import Answer, Asset, Attachment, Classification, Melding
-from meldingen.repositories import MeldingRepository
+from meldingen.models import Answer, Attachment, Classification, FormIoComponentToAnswerTypeMap, Melding
+from meldingen.repositories import FormIoQuestionComponentRepository, MeldingRepository
 from meldingen.schemas.input import (
-    AnswerInput,
     AnswerInputUnion,
     CompleteMeldingInput,
     MeldingAssetInput,
     MeldingContactInput,
     MeldingInput,
+    TextAnswerInput,
 )
 from meldingen.schemas.output import (
     AnswerOutputUnion,
@@ -486,6 +487,36 @@ async def complete_melding(
     return await produce_output(melding)
 
 
+async def dynamic_answer_input(
+    request: Request,
+    question_id: int,
+    form_question_component_repository: FormIoQuestionComponentRepository = Depends(
+        form_io_question_component_repository
+    ),
+) -> TextAnswerInput:
+    """Dependency that dynamically selects the correct AnswerInputUnion member based on the question type."""
+
+    try:
+        component = await form_question_component_repository.find_component_by_question_id(question_id)
+    except NotFoundException:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND, detail=f"Question component not found for question_id {question_id}"
+        )
+
+    try:
+        answer_type = FormIoComponentToAnswerTypeMap.get(component.type)
+    except KeyError:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST, detail=f"Can't map component type {component.type} to answer type"
+        )
+
+    body = await request.json()
+    body["type"] = answer_type
+
+    # Use type adapter to validate a Union and create correct union member
+    return TypeAdapter(AnswerInputUnion).validate_python(body)
+
+
 @router.post(
     "/{melding_id}/question/{question_id}",
     name="melding:answer-question",
@@ -515,7 +546,7 @@ async def answer_additional_question(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     question_id: Annotated[int, Path(description="The id of the question.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    answer_input: AnswerInputUnion,
+    answer_input: Annotated[AnswerInputUnion, Depends(dynamic_answer_input)],
     action: Annotated[AnswerCreateAction, Depends(melding_answer_create_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutputUnion:
