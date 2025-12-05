@@ -40,8 +40,14 @@ from meldingen.repositories import (
     QuestionRepository,
     StaticFormRepository,
 )
-from meldingen.schemas.input import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, StaticFormInput, \
-    AnswerInputUnion
+from meldingen.schemas.input import (
+    AnswerInput,
+    AnswerInputUnion,
+    FormComponent,
+    FormInput,
+    FormPanelComponentInput,
+    StaticFormInput,
+)
 
 
 class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
