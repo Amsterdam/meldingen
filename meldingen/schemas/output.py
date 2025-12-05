@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import Annotated, Any, Union
+from typing import Annotated, Any, Literal, Union, final
 
 from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field, field_serializer
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
+from meldingen.models import AnswerTypeEnum
 from meldingen.schemas.types import FormIOConditional, GeoJson, PhoneNumber
 
 ### Form.io ###
@@ -235,7 +236,23 @@ class FormTimeComponentOutput(BaseFormComponentOutput):
 
 
 class AnswerOutput(BaseOutputModel):
+    type: str
+
+
+class TextAnswerOutput(AnswerOutput):
     text: str
+    type: Literal[AnswerTypeEnum.text]
+
+
+class TimeAnswerOutput(AnswerOutput):
+    time: str
+    type: Literal[AnswerTypeEnum.time]
+
+
+AnswerOutputUnion = Annotated[
+    Union[TextAnswerOutput, TimeAnswerOutput],
+    Field(discriminator="type"),
+]
 
 
 class QuestionOutput(BaseOutputModel):
@@ -243,7 +260,7 @@ class QuestionOutput(BaseOutputModel):
 
 
 class AnswerQuestionOutput(BaseOutputModel):
-    text: str
+    answer: AnswerOutputUnion
     question: QuestionOutput
 
 

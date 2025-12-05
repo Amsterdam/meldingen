@@ -102,7 +102,13 @@ from meldingen.asset import AssetPurger
 from meldingen.classification import DummyClassifierAdapter, OpenAIClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
-from meldingen.factories import AssetFactory, AttachmentFactory, AzureFilesystemFactory, BaseFilesystemFactory
+from meldingen.factories import (
+    AnswerFactory,
+    AssetFactory,
+    AttachmentFactory,
+    AzureFilesystemFactory,
+    BaseFilesystemFactory,
+)
 from meldingen.generators import PublicIdGenerator
 from meldingen.image import (
     ImageOptimizerTask,
@@ -299,6 +305,10 @@ def asset_repository(session: Annotated[AsyncSession, Depends(database_session)]
 
 def asset_factory() -> AssetFactory:
     return AssetFactory()
+
+
+def answer_factory() -> AnswerFactory:
+    return AnswerFactory()
 
 
 def openai_client() -> AsyncOpenAI:
@@ -594,6 +604,7 @@ def melding_answer_create_action(
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
     jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
+    answer_factory: Annotated[AnswerFactory, Depends(answer_factory)],
 ) -> AnswerCreateAction:
     return AnswerCreateAction(
         answer_repository,
@@ -601,6 +612,7 @@ def melding_answer_create_action(
         question_repository,
         component_repository,
         jsonlogic_validator,
+        answer_factory,
     )
 
 
@@ -610,7 +622,12 @@ def melding_answer_update_action(
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
     jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
 ) -> AnswerUpdateAction:
-    return AnswerUpdateAction(answer_repository, token_verifier, component_repository, jsonlogic_validator)
+    return AnswerUpdateAction(
+        answer_repository,
+        token_verifier,
+        component_repository,
+        jsonlogic_validator,
+    )
 
 
 def melding_list_questions_and_answers_action(
@@ -984,10 +1001,6 @@ def melding_get_possible_next_states_action(
     return MeldingGetPossibleNextStatesAction(state_machine, repository)
 
 
-def melding_list_questions_and_answers_output_factory() -> AnswerListOutputFactory:
-    return AnswerListOutputFactory()
-
-
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:
     return FormComponentValueOutputFactory()
 
@@ -1267,6 +1280,14 @@ def wfs_retrieve_action(
 
 def answer_output_factory() -> AnswerOutputFactory:
     return AnswerOutputFactory()
+
+
+def melding_list_questions_and_answers_output_factory(
+    answer_output_factory: Annotated[AnswerFactory, Depends(answer_output_factory)],
+) -> AnswerListOutputFactory:
+    return AnswerListOutputFactory(
+        answer_output_factory,
+    )
 
 
 def states_output_factory() -> StatesOutputFactory:
