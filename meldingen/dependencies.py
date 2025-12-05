@@ -97,7 +97,7 @@ from meldingen.actions.user import (
 )
 from meldingen.actions.wfs import WfsRetrieveAction
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
-from meldingen.answer import AnswerPurger, AnswerUpdateResolver
+from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
 from meldingen.classification import DummyClassifierAdapter, OpenAIClassifierAdapter
 from meldingen.config import settings
@@ -309,10 +309,6 @@ def asset_factory() -> AssetFactory:
 
 def answer_factory() -> AnswerFactory:
     return AnswerFactory()
-
-
-def answer_update_resolver() -> AnswerUpdateResolver:
-    return AnswerUpdateResolver()
 
 
 def openai_client() -> AsyncOpenAI:
@@ -625,16 +621,12 @@ def melding_answer_update_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
     jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
-    question_repository: Annotated[QuestionRepository, Depends(question_repository)],
-    answer_update_resolver: Annotated[AnswerFactory, Depends(answer_update_resolver)],
 ) -> AnswerUpdateAction:
     return AnswerUpdateAction(
         answer_repository,
         token_verifier,
         component_repository,
         jsonlogic_validator,
-        question_repository,
-        answer_update_resolver,
     )
 
 

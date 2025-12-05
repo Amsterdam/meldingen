@@ -1,5 +1,5 @@
 from abc import ABC, ABCMeta, abstractmethod
-from typing import Annotated, Any, Union
+from typing import Annotated, Any, Literal, Union
 
 from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
 from pydantic.alias_generators import to_camel
@@ -216,31 +216,14 @@ class FormTimeComponentInput(FormComponentInput):
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.time)]
 
 
-class AnswerInput(BaseModel, metaclass=ABCMeta):
-    @property
-    @abstractmethod
-    def answer_value(self) -> str:
-        """Return a flat value representing the answer.
-        Used to parse JSON logic and conditionals"""
-        pass
-
-
-class TextAnswerInput(AnswerInput):
+class TextAnswerInput(BaseModel):
     text: StrippedStr = Field(min_length=1)
-    type: Annotated[AnswerTypeEnum, Field(AnswerTypeEnum.text)]
-
-    @property
-    def answer_value(self) -> str:
-        return self.text
+    type: Literal[AnswerTypeEnum.text]
 
 
-class TimeAnswerInput(AnswerInput):
+class TimeAnswerInput(BaseModel):
     time: StrippedStr = Field(pattern=r"^\d{2}:\d{2}$")
-    type: Annotated[AnswerTypeEnum, Field(AnswerTypeEnum.time)]
-
-    @property
-    def answer_value(self) -> str:
-        return self.time
+    type: Literal[AnswerTypeEnum.time]
 
 
 def answer_discriminator(value: Any) -> str | None:
@@ -258,7 +241,7 @@ AnswerInputUnion = Annotated[
         Annotated[TextAnswerInput, Tag(AnswerTypeEnum.text)],
         Annotated[TimeAnswerInput, Tag(AnswerTypeEnum.time)],
     ],
-    Discriminator(answer_discriminator),
+    Discriminator("type"),
 ]
 
 

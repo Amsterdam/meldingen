@@ -13,6 +13,7 @@ from meldingen.factories import AnswerFactory
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
 from meldingen.models import (
     Answer,
+    AnswerTypeEnum,
     BaseFormIoValuesComponent,
     Form,
     FormIoCheckBoxComponent,
@@ -41,7 +42,6 @@ from meldingen.repositories import (
     StaticFormRepository,
 )
 from meldingen.schemas.input import (
-    AnswerInput,
     AnswerInputUnion,
     FormComponent,
     FormInput,
@@ -327,13 +327,13 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
                 detail=[{"msg": "Form classification is not the same as melding classification"}],
             )
 
-        # Store the answer
-        answer_data = answer_input.model_dump(by_alias=True)
         # Evaluate JSONLogic if present
         form_component = await self._component_repository.find_component_by_question_id(question.id)
-        if form_component.jsonlogic is not None:
+
+        # We only validate JSON logic on text answers
+        if form_component.jsonlogic is not None and answer_input.type == AnswerTypeEnum.text:
             try:
-                self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.answer_value})
+                self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.text})
             except JSONLogicValidationException as e:
                 raise HTTPException(
                     status_code=HTTP_422_UNPROCESSABLE_CONTENT,
@@ -364,7 +364,7 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
         self._component_repository = component_repository
         self._jsonlogic_validate = jsonlogic_validator
 
-    async def __call__(self, melding_id: int, token: str, answer_id: int, text: str) -> Answer:
+    async def __call__(self, melding_id: int, token: str, answer_id: int, answer_input: AnswerInputUnion) -> Answer:
         melding = await self._token_verifier(melding_id, token)
 
         answer = await self._repository.retrieve(answer_id)
@@ -379,16 +379,21 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
             )
 
         form_component = await self._component_repository.find_component_by_question_id(answer.question_id)
-        if form_component.jsonlogic is not None:
+        if form_component.jsonlogic is not None and answer.type == AnswerTypeEnum.text:
             try:
-                self._jsonlogic_validate(form_component.jsonlogic, {"text": text})
+                self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.text})
             except JSONLogicValidationException as e:
                 raise HTTPException(
                     status_code=HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
                 ) from e
 
-        answer.text = text
+        # update only the fields that are set in the input
+        update_data = answer_input.model_dump(exclude_unset=True)
+
+        for key, value in update_data.items():
+            setattr(answer, key, value)
+
         await self._repository.save(answer)
 
         return answer

@@ -69,6 +69,7 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
     answer_output_factory,
+    answer_repository,
     asset_output_factory,
     form_io_question_component_repository,
     melder_melding_download_attachment_action,
@@ -111,7 +112,7 @@ from meldingen.dependencies import (
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
 from meldingen.models import Answer, Attachment, Classification, FormIoComponentToAnswerTypeMap, Melding
-from meldingen.repositories import FormIoQuestionComponentRepository, MeldingRepository
+from meldingen.repositories import AnswerRepository, FormIoQuestionComponentRepository, MeldingRepository
 from meldingen.schemas.input import (
     AnswerInputUnion,
     CompleteMeldingInput,
@@ -487,7 +488,7 @@ async def complete_melding(
     return await produce_output(melding)
 
 
-async def dynamic_answer_input(
+async def resolve_answer_type_through_question_id(
     request: Request,
     question_id: int,
     form_question_component_repository: FormIoQuestionComponentRepository = Depends(
@@ -503,17 +504,12 @@ async def dynamic_answer_input(
             status_code=HTTP_404_NOT_FOUND, detail=f"Question component not found for question_id {question_id}"
         )
 
-    try:
-        answer_type = FormIoComponentToAnswerTypeMap.get(component.type)
-    except KeyError:
-        raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST, detail=f"Can't map component type {component.type} to answer type"
-        )
+    answer_type = FormIoComponentToAnswerTypeMap.get(component.type)
 
     body = await request.json()
     body["type"] = answer_type
 
-    # Use type adapter to validate a Union and create correct union member
+    # Use type adapter to validate a python Union and create correct union member
     return TypeAdapter(AnswerInputUnion).validate_python(body)
 
 
@@ -546,7 +542,7 @@ async def answer_additional_question(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     question_id: Annotated[int, Path(description="The id of the question.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    answer_input: Annotated[AnswerInputUnion, Depends(dynamic_answer_input)],
+    answer_input: Annotated[AnswerInputUnion, Depends(resolve_answer_type_through_question_id)],
     action: Annotated[AnswerCreateAction, Depends(melding_answer_create_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutputUnion:
@@ -560,6 +556,24 @@ async def answer_additional_question(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
 
     return produce_output(answer)
+
+
+async def resolve_answer_type_through_answer_id(
+    request: Request,
+    answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
+    answer_id: int,
+) -> AnswerInputUnion:
+    """Dependency that dynamically selects the correct AnswerInputUnion member based on the answer type."""
+    answer = await answer_repository.retrieve(answer_id)
+
+    if answer is None:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"Answer not found for answer_id {answer_id}")
+
+    body = await request.json()
+    body["type"] = answer.type
+
+    # Use type adapter to validate a Union and create correct union member
+    return TypeAdapter(AnswerInputUnion).validate_python(body)
 
 
 @router.patch(
@@ -588,7 +602,7 @@ async def update_answer(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     answer_id: Annotated[int, Path(description="The id of the answer.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    answer_input: AnswerInputUnion,
+    answer_input: Annotated[AnswerInputUnion, Depends(resolve_answer_type_through_answer_id)],
     action: Annotated[AnswerUpdateAction, Depends(melding_answer_update_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutputUnion:
