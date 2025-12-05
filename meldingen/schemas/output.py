@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Any, Union, final
+from typing import Annotated, Any, Literal, Union, final
 
 from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field, field_serializer
 from pydantic.alias_generators import to_camel
@@ -241,13 +241,18 @@ class AnswerOutput(BaseOutputModel):
 
 class TextAnswerOutput(AnswerOutput):
     text: str
+    type: Literal[AnswerTypeEnum.text]
 
 
 class TimeAnswerOutput(AnswerOutput):
     time: str
+    type: Literal[AnswerTypeEnum.time]
 
 
-AnswerOutputUnion = Union[TextAnswerOutput, TimeAnswerOutput]
+AnswerOutputUnion = Annotated[
+    Union[TextAnswerOutput, TimeAnswerOutput],
+    Field(discriminator="type"),
+]
 
 
 class QuestionOutput(BaseOutputModel):
