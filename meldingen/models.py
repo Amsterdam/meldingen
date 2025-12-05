@@ -442,6 +442,14 @@ class AnswerTypeEnum(enum.StrEnum):
     time = "time"
 
 
+# Mapping from FormIoComponentTypeEnum to AnswerTypeEnum
+FormIoComponentToAnswerTypeMap = {
+    FormIoComponentTypeEnum.text_area: AnswerTypeEnum.text,
+    FormIoComponentTypeEnum.text_field: AnswerTypeEnum.text,
+    FormIoComponentTypeEnum.time: AnswerTypeEnum.time,
+}
+
+
 class Answer(AsyncAttrs, BaseDBModel, kw_only=True):
     """This class uses kw_only to bypass the issue where fields with default values
     cannot come before fields without default values in the generated __init__ method."""
@@ -477,8 +485,8 @@ class TextAnswer(Answer, BaseAnswer):
 
 
 class TimeAnswer(Answer, BaseAnswer):
-    """Answer type for time values. Without timezone info,
-    because it should always display the local time."""
+    """Answer type for time values. Stored as hh:mm string,
+    because it's only used as a simple display of the user's input"""
 
     __table_args__ = {"extend_existing": True}
 

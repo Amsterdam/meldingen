@@ -1774,7 +1774,7 @@ class TestMeldingQuestionAnswer:
         assert isinstance(question, Question)
 
         text = "dit is het antwoord op de vraag"
-        data = {"text": text, "type": AnswerTypeEnum.text}
+        data = {"text": text}
 
         response = await client.post(
             app.url_path_for(
@@ -1830,7 +1830,7 @@ class TestMeldingQuestionAnswer:
         await db_session.delete(panel_components[0])
         await db_session.commit()
 
-        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
+        data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
             app.url_path_for(
@@ -1893,7 +1893,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
+        data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
             app.url_path_for(
@@ -1925,7 +1925,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
+        data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=999, question_id=question.id),
@@ -1956,7 +1956,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
+        data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
@@ -1984,7 +1984,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
+        data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
@@ -2023,7 +2023,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
+        data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
@@ -2095,7 +2095,7 @@ class TestMeldingQuestionAnswer:
         client: AsyncClient,
         melding: Melding,
     ) -> None:
-        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
+        data = {"text": "dit is het antwoord op de vraag"}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=999),
@@ -2106,7 +2106,7 @@ class TestMeldingQuestionAnswer:
         assert response.status_code == HTTP_404_NOT_FOUND
 
         data = response.json()
-        assert data.get("detail") == "Not Found"
+        assert data.get("detail") == "Question component not found for question_id 999"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -2127,7 +2127,7 @@ class TestMeldingQuestionAnswer:
         db_session.add(question)
         await db_session.commit()
 
-        data = {"text": "Ja, dit is een vraag", "type": AnswerTypeEnum.text}
+        data = {"text": "Ja, dit is een vraag"}
 
         response = await client.post(
             app.url_path_for(
@@ -2140,7 +2140,7 @@ class TestMeldingQuestionAnswer:
         assert response.status_code == HTTP_404_NOT_FOUND
 
         data = response.json()
-        assert data.get("detail") == "Not Found"
+        assert data.get("detail") == f"Question component not found for question_id {question.id}"
 
 
 class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
@@ -2152,7 +2152,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
     @override
     def get_json(self) -> dict[str, Any] | None:
-        return {"text": "This is the answer", "type": AnswerTypeEnum.text}
+        return {"text": "This is the answer"}
 
     @override
     def get_extra_path_params(self) -> dict[str, Any]:
@@ -2244,7 +2244,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"text": "This is another answer", "type": AnswerTypeEnum.text},
+            json={"text": "This is another answer"},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2291,7 +2291,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"text": "This is another answer", "type": AnswerTypeEnum.text},
+            json={"text": "This is another answer"},
         )
 
         assert response.status_code == HTTP_200_OK
