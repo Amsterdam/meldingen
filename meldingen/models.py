@@ -102,6 +102,7 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     email: Mapped[str | None] = mapped_column(String(254), default=None)
     phone: Mapped[str | None] = mapped_column(String(50), default=None)
     assets: Mapped[list[Asset]] = relationship(secondary=asset_melding, default_factory=list)
+    answers = relationship("Answer", back_populates="melding", default_factory=list)
 
 
 user_group = Table(

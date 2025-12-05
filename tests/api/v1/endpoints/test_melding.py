@@ -2143,7 +2143,7 @@ class TestMeldingQuestionAnswer:
         assert data.get("detail") == f"Question component not found for question_id {question.id}"
 
 
-class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
+class TestMeldingUpdateAnswer:
     def get_route_name(self) -> str:
         return "melding:update-answer"
 
@@ -2158,11 +2158,71 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
     def get_extra_path_params(self) -> dict[str, Any]:
         return {"answer_id": 123}
 
+    """We can't use the BaseTokenAuthenticationTest because the endpoint first resolves
+    the answer input type and we can't add a fixture with answer and type there. 
+    Unless we make the token authentication also a dependency instead of part of the action. 
+    """
+
     @pytest.mark.anyio
-    async def test_melding_not_found(self, app: FastAPI, client: AsyncClient) -> None:
+    async def test_token_missing(self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding) -> None:
+        answers = await melding_with_text_answers.awaitable_attrs.answers
+
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=123, answer_id=456),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id, answer_id=answers[0].id),
+            json=self.get_json(),
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["query", "token"]
+        assert detail[0].get("msg") == "Field required"
+
+    @pytest.mark.anyio
+    async def test_token_invalid(self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding) -> None:
+        answers = await melding_with_text_answers.awaitable_attrs.answers
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id, answer_id=answers[0].id),
+            params={"token": ""},
+            json=self.get_json(),
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
+        indirect=True,
+    )
+    async def test_token_expired(self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding) -> None:
+        answers = await melding_with_text_answers.awaitable_attrs.answers
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id, answer_id=answers[0].id),
+            params={"token": "supersecuretoken"},
+            json=self.get_json(),
+        )
+
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    async def test_melding_not_found(
+        self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding
+    ) -> None:
+        answers = await melding_with_text_answers.awaitable_attrs.answers
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=123, answer_id=answers[0].id),
             params={"token": "supersecuretoken"},
             json=self.get_json(),
         )
