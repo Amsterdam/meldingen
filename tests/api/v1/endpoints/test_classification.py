@@ -533,8 +533,9 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         client: AsyncClient,
         auth_user: None,
         classification_with_asset_type: Classification,
-        asset_type: AssetType,
+        asset_types: list[AssetType],
     ) -> None:
+        asset_type = asset_types[0]
         assert classification_with_asset_type.asset_type_id != asset_type.id
 
         response = await client.patch(

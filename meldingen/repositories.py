@@ -5,6 +5,7 @@ from typing import Any, List, TypeVar
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters
+from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
@@ -347,6 +348,17 @@ class AssetTypeRepository(BaseSQLAlchemyRepository[AssetType], BaseAssetTypeRepo
         result = await self._session.execute(statement)
 
         return result.scalars().one_or_none()
+
+    async def find_by_melding(self, melding_id: int) -> AssetType | None:
+        stmt = (
+            select(AssetType)
+            .join(Classification, Classification.asset_type_id == AssetType.id)
+            .join(Melding, Melding.classification_id == Classification.id)
+            .where(Melding.id == melding_id)
+        )
+
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
 
 
 class AssetRepository(BaseSQLAlchemyRepository[Asset], BaseAssetRepository[Asset]):
