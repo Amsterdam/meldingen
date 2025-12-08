@@ -517,7 +517,10 @@ async def resolve_answer_type_through_question_id(
     body["type"] = answer_type
 
     # Use type adapter to validate a python Union and create correct union member
-    return TypeAdapter(AnswerInputUnion).validate_python(body)
+    try:
+        return TypeAdapter(AnswerInputUnion).validate_python(body)
+    except ValidationError as e:
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors()) from e
 
 
 @router.post(
@@ -580,7 +583,10 @@ async def resolve_answer_type_through_answer_id(
     body["type"] = answer.type
 
     # Use type adapter to validate a Union and create correct union member
-    return TypeAdapter(AnswerInputUnion).validate_python(body)
+    try:
+        return TypeAdapter(AnswerInputUnion).validate_python(body)
+    except ValidationError as e:
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors()) from e
 
 
 @router.patch(

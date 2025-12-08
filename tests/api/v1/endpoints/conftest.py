@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from os import pipe2
 from typing import Any
 from uuid import uuid4
 
@@ -31,6 +32,7 @@ from meldingen.models import (
     StaticForm,
     StaticFormTypeEnum,
     TextAnswer,
+    TimeAnswer,
     User,
 )
 
@@ -261,6 +263,27 @@ async def melding_with_text_answers(
                 melding=melding_with_classification,
                 question=questions[i],
                 type=AnswerTypeEnum.text,
+            )
+        )
+
+    await db_session.commit()
+
+    return melding_with_classification
+
+
+@pytest.fixture
+async def melding_with_time_answers(
+    db_session: AsyncSession, melding_with_classification: Melding, form_with_multiple_questions: Form
+) -> Melding:
+    questions = await form_with_multiple_questions.awaitable_attrs.questions
+
+    for i in [1, 2, 5, 6]:
+        db_session.add(
+            TimeAnswer(
+                time=f"10:0{i}",
+                melding=melding_with_classification,
+                question=questions[i],
+                type=AnswerTypeEnum.time,
             )
         )
 
@@ -737,6 +760,52 @@ async def form_with_classification(
     form.questions.append(question)
     db_session.add(form)
 
+    await db_session.commit()
+
+    return form
+
+
+@pytest.fixture
+async def form_with_time_question_component(
+    db_session: AsyncSession,
+    form_title: str,
+    conditional: dict[str, Any],
+    melding_with_classification: Melding,
+) -> Form:
+    form = Form(
+        title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
+    )
+
+    panel = FormIoPanelComponent(
+        title="Panel 1",
+        label="Page 1",
+        key="page1",
+        input=False,
+        type=FormIoComponentTypeEnum.panel,
+        conditional=conditional,
+    )
+
+    component = FormIoTimeComponent(
+        label="Wanneer speelde dit?",
+        description="Geef aan hoe laat dit gebeurde.",
+        key="wanneer",
+        type=FormIoComponentTypeEnum.time,
+        input=True,
+        conditional=None,
+    )
+
+    panel_components = await panel.awaitable_attrs.components
+    panel_components.append(component)
+
+    components = await form.awaitable_attrs.components
+    components.append(panel)
+
+    question = Question(text="Hoe laat was dit?", form=form, component=component)
+    db_session.add(question)
+
+    component.question = question
+
+    db_session.add(form)
     await db_session.commit()
 
     return form

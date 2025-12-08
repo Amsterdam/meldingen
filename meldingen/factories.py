@@ -4,7 +4,17 @@ from collections.abc import AsyncIterator
 from meldingen_core.factories import BaseAssetFactory, BaseAttachmentFactory
 from plugfs.filesystem import Filesystem
 
-from meldingen.models import Answer, Asset, AssetType, Attachment, Melding, Question, TextAnswer, TimeAnswer
+from meldingen.models import (
+    Answer,
+    AnswerTypeEnum,
+    Asset,
+    AssetType,
+    Attachment,
+    Melding,
+    Question,
+    TextAnswer,
+    TimeAnswer,
+)
 from meldingen.schemas.input import AnswerInputUnion
 
 
@@ -44,8 +54,8 @@ class AnswerFactory:
 
         match answer_input.type:
             case "text":
-                return TextAnswer(text=answer_input.text, melding=melding, question=question)
+                return TextAnswer(type=answer_input.type, text=answer_input.text, melding=melding, question=question)
             case "time":
-                return TimeAnswer(time=answer_input.time, melding=melding, question=question)
+                return TimeAnswer(type=answer_input.type, time=answer_input.time, melding=melding, question=question)
             case _:
                 raise UnsupportedAnswerTypeException(f"Unsupported answer type: {answer_input.type}")
