@@ -45,6 +45,8 @@ async def authenticate_user(
     py_jwt: Annotated[PyJWT, Depends(py_jwt)],
     user_repository: Annotated[UserRepository, Depends(user_repository)],
 ) -> User:
+
+    print("TOKENNNNNNNN", token)
     signing_key = jwks_client.get_signing_key_from_jwt(token)
 
     try:
@@ -63,7 +65,4 @@ async def authenticate_user(
 
     email = payload.get(settings.auth_identifier_field)
 
-    try:
-        return await user_repository.find_by_email(email)
-    except NoResultFound:
-        raise UnauthenticatedException("User not found")
+    return await user_repository.find_by_email_or_create(email)

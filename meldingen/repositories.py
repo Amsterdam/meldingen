@@ -234,6 +234,19 @@ class UserRepository(BaseSQLAlchemyRepository[User], BaseUserRepository):
 
         return results.scalars().unique().one()
 
+    async def find_by_email_or_create(self, email: str) -> User:
+        statement = select(User).where(User.email == email)
+
+        results = await self._session.execute(statement)
+
+        user = results.scalars().unique().one_or_none()
+
+        if user is None:
+            user = User(email=email, username=email, groups=[])
+            await self.save(user)
+
+        return user
+
 
 class GroupRepository(BaseSQLAlchemyRepository[Group]):
     def get_model_type(self) -> type[Group]:
