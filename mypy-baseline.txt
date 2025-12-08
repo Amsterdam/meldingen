@@ -3,6 +3,8 @@ migrations/versions/f88c971186dc_remove_location_form_type_from_enum.py:0: error
 migrations/versions/f88c971186dc_remove_location_form_type_from_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/f00d6c808e2d_add_other_static_form_types.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/f00d6c808e2d_add_other_static_form_types.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
+migrations/versions/eb1f60f8afbd_add_time_answer.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
+migrations/versions/eb1f60f8afbd_add_time_answer.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/cd7033b17112_update_form_component_types_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/cd7033b17112_update_form_component_types_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/ca3e63fcdb25_date_question_component.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
@@ -31,9 +33,9 @@ tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (e
 meldingen/main.py:0: error: Argument 1 to "add_middleware" of "Starlette" has incompatible type "type[ContentSizeLimitMiddleware]"; expected "_MiddlewareFactory[[int]]"  [arg-type]
 meldingen/main.py:0: note: Following member(s) of "ContentSizeLimitMiddleware" have conflicts:
 meldingen/main.py:0: note: Expected:
-meldingen/main.py:0: note: def __call__(Callable[[Any, Callable[[], Awaitable[Any]], Callable[[Any], Awaitable[None]]], Awaitable[None]], /, max_size: int) -> Callable[[Any, Callable[[], Awaitable[Any]], Callable[[Any], Awaitable[None]]], Awaitable[None]]
+meldingen/main.py:0: note: def __call__(self, Callable[[Any, Callable[[], Awaitable[Any]], Callable[[Any], Awaitable[None]]], Awaitable[None]], /, max_size: int) -> Callable[[Any, Callable[[], Awaitable[Any]], Callable[[Any], Awaitable[None]]], Awaitable[None]]
 meldingen/main.py:0: note: Got:
-meldingen/main.py:0: note: def __init__(app: FastAPI, max_size: int) -> ContentSizeLimitMiddleware
+meldingen/main.py:0: note: def ContentSizeLimitMiddleware(self, app: FastAPI, max_size: int) -> ContentSizeLimitMiddleware
 meldingen/main.py:0: note: "_MiddlewareFactory[[int]].__call__" has type "Callable[[Callable[[Any, Callable[[], Awaitable[Any]], Callable[[Any], Awaitable[None]]], Awaitable[None]], Arg(int, 'max_size')], Callable[[Any, Callable[[], Awaitable[Any]], Callable[[Any], Awaitable[None]]], Awaitable[None]]]"
 tests/conftest.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
 tests/conftest.py:0: error: Call to untyped function "visit_drop_table" in typed context  [no-untyped-call]

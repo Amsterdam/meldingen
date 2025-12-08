@@ -111,7 +111,14 @@ from meldingen.dependencies import (
 )
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
-from meldingen.models import Answer, Attachment, Classification, FormIoComponentToAnswerTypeMap, Melding
+from meldingen.models import (
+    Answer,
+    Attachment,
+    Classification,
+    FormIoComponentToAnswerTypeMap,
+    FormIoComponentTypeEnum,
+    Melding,
+)
 from meldingen.repositories import AnswerRepository, FormIoQuestionComponentRepository, MeldingRepository
 from meldingen.schemas.input import (
     AnswerInputUnion,
@@ -504,7 +511,7 @@ async def resolve_answer_type_through_question_id(
             status_code=HTTP_404_NOT_FOUND, detail=f"Question component not found for question_id {question_id}"
         )
 
-    answer_type = FormIoComponentToAnswerTypeMap.get(component.type)
+    answer_type = FormIoComponentToAnswerTypeMap.get(FormIoComponentTypeEnum(component.type))
 
     body = await request.json()
     body["type"] = answer_type
