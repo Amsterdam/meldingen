@@ -67,20 +67,6 @@ async def test_get_user_token_missing_claim(app: FastAPI) -> None:
 
 
 @pytest.mark.anyio
-async def test_get_user_not_found(app: FastAPI) -> None:
-    py_jwt_mock = Mock(PyJWT)
-    py_jwt_mock.decode.return_value = {"email": "a@b.c"}
-
-    user_repository = Mock(UserRepository)
-    user_repository.find_by_email.side_effect = NoResultFound()
-
-    with pytest.raises(UnauthenticatedException) as exc_info:
-        await authenticate_user("123456789", Mock(PyJWKClient), py_jwt_mock, user_repository)
-
-    assert exc_info.value.detail == "User not found"
-
-
-@pytest.mark.anyio
 async def test_get_user(app: FastAPI) -> None:
     py_jwt_mock = Mock(PyJWT)
     py_jwt_mock.decode.return_value = {"email": "user@example.com"}
@@ -88,7 +74,7 @@ async def test_get_user(app: FastAPI) -> None:
     test_user = User(email="user@example.com", username="user")
 
     user_repository = Mock(UserRepository)
-    user_repository.find_by_email.return_value = test_user
+    user_repository.find_by_email_or_create.return_value = test_user
 
     user = await authenticate_user("123456789", Mock(PyJWKClient), py_jwt_mock, user_repository)
 
