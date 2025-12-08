@@ -123,7 +123,7 @@ from meldingen.schemas.input import (
 )
 from meldingen.schemas.output import (
     AnswerOutputUnion,
-    AnswerQuestionOutput,
+    AnswerQuestionOutputUnion,
     AssetOutput,
     AttachmentOutput,
     MeldingCreateOutput,
@@ -555,7 +555,7 @@ async def answer_additional_question(
     except MeldingNotClassifiedException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
 
-    return produce_output(answer)
+    return await produce_output(answer)
 
 
 async def resolve_answer_type_through_answer_id(
@@ -613,7 +613,7 @@ async def update_answer(
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
-    return produce_output(answer)
+    return await produce_output(answer)
 
 
 def _hydrate_attachment_output(attachment: Attachment) -> AttachmentOutput:
@@ -879,7 +879,7 @@ async def melder_list_answers(
         Depends(melder_melding_list_questions_and_answers_action),
     ],
     produce_output: Annotated[AnswerListOutputFactory, Depends(melding_list_questions_and_answers_output_factory)],
-) -> list[AnswerQuestionOutput]:
+) -> list[AnswerQuestionOutputUnion]:
     try:
         answers = await action(melding_id, token)
     except NotFoundException:
@@ -906,7 +906,7 @@ async def list_answers(
         Depends(melding_list_questions_and_answers_action),
     ],
     produce_output: Annotated[AnswerListOutputFactory, Depends(melding_list_questions_and_answers_output_factory)],
-) -> list[AnswerQuestionOutput]:
+) -> list[AnswerQuestionOutputUnion]:
     answers = await action(melding_id)
 
     return await produce_output(answers)
