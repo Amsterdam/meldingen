@@ -2150,11 +2150,9 @@ class TestMeldingUpdateAnswer:
     def get_method(self) -> str:
         return "PATCH"
 
-    @override
     def get_json(self) -> dict[str, Any] | None:
         return {"text": "This is the answer"}
 
-    @override
     def get_extra_path_params(self) -> dict[str, Any]:
         return {"answer_id": 123}
 

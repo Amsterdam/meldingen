@@ -46,7 +46,7 @@ from meldingen.schemas.input import (
     FormComponent,
     FormInput,
     FormPanelComponentInput,
-    StaticFormInput,
+    StaticFormInput, TextAnswerInput,
 )
 
 
@@ -331,7 +331,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         form_component = await self._component_repository.find_component_by_question_id(question.id)
 
         # We only validate JSON logic on text answers
-        if form_component.jsonlogic is not None and answer_input.type == AnswerTypeEnum.text:
+        if form_component.jsonlogic is not None and isinstance(answer_input, TextAnswerInput):
             try:
                 self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.text})
             except JSONLogicValidationException as e:
@@ -379,8 +379,10 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
             )
 
         form_component = await self._component_repository.find_component_by_question_id(answer.question_id)
-        if form_component.jsonlogic is not None and answer.type == AnswerTypeEnum.text:
+
+        if form_component.jsonlogic is not None and isinstance(answer_input, TextAnswerInput):
             try:
+                assert answer_input.text is not None
                 self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.text})
             except JSONLogicValidationException as e:
                 raise HTTPException(
