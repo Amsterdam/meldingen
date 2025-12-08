@@ -3,13 +3,13 @@ from typing import Annotated, Any, TypeAlias
 from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from geojson_pydantic import Point
 from meldingen_core.address import Address as BaseAddress
-from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, StringConstraints
+from pydantic import AfterValidator, BaseModel, Field
 from pydantic.dataclasses import dataclass
 from pydantic_extra_types.phone_numbers import PhoneNumber as PydanticPhoneNumber
 
 from meldingen.config import settings
 
-StrippedStr: TypeAlias = Annotated[str, BeforeValidator(lambda val: val.strip())]
+StrippedStr: TypeAlias = Annotated[str, AfterValidator(lambda val: val.strip())]
 """String that automatically strips leading and trailing whitespace before inner validation."""
 
 

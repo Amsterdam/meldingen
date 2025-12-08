@@ -43,6 +43,7 @@ from meldingen.models import (
     Question,
     StaticForm,
     TextAnswer,
+    TimeAnswer,
 )
 from meldingen.repositories import MeldingRepository
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
@@ -2142,6 +2143,100 @@ class TestMeldingQuestionAnswer:
         data = response.json()
         assert data.get("detail") == f"Question component not found for question_id {question.id}"
 
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            )
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_create_time_answer(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_time_question_component: Form,
+    ) -> None:
+        components = await form_with_time_question_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"time": "16:45"},
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        body = response.json()
+        assert body.get("id") is not None
+        assert body.get("time") == "16:45"
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["time_value", "error_message"],
+        [
+            ("invalid-time-format", r"String should match pattern '^\d{2}:\d{2}$'"),
+            ("24:00:00", r"String should match pattern '^\d{2}:\d{2}$'"),
+            ("1560", r"String should match pattern '^\d{2}:\d{2}$'"),
+            ("ab:cd", r"String should match pattern '^\d{2}:\d{2}$'"),
+            (1000, "Input should be a valid string"),
+            (10.00, "Input should be a valid string"),
+        ],
+    )
+    async def test_create_time_answer_invalid(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_time_question_component: Form,
+        time_value: str | int,
+        error_message: str,
+    ) -> None:
+        components = await form_with_time_question_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"time": time_value},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == error_message
+
 
 class TestMeldingUpdateAnswer:
     def get_route_name(self) -> str:
@@ -2325,7 +2420,7 @@ class TestMeldingUpdateAnswer:
         indirect=["classification_name", "jsonlogic"],
     )
     @pytest.mark.anyio
-    async def test_update_answer(
+    async def test_update_text_answer(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -2359,6 +2454,98 @@ class TestMeldingUpdateAnswer:
         assert body.get("text") == "This is another answer"
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            )
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_time_answer(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = TimeAnswer(
+            time="14:30",
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.time,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"time": "16:45"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") == answer.id
+        assert body.get("time") == "16:45"
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["time_value", "error_message"],
+        [
+            ("invalid-time-format", r"String should match pattern '^\d{2}:\d{2}$'"),
+            ("24:00:00", r"String should match pattern '^\d{2}:\d{2}$'"),
+            ("1560", r"String should match pattern '^\d{2}:\d{2}$'"),
+            ("ab:cd", r"String should match pattern '^\d{2}:\d{2}$'"),
+            (1000, "Input should be a valid string"),
+            (10.00, "Input should be a valid string"),
+        ],
+    )
+    async def test_update_time_answer_invalid(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+        time_value: str | int | float,
+        error_message: str,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = TimeAnswer(
+            time="14:30",
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.time,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"time": time_value},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == error_message
 
 
 class TestMeldingUploadAttachment:
