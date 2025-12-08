@@ -463,6 +463,7 @@ class Answer(AsyncAttrs, BaseDBModel, kw_only=True):
     def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_on": "type",
+            "polymorphic_abstract": True,
         }
 
     question_id: Mapped[int] = mapped_column(ForeignKey("question.id"), init=False)
@@ -485,7 +486,7 @@ class TextAnswer(Answer, BaseAnswer):
         }
 
 
-class TimeAnswer(Answer, BaseAnswer):
+class TimeAnswer(Answer):
     """Answer type for time values. Stored as hh:mm string,
     because it's only used as a simple display of the user's input"""
 
