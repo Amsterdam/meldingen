@@ -46,7 +46,8 @@ from meldingen.schemas.input import (
     FormComponent,
     FormInput,
     FormPanelComponentInput,
-    StaticFormInput, TextAnswerInput,
+    StaticFormInput,
+    TextAnswerInput,
 )
 
 
