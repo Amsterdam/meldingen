@@ -28,7 +28,7 @@ from meldingen.models import (
 )
 from meldingen.schemas.output import (
     AnswerOutputUnion,
-    AnswerQuestionOutput,
+    AnswerQuestionOutputUnion,
     AssetOutput,
     AssetTypeOutput,
     BaseFormComponentOutput,
@@ -60,7 +60,9 @@ from meldingen.schemas.output import (
     StaticFormTextAreaComponentOutput,
     StaticFormTextFieldInputComponentOutput,
     TextAnswerOutput,
+    TextAnswerQuestionOutput,
     TimeAnswerOutput,
+    TimeAnswerQuestionOutput,
 )
 
 
@@ -758,52 +760,93 @@ class MeldingUpdateOutputFactory(MeldingOutputFactory):
 
 
 class TextAnswerOutputFactory:
-    def __call__(self, answer: TextAnswer) -> TextAnswerOutput:
+    async def __call__(self, answer: TextAnswer) -> TextAnswerOutput:
         return TextAnswerOutput(
-            id=answer.id, type=answer.type, text=answer.text, created_at=answer.created_at, updated_at=answer.updated_at
+            id=answer.id,
+            type=answer.type,
+            text=await answer.awaitable_attrs.text,
+            created_at=answer.created_at,
+            updated_at=answer.updated_at,
         )
 
 
 class TimeAnswerOutputFactory:
-    def __call__(self, answer: TimeAnswer) -> TimeAnswerOutput:
+    async def __call__(self, answer: TimeAnswer) -> TimeAnswerOutput:
         return TimeAnswerOutput(
-            id=answer.id, type=answer.type, time=answer.time, created_at=answer.created_at, updated_at=answer.updated_at
+            id=answer.id,
+            type=answer.type,
+            time=await answer.awaitable_attrs.time,
+            created_at=answer.created_at,
+            updated_at=answer.updated_at,
         )
 
 
 class AnswerOutputFactory:
-    def __call__(self, answer: Answer) -> AnswerOutputUnion:
-        match answer:
-            case TextAnswer():
-                return TextAnswerOutputFactory()(answer)
-            case TimeAnswer():
-                return TimeAnswerOutputFactory()(answer)
-            case _:
-                raise Exception(f"Unsupported answer type: {type(answer)}")
+    _create_text_answer: TextAnswerOutputFactory
+    _create_time_answer: TimeAnswerOutputFactory
+
+    def __init__(self, text_factory: TextAnswerOutputFactory, time_factory: TimeAnswerOutputFactory):
+        self._create_text_answer = text_factory
+        self._create_time_answer = time_factory
+
+    async def __call__(self, answer: Answer) -> AnswerOutputUnion:
+        if isinstance(answer, TextAnswer):
+            answer = await self._create_text_answer(answer)
+            return answer
+        elif isinstance(answer, TimeAnswer):
+            return await self._create_time_answer(answer)
+        else:
+            raise Exception(f"Unsupported answer output type: {type(answer)}")
+
+
+class AnswerQuestionOutputFactory:
+    """Output a combination of answer and question models"""
+
+    async def __call__(self, answer: Answer, question: QuestionOutput) -> AnswerQuestionOutputUnion:
+        fields = {
+            "id": answer.id,
+            "type": answer.type,
+            "created_at": answer.created_at,
+            "updated_at": answer.updated_at,
+            "question": question,
+        }
+
+        # Subclass attributes are not eagerly loaded by default
+        if isinstance(answer, TextAnswer):
+            return TextAnswerQuestionOutput(
+                **fields,
+                text=await answer.awaitable_attrs.text,
+            )
+        elif isinstance(answer, TimeAnswer):
+            return TimeAnswerQuestionOutput(
+                **fields,
+                time=await answer.awaitable_attrs.time,
+            )
+        else:
+            raise Exception(f"Unsupported answer-question output type: {type(answer)}")
 
 
 class AnswerListOutputFactory:
-    _output_answer: AnswerOutputFactory
+    _output_answer: AnswerQuestionOutputFactory
 
-    def __init__(self, answer_output_factory: AnswerOutputFactory):
+    def __init__(self, answer_output_factory: AnswerQuestionOutputFactory):
         self._output_answer = answer_output_factory
 
-    async def __call__(self, answers: Sequence[Answer]) -> list[AnswerQuestionOutput]:
+    async def __call__(self, answers: Sequence[Answer]) -> list[AnswerQuestionOutputUnion]:
         flattened = {}
         for answer in answers:
             question = await answer.awaitable_attrs.question
             component = await question.awaitable_attrs.component
             panel = await component.awaitable_attrs.parent
-
-            flattened[int(f"{panel.position}00000{component.position}")] = AnswerQuestionOutput(
-                answer=self._output_answer(answer),
-                question=QuestionOutput(
-                    id=question.id,
-                    text=question.text,
-                    created_at=question.created_at,
-                    updated_at=question.updated_at,
-                ),
+            question_output = QuestionOutput(
+                id=question.id,
+                text=question.text,
+                created_at=question.created_at,
+                updated_at=question.updated_at,
             )
+            output = await self._output_answer(answer, question_output)
+
+            flattened[int(f"{panel.position}00000{component.position}")] = output
 
         _sorted = dict(sorted(flattened.items()))
 

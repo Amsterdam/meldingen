@@ -259,9 +259,18 @@ class QuestionOutput(BaseOutputModel):
     text: str
 
 
-class AnswerQuestionOutput(BaseOutputModel):
-    answer: AnswerOutputUnion
+class TextAnswerQuestionOutput(TextAnswerOutput):
     question: QuestionOutput
+
+
+class TimeAnswerQuestionOutput(TimeAnswerOutput):
+    question: QuestionOutput
+
+
+AnswerQuestionOutputUnion = Annotated[
+    Union[TextAnswerQuestionOutput, TimeAnswerQuestionOutput],
+    Field(discriminator="type"),
+]
 
 
 class AttachmentOutput(BaseOutputModel):
