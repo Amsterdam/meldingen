@@ -451,7 +451,7 @@ FormIoComponentToAnswerTypeMap = {
 }
 
 
-class Answer(AsyncAttrs, BaseDBModel, kw_only=True):
+class Answer(AsyncAttrs, BaseAnswer, BaseDBModel, kw_only=True):
     """This class uses kw_only to bypass the issue where fields with default values
     cannot come before fields without default values in the generated __init__ method."""
 
@@ -474,10 +474,10 @@ class Answer(AsyncAttrs, BaseDBModel, kw_only=True):
     type: Mapped[str] = mapped_column(Enum(AnswerTypeEnum, name="answer_type"), default=AnswerTypeEnum.text)
 
 
-class TextAnswer(Answer, BaseAnswer):
+class TextAnswer(Answer):
     __table_args__ = {"extend_existing": True}
 
-    text: Mapped[str] = mapped_column(String(), nullable="True")
+    text: Mapped[str] = mapped_column(String(), nullable=True)
 
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:
@@ -492,7 +492,7 @@ class TimeAnswer(Answer):
 
     __table_args__ = {"extend_existing": True}
 
-    time: Mapped[str] = mapped_column(String(), nullable="True")
+    time: Mapped[str] = mapped_column(String(), nullable=True)
 
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:

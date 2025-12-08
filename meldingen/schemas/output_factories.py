@@ -791,8 +791,7 @@ class AnswerOutputFactory:
 
     async def __call__(self, answer: Answer) -> AnswerOutputUnion:
         if isinstance(answer, TextAnswer):
-            answer = await self._create_text_answer(answer)
-            return answer
+            return  await self._create_text_answer(answer)
         elif isinstance(answer, TimeAnswer):
             return await self._create_time_answer(answer)
         else:
