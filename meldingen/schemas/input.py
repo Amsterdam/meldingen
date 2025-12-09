@@ -1,12 +1,12 @@
-from abc import ABC, ABCMeta, abstractmethod
 from typing import Annotated, Any, Literal, Union
 
-from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
+from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag, \
+    StringConstraints
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
-from meldingen.models import AnswerTypeEnum, FormIoComponentTypeEnum, FormIoFormDisplayEnum, TextAnswer
-from meldingen.schemas.types import FormIOConditional, PhoneNumber, StrippedStr
+from meldingen.models import AnswerTypeEnum, FormIoComponentTypeEnum, FormIoFormDisplayEnum
+from meldingen.schemas.types import FormIOConditional, PhoneNumber
 from meldingen.validators import create_non_match_validator
 
 
@@ -217,12 +217,12 @@ class FormTimeComponentInput(FormComponentInput):
 
 
 class TextAnswerInput(BaseModel):
-    text: StrippedStr = Field(min_length=1)
+    text: Annotated[str, StringConstraints(min_length=1, strip_whitespace=True)]
     type: Literal[AnswerTypeEnum.text]
 
 
 class TimeAnswerInput(BaseModel):
-    time: StrippedStr = Field(pattern=r"^\d{2}:\d{2}$")
+    time: Annotated[str, Field(pattern=r"^\d{2}:\d{2}$")]
     type: Literal[AnswerTypeEnum.time]
 
 
