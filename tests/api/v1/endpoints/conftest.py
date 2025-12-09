@@ -292,7 +292,10 @@ async def melding_with_time_answers(
 
 @pytest.fixture
 async def melding_with_different_answer_types(
-     db_session: AsyncSession, melding_with_classification: Melding, formio_time_component: FormIoTimeComponent, formio_text_area_component: FormIoTextAreaComponent
+    db_session: AsyncSession,
+    melding_with_classification: Melding,
+    formio_time_component: FormIoTimeComponent,
+    formio_text_area_component: FormIoTextAreaComponent,
 ) -> Melding:
     classification = melding_with_classification.classification
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)

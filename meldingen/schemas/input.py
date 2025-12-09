@@ -1,7 +1,16 @@
 from typing import Annotated, Any, Literal, Union
 
-from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag, \
-    StringConstraints
+from pydantic import (
+    AfterValidator,
+    AliasGenerator,
+    BaseModel,
+    ConfigDict,
+    Discriminator,
+    EmailStr,
+    Field,
+    StringConstraints,
+    Tag,
+)
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 

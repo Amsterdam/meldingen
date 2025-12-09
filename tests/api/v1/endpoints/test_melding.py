@@ -3545,25 +3545,23 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         assert question.get("created_at") is not None
         assert question.get("updated_at") is not None
 
-
-    async def test_list_different_answers(self, app: FastAPI, client: AsyncClient, melding_with_different_answer_types: Melding, auth_user: None) -> None:
+    async def test_list_different_answers(
+        self, app: FastAPI, client: AsyncClient, melding_with_different_answer_types: Melding, auth_user: None
+    ) -> None:
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_different_answer_types.id),
         )
+        assert response.status_code == HTTP_200_OK
 
         answers = await melding_with_different_answer_types.awaitable_attrs.answers
 
-        assert response.status_code == HTTP_200_OK
-
         body = response.json()
-
         assert isinstance(body, list)
 
         answer_types = {answer_output.get("type") for answer_output in body}
 
         for answer in answers:
-
             assert answer.type in answer_types
             assert answer.question_id in {answer_output.get("question").get("id") for answer_output in body}
 
@@ -3645,25 +3643,24 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
-    async def test_list_different_answers(self, app: FastAPI, client: AsyncClient, melding_with_different_answer_types: Melding) -> None:
+    async def test_list_different_answers(
+        self, app: FastAPI, client: AsyncClient, melding_with_different_answer_types: Melding
+    ) -> None:
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_different_answer_types.id),
             params={"token": melding_with_different_answer_types.token},
         )
+        assert response.status_code == HTTP_200_OK
 
         answers = await melding_with_different_answer_types.awaitable_attrs.answers
 
-        assert response.status_code == HTTP_200_OK
-
         body = response.json()
-
         assert isinstance(body, list)
 
         answer_types = {answer_output.get("type") for answer_output in body}
 
         for answer in answers:
-
             assert answer.type in answer_types
             assert answer.question_id in {answer_output.get("question").get("id") for answer_output in body}
 
