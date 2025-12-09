@@ -21,7 +21,6 @@ RUN set eux; \
     poetry self add poetry-plugin-sort
 
 RUN set -eux; \
-    apt remove curl -yq; \
     apt autoremove -yq; \
     apt clean
 
