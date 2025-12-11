@@ -78,7 +78,7 @@ def custom_openapi():
         routes=app.routes,
     )
     openapi_schema["components"]["securitySchemes"] = {
-        "oauth2": {
+        "OAuth2AuthorizationCodeBearer": {
             "type": "oauth2",
             "flows": {
                 "authorizationCode": {
@@ -90,7 +90,7 @@ def custom_openapi():
         }
     }
     openapi_schema["security"] = [
-        {"oauth2": []}
+        {"OAuth2AuthorizationCodeBearer": []}
     ]
     app.openapi_schema = openapi_schema
     return app.openapi_schema

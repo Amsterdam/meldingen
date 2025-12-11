@@ -11,9 +11,9 @@ async def scalar_api_reference(request: Request) -> HTMLResponse:
         openapi_url=request.app.openapi_url,
         title="Meldingen API Reference",
         authentication={
-            "preferredSecurityScheme": "oauth2",
+            "preferredSecurityScheme": "OAuth2AuthorizationCodeBearer",
             "securitySchemes": {
-                "oauth2": {
+                "OAuth2AuthorizationCodeBearer": {
                     "flows": {
                         "authorizationCode": {
                             "x-scalar-client-id": settings.auth_client_id,
