@@ -332,7 +332,7 @@ class AnswerRepository(BaseSQLAlchemyRepository[Answer], BaseAnswerRepository[An
         statement = select(_type).where(_type.melding_id == melding_id)
 
         results = await self._session.execute(statement)
-        
+
         return results.scalars().unique().all()
 
 
