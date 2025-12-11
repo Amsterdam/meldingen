@@ -44,9 +44,13 @@ This will launch the following containers:
 - **docs**: Documentation service.
 
 Once the containers are running, you can access the Meldingen API at 
-[http://localhost:8000](http://localhost:8000/docs). The OpenAPI specifications 
-are available at [http://localhost:8000/docs](http://localhost:8000/docs), 
-and this documentation can be found at [http://localhost:8001/](http://localhost:8001/).
+[http://localhost:8000](http://localhost:8000/docs). 
+
+The OpenAPI specifications are available at: 
+- Scalar Docs [http://localhost:8000/docs](http://localhost:8000/docs)
+- SwaggerUI [http://localhost:8000/swagger](http://localhost:8000/swagger)
+
+The documentation can be found at [http://localhost:8001/](http://localhost:8001/).
 
 ## Restarting the containers after changes
 The best way to restart your containers after changes is:
