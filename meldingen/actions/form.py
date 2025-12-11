@@ -328,10 +328,9 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
                 detail=[{"msg": "Form classification is not the same as melding classification"}],
             )
 
-        # Evaluate JSONLogic if present
         form_component = await self._component_repository.find_component_by_question_id(question.id)
 
-        # We only validate JSON logic on text answers
+        # Validate JSONlogic on TextAnswerInput
         if form_component.jsonlogic is not None and isinstance(answer_input, TextAnswerInput):
             try:
                 self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.text})
