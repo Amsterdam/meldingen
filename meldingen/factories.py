@@ -53,9 +53,9 @@ class AnswerFactory:
     def __call__(self, answer_input: AnswerInputUnion, melding: Melding, question: Question) -> Answer:
 
         match answer_input.type:
-            case "text":
+            case AnswerTypeEnum.text:
                 return TextAnswer(type=answer_input.type, text=answer_input.text, melding=melding, question=question)
-            case "time":
+            case AnswerTypeEnum.time:
                 return TimeAnswer(type=answer_input.type, time=answer_input.time, melding=melding, question=question)
             case _:
                 raise UnsupportedAnswerTypeException(f"Unsupported answer type: {answer_input.type}")
