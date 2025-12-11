@@ -1,4 +1,5 @@
 import enum
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional, Union
 
@@ -26,6 +27,7 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
+    Time,
     UniqueConstraint,
     func,
 )
@@ -100,6 +102,7 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     email: Mapped[str | None] = mapped_column(String(254), default=None)
     phone: Mapped[str | None] = mapped_column(String(50), default=None)
     assets: Mapped[list[Asset]] = relationship(secondary=asset_melding, default_factory=list)
+    answers = relationship("Answer", back_populates="melding", default_factory=list)
 
 
 user_group = Table(
@@ -435,14 +438,67 @@ class Question(AsyncAttrs, BaseDBModel, BaseQuestion):
     component: Mapped[FormIoQuestionComponent | None] = relationship(default=None)
 
 
-class Answer(AsyncAttrs, BaseDBModel, BaseAnswer):
-    text: Mapped[str] = mapped_column(String())
+class AnswerTypeEnum(enum.StrEnum):
+    text = "text"
+    time = "time"
+
+
+# Mapping from FormIoComponentTypeEnum to AnswerTypeEnum
+FormIoComponentToAnswerTypeMap = {
+    FormIoComponentTypeEnum.text_area: AnswerTypeEnum.text,
+    FormIoComponentTypeEnum.text_field: AnswerTypeEnum.text,
+    FormIoComponentTypeEnum.time: AnswerTypeEnum.time,
+}
+
+
+class Answer(AsyncAttrs, BaseAnswer, BaseDBModel, kw_only=True):
+    """This class uses kw_only to bypass the issue where fields with default values
+    cannot come before fields without default values in the generated __init__ method."""
+
+    @declared_attr.directive
+    def __tablename__(cls) -> str:
+        return "answer"
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_on": "type",
+            "polymorphic_abstract": True,
+        }
 
     question_id: Mapped[int] = mapped_column(ForeignKey("question.id"), init=False)
     question: Mapped[Question] = relationship()
 
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
     melding: Mapped[Melding] = relationship()
+    type: Mapped[str] = mapped_column(Enum(AnswerTypeEnum, name="answer_type"), default=AnswerTypeEnum.text)
+
+
+class TextAnswer(Answer):
+    __table_args__ = {"extend_existing": True}
+
+    text: Mapped[str] = mapped_column(String(), nullable=True)
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": AnswerTypeEnum.text,
+        }
+
+
+class TimeAnswer(Answer):
+    """Answer type for time values. Stored as hh:mm string,
+    because it's only used as a simple display of the user's input"""
+
+    __table_args__ = {"extend_existing": True}
+
+    time: Mapped[str] = mapped_column(String(), nullable=True)
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": AnswerTypeEnum.time,
+        }
 
 
 class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):

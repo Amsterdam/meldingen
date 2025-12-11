@@ -3,6 +3,8 @@ migrations/versions/f88c971186dc_remove_location_form_type_from_enum.py:0: error
 migrations/versions/f88c971186dc_remove_location_form_type_from_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/f00d6c808e2d_add_other_static_form_types.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/f00d6c808e2d_add_other_static_form_types.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
+migrations/versions/eb1f60f8afbd_add_time_answer.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
+migrations/versions/eb1f60f8afbd_add_time_answer.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/cd7033b17112_update_form_component_types_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/cd7033b17112_update_form_component_types_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/ca3e63fcdb25_date_question_component.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
