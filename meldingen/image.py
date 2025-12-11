@@ -75,7 +75,7 @@ class IMGProxyThumbnailUrlGenerator(BaseIMGProxyUrlGenerator):
         self._height = height
 
     def __call__(self, image_path: str) -> str:
-        url_path = f"/rs:auto:{self._width}:{self._height}/f:webp/plain/{quote(image_path)}"
+        url_path = f"/rs:fit:{self._width}:{self._height}/f:webp/plain/{quote(image_path)}"
         signature = self._generate_signature(url_path)
 
         return f"{self._imgproxy_base_url}/{signature}{url_path}"

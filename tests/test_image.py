@@ -57,7 +57,7 @@ def test_imgproxy_thumbnail_url_generator() -> None:
 
     assert (
         url
-        == "http://imgproxy/oKfUtW34Dvo2BGQehJFR4Nr0_rIjOtdtzJ3QFsUcXH8/rs:auto:150:150/f:webp/plain/path/to/image.jpg"
+        == "http://imgproxy/oKfUtW34Dvo2BGQehJFR4Nr0_rIjOtdtzJ3QFsUcXH8/rs:fit:150:150/f:webp/plain/path/to/image.jpg"
     )
 
 
