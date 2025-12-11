@@ -60,9 +60,9 @@ class Settings(BaseSettings):
     azure_malware_scanner_sleep_time: float = 1.0
     azure_malware_scanner_enabled: bool = False
 
-    # thumbnail
-    thumbnail_width: int = 150
-    thumbnail_height: int = 150
+    # thumbnail (default for meldingen-frontend)
+    thumbnail_width: int = 544
+    thumbnail_height: int = 306
 
     # Phone number format
     phone_number_format: str = "E164"  # International ITU standard
