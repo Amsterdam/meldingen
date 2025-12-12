@@ -1,3 +1,4 @@
+import json
 from collections.abc import Sequence
 from typing import Union
 
@@ -73,7 +74,7 @@ class ValidateAdder:
         jsonlogic = await component.awaitable_attrs.jsonlogic
         if jsonlogic is not None:
             output.validate_ = FormComponentOutputValidate.model_validate_json(
-                f'{{"json": {jsonlogic}, "required": {"true" if required else "false"}, "required_error_message": {required_error_message if required_error_message else "null"} }}'
+                f'{{"json": {jsonlogic}, "required": {"true" if required else "false"}, "required_error_message": {json.dumps(required_error_message)if required_error_message else "null"} }}'
             )
         else:
             output.validate_ = FormComponentOutputValidate(
