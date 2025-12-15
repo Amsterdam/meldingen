@@ -109,8 +109,12 @@ class BaseFormTest:
 
         validate = data.get("validate")
         assert validate is not None
-        assert validate.get("required") is not None
-        assert validate.get("required_error_message") is None
+
+        # Some component fixtures do not have required set,
+        # then it defaults to None while the output is always a boolean
+        if component.required is not None:
+            assert validate.get("required") == component.required
+            assert validate.get("required_error_message") == component.required_error_message
 
         if isinstance(component, FormIoTextAreaComponent):
             assert data.get("autoExpand") == component.auto_expand

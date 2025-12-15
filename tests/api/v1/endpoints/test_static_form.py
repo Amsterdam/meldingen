@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from meldingen_core import SortingDirection
 from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from meldingen.models import FormIoComponentTypeEnum, FormIoQuestionComponent, StaticForm, StaticFormTypeEnum
+from meldingen.models import FormIoComponentTypeEnum, FormIoQuestionComponent, StaticForm
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 from tests.api.v1.endpoints.test_form import BaseFormTest
 
@@ -100,6 +100,10 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "input": True,
                             "autoExpand": False,
                             "maxCharCount": None,
+                            "validate": {
+                                "required": True,
+                                "required_error_message": "Dit veld is verplicht.",
+                            },
                         }
                     ],
                 }
