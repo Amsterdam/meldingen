@@ -103,7 +103,7 @@ class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "validate": {
                                 "required": True,
                                 "required_error_message": "Dit veld is verplicht.",
-                            }
+                            },
                         }
                     ],
                 }
