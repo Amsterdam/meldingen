@@ -7,32 +7,10 @@ from sqlalchemy.exc import IntegrityError
 
 from meldingen.dependencies import database_engine, database_session, database_session_manager
 from meldingen.models import Classification
-from meldingen.repositories import ClassificationRepository
 from meldingen.schemas.input import ClassificationCreateInput
 import json
 
 app = typer.Typer()
-
-
-async def async_add_classification(data: dict[str, Any]) -> None:
-    async for session in database_session(database_session_manager(database_engine())):
-        repository = ClassificationRepository(session)
-
-        input = ClassificationCreateInput(**data)
-        classification = Classification(**input.model_dump())
-
-        try:
-            await repository.save(classification)
-        except IntegrityError:
-            print(f"[yellow]Warning[/yellow] - Classification {classification.name} already exists!")
-            raise typer.Exit
-
-        print(f'[green]Success[/green] - Classification "{classification.name}" created!')
-
-
-# @app.command()
-# def add(name: str) -> None:
-#     asyncio.run(async_add_classification({"name": name}))
 
 
 @app.command()
@@ -41,8 +19,16 @@ def seed(file_path: str = "./seed/classifications.json") -> None:
 
 
 async def async_seed_classification_from_file(file_path: str) -> None:
-    with open(file_path) as f:
-        data = json.load(f)
+    try:
+        with open(file_path) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print(f"🟡 - Seeding of classsifactions aborted: no seed file found. ")
+        raise typer.Exit
+
+    if not isinstance(data, list):
+        print(f"🔴 - Invalid data format in {file_path}. Expected a list of classifications.")
+        raise typer.Exit
 
     models = []
 
@@ -51,13 +37,14 @@ async def async_seed_classification_from_file(file_path: str) -> None:
         classification = Classification(**input.model_dump())
         models.append(classification)
 
-    async with database_session(database_session_manager(database_engine())) as session:
+    async for session in database_session(database_session_manager(database_engine())):
         try:
             session.add_all(models)
             await session.commit()
-            print(f'[green]Success[/green] - Seeded {len(models)} classifications from {file_path}!')
+            print(f'🟢 - Success - seeded {len(models)} classifications from {file_path}.')
         except IntegrityError as e:
-            print(f"[red]Error[/red] - {str(e)}")
+            print(f"🟡 - {str(e)}")
+            print(f"🟡 - Seeding of classifications aborted: found classifications already in database")
             raise typer.Exit
 
 
