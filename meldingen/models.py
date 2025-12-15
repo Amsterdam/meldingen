@@ -1,5 +1,4 @@
 import enum
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional, Union
 
@@ -27,7 +26,6 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
-    Time,
     UniqueConstraint,
     func,
 )
@@ -470,7 +468,7 @@ class Answer(AsyncAttrs, BaseAnswer, BaseDBModel, kw_only=True):
     question: Mapped[Question] = relationship()
 
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
-    melding: Mapped[Melding] = relationship()
+    melding: Mapped[Melding] = relationship(back_populates="answers", default_factory=list)
     type: Mapped[str] = mapped_column(Enum(AnswerTypeEnum, name="answer_type"), default=AnswerTypeEnum.text)
 
 
