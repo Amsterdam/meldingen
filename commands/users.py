@@ -1,7 +1,6 @@
 import asyncio
 
 import typer
-from pydantic import EmailStr
 from rich import print
 from sqlalchemy.exc import IntegrityError
 
