@@ -5,6 +5,6 @@ __pycache__/
 .coverage
 .devcontainer/
 
-./seed/*
+./seed/*.json
 
 !.env.example*
