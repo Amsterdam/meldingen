@@ -43,7 +43,6 @@ async def async_seed_classification_from_file(file_path: str) -> None:
             await session.commit()
             print(f'🟢 - Success - seeded {len(models)} classifications from {file_path}.')
         except IntegrityError as e:
-            print(f"🟡 - {str(e)}")
             print(f"🟡 - Seeding of classifications aborted: found classifications already in database")
             raise typer.Exit
 
