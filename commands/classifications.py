@@ -1,4 +1,5 @@
 import asyncio
+import json
 from typing import Any
 
 import typer
@@ -8,7 +9,6 @@ from sqlalchemy.exc import IntegrityError
 from meldingen.dependencies import database_engine, database_session, database_session_manager
 from meldingen.models import Classification
 from meldingen.schemas.input import ClassificationCreateInput
-import json
 
 app = typer.Typer()
 
@@ -41,7 +41,7 @@ async def async_seed_classification_from_file(file_path: str) -> None:
         try:
             session.add_all(models)
             await session.commit()
-            print(f'🟢 - Success - seeded {len(models)} classifications from {file_path}.')
+            print(f"🟢 - Success - seeded {len(models)} classifications from {file_path}.")
         except IntegrityError as e:
             print(f"🟡 - Seeding of classifications aborted: found classifications already in database")
             raise typer.Exit

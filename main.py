@@ -1,6 +1,6 @@
 import typer
 
-from commands import asset_types, azure, groups, meldingen, static_forms, users, classifications
+from commands import asset_types, azure, classifications, groups, meldingen, static_forms, users
 
 app = typer.Typer()
 app.add_typer(users.app, name="users")
