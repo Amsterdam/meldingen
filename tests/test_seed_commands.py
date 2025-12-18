@@ -1,7 +1,7 @@
 import pytest
 from _pytest.capture import CaptureFixture
 
-from commands.classifications import async_seed_classification_from_file
+from commands.seed import async_seed_classification_from_file
 
 EXAMPLE_FILE_PATH = "./seed/examples/classifications.json"
 
