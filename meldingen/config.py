@@ -108,7 +108,7 @@ Gemeente Amsterdam
         "LLM_URL", ""
     )  # LLM_URL is injected by docker compose and specifies the OpenAI compatible API endpoint base URL
     llm_model_identifier: str = os.getenv(
-        "LLM", ""
+        "LLM_MODEL", ""
     )  # LLM is injected by docker compose and specifies the model identifier
 
 
