@@ -441,6 +441,7 @@ class Question(AsyncAttrs, BaseDBModel, BaseQuestion):
 class AnswerTypeEnum(enum.StrEnum):
     text = "text"
     time = "time"
+    date = "date"
 
 
 # Mapping from FormIoComponentTypeEnum to AnswerTypeEnum
@@ -448,6 +449,7 @@ FormIoComponentToAnswerTypeMap = {
     FormIoComponentTypeEnum.text_area: AnswerTypeEnum.text,
     FormIoComponentTypeEnum.text_field: AnswerTypeEnum.text,
     FormIoComponentTypeEnum.time: AnswerTypeEnum.time,
+    FormIoComponentTypeEnum.date: AnswerTypeEnum.date,
 }
 
 
@@ -498,6 +500,20 @@ class TimeAnswer(Answer):
     def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_identity": AnswerTypeEnum.time,
+        }
+
+
+class DateAnswer(Answer):
+    """Answer type for date component saved as a JSON object
+    with value, label and converted_date as keys"""
+
+    __table_args__ = {"extend_existing": True}
+    date: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=True)
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": AnswerTypeEnum.date,
         }
 
 

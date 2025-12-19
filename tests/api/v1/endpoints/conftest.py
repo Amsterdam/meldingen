@@ -18,6 +18,7 @@ from meldingen.models import (
     AssetType,
     Attachment,
     Classification,
+    DateAnswer,
     Form,
     FormIoComponentTypeEnum,
     FormIoDateComponent,
@@ -296,39 +297,38 @@ async def melding_with_different_answer_types(
     melding_with_classification: Melding,
     formio_time_component: FormIoTimeComponent,
     formio_text_area_component: FormIoTextAreaComponent,
+    formio_date_component: FormIoDateComponent,
 ) -> Melding:
     classification = melding_with_classification.classification
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
 
-    panel1 = FormIoPanelComponent(
-        title="Panel 1",
-        label="Page 1",
-        key="page1",
-        input=False,
-        type=FormIoComponentTypeEnum.panel,
-        position=1,
-    )
+    question_components = [
+        formio_text_area_component,
+        formio_time_component,
+        formio_date_component,
+    ]
 
-    form.components.append(panel1)
+    for i in range(1, len(question_components) + 1):
+        panel = FormIoPanelComponent(
+            title=f"Panel {i}",
+            label=f"Page {i}",
+            key=f"page{i}",
+            input=False,
+            type=FormIoComponentTypeEnum.panel,
+            position=i,
+        )
+        form.components.append(panel)
+
+    # Add question components to panels
+    for i in range(len(question_components)):
+        component = question_components[i]
+
+        assert isinstance(form.components[i], FormIoPanelComponent)
+        component.parent = form.components[i]
+        component.position = i + 1
 
     db_session.add(form)
     await db_session.commit()
-
-    formio_text_area_component.parent = panel1
-
-    panel2 = FormIoPanelComponent(
-        title="Panel 2",
-        label="Page 2",
-        key="page2",
-        input=False,
-        type=FormIoComponentTypeEnum.panel,
-        position=2,
-    )
-
-    form_components = await form.awaitable_attrs.components
-    form_components.append(panel2)
-
-    formio_time_component.parent = panel2
 
     text_answer = TextAnswer(
         text="John Doe",
@@ -338,7 +338,6 @@ async def melding_with_different_answer_types(
     )
 
     db_session.add(text_answer)
-    await db_session.commit()
 
     time_answer = TimeAnswer(
         time="14:30",
@@ -348,6 +347,15 @@ async def melding_with_different_answer_types(
     )
 
     db_session.add(time_answer)
+
+    date_answer = DateAnswer(
+        melding=melding_with_classification,
+        date={"value": "-1", "label": "Gisteren 31 december", "converted_date": "2025-12-31"},
+        question=Question(text="When did this happen?", form=form, component=formio_date_component),
+        type=AnswerTypeEnum.date,
+    )
+
+    db_session.add(date_answer)
     await db_session.commit()
 
     return melding_with_classification
@@ -724,9 +732,12 @@ async def form_with_date_component(
     form_title: str,
     form_panel: FormIoPanelComponent,
     formio_date_component: FormIoDateComponent,
+    melding_with_classification: Melding,
     conditional: dict[str, Any],
 ) -> Form:
-    form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
+    form = Form(
+        title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
+    )
 
     formio_date_component.conditional = conditional
 

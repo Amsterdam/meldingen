@@ -2157,7 +2157,6 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        db_session: AsyncSession,
         melding_with_classification: Melding,
         form_with_time_component: Form,
     ) -> None:
@@ -2185,6 +2184,7 @@ class TestMeldingQuestionAnswer:
 
         body = response.json()
         assert body.get("id") is not None
+        assert body.get("type") == AnswerTypeEnum.time
         assert body.get("time") == "16:45"
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
@@ -2204,7 +2204,6 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        db_session: AsyncSession,
         melding_with_classification: Melding,
         form_with_time_component: Form,
         time_value: str | int,
@@ -2236,6 +2235,78 @@ class TestMeldingQuestionAnswer:
         detail = body.get("detail")
         assert len(detail) == 1
         assert detail[0].get("msg") == error_message
+
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
+    async def test_create_date_answer(
+        self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
+    ) -> None:
+        components = await form_with_date_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        date_input = {"value": "day - 1", "label": "Gisteren 31 december", "converted_date": "2025-31-12"}
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"date": date_input},
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        body = response.json()
+        assert body.get("id") is not None
+        assert body.get("date") == date_input
+        assert body.get("type") == AnswerTypeEnum.date
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
+    async def test_create_answer_invalid(
+        self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
+    ) -> None:
+        components = await form_with_date_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"date": "invalid-date-format"},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Input should be a valid dictionary or instance of DateAnswerObject"
 
 
 class TestMeldingUpdateAnswer:

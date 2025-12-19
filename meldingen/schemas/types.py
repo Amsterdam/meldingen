@@ -3,7 +3,7 @@ from typing import Annotated, Any, TypeAlias
 from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from geojson_pydantic import Point
 from meldingen_core.address import Address as BaseAddress
-from pydantic import AfterValidator, BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 from pydantic.dataclasses import dataclass
 from pydantic_extra_types.phone_numbers import PhoneNumber as PydanticPhoneNumber
 
@@ -38,3 +38,11 @@ class FormIOConditional(BaseModel):
     show: bool
     when: Annotated[str, StringConstraints(min_length=1, strip_whitespace=True)]
     eq: str | int | float | bool | None
+
+
+class DateAnswerObject(BaseModel):
+    """Used to display an answer in a date answer component."""
+
+    value: str  # the raw value selected by the user f.e. "day -1"
+    label: str
+    converted_date: str  # ISO 8601 formatted date

@@ -10,6 +10,7 @@ from meldingen.models import (
     Asset,
     AssetType,
     Attachment,
+    DateAnswer,
     Melding,
     Question,
     TextAnswer,
@@ -57,5 +58,9 @@ class AnswerFactory:
                 return TextAnswer(type=answer_input.type, text=answer_input.text, melding=melding, question=question)
             case AnswerTypeEnum.time:
                 return TimeAnswer(type=answer_input.type, time=answer_input.time, melding=melding, question=question)
+            case AnswerTypeEnum.date:
+                return DateAnswer(
+                    type=answer_input.type, date=answer_input.date.dict(), melding=melding, question=question
+                )
             case _:
                 raise UnsupportedAnswerTypeException(f"Unsupported answer type: {answer_input.type}")

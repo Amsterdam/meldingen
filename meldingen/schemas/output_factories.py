@@ -9,6 +9,7 @@ from meldingen.models import (
     AssetType,
     BaseFormIoValuesComponent,
     Classification,
+    DateAnswer,
     Form,
     FormIoCheckBoxComponent,
     FormIoComponent,
@@ -32,6 +33,8 @@ from meldingen.schemas.output import (
     AssetOutput,
     AssetTypeOutput,
     BaseFormComponentOutput,
+    DateAnswerOutput,
+    DateAnswerQuestionOutput,
     FormCheckboxComponentOutput,
     FormComponentOutputValidate,
     FormComponentValueOutput,
@@ -759,43 +762,34 @@ class MeldingUpdateOutputFactory(MeldingOutputFactory):
         )
 
 
-class TextAnswerOutputFactory:
-    async def __call__(self, answer: TextAnswer) -> TextAnswerOutput:
-        return TextAnswerOutput(
-            id=answer.id,
-            type=answer.type,
-            text=await answer.awaitable_attrs.text,
-            created_at=answer.created_at,
-            updated_at=answer.updated_at,
-        )
-
-
-class TimeAnswerOutputFactory:
-    async def __call__(self, answer: TimeAnswer) -> TimeAnswerOutput:
-        return TimeAnswerOutput(
-            id=answer.id,
-            type=answer.type,
-            time=await answer.awaitable_attrs.time,
-            created_at=answer.created_at,
-            updated_at=answer.updated_at,
-        )
-
-
 class AnswerOutputFactory:
-    _create_text_answer: TextAnswerOutputFactory
-    _create_time_answer: TimeAnswerOutputFactory
-
-    def __init__(self, text_factory: TextAnswerOutputFactory, time_factory: TimeAnswerOutputFactory):
-        self._create_text_answer = text_factory
-        self._create_time_answer = time_factory
 
     async def __call__(self, answer: Answer) -> AnswerOutputUnion:
+        fields = {
+            "id": answer.id,
+            "type": answer.type,
+            "created_at": answer.created_at,
+            "updated_at": answer.updated_at,
+        }
+
+        # Subclass attributes are not eagerly loaded by default
         if isinstance(answer, TextAnswer):
-            return await self._create_text_answer(answer)
+            return TextAnswerOutput(
+                **fields,
+                text=await answer.awaitable_attrs.text,
+            )
         elif isinstance(answer, TimeAnswer):
-            return await self._create_time_answer(answer)
+            return TimeAnswerOutput(
+                **fields,
+                time=await answer.awaitable_attrs.time,
+            )
+        elif isinstance(answer, DateAnswer):
+            return DateAnswerOutput(
+                **fields,
+                date=await answer.awaitable_attrs.date,
+            )
         else:
-            raise Exception(f"Unsupported answer output type: {type(answer)}")
+            raise Exception(f"Unsupported answer-question output type: {type(answer)}")
 
 
 class AnswerQuestionOutputFactory:
@@ -820,6 +814,11 @@ class AnswerQuestionOutputFactory:
             return TimeAnswerQuestionOutput(
                 **fields,
                 time=await answer.awaitable_attrs.time,
+            )
+        elif isinstance(answer, DateAnswer):
+            return DateAnswerQuestionOutput(
+                **fields,
+                date=await answer.awaitable_attrs.date,
             )
         else:
             raise Exception(f"Unsupported answer-question output type: {type(answer)}")
