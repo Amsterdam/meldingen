@@ -30,7 +30,7 @@ class Reclassifier(BaseReclassification[Melding, Classification]):
             return
 
         # Always purge answers if the classification changed
-        await self._purge_answers(melding.id)
+        await self._purge_answers(melding)
 
         # Classification changed, but asset_type may still be the same
         if old_asset_type != new_asset_type:

@@ -1,10 +1,20 @@
-from typing import Annotated, Any, Union
+from typing import Annotated, Any, Literal, Union
 
-from pydantic import AfterValidator, AliasGenerator, BaseModel, ConfigDict, Discriminator, EmailStr, Field, Tag
+from pydantic import (
+    AfterValidator,
+    AliasGenerator,
+    BaseModel,
+    ConfigDict,
+    Discriminator,
+    EmailStr,
+    Field,
+    StringConstraints,
+    Tag,
+)
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
-from meldingen.models import FormIoComponentTypeEnum, FormIoFormDisplayEnum
+from meldingen.models import AnswerTypeEnum, FormIoComponentTypeEnum, FormIoFormDisplayEnum
 from meldingen.schemas.types import FormIOConditional, PhoneNumber
 from meldingen.validators import create_non_match_validator
 
@@ -215,8 +225,33 @@ class FormTimeComponentInput(FormComponentInput):
     type: Annotated[FormIoComponentTypeEnum, Field(FormIoComponentTypeEnum.time)]
 
 
-class AnswerInput(BaseModel):
-    text: str = Field(min_length=1)
+class TextAnswerInput(BaseModel):
+    text: Annotated[str, StringConstraints(min_length=1, strip_whitespace=True)]
+    type: Literal[AnswerTypeEnum.text]
+
+
+class TimeAnswerInput(BaseModel):
+    time: Annotated[str, Field(pattern=r"^\d{2}:\d{2}$")]
+    type: Literal[AnswerTypeEnum.time]
+
+
+def answer_discriminator(value: Any) -> str | None:
+    if isinstance(value, dict):
+        return value.get("type")
+    elif isinstance(value, TextAnswerInput):
+        return AnswerTypeEnum.text
+    elif isinstance(value, TimeAnswerInput):
+        return AnswerTypeEnum.time
+    return None
+
+
+AnswerInputUnion = Annotated[
+    Union[
+        Annotated[TextAnswerInput, Tag(AnswerTypeEnum.text)],
+        Annotated[TimeAnswerInput, Tag(AnswerTypeEnum.time)],
+    ],
+    Discriminator("type"),
+]
 
 
 class MailPreviewInput(BaseModel):
