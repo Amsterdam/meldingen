@@ -1,13 +1,15 @@
-from meldingen.repositories import AnswerRepository
+from meldingen.models import Melding
+from meldingen.repositories import AnswerRepository, MeldingRepository
 
 
 class AnswerPurger:
-    _repository: AnswerRepository
+    _repository: MeldingRepository
 
-    def __init__(self, repository: AnswerRepository):
+    def __init__(self, repository: MeldingRepository) -> None:
         self._repository = repository
 
-    async def __call__(self, melding_id: int) -> None:
-        answers = await self._repository.find_by_melding(melding_id)
-        for answer in answers:
-            await self._repository.delete(answer.id)
+    async def __call__(self, melding: Melding) -> None:
+        answers = await melding.awaitable_attrs.answers
+
+        answers.clear()
+        await self._repository.save(melding)

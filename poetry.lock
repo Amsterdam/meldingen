@@ -2550,7 +2550,7 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
 reference = "chore/remove-text-attribute-answer"
-resolved_reference = "e524163188ee2bb069a423588831c1c62a37bdcc"
+resolved_reference = "bf10eb9d6556028c112307f2551db7193d496a6e"
 
 [[package]]
 name = "mergedeep"
