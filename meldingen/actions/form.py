@@ -9,9 +9,11 @@ from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_
 
 from meldingen.actions.base import BaseListAction
 from meldingen.exceptions import MeldingNotClassifiedException
+from meldingen.factories import AnswerFactory
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
 from meldingen.models import (
     Answer,
+    AnswerTypeEnum,
     BaseFormIoValuesComponent,
     Form,
     FormIoCheckBoxComponent,
@@ -39,7 +41,14 @@ from meldingen.repositories import (
     QuestionRepository,
     StaticFormRepository,
 )
-from meldingen.schemas.input import AnswerInput, FormComponent, FormInput, FormPanelComponentInput, StaticFormInput
+from meldingen.schemas.input import (
+    AnswerInputUnion,
+    FormComponent,
+    FormInput,
+    FormPanelComponentInput,
+    StaticFormInput,
+    TextAnswerInput,
+)
 
 
 class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
@@ -261,6 +270,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
     _question_repository: QuestionRepository
     _component_repository: FormIoQuestionComponentRepository
     _jsonlogic_validate: JSONLogicValidator
+    _create_answer: AnswerFactory
 
     def __init__(
         self,
@@ -269,14 +279,16 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         question_repository: QuestionRepository,
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
+        answer_factory: AnswerFactory,
     ):
         super().__init__(repository)
         self._token_verifier = token_verifier
         self._question_repository = question_repository
         self._component_repository = component_repository
         self._jsonlogic_validate = jsonlogic_validator
+        self._create_answer = answer_factory
 
-    async def __call__(self, melding_id: int, token: str, question_id: int, answer_input: AnswerInput) -> Answer:
+    async def __call__(self, melding_id: int, token: str, question_id: int, answer_input: AnswerInputUnion) -> Answer:
         """
         Create and store an Answer in the database, subject to several conditions:
 
@@ -316,19 +328,19 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
                 detail=[{"msg": "Form classification is not the same as melding classification"}],
             )
 
-        # Store the answer
-        answer_data = answer_input.model_dump(by_alias=True)
         form_component = await self._component_repository.find_component_by_question_id(question.id)
-        if form_component.jsonlogic is not None:
+
+        # Validate JSONlogic on TextAnswerInput
+        if form_component.jsonlogic is not None and isinstance(answer_input, TextAnswerInput):
             try:
-                self._jsonlogic_validate(form_component.jsonlogic, answer_data)
+                self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.text})
             except JSONLogicValidationException as e:
                 raise HTTPException(
                     status_code=HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
                 ) from e
 
-        answer = Answer(**answer_data, melding=melding, question=question)
+        answer = self._create_answer(answer_input, melding, question)
 
         await self._repository.save(answer)
 
@@ -352,7 +364,7 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
         self._component_repository = component_repository
         self._jsonlogic_validate = jsonlogic_validator
 
-    async def __call__(self, melding_id: int, token: str, answer_id: int, text: str) -> Answer:
+    async def __call__(self, melding_id: int, token: str, answer_id: int, answer_input: AnswerInputUnion) -> Answer:
         melding = await self._token_verifier(melding_id, token)
 
         answer = await self._repository.retrieve(answer_id)
@@ -367,16 +379,23 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
             )
 
         form_component = await self._component_repository.find_component_by_question_id(answer.question_id)
-        if form_component.jsonlogic is not None:
+
+        if form_component.jsonlogic is not None and isinstance(answer_input, TextAnswerInput):
             try:
-                self._jsonlogic_validate(form_component.jsonlogic, {"text": text})
+                assert answer_input.text is not None
+                self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.text})
             except JSONLogicValidationException as e:
                 raise HTTPException(
                     status_code=HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
                 ) from e
 
-        answer.text = text
+        # update only the fields that are set in the input
+        update_data = answer_input.model_dump(exclude_unset=True)
+
+        for key, value in update_data.items():
+            setattr(answer, key, value)
+
         await self._repository.save(answer)
 
         return answer

@@ -1,9 +1,9 @@
-from typing import Annotated, Any
+from typing import Annotated, Any, TypeAlias
 
 from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from geojson_pydantic import Point
 from meldingen_core.address import Address as BaseAddress
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import AfterValidator, BaseModel, Field, StringConstraints
 from pydantic.dataclasses import dataclass
 from pydantic_extra_types.phone_numbers import PhoneNumber as PydanticPhoneNumber
 

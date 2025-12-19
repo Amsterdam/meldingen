@@ -2549,8 +2549,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "1d2b9f81f99a9b326ed771ea89e14f87f04822f4"
+reference = "chore/remove-text-attribute-answer"
+resolved_reference = "bf10eb9d6556028c112307f2551db7193d496a6e"
 
 [[package]]
 name = "mergedeep"
@@ -5757,4 +5757,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "004bcbcfa668e34bd7936ccb03d1c00135c716ec89e84740836063abb43de25d"
+content-hash = "30f3e1248ee4333627df761c2e61ec740ab5454ad1c9caae92742baf672c7c3c"

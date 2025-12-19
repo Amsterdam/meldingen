@@ -102,7 +102,13 @@ from meldingen.asset import AssetPurger
 from meldingen.classification import DummyClassifierAdapter, OpenAIClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
-from meldingen.factories import AssetFactory, AttachmentFactory, AzureFilesystemFactory, BaseFilesystemFactory
+from meldingen.factories import (
+    AnswerFactory,
+    AssetFactory,
+    AttachmentFactory,
+    AzureFilesystemFactory,
+    BaseFilesystemFactory,
+)
 from meldingen.generators import PublicIdGenerator
 from meldingen.image import (
     ImageOptimizerTask,
@@ -155,6 +161,7 @@ from meldingen.repositories import (
 from meldingen.schemas.output_factories import (
     AnswerListOutputFactory,
     AnswerOutputFactory,
+    AnswerQuestionOutputFactory,
     AssetOutputFactory,
     AssetTypeOutputFactory,
     FormCheckboxComponentOutputFactory,
@@ -182,6 +189,8 @@ from meldingen.schemas.output_factories import (
     StaticFormSelectComponentOutputFactory,
     StaticFormTextAreaComponentOutputFactory,
     StaticFormTextFieldInputComponentOutputFactory,
+    TextAnswerOutputFactory,
+    TimeAnswerOutputFactory,
     ValidateAdder,
 )
 from meldingen.statemachine import (
@@ -301,6 +310,10 @@ def asset_factory() -> AssetFactory:
     return AssetFactory()
 
 
+def answer_factory() -> AnswerFactory:
+    return AnswerFactory()
+
+
 def openai_client() -> AsyncOpenAI:
     return AsyncOpenAI(base_url=settings.llm_base_url)
 
@@ -413,8 +426,10 @@ def melding_list_action(repository: Annotated[MeldingRepository, Depends(melding
     return MeldingListAction(repository)
 
 
-def answer_purger(repository: Annotated[AnswerRepository, Depends(answer_repository)]) -> AnswerPurger:
-    return AnswerPurger(repository)
+def answer_purger(
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> AnswerPurger:
+    return AnswerPurger(melding_repository)
 
 
 def location_purger(repository: Annotated[MeldingRepository, Depends(melding_repository)]) -> LocationPurger:
@@ -594,6 +609,7 @@ def melding_answer_create_action(
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
     jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
+    answer_factory: Annotated[AnswerFactory, Depends(answer_factory)],
 ) -> AnswerCreateAction:
     return AnswerCreateAction(
         answer_repository,
@@ -601,6 +617,7 @@ def melding_answer_create_action(
         question_repository,
         component_repository,
         jsonlogic_validator,
+        answer_factory,
     )
 
 
@@ -610,7 +627,12 @@ def melding_answer_update_action(
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
     jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
 ) -> AnswerUpdateAction:
-    return AnswerUpdateAction(answer_repository, token_verifier, component_repository, jsonlogic_validator)
+    return AnswerUpdateAction(
+        answer_repository,
+        token_verifier,
+        component_repository,
+        jsonlogic_validator,
+    )
 
 
 def melding_list_questions_and_answers_action(
@@ -984,10 +1006,6 @@ def melding_get_possible_next_states_action(
     return MeldingGetPossibleNextStatesAction(state_machine, repository)
 
 
-def melding_list_questions_and_answers_output_factory() -> AnswerListOutputFactory:
-    return AnswerListOutputFactory()
-
-
 def form_component_value_output_factory() -> FormComponentValueOutputFactory:
     return FormComponentValueOutputFactory()
 
@@ -1265,8 +1283,34 @@ def wfs_retrieve_action(
     return WfsRetrieveAction(provider_factory, repository)
 
 
-def answer_output_factory() -> AnswerOutputFactory:
-    return AnswerOutputFactory()
+def text_answer_output_factory() -> TextAnswerOutputFactory:
+    return TextAnswerOutputFactory()
+
+
+def time_answer_output_factory() -> TimeAnswerOutputFactory:
+    return TimeAnswerOutputFactory()
+
+
+def answer_output_factory(
+    text_factory: Annotated[TextAnswerOutputFactory, Depends(text_answer_output_factory)],
+    time_factory: Annotated[TimeAnswerOutputFactory, Depends(time_answer_output_factory)],
+) -> AnswerOutputFactory:
+    return AnswerOutputFactory(
+        text_factory,
+        time_factory,
+    )
+
+
+def answer_questions_output_factory() -> AnswerQuestionOutputFactory:
+    return AnswerQuestionOutputFactory()
+
+
+def melding_list_questions_and_answers_output_factory(
+    answer_questions_output_factory: Annotated[AnswerQuestionOutputFactory, Depends(answer_questions_output_factory)],
+) -> AnswerListOutputFactory:
+    return AnswerListOutputFactory(
+        answer_questions_output_factory,
+    )
 
 
 def states_output_factory() -> StatesOutputFactory:
