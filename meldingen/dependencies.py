@@ -426,8 +426,10 @@ def melding_list_action(repository: Annotated[MeldingRepository, Depends(melding
     return MeldingListAction(repository)
 
 
-def answer_purger(repository: Annotated[AnswerRepository, Depends(answer_repository)]) -> AnswerPurger:
-    return AnswerPurger(repository)
+def answer_purger(
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> AnswerPurger:
+    return AnswerPurger(melding_repository)
 
 
 def location_purger(repository: Annotated[MeldingRepository, Depends(melding_repository)]) -> LocationPurger:
