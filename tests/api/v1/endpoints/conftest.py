@@ -32,7 +32,7 @@ from meldingen.models import (
     StaticFormTypeEnum,
     TextAnswer,
     TimeAnswer,
-    User, FormIoComponent,
+    User,
 )
 
 
@@ -333,7 +333,6 @@ async def melding_with_different_answer_types(
 
     db_session.add(form)
     await db_session.commit()
-
 
     text_answer = TextAnswer(
         text="John Doe",
