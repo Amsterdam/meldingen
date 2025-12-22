@@ -6,7 +6,7 @@ from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
 from meldingen.models import AnswerTypeEnum
-from meldingen.schemas.types import FormIOConditional, GeoJson, PhoneNumber
+from meldingen.schemas.types import DateAnswerObject, FormIOConditional, GeoJson, PhoneNumber
 
 ### Form.io ###
 
@@ -249,8 +249,13 @@ class TimeAnswerOutput(AnswerOutput):
     type: Literal[AnswerTypeEnum.time]
 
 
+class DateAnswerOutput(AnswerOutput):
+    date: DateAnswerObject
+    type: Literal[AnswerTypeEnum.date]
+
+
 AnswerOutputUnion = Annotated[
-    Union[TextAnswerOutput, TimeAnswerOutput],
+    Union[TextAnswerOutput, TimeAnswerOutput, DateAnswerOutput],
     Field(discriminator="type"),
 ]
 
@@ -267,8 +272,12 @@ class TimeAnswerQuestionOutput(TimeAnswerOutput):
     question: QuestionOutput
 
 
+class DateAnswerQuestionOutput(DateAnswerOutput):
+    question: QuestionOutput
+
+
 AnswerQuestionOutputUnion = Annotated[
-    Union[TextAnswerQuestionOutput, TimeAnswerQuestionOutput],
+    Union[TextAnswerQuestionOutput, TimeAnswerQuestionOutput, DateAnswerQuestionOutput],
     Field(discriminator="type"),
 ]
 
