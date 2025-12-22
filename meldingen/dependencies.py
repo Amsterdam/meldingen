@@ -189,6 +189,8 @@ from meldingen.schemas.output_factories import (
     StaticFormSelectComponentOutputFactory,
     StaticFormTextAreaComponentOutputFactory,
     StaticFormTextFieldInputComponentOutputFactory,
+    TextAnswerOutputFactory,
+    TimeAnswerOutputFactory,
     ValidateAdder,
 )
 from meldingen.statemachine import (
@@ -1281,8 +1283,34 @@ def wfs_retrieve_action(
     return WfsRetrieveAction(provider_factory, repository)
 
 
-def answer_output_factory() -> AnswerOutputFactory:
-    return AnswerOutputFactory()
+def text_answer_output_factory() -> TextAnswerOutputFactory:
+    return TextAnswerOutputFactory()
+
+
+def time_answer_output_factory() -> TimeAnswerOutputFactory:
+    return TimeAnswerOutputFactory()
+
+
+def answer_output_factory(
+    text_factory: Annotated[TextAnswerOutputFactory, Depends(text_answer_output_factory)],
+    time_factory: Annotated[TimeAnswerOutputFactory, Depends(time_answer_output_factory)],
+) -> AnswerOutputFactory:
+    return AnswerOutputFactory(
+        text_factory,
+        time_factory,
+    )
+
+
+def answer_questions_output_factory() -> AnswerQuestionOutputFactory:
+    return AnswerQuestionOutputFactory()
+
+
+def melding_list_questions_and_answers_output_factory(
+    answer_questions_output_factory: Annotated[AnswerQuestionOutputFactory, Depends(answer_questions_output_factory)],
+) -> AnswerListOutputFactory:
+    return AnswerListOutputFactory(
+        answer_questions_output_factory,
+    )
 
 
 def answer_questions_output_factory() -> AnswerQuestionOutputFactory:
