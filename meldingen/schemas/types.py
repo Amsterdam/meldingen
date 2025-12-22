@@ -46,3 +46,10 @@ class DateAnswerObject(BaseModel):
     value: str  # the raw value selected by the user f.e. "day -1"
     label: str
     converted_date: str  # ISO 8601 formatted date
+
+
+class ValueLabelObject(BaseModel):
+    """Used to display an answer in a value label answer component."""
+
+    value: str
+    label: str

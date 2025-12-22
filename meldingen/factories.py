@@ -15,6 +15,7 @@ from meldingen.models import (
     Question,
     TextAnswer,
     TimeAnswer,
+    ValueLabelAnswer,
 )
 from meldingen.schemas.input import AnswerInputUnion
 
@@ -60,7 +61,14 @@ class AnswerFactory:
                 return TimeAnswer(type=answer_input.type, time=answer_input.time, melding=melding, question=question)
             case AnswerTypeEnum.date:
                 return DateAnswer(
-                    type=answer_input.type, date=answer_input.date.dict(), melding=melding, question=question
+                    type=answer_input.type, date=answer_input.date.model_dump(), melding=melding, question=question
+                )
+            case AnswerTypeEnum.value_label:
+                return ValueLabelAnswer(
+                    type=answer_input.type,
+                    values_and_labels=[v.model_dump() for v in answer_input.values_and_labels],
+                    melding=melding,
+                    question=question,
                 )
             case _:
                 raise UnsupportedAnswerTypeException(f"Unsupported answer type: {answer_input.type}")
