@@ -2,6 +2,7 @@ from typing import AsyncIterator, Literal
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from httpx import AsyncClient, Response
+from meldingen_core.models import AssetTypeArguments
 from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory
 
 
@@ -82,8 +83,13 @@ class ProxyWfsProvider(BaseWfsProvider):
 class ProxyWfsProviderFactory(BaseWfsProviderFactory):
     _base_url: str
 
-    def __init__(self, base_url: str):
-        self._base_url = base_url
+    def __init__(self, arguments: AssetTypeArguments):
+        super().__init__(arguments)
+
+        if "base_url" not in self._arguments:
+            raise ValueError("Missing 'base_url' in arguments")
+
+        self._base_url = self._arguments.get("base_url")
 
     def __call__(self) -> ProxyWfsProvider:
         return ProxyWfsProvider(self._base_url, UrlProcessor(), AsyncClient())
