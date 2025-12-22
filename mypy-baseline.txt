@@ -1,4 +1,6 @@
 tests/scenarios/context/mail.py:0: error: Skipping analyzing "mailpit.client.api": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+migrations/versions/fa34d0f248d8_date_answer.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
+migrations/versions/fa34d0f248d8_date_answer.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/f88c971186dc_remove_location_form_type_from_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/f88c971186dc_remove_location_form_type_from_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/f00d6c808e2d_add_other_static_form_types.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]

@@ -15,7 +15,7 @@ from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
 from meldingen.models import AnswerTypeEnum, FormIoComponentTypeEnum, FormIoFormDisplayEnum
-from meldingen.schemas.types import FormIOConditional, PhoneNumber
+from meldingen.schemas.types import DateAnswerObject, FormIOConditional, PhoneNumber
 from meldingen.validators import create_non_match_validator
 
 
@@ -235,6 +235,11 @@ class TimeAnswerInput(BaseModel):
     type: Literal[AnswerTypeEnum.time]
 
 
+class DateAnswerInput(BaseModel):
+    date: DateAnswerObject
+    type: Literal[AnswerTypeEnum.date]
+
+
 def answer_discriminator(value: Any) -> str | None:
     if isinstance(value, dict):
         return value.get("type")
@@ -242,6 +247,8 @@ def answer_discriminator(value: Any) -> str | None:
         return AnswerTypeEnum.text
     elif isinstance(value, TimeAnswerInput):
         return AnswerTypeEnum.time
+    elif isinstance(value, DateAnswerInput):
+        return AnswerTypeEnum.date
     return None
 
 
@@ -249,6 +256,7 @@ AnswerInputUnion = Annotated[
     Union[
         Annotated[TextAnswerInput, Tag(AnswerTypeEnum.text)],
         Annotated[TimeAnswerInput, Tag(AnswerTypeEnum.time)],
+        Annotated[DateAnswerInput, Tag(AnswerTypeEnum.date)],
     ],
     Discriminator("type"),
 ]

@@ -38,3 +38,11 @@ class FormIOConditional(BaseModel):
     show: bool
     when: Annotated[str, StringConstraints(min_length=1, strip_whitespace=True)]
     eq: str | int | float | bool | None
+
+
+class DateAnswerObject(BaseModel):
+    """Used to display an answer in a date answer component."""
+
+    value: str  # the raw value selected by the user f.e. "day -1"
+    label: str
+    converted_date: str  # ISO 8601 formatted date
