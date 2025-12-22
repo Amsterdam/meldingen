@@ -32,7 +32,7 @@ from meldingen.models import (
     StaticFormTypeEnum,
     TextAnswer,
     TimeAnswer,
-    User,
+    User, FormIoComponent,
 )
 
 
@@ -319,16 +319,21 @@ async def melding_with_different_answer_types(
         )
         form.components.append(panel)
 
+    db_session.add(form)
+    await db_session.commit()
+
+    panels = await form.awaitable_attrs.components
+
     # Add question components to panels
     for i in range(len(question_components)):
         component = question_components[i]
 
-        assert isinstance(form.components[i], FormIoPanelComponent)
-        component.parent = form.components[i]
+        component.parent = panels[i]
         component.position = i + 1
 
     db_session.add(form)
     await db_session.commit()
+
 
     text_answer = TextAnswer(
         text="John Doe",

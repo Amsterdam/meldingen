@@ -1297,18 +1297,6 @@ def melding_list_questions_and_answers_output_factory(
     )
 
 
-def answer_questions_output_factory() -> AnswerQuestionOutputFactory:
-    return AnswerQuestionOutputFactory()
-
-
-def melding_list_questions_and_answers_output_factory(
-    answer_questions_output_factory: Annotated[AnswerQuestionOutputFactory, Depends(answer_questions_output_factory)],
-) -> AnswerListOutputFactory:
-    return AnswerListOutputFactory(
-        answer_questions_output_factory,
-    )
-
-
 def states_output_factory() -> StatesOutputFactory:
     return StatesOutputFactory()
 
