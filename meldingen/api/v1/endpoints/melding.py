@@ -126,7 +126,6 @@ from meldingen.schemas.input import (
     MeldingAssetInput,
     MeldingContactInput,
     MeldingInput,
-    TextAnswerInput,
 )
 from meldingen.schemas.output import (
     AnswerOutputUnion,
@@ -501,7 +500,7 @@ async def resolve_answer_type_through_question_id(
     form_question_component_repository: FormIoQuestionComponentRepository = Depends(
         form_io_question_component_repository
     ),
-) -> TextAnswerInput:
+) -> AnswerInputUnion:
     """Dependency that dynamically selects the correct AnswerInputUnion member based on the question type."""
 
     try:
@@ -527,6 +526,7 @@ async def resolve_answer_type_through_question_id(
     "/{melding_id}/question/{question_id}",
     name="melding:answer-question",
     status_code=HTTP_201_CREATED,
+    openapi_extra={"requestBody": {"content": {"application/json": {"example": {"text": "This is an answer"}}}}},
     responses={
         **not_found_response,
         **unauthorized_response,
@@ -592,6 +592,9 @@ async def resolve_answer_type_through_answer_id(
 @router.patch(
     "/{melding_id}/answer/{answer_id}",
     name="melding:update-answer",
+    openapi_extra={
+        "requestBody": {"content": {"application/json": {"example": {"text": "This is an updated answer"}}}}
+    },
     responses={
         **not_found_response,
         **unauthorized_response,
