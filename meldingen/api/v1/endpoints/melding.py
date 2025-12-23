@@ -126,7 +126,6 @@ from meldingen.schemas.input import (
     MeldingAssetInput,
     MeldingContactInput,
     MeldingInput,
-    TextAnswerInput,
 )
 from meldingen.schemas.output import (
     AnswerOutputUnion,
@@ -147,7 +146,7 @@ from meldingen.schemas.output_factories import (
     MeldingUpdateOutputFactory,
     StatesOutputFactory,
 )
-from meldingen.schemas.types import GeoJson
+from meldingen.schemas.types import GeoJson, InvalidDateFormatException
 from meldingen.validators import MeldingPrimaryFormValidator
 
 router = APIRouter()
@@ -501,7 +500,7 @@ async def resolve_answer_type_through_question_id(
     form_question_component_repository: FormIoQuestionComponentRepository = Depends(
         form_io_question_component_repository
     ),
-) -> TextAnswerInput:
+) -> AnswerInputUnion:
     """Dependency that dynamically selects the correct AnswerInputUnion member based on the question type."""
 
     try:
@@ -521,12 +520,18 @@ async def resolve_answer_type_through_question_id(
         return TypeAdapter(AnswerInputUnion).validate_python(body)
     except ValidationError as e:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors()) from e
+    except InvalidDateFormatException as e:
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
+        ) from e
 
 
 @router.post(
     "/{melding_id}/question/{question_id}",
     name="melding:answer-question",
     status_code=HTTP_201_CREATED,
+    openapi_extra={"requestBody": {"content": {"application/json": {"example": {"text": "This is an answer"}}}}},
     responses={
         **not_found_response,
         **unauthorized_response,
@@ -587,11 +592,19 @@ async def resolve_answer_type_through_answer_id(
         return TypeAdapter(AnswerInputUnion).validate_python(body)
     except ValidationError as e:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors()) from e
+    except InvalidDateFormatException as e:
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
+        ) from e
 
 
 @router.patch(
     "/{melding_id}/answer/{answer_id}",
     name="melding:update-answer",
+    openapi_extra={
+        "requestBody": {"content": {"application/json": {"example": {"text": "This is an updated answer"}}}}
+    },
     responses={
         **not_found_response,
         **unauthorized_response,

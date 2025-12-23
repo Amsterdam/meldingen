@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 import pytest
@@ -10,6 +10,7 @@ from pytest import FixtureRequest
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.orderinglist import OrderingList
 
 from meldingen.authentication import authenticate_user
 from meldingen.models import (
@@ -20,11 +21,18 @@ from meldingen.models import (
     Classification,
     DateAnswer,
     Form,
+    FormIoCheckBoxComponent,
     FormIoComponentTypeEnum,
+    FormIoComponentValue,
     FormIoDateComponent,
     FormIoFormDisplayEnum,
     FormIoPanelComponent,
+    FormIoRadioComponent,
+    FormIoSelectComponent,
+    FormIoSelectComponentData,
+    FormIoSelectComponentValue,
     FormIoTextAreaComponent,
+    FormIoTextFieldComponent,
     FormIoTimeComponent,
     Melding,
     Question,
@@ -33,6 +41,7 @@ from meldingen.models import (
     TextAnswer,
     TimeAnswer,
     User,
+    ValueLabelAnswer,
 )
 
 
@@ -298,6 +307,10 @@ async def melding_with_different_answer_types(
     formio_time_component: FormIoTimeComponent,
     formio_text_area_component: FormIoTextAreaComponent,
     formio_date_component: FormIoDateComponent,
+    formio_select_component: FormIoSelectComponent,
+    formio_checkbox_component: FormIoCheckBoxComponent,
+    formio_radio_component: FormIoRadioComponent,
+    formio_text_field_component: FormIoTextFieldComponent,
 ) -> Melding:
     classification = melding_with_classification.classification
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
@@ -306,8 +319,13 @@ async def melding_with_different_answer_types(
         formio_text_area_component,
         formio_time_component,
         formio_date_component,
+        formio_select_component,
+        formio_checkbox_component,
+        formio_radio_component,
+        formio_text_field_component,
     ]
 
+    # Generate panels for each question
     for i in range(1, len(question_components) + 1):
         panel = FormIoPanelComponent(
             title=f"Panel {i}",
@@ -341,16 +359,12 @@ async def melding_with_different_answer_types(
         type=AnswerTypeEnum.text,
     )
 
-    db_session.add(text_answer)
-
     time_answer = TimeAnswer(
         time="14:30",
         melding=melding_with_classification,
         question=Question(text="What time is it?", form=form, component=formio_time_component),
         type=AnswerTypeEnum.time,
     )
-
-    db_session.add(time_answer)
 
     date_answer = DateAnswer(
         melding=melding_with_classification,
@@ -359,7 +373,37 @@ async def melding_with_different_answer_types(
         type=AnswerTypeEnum.date,
     )
 
-    db_session.add(date_answer)
+    radio_answer = ValueLabelAnswer(
+        melding=melding_with_classification,
+        values_and_labels=[{"value": "option-2", "label": "Optie #2"}],
+        question=Question(text="Kies een optie", form=form, component=formio_radio_component),
+        type=AnswerTypeEnum.value_label,
+    )
+
+    select_answer = ValueLabelAnswer(
+        melding=melding_with_classification,
+        values_and_labels=[{"value": "option-1", "label": "Optie #1"}, {"value": "option-2", "label": "Optie #2"}],
+        question=Question(text="Kies een optie", form=form, component=formio_select_component),
+        type=AnswerTypeEnum.value_label,
+    )
+
+    checkbox_answer = ValueLabelAnswer(
+        melding=melding_with_classification,
+        values_and_labels=[{"value": "option-3", "label": "Optie #3"}],
+        question=Question(text="Vink aan wat voor jou geldt", form=form, component=formio_checkbox_component),
+        type=AnswerTypeEnum.value_label,
+    )
+
+    text_field_answer = TextAnswer(
+        text="Jane Doe",
+        melding=melding_with_classification,
+        question=Question(text="Vul uw naam in", form=form, component=formio_text_field_component),
+        type=AnswerTypeEnum.text,
+    )
+
+    db_session.add_all(
+        [text_answer, time_answer, date_answer, radio_answer, select_answer, checkbox_answer, text_field_answer]
+    )
     await db_session.commit()
 
     return melding_with_classification
@@ -667,6 +711,147 @@ def formio_text_area_component(
 
 
 @pytest.fixture
+async def formio_select_component(
+    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool
+) -> FormIoSelectComponent:
+    component = FormIoSelectComponent(
+        label="Kies een optie",
+        description="",
+        key="kies-een-optie",
+        type=FormIoComponentTypeEnum.select,
+        input=True,
+        conditional=conditional,
+        required=is_required,
+        data=FormIoSelectComponentData(
+            # cast to OrderingList to prevent mypy issue
+            values=cast(
+                OrderingList[FormIoSelectComponentValue],
+                [
+                    FormIoSelectComponentValue(
+                        label="Optie #1",
+                        value="option-1",
+                        position=1,
+                    ),
+                    FormIoSelectComponentValue(
+                        label="Optie #2",
+                        value="option-2",
+                        position=2,
+                    ),
+                    FormIoSelectComponentValue(
+                        label="Optie #3",
+                        value="option-3",
+                        position=3,
+                    ),
+                ],
+            )
+        ),
+    )
+    db_session.add(component)
+    await db_session.commit()
+    return component
+
+
+@pytest.fixture
+async def formio_radio_component(
+    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool
+) -> FormIoRadioComponent:
+    component = FormIoRadioComponent(
+        label="Kies een optie",
+        description="",
+        key="radio-kies-een-optie",
+        type=FormIoComponentTypeEnum.radio,
+        input=True,
+        conditional=conditional,
+        required=is_required,
+        values=cast(
+            OrderingList[FormIoComponentValue],
+            [
+                FormIoComponentValue(
+                    label="Optie #1",
+                    value="option-1",
+                    position=1,
+                ),
+                FormIoComponentValue(
+                    label="Optie #2",
+                    value="option-2",
+                    position=2,
+                ),
+                FormIoComponentValue(
+                    label="Optie #3",
+                    value="option-3",
+                    position=3,
+                ),
+            ],
+        ),
+    )
+
+    db_session.add(component)
+    await db_session.commit()
+    return component
+
+
+@pytest.fixture
+async def formio_text_field_component(
+    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool, jsonlogic: str | None
+) -> FormIoTextFieldComponent:
+    component = FormIoTextFieldComponent(
+        label="Vul uw naam in",
+        description="",
+        key="vul-uw-naam-in",
+        type=FormIoComponentTypeEnum.text_field,
+        input=True,
+        required=is_required,
+        conditional=conditional,
+        jsonlogic=jsonlogic,
+    )
+
+    db_session.add(component)
+    await db_session.commit()
+
+    return component
+
+
+@pytest.fixture
+async def formio_checkbox_component(
+    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool
+) -> FormIoCheckBoxComponent:
+    component = FormIoCheckBoxComponent(
+        label="Vink aan wat voor jou geldt",
+        description="",
+        key="vink-aan",
+        type=FormIoComponentTypeEnum.checkbox,
+        input=True,
+        conditional=conditional,
+        required=is_required,
+        values=cast(
+            OrderingList[FormIoComponentValue],
+            [
+                FormIoComponentValue(
+                    label="Optie #1",
+                    value="option-1",
+                    position=1,
+                ),
+                FormIoComponentValue(
+                    label="Optie #2",
+                    value="option-2",
+                    position=2,
+                ),
+                FormIoComponentValue(
+                    label="Optie #3",
+                    value="option-3",
+                    position=3,
+                ),
+            ],
+        ),
+    )
+
+    db_session.add(component)
+    await db_session.commit()
+
+    return component
+
+
+@pytest.fixture
 def conditional(request: FixtureRequest) -> dict[str, Any] | None:
     if hasattr(request, "param"):
         return dict(request.param)
@@ -754,6 +939,99 @@ async def form_with_date_component(
     question = Question(text="Vanaf welke dag speelt dit?", form=form)
 
     formio_date_component.question = question
+
+    db_session.add(form)
+    await db_session.commit()
+
+    return form
+
+
+@pytest.fixture
+async def form_with_select_component(
+    db_session: AsyncSession,
+    form_title: str,
+    form_panel: FormIoPanelComponent,
+    formio_select_component: FormIoSelectComponent,
+    melding_with_classification: Melding,
+    conditional: dict[str, Any],
+) -> Form:
+    form = Form(
+        title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
+    )
+
+    formio_select_component.conditional = conditional
+
+    form_components = await form.awaitable_attrs.components
+    form_components.append(form_panel)
+
+    panel_components = await form_panel.awaitable_attrs.components
+    panel_components.append(formio_select_component)
+
+    question = Question(text="Kies een optie", form=form)
+
+    formio_select_component.question = question
+
+    db_session.add(form)
+    await db_session.commit()
+
+    return form
+
+
+@pytest.fixture
+async def form_with_checkbox_component(
+    db_session: AsyncSession,
+    form_title: str,
+    form_panel: FormIoPanelComponent,
+    formio_checkbox_component: FormIoCheckBoxComponent,
+    melding_with_classification: Melding,
+    conditional: dict[str, Any],
+) -> Form:
+    form = Form(
+        title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
+    )
+
+    formio_checkbox_component.conditional = conditional
+
+    form_components = await form.awaitable_attrs.components
+    form_components.append(form_panel)
+
+    panel_components = await form_panel.awaitable_attrs.components
+    panel_components.append(formio_checkbox_component)
+
+    question = Question(text="Vink aan wat voor jou geldt", form=form)
+
+    formio_checkbox_component.question = question
+
+    db_session.add(form)
+    await db_session.commit()
+
+    return form
+
+
+@pytest.fixture
+async def form_with_radio_component(
+    db_session: AsyncSession,
+    form_title: str,
+    form_panel: FormIoPanelComponent,
+    formio_radio_component: FormIoRadioComponent,
+    melding_with_classification: Melding,
+    conditional: dict[str, Any],
+) -> Form:
+    form = Form(
+        title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
+    )
+
+    formio_radio_component.conditional = conditional
+
+    form_components = await form.awaitable_attrs.components
+    form_components.append(form_panel)
+
+    panel_components = await form_panel.awaitable_attrs.components
+    panel_components.append(formio_radio_component)
+
+    question = Question(text="Kies een optie", form=form)
+
+    formio_radio_component.question = question
 
     db_session.add(form)
     await db_session.commit()

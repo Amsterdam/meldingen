@@ -442,6 +442,7 @@ class AnswerTypeEnum(enum.StrEnum):
     text = "text"
     time = "time"
     date = "date"
+    value_label = "value_label"
 
 
 # Mapping from FormIoComponentTypeEnum to AnswerTypeEnum
@@ -450,6 +451,9 @@ FormIoComponentToAnswerTypeMap = {
     FormIoComponentTypeEnum.text_field: AnswerTypeEnum.text,
     FormIoComponentTypeEnum.time: AnswerTypeEnum.time,
     FormIoComponentTypeEnum.date: AnswerTypeEnum.date,
+    FormIoComponentTypeEnum.checkbox: AnswerTypeEnum.value_label,
+    FormIoComponentTypeEnum.radio: AnswerTypeEnum.value_label,
+    FormIoComponentTypeEnum.select: AnswerTypeEnum.value_label,
 }
 
 
@@ -514,6 +518,22 @@ class DateAnswer(Answer):
     def __mapper_args__(cls) -> dict[str, Any]:
         return {
             "polymorphic_identity": AnswerTypeEnum.date,
+        }
+
+
+class ValueLabelAnswer(Answer):
+    """Answer type for components with value/label pairs like
+    select, radio and checkbox components. Stored as a list of objects
+    f.e. [{"value": "option1", "label": "Option 1"}, ...]"""
+
+    __table_args__ = {"extend_existing": True}
+
+    values_and_labels: Mapped[list[dict[str, str]]] = mapped_column(JSON, nullable=True)
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": AnswerTypeEnum.value_label,
         }
 
 

@@ -26,6 +26,7 @@ from meldingen.models import (
     StaticForm,
     TextAnswer,
     TimeAnswer,
+    ValueLabelAnswer,
 )
 from meldingen.schemas.output import (
     AnswerOutputUnion,
@@ -66,6 +67,8 @@ from meldingen.schemas.output import (
     TextAnswerQuestionOutput,
     TimeAnswerOutput,
     TimeAnswerQuestionOutput,
+    ValueLabelAnswerOutput,
+    ValueLabelAnswerQuestionOutput,
 )
 
 
@@ -788,6 +791,11 @@ class AnswerOutputFactory:
                 **fields,
                 date=await answer.awaitable_attrs.date,
             )
+        elif isinstance(answer, ValueLabelAnswer):
+            return ValueLabelAnswerOutput(
+                **fields,
+                values_and_labels=await answer.awaitable_attrs.values_and_labels,
+            )
         else:
             raise Exception(f"Unsupported answer-question output type: {type(answer)}")
 
@@ -819,6 +827,11 @@ class AnswerQuestionOutputFactory:
             return DateAnswerQuestionOutput(
                 **fields,
                 date=await answer.awaitable_attrs.date,
+            )
+        elif isinstance(answer, ValueLabelAnswer):
+            return ValueLabelAnswerQuestionOutput(
+                **fields,
+                values_and_labels=await answer.awaitable_attrs.values_and_labels,
             )
         else:
             raise Exception(f"Unsupported answer-question output type: {type(answer)}")
