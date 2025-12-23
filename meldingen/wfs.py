@@ -80,10 +80,10 @@ class ProxyWfsProvider(BaseWfsProvider):
 
 
 class ProxyWfsProviderFactory(BaseWfsProviderFactory):
-    _base_url: str
-
-    def __init__(self, base_url: str):
-        self._base_url = base_url
-
     def __call__(self) -> ProxyWfsProvider:
-        return ProxyWfsProvider(self._base_url, UrlProcessor(), AsyncClient())
+        if "base_url" not in self._arguments:
+            raise ValueError("Missing 'base_url' in arguments")
+
+        base_url = self._arguments["base_url"]
+
+        return ProxyWfsProvider(base_url, UrlProcessor(), AsyncClient())
