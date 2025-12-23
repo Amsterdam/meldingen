@@ -12,11 +12,6 @@ from meldingen.wfs import ProxyWfsProvider, UrlProcessor
 
 
 class ValidMockProxyWfsProviderFactory(BaseWfsProviderFactory):
-    _base_url: str
-
-    def __init__(self, base_url: str):
-        self._base_url = base_url
-
     def __call__(self) -> ProxyWfsProvider:
         response = Mock(Response)
         response.status_code = 200
@@ -24,7 +19,7 @@ class ValidMockProxyWfsProviderFactory(BaseWfsProviderFactory):
         http_client = AsyncMock(AsyncClient)
         http_client.stream.return_value.__aenter__.return_value = response
 
-        return ProxyWfsProvider(self._base_url, UrlProcessor(), http_client)
+        return ProxyWfsProvider(self._arguments["base_url"], UrlProcessor(), http_client)
 
 
 @pytest.mark.anyio
