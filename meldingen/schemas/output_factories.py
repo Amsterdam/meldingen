@@ -794,7 +794,7 @@ class AnswerOutputFactory:
         elif isinstance(answer, ValueLabelAnswer):
             return ValueLabelAnswerOutput(
                 **fields,
-                value_and_labels=await answer.awaitable_attrs.values_and_labels,
+                values_and_labels=await answer.awaitable_attrs.values_and_labels,
             )
         else:
             raise Exception(f"Unsupported answer-question output type: {type(answer)}")
@@ -831,7 +831,7 @@ class AnswerQuestionOutputFactory:
         elif isinstance(answer, ValueLabelAnswer):
             return ValueLabelAnswerQuestionOutput(
                 **fields,
-                value_and_labels=await answer.awaitable_attrs.values_and_labels,
+                values_and_labels=await answer.awaitable_attrs.values_and_labels,
             )
         else:
             raise Exception(f"Unsupported answer-question output type: {type(answer)}")

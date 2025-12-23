@@ -44,6 +44,7 @@ from meldingen.models import (
     StaticForm,
     TextAnswer,
     TimeAnswer,
+    ValueLabelAnswer,
 )
 from meldingen.repositories import MeldingRepository
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
@@ -2308,6 +2309,236 @@ class TestMeldingQuestionAnswer:
         assert len(detail) == 1
         assert detail[0].get("msg") == "Input should be a valid dictionary or instance of DateAnswerObject"
 
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
+    async def test_create_select_component_answer(
+        self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding_with_classification: Melding
+    ) -> None:
+        components = await form_with_select_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        select_input = [{"value": "option_1", "label": "Option 1"}, {"value": "option_3", "label": "Option 3"}]
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"values_and_labels": select_input},
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        body = response.json()
+        assert body.get("id") is not None
+        assert body.get("values_and_labels") == select_input
+        assert body.get("type") == AnswerTypeEnum.value_label
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
+    async def test_create_select_component_answer_invalid(
+        self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding_with_classification: Melding
+    ) -> None:
+        components = await form_with_select_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"text": "invalid-answer-field"},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Field required"
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
+    async def test_create_radio_component_answer(
+        self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
+    ) -> None:
+        components = await form_with_radio_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        radio_input = [{"value": "option_2", "label": "Option 2"}]
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"values_and_labels": radio_input},
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        body = response.json()
+        assert body.get("id") is not None
+        assert body.get("values_and_labels") == radio_input
+        assert body.get("type") == AnswerTypeEnum.value_label
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
+    async def test_create_radio_component_answer_invalid(
+        self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
+    ) -> None:
+        components = await form_with_radio_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"time": "10:30"},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Field required"
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
+    async def test_create_checkbox_component_answer(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        form_with_checkbox_component: Form,
+        melding_with_classification: Melding,
+    ) -> None:
+        components = await form_with_checkbox_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        checkbox_input = [{"value": "option_1", "label": "Option 1"}]
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"values_and_labels": checkbox_input},
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        body = response.json()
+        assert body.get("id") is not None
+        assert body.get("values_and_labels") == checkbox_input
+        assert body.get("type") == AnswerTypeEnum.value_label
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
+    async def test_create_checkbox_component_answer_invalid(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        form_with_checkbox_component: Form,
+        melding_with_classification: Melding,
+    ) -> None:
+        components = await form_with_checkbox_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"date": {"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"}},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Field required"
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+
 
 class TestMeldingUpdateAnswer:
     def get_route_name(self) -> str:
@@ -2617,6 +2848,285 @@ class TestMeldingUpdateAnswer:
         detail = body.get("detail")
         assert len(detail) == 1
         assert detail[0].get("msg") == error_message
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            )
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_radio_component_answer(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = ValueLabelAnswer(
+            values_and_labels=[{"value": "option_1", "label": "Option 1"}],
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.value_label,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        new_values_and_labels = [{"value": "option_2", "label": "Option 2"}]
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"values_and_labels": new_values_and_labels},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") == answer.id
+        assert body.get("values_and_labels") == new_values_and_labels
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            )
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_radio_component_answer_invalid(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = ValueLabelAnswer(
+            values_and_labels=[{"value": "option_1", "label": "Option 1"}],
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.value_label,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"time": "10:30"},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Field required"
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            )
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_select_component(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = ValueLabelAnswer(
+            values_and_labels=[{"value": "option_1", "label": "Option 1"}, {"value": "option_3", "label": "Option 3"}],
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.value_label,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        new_values_and_labels = [{"value": "option_2", "label": "Option 2"}]
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"values_and_labels": new_values_and_labels},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") == answer.id
+        assert body.get("values_and_labels") == new_values_and_labels
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            ),
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_select_component_answer_invalid(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = ValueLabelAnswer(
+            values_and_labels=[{"value": "option_1", "label": "Option 1"}, {"value": "option_3", "label": "Option 3"}],
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.value_label,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"text": "invalid-answer-field"},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Field required"
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            ),
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_checkbox_answer(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = ValueLabelAnswer(
+            values_and_labels=[{"value": "option_1", "label": "Option 1"}],
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.value_label,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        new_values_and_labels = [{"value": "option_2", "label": "Option 2"}]
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"values_and_labels": new_values_and_labels},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") == answer.id
+        assert body.get("values_and_labels") == new_values_and_labels
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            ),
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_checkbox_component_answer_invalid(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = ValueLabelAnswer(
+            values_and_labels=[{"value": "option_1", "label": "Option 1"}],
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.value_label,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"date": {"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"}},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Field required"
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
 
 
 class TestMeldingUploadAttachment:

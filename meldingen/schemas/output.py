@@ -255,7 +255,7 @@ class DateAnswerOutput(AnswerOutput):
 
 
 class ValueLabelAnswerOutput(AnswerOutput):
-    value_and_labels: list[ValueLabelObject]
+    values_and_labels: list[ValueLabelObject]
     type: Literal[AnswerTypeEnum.value_label]
 
 
