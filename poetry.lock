@@ -2537,8 +2537,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feature/use-packed-arguments-for-wfs-provider"
-resolved_reference = "575618ca9f70f90df5c2b3484868505daf894acb"
+reference = "HEAD"
+resolved_reference = "919ddbeb7fd0ce8666f5852a251eae9c3c095c56"
 
 [[package]]
 name = "mergedeep"
@@ -5745,4 +5745,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "a43ae670593e5dd5ac4dae63c84e589fa72e55ce1624a78c1ae7dce926a32c77"
+content-hash = "af2e14a35ebf20976d241ebfa7cbaf40dcb60aa83430508bcf6026fa616c7f97"
