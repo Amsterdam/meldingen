@@ -100,6 +100,9 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     email: Mapped[str | None] = mapped_column(String(254), default=None)
     phone: Mapped[str | None] = mapped_column(String(50), default=None)
     assets: Mapped[list[Asset]] = relationship(secondary=asset_melding, default_factory=list)
+    answers: Mapped[list["Answer"]] = relationship(
+        "Answer", back_populates="melding", cascade="save-update, merge, delete, delete-orphan", default_factory=list
+    )
 
 
 user_group = Table(
@@ -435,14 +438,103 @@ class Question(AsyncAttrs, BaseDBModel, BaseQuestion):
     component: Mapped[FormIoQuestionComponent | None] = relationship(default=None)
 
 
-class Answer(AsyncAttrs, BaseDBModel, BaseAnswer):
-    text: Mapped[str] = mapped_column(String())
+class AnswerTypeEnum(enum.StrEnum):
+    text = "text"
+    time = "time"
+    date = "date"
+    value_label = "value_label"
+
+
+# Mapping from FormIoComponentTypeEnum to AnswerTypeEnum
+FormIoComponentToAnswerTypeMap = {
+    FormIoComponentTypeEnum.text_area: AnswerTypeEnum.text,
+    FormIoComponentTypeEnum.text_field: AnswerTypeEnum.text,
+    FormIoComponentTypeEnum.time: AnswerTypeEnum.time,
+    FormIoComponentTypeEnum.date: AnswerTypeEnum.date,
+    FormIoComponentTypeEnum.checkbox: AnswerTypeEnum.value_label,
+    FormIoComponentTypeEnum.radio: AnswerTypeEnum.value_label,
+    FormIoComponentTypeEnum.select: AnswerTypeEnum.value_label,
+}
+
+
+class Answer(AsyncAttrs, BaseAnswer, BaseDBModel, kw_only=True):
+    """This class uses kw_only to bypass the issue where fields with default values
+    cannot come before fields without default values in the generated __init__ method."""
+
+    @declared_attr.directive
+    def __tablename__(cls) -> str:
+        return "answer"
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_on": "type",
+            "polymorphic_abstract": True,
+        }
 
     question_id: Mapped[int] = mapped_column(ForeignKey("question.id"), init=False)
     question: Mapped[Question] = relationship()
 
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
-    melding: Mapped[Melding] = relationship()
+    melding: Mapped[Melding] = relationship(back_populates="answers", default_factory=list)
+    type: Mapped[str] = mapped_column(Enum(AnswerTypeEnum, name="answer_type"), default=AnswerTypeEnum.text)
+
+
+class TextAnswer(Answer):
+    __table_args__ = {"extend_existing": True}
+
+    text: Mapped[str] = mapped_column(String(), nullable=True)
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": AnswerTypeEnum.text,
+        }
+
+
+class TimeAnswer(Answer):
+    """Answer type for time values. Stored as hh:mm string,
+    because it's only used as a simple display of the user's input"""
+
+    __table_args__ = {"extend_existing": True}
+
+    time: Mapped[str] = mapped_column(String(), nullable=True)
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": AnswerTypeEnum.time,
+        }
+
+
+class DateAnswer(Answer):
+    """Answer type for date component saved as a JSON object
+    with value, label and converted_date as keys"""
+
+    __table_args__ = {"extend_existing": True}
+    date: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=True)
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": AnswerTypeEnum.date,
+        }
+
+
+class ValueLabelAnswer(Answer):
+    """Answer type for components with value/label pairs like
+    select, radio and checkbox components. Stored as a list of objects
+    f.e. [{"value": "option1", "label": "Option 1"}, ...]"""
+
+    __table_args__ = {"extend_existing": True}
+
+    values_and_labels: Mapped[list[dict[str, str]]] = mapped_column(JSON, nullable=True)
+
+    @declared_attr.directive
+    def __mapper_args__(cls) -> dict[str, Any]:
+        return {
+            "polymorphic_identity": AnswerTypeEnum.value_label,
+        }
 
 
 class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):

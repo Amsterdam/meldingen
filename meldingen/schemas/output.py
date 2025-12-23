@@ -1,11 +1,12 @@
 from datetime import datetime
-from typing import Annotated, Any, Union
+from typing import Annotated, Any, Literal, Union, final
 
 from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field, field_serializer
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
-from meldingen.schemas.types import FormIOConditional, GeoJson, PhoneNumber
+from meldingen.models import AnswerTypeEnum
+from meldingen.schemas.types import DateAnswerObject, FormIOConditional, GeoJson, PhoneNumber, ValueLabelObject
 
 ### Form.io ###
 
@@ -235,16 +236,59 @@ class FormTimeComponentOutput(BaseFormComponentOutput):
 
 
 class AnswerOutput(BaseOutputModel):
+    type: str
+
+
+class TextAnswerOutput(AnswerOutput):
     text: str
+    type: Literal[AnswerTypeEnum.text]
+
+
+class TimeAnswerOutput(AnswerOutput):
+    time: str
+    type: Literal[AnswerTypeEnum.time]
+
+
+class DateAnswerOutput(AnswerOutput):
+    date: DateAnswerObject
+    type: Literal[AnswerTypeEnum.date]
+
+
+class ValueLabelAnswerOutput(AnswerOutput):
+    values_and_labels: list[ValueLabelObject]
+    type: Literal[AnswerTypeEnum.value_label]
+
+
+AnswerOutputUnion = Annotated[
+    Union[TextAnswerOutput, TimeAnswerOutput, DateAnswerOutput, ValueLabelAnswerOutput],
+    Field(discriminator="type"),
+]
 
 
 class QuestionOutput(BaseOutputModel):
     text: str
 
 
-class AnswerQuestionOutput(BaseOutputModel):
-    text: str
+class TextAnswerQuestionOutput(TextAnswerOutput):
     question: QuestionOutput
+
+
+class TimeAnswerQuestionOutput(TimeAnswerOutput):
+    question: QuestionOutput
+
+
+class DateAnswerQuestionOutput(DateAnswerOutput):
+    question: QuestionOutput
+
+
+class ValueLabelAnswerQuestionOutput(ValueLabelAnswerOutput):
+    question: QuestionOutput
+
+
+AnswerQuestionOutputUnion = Annotated[
+    Union[TextAnswerQuestionOutput, TimeAnswerQuestionOutput, DateAnswerQuestionOutput, ValueLabelAnswerQuestionOutput],
+    Field(discriminator="type"),
+]
 
 
 class AttachmentOutput(BaseOutputModel):
