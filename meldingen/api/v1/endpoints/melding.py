@@ -146,7 +146,7 @@ from meldingen.schemas.output_factories import (
     MeldingUpdateOutputFactory,
     StatesOutputFactory,
 )
-from meldingen.schemas.types import GeoJson
+from meldingen.schemas.types import GeoJson, InvalidDateFormatException
 from meldingen.validators import MeldingPrimaryFormValidator
 
 router = APIRouter()
@@ -520,6 +520,11 @@ async def resolve_answer_type_through_question_id(
         return TypeAdapter(AnswerInputUnion).validate_python(body)
     except ValidationError as e:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors()) from e
+    except InvalidDateFormatException as e:
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
+        ) from e
 
 
 @router.post(
@@ -587,6 +592,11 @@ async def resolve_answer_type_through_answer_id(
         return TypeAdapter(AnswerInputUnion).validate_python(body)
     except ValidationError as e:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors()) from e
+    except InvalidDateFormatException as e:
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
+        ) from e
 
 
 @router.patch(

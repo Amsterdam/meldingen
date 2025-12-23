@@ -2254,7 +2254,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        date_input = {"value": "day - 1", "label": "Gisteren 31 december", "converted_date": "2025-31-12"}
+        date_input = {"value": "day - 1", "label": "Gisteren 31 december", "converted_date": "2025-12-31"}
 
         response = await client.post(
             app.url_path_for(
@@ -2308,6 +2308,55 @@ class TestMeldingQuestionAnswer:
         detail = body.get("detail")
         assert len(detail) == 1
         assert detail[0].get("msg") == "Input should be a valid dictionary or instance of DateAnswerObject"
+
+    @pytest.mark.parametrize(
+        ["melding_token", "converted_date_input"],
+        [
+            ("supersecrettoken", "2025-13-01"),
+            ("supersecrettoken", "2025-02-30"),
+            ("supersecrettoken", "2025-10-32"),
+            ("supersecrettoken", "not-a-date"),
+            ("supersecrettoken", "2025-01-1"),
+        ],
+    )
+    async def test_create_date_answer_invalid_converted_date(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        form_with_date_component: Form,
+        melding_with_classification: Melding,
+        converted_date_input: str,
+    ) -> None:
+        components = await form_with_date_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        date_input = {"value": "some value", "label": "Some label", "converted_date": converted_date_input}
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"date": date_input},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "converted_date must be in YYYY-mm-dd format"
+        assert detail[0].get("type") == "value_error"
+        assert detail[0].get("input") == {"converted_date": converted_date_input}
 
     @pytest.mark.parametrize(
         ["melding_token"],

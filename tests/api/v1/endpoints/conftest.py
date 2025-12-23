@@ -791,7 +791,7 @@ async def formio_radio_component(
 
 
 @pytest.fixture
-async def text_field_component(
+async def formio_text_field_component(
     db_session: AsyncSession, conditional: dict[str, Any], is_required: bool, jsonlogic: str | None
 ) -> FormIoTextFieldComponent:
     component = FormIoTextFieldComponent(
