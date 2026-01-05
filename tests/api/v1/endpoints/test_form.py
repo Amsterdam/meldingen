@@ -1125,16 +1125,15 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=new_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        detail = body.get("detail")
-        assert len(detail) == 1
+        components = body.get("components")
+        assert len(components) == 2
 
-        violation = detail[0]
-        assert violation.get("type") == "string_too_short"
-        assert violation.get("loc") == ["body", "components", 1, "panel", "conditional", "when"]
-        assert violation.get("msg") == "String should have at least 1 character"
+        assert components[1]["conditional"]["when"] == ""
+        assert components[1]["conditional"]["show"] is True
+        assert components[1]["conditional"]["eq"] == "ja"
 
     @pytest.mark.anyio
     async def test_update_form_with_conditional_missing_elements(
@@ -1884,16 +1883,60 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
 
         response = await client.post(app.url_path_for(self.ROUTE_NAME), json=form_data)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.status_code == HTTP_201_CREATED
 
         body = response.json()
-        detail = body.get("detail")
-        assert len(detail) == 1
+        components = body.get("components")
+        assert len(components) == 2
 
-        violation = detail[0]
-        assert violation.get("type") == "string_too_short"
-        assert violation.get("loc") == ["body", "components", 1, "panel", "conditional", "when"]
-        assert violation.get("msg") == "String should have at least 1 character"
+        assert components[1]["conditional"]["when"] == ""
+        assert components[1]["conditional"]["show"] is True
+        assert components[1]["conditional"]["eq"] == "ja"
+
+    @pytest.mark.anyio
+    async def test_create_form_with_conditional_with_none_values(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        form_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "components": [
+                {
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": FormIoComponentTypeEnum.text_area,
+                    "input": True,
+                    "autoExpand": False,
+                    "maxCharCount": None,
+                },
+                {
+                    "title": "Panel title",
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "conditional": {
+                        "show": None,
+                        "when": "",
+                        "eq": None,
+                    },
+                    "components": [],
+                },
+            ],
+        }
+
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json=form_data)
+
+        assert response.status_code == HTTP_201_CREATED
+        body = response.json()
+
+        components = body.get("components")
+        assert len(components) == 2
+
+        assert components[1]["conditional"]["when"] == ""
+        assert components[1]["conditional"]["show"] is None
+        assert components[1]["conditional"]["eq"] is None
 
     @pytest.mark.anyio
     async def test_create_form_with_conditional_missing_elements(

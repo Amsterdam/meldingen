@@ -37,8 +37,8 @@ class PhoneNumber(PydanticPhoneNumber):
 
 
 class FormIOConditional(BaseModel):
-    show: bool
-    when: Annotated[str, StringConstraints(min_length=1, strip_whitespace=True)]
+    show: bool | None
+    when: Annotated[str, StringConstraints(strip_whitespace=True)]
     eq: str | int | float | bool | None
 
 
