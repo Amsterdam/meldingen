@@ -1091,6 +1091,53 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         await self._assert_components(data.get("components"), components)
 
     @pytest.mark.anyio
+    async def test_update_form_with_conditional_with_none_values(
+        self, app: FastAPI, client: AsyncClient, form: Form, auth_user: None
+    ) -> None:
+        """If no conditional is explicitly set, this is what FormIO sends to the backend"""
+
+        form_data = {
+            "title": "Formulier #1",
+            "display": "wizard",
+            "components": [
+                {
+                    "label": "Heeft u meer informatie die u met ons wilt delen?",
+                    "description": "Help tekst bij de vraag.",
+                    "key": "heeft-u-meer-informatie",
+                    "type": FormIoComponentTypeEnum.text_area,
+                    "input": True,
+                    "autoExpand": False,
+                    "maxCharCount": None,
+                },
+                {
+                    "title": "Panel title",
+                    "label": "panel-1",
+                    "key": "panel",
+                    "type": "panel",
+                    "input": False,
+                    "conditional": {
+                        "show": None,
+                        "when": None,
+                        "eq": "",
+                    },
+                    "components": [],
+                },
+            ],
+        }
+
+        response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=form_data)
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+
+        components = body.get("components")
+        assert len(components) == 2
+
+        assert components[1]["conditional"]["when"] is None
+        assert components[1]["conditional"]["show"] is None
+        assert components[1]["conditional"]["eq"] == ""
+
+    @pytest.mark.anyio
     async def test_update_form_with_conditional_empty_when(
         self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form
     ) -> None:
@@ -1897,6 +1944,8 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
     async def test_create_form_with_conditional_with_none_values(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
+        """If no conditional is explicitly set, this is what FormIO sends to the backend"""
+
         form_data = {
             "title": "Formulier #1",
             "display": "wizard",
@@ -1918,8 +1967,8 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "input": False,
                     "conditional": {
                         "show": None,
-                        "when": "",
-                        "eq": None,
+                        "when": None,
+                        "eq": "",
                     },
                     "components": [],
                 },
@@ -1934,9 +1983,9 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         components = body.get("components")
         assert len(components) == 2
 
-        assert components[1]["conditional"]["when"] == ""
+        assert components[1]["conditional"]["when"] is None
         assert components[1]["conditional"]["show"] is None
-        assert components[1]["conditional"]["eq"] is None
+        assert components[1]["conditional"]["eq"] == ""
 
     @pytest.mark.anyio
     async def test_create_form_with_conditional_missing_elements(
