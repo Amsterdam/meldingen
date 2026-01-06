@@ -1,9 +1,22 @@
+from abc import ABCMeta
+
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, get_all_backoffice_states
 from mp_fsm.statemachine import BaseGuard, BaseStateMachine, BaseTransition
 
 from meldingen.models import Melding
 from meldingen.repositories import AnswerRepository, FormRepository
+
+
+class BaseBackofficeTransition(BaseTransition[Melding], metaclass=ABCMeta):
+    to_state: str
+
+    @property
+    def from_states(self) -> list[str]:
+        return ["MeldingStates." + s.name for s in get_all_backoffice_states()]
+
+    def to_state(self) -> str:
+        return self.to_state
 
 
 # guards
@@ -132,31 +145,39 @@ class AddContactInfo(BaseTransition[Melding]):
 class Submit(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.CONTACT_INFO_ADDED, MeldingStates.COMPLETED]
+        return [MeldingStates.CONTACT_INFO_ADDED] + ["MeldingStates." + s.name for s in get_all_backoffice_states()]
 
     @property
     def to_state(self) -> str:
         return MeldingStates.SUBMITTED
 
 
-class Process(BaseTransition[Melding]):
-    @property
-    def from_states(self) -> list[str]:
-        return [MeldingStates.SUBMITTED, MeldingStates.COMPLETED]
-
-    @property
-    def to_state(self) -> str:
-        return MeldingStates.PROCESSING
+class RequestProcessing(BaseBackofficeTransition):
+    to_state = MeldingStates.AWAITING_PROCESSING
 
 
-class Complete(BaseTransition[Melding]):
-    @property
-    def from_states(self) -> list[str]:
-        return [MeldingStates.SUBMITTED, MeldingStates.PROCESSING]
+class Plan(BaseBackofficeTransition):
+    to_state = MeldingStates.PLANNED
 
-    @property
-    def to_state(self) -> str:
-        return MeldingStates.COMPLETED
+
+class Process(BaseBackofficeTransition):
+    to_state = MeldingStates.PROCESSING
+
+
+class Complete(BaseBackofficeTransition):
+    to_state = MeldingStates.COMPLETED
+
+
+class RequestReopen(BaseBackofficeTransition):
+    to_state = MeldingStates.REOPEN_REQUESTED
+
+
+class Reopen(BaseBackofficeTransition):
+    to_state = MeldingStates.REOPENED
+
+
+class Cancel(BaseBackofficeTransition):
+    to_state = MeldingStates.CANCELED
 
 
 # state machine

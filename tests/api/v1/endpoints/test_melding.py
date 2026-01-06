@@ -1594,9 +1594,13 @@ class TestMeldingSubmitLocation(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_404_NOT_FOUND
 
 
-class TestMeldingProcess(BaseUnauthorizedTest):
+class BaseMeldingBackofficeTransitionTest(BaseUnauthorizedTest):
+    route_name: str
+    target_state: MeldingStates
+    initial_state: MeldingStates = MeldingStates.SUBMITTED
+
     def get_route_name(self) -> str:
-        return "melding:process"
+        return self.route_name
 
     def get_method(self) -> str:
         return "PUT"
@@ -1608,44 +1612,65 @@ class TestMeldingProcess(BaseUnauthorizedTest):
     @pytest.mark.parametrize(
         ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.SUBMITTED)], indirect=True
     )
-    async def test_process_melding(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
+    async def test_successful_transition(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
         response = await client.request(
             self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
         )
 
         assert response.status_code == HTTP_200_OK
-
         body = response.json()
-
-        assert body.get("state") == MeldingStates.PROCESSING
+        assert body.get("state") == self.target_state
         assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
-    async def test_process_melding_not_found(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
-    ) -> None:
+    async def test_not_found(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
         response = await client.request(self.get_method(), app.url_path_for(self.get_route_name(), melding_id=404))
-
         assert response.status_code == HTTP_404_NOT_FOUND
-
-        body = response.json()
-
-        assert body.get("detail") == "Not Found"
+        assert response.json().get("detail") == "Not Found"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.COMPLETED)], indirect=True
     )
-    async def test_process_melding_wrong_state(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
-    ) -> None:
+    async def test_wrong_state(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
         response = await client.request(
             self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
         )
-
         assert response.status_code == HTTP_200_OK
+
+
+class TestMeldingRequestProcessing(BaseMeldingBackofficeTransitionTest):
+    route_name = "melding:request-processing"
+    target_state = MeldingStates.AWAITING_PROCESSING
+
+
+class TestMeldingProcess(BaseMeldingBackofficeTransitionTest):
+    route_name = "melding:process"
+    target_state = MeldingStates.PROCESSING
+
+
+class TestMeldingPlan(BaseMeldingBackofficeTransitionTest):
+    route_name = "melding:plan"
+    target_state = MeldingStates.PLANNED
+
+
+class TestMeldingRequestReopen(BaseMeldingBackofficeTransitionTest):
+    route_name = "melding:request-reopen"
+    target_state = MeldingStates.REOPEN_REQUESTED
+
+
+class TestMeldingReopen(BaseMeldingBackofficeTransitionTest):
+    route_name = "melding:reopen"
+    target_state = MeldingStates.REOPENED
+
+
+class TestMeldingCancel(BaseMeldingBackofficeTransitionTest):
+    route_name = "melding:cancel"
+    target_state = MeldingStates.CANCELED
 
 
 class TestMeldingComplete(BaseUnauthorizedTest):
@@ -1715,7 +1740,7 @@ class TestMeldingComplete(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.COMPLETED)], indirect=True
+        ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.NEW)], indirect=True
     )
     async def test_complete_melding_wrong_state(
         self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding

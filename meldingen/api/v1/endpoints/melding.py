@@ -10,11 +10,16 @@ from meldingen_core.actions.melding import (
     MelderMeldingListQuestionsAnswersAction,
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
+    MeldingCancelAction,
     MeldingCompleteAction,
     MeldingContactInfoAddedAction,
     MeldingCreateAction,
     MeldingListQuestionsAnswersAction,
+    MeldingPlanAction,
     MeldingProcessAction,
+    MeldingReopenAction,
+    MeldingRequestProcessingAction,
+    MeldingRequestReopenAction,
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
@@ -84,6 +89,7 @@ from meldingen.dependencies import (
     melding_answer_create_action,
     melding_answer_questions_action,
     melding_answer_update_action,
+    melding_cancel_action,
     melding_complete_action,
     melding_contact_info_added_action,
     melding_create_action,
@@ -97,9 +103,13 @@ from meldingen.dependencies import (
     melding_list_questions_and_answers_action,
     melding_list_questions_and_answers_output_factory,
     melding_output_factory,
+    melding_plan_action,
     melding_primary_form_validator,
     melding_process_action,
+    melding_reopen_action,
     melding_repository,
+    melding_request_processing_action,
+    melding_request_reopen_action,
     melding_retrieve_action,
     melding_submit_action,
     melding_submit_location_action,
@@ -438,6 +448,110 @@ async def melding_submit(
 
 
 @router.put(
+    "/{melding_id}/plan",
+    name="melding:plan",
+    responses={
+        **transition_not_allowed,
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+    dependencies=[Depends(authenticate_user)],
+)
+async def plan_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    action: Annotated[MeldingPlanAction[Melding], Depends(melding_plan_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+
+    return await produce_output(melding)
+
+
+@router.put(
+    "/{melding_id}/request_reopen",
+    name="melding:request-reopen",
+    responses={
+        **transition_not_allowed,
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+    dependencies=[Depends(authenticate_user)],
+)
+async def request_reopen_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    action: Annotated[MeldingRequestReopenAction[Melding], Depends(melding_request_reopen_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+
+    return await produce_output(melding)
+
+
+@router.put(
+    "/{melding_id}/reopen",
+    name="melding:reopen",
+    responses={
+        **transition_not_allowed,
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+    dependencies=[Depends(authenticate_user)],
+)
+async def reopen_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    action: Annotated[MeldingReopenAction[Melding], Depends(melding_reopen_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+
+    return await produce_output(melding)
+
+
+@router.put(
+    "/{melding_id}/request_processing",
+    name="melding:request-processing",
+    responses={
+        **transition_not_allowed,
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+    dependencies=[Depends(authenticate_user)],
+)
+async def request_processing_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    action: Annotated[MeldingRequestProcessingAction[Melding], Depends(melding_request_processing_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException as e:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+
+    return await produce_output(melding)
+
+
+@router.put(
     "/{melding_id}/process",
     name="melding:process",
     responses={
@@ -486,6 +600,32 @@ async def complete_melding(
 
     try:
         melding = await action(melding_id, mail_text)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+
+    return await produce_output(melding)
+
+
+@router.put(
+    "/{melding_id}/cancel",
+    name="melding:cancel",
+    responses={
+        **transition_not_allowed,
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+    dependencies=[Depends(authenticate_user)],
+)
+async def cancel_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    action: Annotated[MeldingCancelAction[Melding], Depends(melding_cancel_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except WrongStateException:
