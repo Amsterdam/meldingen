@@ -9,14 +9,14 @@ from meldingen.repositories import AnswerRepository, FormRepository
 
 
 class BaseBackofficeTransition(BaseTransition[Melding], metaclass=ABCMeta):
-    to_state: str
+    state_for_transition: str
 
     @property
     def from_states(self) -> list[str]:
         return ["MeldingStates." + s.name for s in get_all_backoffice_states()]
 
     def to_state(self) -> str:
-        return self.to_state
+        return self.state_for_transition
 
 
 # guards
@@ -153,31 +153,31 @@ class Submit(BaseTransition[Melding]):
 
 
 class RequestProcessing(BaseBackofficeTransition):
-    to_state = MeldingStates.AWAITING_PROCESSING
+    state_for_transition = MeldingStates.AWAITING_PROCESSING
 
 
 class Plan(BaseBackofficeTransition):
-    to_state = MeldingStates.PLANNED
+    state_for_transition = MeldingStates.PLANNED
 
 
 class Process(BaseBackofficeTransition):
-    to_state = MeldingStates.PROCESSING
+    state_for_transition = MeldingStates.PROCESSING
 
 
 class Complete(BaseBackofficeTransition):
-    to_state = MeldingStates.COMPLETED
+    state_for_transition = MeldingStates.COMPLETED
 
 
 class RequestReopen(BaseBackofficeTransition):
-    to_state = MeldingStates.REOPEN_REQUESTED
+    state_for_transition = MeldingStates.REOPEN_REQUESTED
 
 
 class Reopen(BaseBackofficeTransition):
-    to_state = MeldingStates.REOPENED
+    state_for_transition = MeldingStates.REOPENED
 
 
 class Cancel(BaseBackofficeTransition):
-    to_state = MeldingStates.CANCELED
+    state_for_transition = MeldingStates.CANCELED
 
 
 # state machine
