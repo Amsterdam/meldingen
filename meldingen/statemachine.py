@@ -15,6 +15,7 @@ class BaseBackofficeTransition(BaseTransition[Melding], metaclass=ABCMeta):
     def from_states(self) -> list[str]:
         return ["MeldingStates." + s.name for s in get_all_backoffice_states()]
 
+    @property
     def to_state(self) -> str:
         return self.state_for_transition
 
