@@ -14,11 +14,16 @@ from meldingen_core.actions.melding import (
     MelderMeldingListQuestionsAnswersAction,
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
+    MeldingCancelAction,
     MeldingCompleteAction,
     MeldingContactInfoAddedAction,
     MeldingCreateAction,
     MeldingListQuestionsAnswersAction,
+    MeldingPlanAction,
     MeldingProcessAction,
+    MeldingReopenAction,
+    MeldingRequestProcessingAction,
+    MeldingRequestReopenAction,
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
 )
@@ -195,13 +200,18 @@ from meldingen.statemachine import (
     AddAttachments,
     AddContactInfo,
     AnswerQuestions,
+    Cancel,
     Classify,
     Complete,
     HasAnsweredRequiredQuestions,
     HasLocation,
     MeldingStateMachine,
     MpFsmMeldingStateMachine,
+    Plan,
     Process,
+    Reopen,
+    RequestProcessing,
+    RequestReopen,
     Submit,
     SubmitLocation,
 )
@@ -370,7 +380,12 @@ def melding_state_machine(
                 MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
                 MeldingTransitions.ADD_CONTACT_INFO: AddContactInfo(),
                 MeldingTransitions.SUBMIT: Submit(),
+                MeldingTransitions.REQUEST_PROCESSING: RequestProcessing(),
                 MeldingTransitions.PROCESS: Process(),
+                MeldingTransitions.PLAN: Plan(),
+                MeldingTransitions.CANCEL: Cancel(),
+                MeldingTransitions.REQUEST_REOPEN: RequestReopen(),
+                MeldingTransitions.REOPEN: Reopen(),
                 MeldingTransitions.COMPLETE: Complete(),
             }
         )
@@ -485,11 +500,46 @@ def melding_add_attachments_action(
     return MeldingAddAttachmentsAction(state_machine, repository, token_verifier)
 
 
+def melding_request_processing_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> MeldingRequestProcessingAction[Melding]:
+    return MeldingRequestProcessingAction(state_machine, repository)
+
+
 def melding_process_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingProcessAction[Melding]:
     return MeldingProcessAction(state_machine, repository)
+
+
+def melding_plan_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> MeldingPlanAction[Melding]:
+    return MeldingPlanAction(state_machine, repository)
+
+
+def melding_request_reopen_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> MeldingRequestReopenAction[Melding]:
+    return MeldingRequestReopenAction(state_machine, repository)
+
+
+def melding_reopen_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> MeldingReopenAction[Melding]:
+    return MeldingReopenAction(state_machine, repository)
+
+
+def melding_cancel_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> MeldingCancelAction[Melding]:
+    return MeldingCancelAction(state_machine, repository)
 
 
 def melding_submit_location_action(
