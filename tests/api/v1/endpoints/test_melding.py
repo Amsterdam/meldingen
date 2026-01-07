@@ -1634,13 +1634,17 @@ class BaseMeldingBackofficeTransitionTest(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.COMPLETED)], indirect=True
+        ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.NEW)], indirect=True
     )
     async def test_wrong_state(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
         response = await client.request(
             self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
         )
-        assert response.status_code == HTTP_200_OK
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+
+        assert body.get("detail") == "Transition not allowed from current state"
 
 
 class TestMeldingRequestProcessing(BaseMeldingBackofficeTransitionTest):

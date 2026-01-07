@@ -13,7 +13,7 @@ class BaseBackofficeTransition(BaseTransition[Melding], metaclass=ABCMeta):
 
     @property
     def from_states(self) -> list[str]:
-        return ["MeldingStates." + s.name for s in get_all_backoffice_states()]
+        return [s for s in get_all_backoffice_states()]
 
     @property
     def to_state(self) -> str:
