@@ -49,6 +49,6 @@ stateDiagram-v2
     COMPLETED  --> [*]
     CANCELED  --> [*]
     
-   state COMPLETED <<end>>
+    state COMPLETED <<end>>
     state CANCELED <<end>>
 ```
