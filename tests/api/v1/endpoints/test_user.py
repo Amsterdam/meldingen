@@ -63,6 +63,84 @@ class TestUserCreate(BaseUnauthorizedTest):
         assert violation.get("msg") == "String should have at least 3 characters"
 
     @pytest.mark.anyio
+    async def test_create_user_email_max_length_violation(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME),
+            json={
+                "username": "meldingen_user",
+                "email": "a" * 1000 + "@example.com",
+            },
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        data = response.json()
+        detail = data.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "value_error"
+        assert violation.get("loc") == ["body", "email"]
+        assert (
+            violation.get("msg")
+            == "value is not a valid email address: The email address is too long (758 characters too many)."
+        )
+
+    @pytest.mark.anyio
+    async def test_create_user_email_two_at_signs_violation(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME),
+            json={
+                "username": "meldingen_user",
+                "email": "user@@example.com",
+            },
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        data = response.json()
+        detail = data.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "value_error"
+        assert violation.get("loc") == ["body", "email"]
+        assert (
+            violation.get("msg")
+            == "value is not a valid email address: The part after the @-sign contains invalid characters: '@'."
+        )
+
+    @pytest.mark.anyio
+    async def test_create_user_email_whitespace_violation(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME),
+            json={
+                "username": "meldingen_user",
+                "email": "user @example.com",
+            },
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        data = response.json()
+        detail = data.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "value_error"
+        assert violation.get("loc") == ["body", "email"]
+        assert (
+            violation.get("msg")
+            == "value is not a valid email address: The email address contains invalid characters before the @-sign: SPACE."
+        )
+
+    @pytest.mark.anyio
     async def test_create_user_email_violation(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME), json={"username": "meldingen_user", "email": "user.example.com"}
