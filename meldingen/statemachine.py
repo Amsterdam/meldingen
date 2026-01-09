@@ -164,7 +164,13 @@ class Plan(BaseTransition[Melding]):
 class Process(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.SUBMITTED, MeldingStates.AWAITING_PROCESSING, MeldingStates.PLANNED, MeldingStates.CANCELED, MeldingStates.REOPENED]
+        return [
+            MeldingStates.SUBMITTED,
+            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PLANNED,
+            MeldingStates.CANCELED,
+            MeldingStates.REOPENED,
+        ]
 
     @property
     def to_state(self) -> str:
@@ -174,7 +180,14 @@ class Process(BaseTransition[Melding]):
 class Complete(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.SUBMITTED, MeldingStates.AWAITING_PROCESSING, MeldingStates.PROCESSING, MeldingStates.PLANNED, MeldingStates.REOPEN_REQUESTED, MeldingStates.REOPENED]
+        return [
+            MeldingStates.SUBMITTED,
+            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PROCESSING,
+            MeldingStates.PLANNED,
+            MeldingStates.REOPEN_REQUESTED,
+            MeldingStates.REOPENED,
+        ]
 
     @property
     def to_state(self) -> str:
@@ -194,7 +207,7 @@ class RequestReopen(BaseTransition[Melding]):
 class Reopen(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.REOPEN_REQUESTED, MeldingStates.REOPENED]
+        return [MeldingStates.REOPEN_REQUESTED, MeldingStates.COMPLETED]
 
     @property
     def to_state(self) -> str:
@@ -204,7 +217,14 @@ class Reopen(BaseTransition[Melding]):
 class Cancel(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.SUBMITTED, MeldingStates.AWAITING_PROCESSING, MeldingStates.PROCESSING, MeldingStates.PLANNED, MeldingStates.REOPEN_REQUESTED, MeldingStates.REOPENED]
+        return [
+            MeldingStates.SUBMITTED,
+            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PROCESSING,
+            MeldingStates.PLANNED,
+            MeldingStates.REOPEN_REQUESTED,
+            MeldingStates.REOPENED,
+        ]
 
     @property
     def to_state(self) -> str:
