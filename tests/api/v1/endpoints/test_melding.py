@@ -1666,10 +1666,46 @@ class TestMeldingRequestReopen(BaseMeldingBackofficeTransitionTest):
     route_name = "melding:request-reopen"
     target_state = MeldingStates.REOPEN_REQUESTED
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.COMPLETED)], indirect=True
+    )
+    async def test_successful_transition(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.request(
+            self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("state") == self.target_state
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+
 
 class TestMeldingReopen(BaseMeldingBackofficeTransitionTest):
     route_name = "melding:reopen"
     target_state = MeldingStates.REOPENED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [("Er ligt poep op de stoep.", MeldingStates.REOPEN_REQUESTED)],
+        indirect=True,
+    )
+    async def test_successful_transition(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.request(
+            self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("state") == self.target_state
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class TestMeldingCancel(BaseMeldingBackofficeTransitionTest):
@@ -4808,9 +4844,7 @@ class TestMeldingGetNextPossibleStates(BaseUnauthorizedTest):
 
         body = response.json()
 
-        assert body == {
-            "states": ["request_processing", "process", "plan", "cancel", "request_reopen", "reopen", "complete"]
-        }
+        assert body == {"states": ["request_processing", "process", "plan", "cancel", "complete"]}
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_state"], [[MeldingStates.LOCATION_SUBMITTED]])
