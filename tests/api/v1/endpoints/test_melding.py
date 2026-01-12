@@ -4473,11 +4473,13 @@ class TestMeldingSubmit(BaseTokenAuthenticationTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_state", "melding_token", "melding_email", "mailpit_api"],
-        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com", "http://mailpit:8025")],
-        [(MeldingStates.PLANNED, "supersecrettoken", "melder@example.com", "http://mailpit:8025")],
-        [(MeldingStates.AWAITING_PROCESSING, "supersecrettoken", "melder@example.com", "http://mailpit:8025")],
-        [(MeldingStates.PROCESSING, "supersecrettoken", "melder@example.com", "http://mailpit:8025")],
-        [(MeldingStates.REOPENED, "supersecrettoken", "melder@example.com", "http://mailpit:8025")],
+        [
+            (MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+            (MeldingStates.PLANNED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+            (MeldingStates.AWAITING_PROCESSING, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+            (MeldingStates.PROCESSING, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+            (MeldingStates.REOPENED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+        ],
         indirect=True,
     )
     async def test_submit_melding(self, app: FastAPI, client: AsyncClient, melding: Melding, mailpit_api: API) -> None:
