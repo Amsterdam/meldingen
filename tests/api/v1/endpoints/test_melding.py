@@ -2596,9 +2596,9 @@ class TestMeldingQuestionAnswer:
         [("supersecrettoken",)],
     )
     async def test_create_invalid_answer_without_type(
-        self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding_with_classification: Melding
     ) -> None:
-        components = await form_with_radio_component.awaitable_attrs.components
+        components = await form_with_time_component.awaitable_attrs.components
         assert len(components) == 1
 
         panel = components[0]
@@ -2615,7 +2615,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json=[{"value": "option_2", "label": "Option 2"}],
+            json={"time": "10:30"}
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2626,7 +2626,7 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("msg") == "Unable to extract tag using discriminator 'type'"
         assert detail[0].get("type") == "union_tag_not_found"
         assert detail[0].get("loc") == ["body"]
-        assert detail[0].get("input") == [{"value": "option_2", "label": "Option 2"}]
+        assert detail[0].get("input") == {'time': '10:30'}
 
     @pytest.mark.parametrize(
         ["melding_token"],
