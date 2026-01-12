@@ -1897,7 +1897,7 @@ class TestMeldingQuestionAnswer:
         assert isinstance(question, Question)
 
         text = "dit is het antwoord op de vraag"
-        data = {"text":  text, "type": AnswerTypeEnum.text}
+        data = {"text": text, "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -1953,7 +1953,7 @@ class TestMeldingQuestionAnswer:
         await db_session.delete(panel_components[0])
         await db_session.commit()
 
-        data = {"text": "dit is het antwoord op de vraag", "type":  AnswerTypeEnum.text}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -2551,7 +2551,7 @@ class TestMeldingQuestionAnswer:
         assert len(detail) == 1
         assert detail[0].get("msg") == "Field required"
         assert detail[0].get("type") == "missing"
-        assert detail[0].get("loc") == ['body', 'value_label', 'values_and_labels']
+        assert detail[0].get("loc") == ["body", "value_label", "values_and_labels"]
 
     @pytest.mark.parametrize(
         ["melding_token"],
@@ -2615,7 +2615,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={[{"value": "option_2", "label": "Option 2"}]},
+            json=[{"value": "option_2", "label": "Option 2"}],
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2627,7 +2627,6 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("type") == "union_tag_not_found"
         assert detail[0].get("loc") == ["body"]
         assert detail[0].get("input") == [{"value": "option_2", "label": "Option 2"}]
-
 
     @pytest.mark.parametrize(
         ["melding_token"],
@@ -2661,7 +2660,10 @@ class TestMeldingQuestionAnswer:
         body = response.json()
         detail = body.get("detail")
         assert len(detail) == 1
-        assert detail[0].get("msg") == f"Given answer type {AnswerTypeEnum.time} does not match expected type {AnswerTypeEnum.value_label}"
+        assert (
+            detail[0].get("msg")
+            == f"Given answer type {AnswerTypeEnum.time} does not match expected type {AnswerTypeEnum.value_label}"
+        )
 
     @pytest.mark.parametrize(
         ["melding_token"],
@@ -2733,7 +2735,10 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"date": {"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"}, "type": AnswerTypeEnum.value_label},
+            json={
+                "date": {"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"},
+                "type": AnswerTypeEnum.value_label,
+            },
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2746,7 +2751,7 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("loc") == ["body", "value_label", "values_and_labels"]
 
 
-class TestMeldingUpdateAnswer:
+class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
     def get_route_name(self) -> str:
         return "melding:update-answer"
 
@@ -2754,7 +2759,7 @@ class TestMeldingUpdateAnswer:
         return "PATCH"
 
     def get_json(self) -> dict[str, Any] | None:
-        return {"text": "This is the answer"}
+        return {"text": "This is the answer", "type": AnswerTypeEnum.text}
 
     def get_extra_path_params(self) -> dict[str, Any]:
         return {"answer_id": 123}
@@ -2764,56 +2769,56 @@ class TestMeldingUpdateAnswer:
     Unless we make the token authentication also a dependency instead of part of the action. 
     """
 
-    @pytest.mark.anyio
-    async def test_token_missing(self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding) -> None:
-        answers = await melding_with_text_answers.awaitable_attrs.answers
-
-        response = await client.request(
-            self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id, answer_id=answers[0].id),
-            json=self.get_json(),
-        )
-
-        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
-
-        body = response.json()
-
-        detail = body.get("detail")
-        assert len(detail) == 1
-        assert detail[0].get("type") == "missing"
-        assert detail[0].get("loc") == ["query", "token"]
-        assert detail[0].get("msg") == "Field required"
-
-    @pytest.mark.anyio
-    async def test_token_invalid(self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding) -> None:
-        answers = await melding_with_text_answers.awaitable_attrs.answers
-
-        response = await client.request(
-            self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id, answer_id=answers[0].id),
-            params={"token": ""},
-            json=self.get_json(),
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-
-    @pytest.mark.anyio
-    @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
-        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
-        indirect=True,
-    )
-    async def test_token_expired(self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding) -> None:
-        answers = await melding_with_text_answers.awaitable_attrs.answers
-
-        response = await client.request(
-            self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id, answer_id=answers[0].id),
-            params={"token": "supersecuretoken"},
-            json=self.get_json(),
-        )
-
-        assert response.status_code == HTTP_401_UNAUTHORIZED
+    # @pytest.mark.anyio
+    # async def test_token_missing(self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding) -> None:
+    #     answers = await melding_with_text_answers.awaitable_attrs.answers
+    #
+    #     response = await client.request(
+    #         self.get_method(),
+    #         app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id, answer_id=answers[0].id),
+    #         json=self.get_json(),
+    #     )
+    #
+    #     assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+    #
+    #     body = response.json()
+    #
+    #     detail = body.get("detail")
+    #     assert len(detail) == 1
+    #     assert detail[0].get("type") == "missing"
+    #     assert detail[0].get("loc") == ["query", "token"]
+    #     assert detail[0].get("msg") == "Field required"
+    #
+    # @pytest.mark.anyio
+    # async def test_token_invalid(self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding) -> None:
+    #     answers = await melding_with_text_answers.awaitable_attrs.answers
+    #
+    #     response = await client.request(
+    #         self.get_method(),
+    #         app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id, answer_id=answers[0].id),
+    #         params={"token": ""},
+    #         json=self.get_json(),
+    #     )
+    #
+    #     assert response.status_code == HTTP_401_UNAUTHORIZED
+    #
+    # @pytest.mark.anyio
+    # @pytest.mark.parametrize(
+    #     ["melding_text", "melding_state", "melding_token", "melding_token_expires"],
+    #     [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "PT1H")],
+    #     indirect=True,
+    # )
+    # async def test_token_expired(self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding) -> None:
+    #     answers = await melding_with_text_answers.awaitable_attrs.answers
+    #
+    #     response = await client.request(
+    #         self.get_method(),
+    #         app.url_path_for(self.get_route_name(), melding_id=melding_with_text_answers.id, answer_id=answers[0].id),
+    #         params={"token": "supersecuretoken"},
+    #         json=self.get_json(),
+    #     )
+    #
+    #     assert response.status_code == HTTP_401_UNAUTHORIZED
 
     @pytest.mark.anyio
     async def test_melding_not_found(
@@ -2905,7 +2910,7 @@ class TestMeldingUpdateAnswer:
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"text": "This is another answer"},
+            json={"text": "This is another answer", "type": AnswerTypeEnum.text},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2952,7 +2957,7 @@ class TestMeldingUpdateAnswer:
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"text": "This is another answer"},
+            json={"text": "This is another answer", "type": AnswerTypeEnum.text},
         )
 
         assert response.status_code == HTTP_200_OK
@@ -2997,7 +3002,7 @@ class TestMeldingUpdateAnswer:
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"time": "16:45"},
+            json={"time": "16:45", "type": AnswerTypeEnum.time},
         )
 
         assert response.status_code == HTTP_200_OK
@@ -3045,7 +3050,7 @@ class TestMeldingUpdateAnswer:
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"time": time_value},
+            json={"time": time_value, "type": AnswerTypeEnum.time},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -3091,7 +3096,7 @@ class TestMeldingUpdateAnswer:
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"values_and_labels": new_values_and_labels},
+            json={"values_and_labels": new_values_and_labels, "type": AnswerTypeEnum.value_label},
         )
 
         assert response.status_code == HTTP_200_OK
@@ -3136,7 +3141,7 @@ class TestMeldingUpdateAnswer:
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"time": "10:30"},
+            json={"time": "10:30", "type": AnswerTypeEnum.value_label},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -3184,7 +3189,7 @@ class TestMeldingUpdateAnswer:
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"values_and_labels": new_values_and_labels},
+            json={"values_and_labels": new_values_and_labels, "type": AnswerTypeEnum.value_label},
         )
 
         assert response.status_code == HTTP_200_OK
@@ -3229,7 +3234,7 @@ class TestMeldingUpdateAnswer:
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"text": "invalid-answer-field"},
+            json={"text": "invalid-answer-field", "type": AnswerTypeEnum.value_label},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -3277,7 +3282,7 @@ class TestMeldingUpdateAnswer:
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"values_and_labels": new_values_and_labels},
+            json={"values_and_labels": new_values_and_labels, "type": AnswerTypeEnum.value_label},
         )
 
         assert response.status_code == HTTP_200_OK
@@ -3322,7 +3327,10 @@ class TestMeldingUpdateAnswer:
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"date": {"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"}},
+            json={
+                "date": {"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"},
+                "type": AnswerTypeEnum.value_label,
+            },
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT

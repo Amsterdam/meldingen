@@ -16,6 +16,7 @@ from meldingen.models import (
     BaseFormIoValuesComponent,
     Form,
     FormIoCheckBoxComponent,
+    FormIoComponentToAnswerTypeMap,
     FormIoComponentTypeEnum,
     FormIoComponentValue,
     FormIoDateComponent,
@@ -30,7 +31,7 @@ from meldingen.models import (
     FormIoTimeComponent,
     Melding,
     Question,
-    StaticForm, FormIoComponentToAnswerTypeMap,
+    StaticForm,
 )
 from meldingen.repositories import (
     AnswerRepository,
@@ -292,19 +293,21 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         Create and store an Answer in the database, subject to several conditions:
 
         Conditions:
-        1. The melding must exist.
-        2. The provided token must be valid.
-        3. The melding must be classified.
-        4. The question must exist.
-        5. The question must belong to an existing and active form.
-        6. The provided answer_input must correspond to the question type
+        1. The question must exist
+        2. The provided token must be valid
+        3. The melding must be classified
+        4. The question must belong to an existing and active form.
+        5. The form must have a classification
+        6. The melding classification must be the same as the form classification
+        7. The type of the answer must correspond to the answer type that is expected from the question
+        8. If the question has JSONlogic validation, the answer must pass this validation
         """
         # Question must exist
         question = await self._question_repository.retrieve(question_id)
         if question is None:
             raise NotFoundException()
 
-        # Token must valid
+        # Token must be valid
         melding = await self._token_verifier(melding_id, token)
 
         # Melding must be classified
@@ -316,10 +319,12 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         if form is None:
             raise NotFoundException()
 
+        # Form must have a classification
         form_classification = await form.awaitable_attrs.classification
         if form_classification is None:
             raise NotFoundException()
 
+        # Melding classification must be the same as form classification
         melding_classification = await melding.awaitable_attrs.classification
 
         if melding_classification != form_classification:
@@ -328,17 +333,21 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
                 detail=[{"msg": "Form classification is not the same as melding classification"}],
             )
 
-        # Determine what answer type is expected from the question
+        # The type of the answer must correspond to the answer type that is expected from the question
         form_component = await self._component_repository.find_component_by_question_id(question.id)
         answer_type_from_question = FormIoComponentToAnswerTypeMap.get(FormIoComponentTypeEnum(form_component.type))
 
         if answer_type_from_question != answer_input.type:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
-                detail=[{"msg": f"Given answer type {answer_input.type} does not match expected type {answer_type_from_question}"}],
+                detail=[
+                    {
+                        "msg": f"Given answer type {answer_input.type} does not match expected type {answer_type_from_question}"
+                    }
+                ],
             )
 
-        # Validate JSONlogic on TextAnswerInput
+        # Validate JSONlogic on TextAnswerInput only
         if form_component.jsonlogic is not None and isinstance(answer_input, TextAnswerInput):
             try:
                 self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.text})
@@ -373,12 +382,24 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
         self._jsonlogic_validate = jsonlogic_validator
 
     async def __call__(self, melding_id: int, token: str, answer_id: int, answer_input: AnswerInputUnion) -> Answer:
+        """
+        Conditions:
+        1. The provided token must be valid
+        2. The answer must exist
+        3. The answer must belong to the melding identified by melding_id
+        4. The type of the answer_input must correspond to the type of the existing answer
+        5. If the question has JSONlogic validation, the updated answer must pass this validation
+        """
+
+        # Validate token
         melding = await self._token_verifier(melding_id, token)
 
+        # Validate answer exists
         answer = await self._repository.retrieve(answer_id)
         if answer is None:
             raise NotFoundException("Answer not found")
 
+        # Validate answer belongs to melding
         answer_melding = await answer.awaitable_attrs.melding
         if answer_melding != melding:
             raise HTTPException(
@@ -386,6 +407,16 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
                 detail=[{"msg": "Answer does not belong to melding"}],
             )
 
+        # Validate answer type matches
+        if answer.type != answer_input.type:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail=[
+                    {"msg": f"Given answer type {answer_input.type} does not match existing answer type {answer.type}"}
+                ],
+            )
+
+        # Validate JSONlogic on TextAnswerInput only
         form_component = await self._component_repository.find_component_by_question_id(answer.question_id)
 
         if form_component.jsonlogic is not None and isinstance(answer_input, TextAnswerInput):

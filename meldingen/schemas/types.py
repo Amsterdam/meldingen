@@ -11,6 +11,7 @@ from pydantic_extra_types.phone_numbers import PhoneNumber as PydanticPhoneNumbe
 
 from meldingen.config import settings
 
+
 class GeoJson(GeoJsonPydanticFeature[Point, dict[str, Any] | BaseModel]): ...
 
 
@@ -39,14 +40,6 @@ class FormIOConditional(BaseModel):
     show: bool | None
     when: Annotated[str, StringConstraints(strip_whitespace=True)] | None
     eq: str | int | float | bool | None
-
-
-class InvalidDateFormatException(Exception):
-    """Raised when a date is not in the expected format."""
-
-    def __init__(self, msg: str, input: dict[str, Any]) -> None:
-        self.msg = msg
-        self.input = input
 
 
 class DateAnswerObject(BaseModel):
