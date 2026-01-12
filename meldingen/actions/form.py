@@ -13,7 +13,6 @@ from meldingen.factories import AnswerFactory
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
 from meldingen.models import (
     Answer,
-    AnswerTypeEnum,
     BaseFormIoValuesComponent,
     Form,
     FormIoCheckBoxComponent,
@@ -31,7 +30,7 @@ from meldingen.models import (
     FormIoTimeComponent,
     Melding,
     Question,
-    StaticForm,
+    StaticForm, FormIoComponentToAnswerTypeMap,
 )
 from meldingen.repositories import (
     AnswerRepository,
@@ -298,6 +297,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         3. The melding must be classified.
         4. The question must exist.
         5. The question must belong to an existing and active form.
+        6. The provided answer_input must correspond to the question type
         """
         # Question must exist
         question = await self._question_repository.retrieve(question_id)
@@ -328,7 +328,15 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
                 detail=[{"msg": "Form classification is not the same as melding classification"}],
             )
 
+        # Determine what answer type is expected from the question
         form_component = await self._component_repository.find_component_by_question_id(question.id)
+        answer_type_from_question = FormIoComponentToAnswerTypeMap.get(FormIoComponentTypeEnum(form_component.type))
+
+        if answer_type_from_question != answer_input.type:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail=[{"msg": f"Given answer type {answer_input.type} does not match expected type {answer_type_from_question}"}],
+            )
 
         # Validate JSONlogic on TextAnswerInput
         if form_component.jsonlogic is not None and isinstance(answer_input, TextAnswerInput):

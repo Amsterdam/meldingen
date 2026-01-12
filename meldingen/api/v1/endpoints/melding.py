@@ -697,7 +697,7 @@ async def answer_additional_question(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     question_id: Annotated[int, Path(description="The id of the question.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    answer_input: Annotated[AnswerInputUnion, Depends(resolve_answer_type_through_question_id)],
+    answer_input: AnswerInputUnion,
     action: Annotated[AnswerCreateAction, Depends(melding_answer_create_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutputUnion:
@@ -709,6 +709,12 @@ async def answer_additional_question(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
     except MeldingNotClassifiedException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
+    except InvalidDateFormatException as e:
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
+        ) from e
+
 
     return await produce_output(answer)
 

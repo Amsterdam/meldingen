@@ -11,7 +11,6 @@ from pydantic_extra_types.phone_numbers import PhoneNumber as PydanticPhoneNumbe
 
 from meldingen.config import settings
 
-
 class GeoJson(GeoJsonPydanticFeature[Point, dict[str, Any] | BaseModel]): ...
 
 
@@ -61,15 +60,11 @@ class DateAnswerObject(BaseModel):
     @classmethod
     def validate_converted_date(cls, value: str) -> str:
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
-            raise InvalidDateFormatException(
-                msg="converted_date must be in YYYY-mm-dd format", input={"converted_date": value}
-            )
+            raise ValueError("converted_date must be in YYYY-mm-dd format")
         try:
             datetime.date.fromisoformat(value)
         except ValueError:
-            raise InvalidDateFormatException(
-                msg="converted_date must be in YYYY-mm-dd format", input={"converted_date": value}
-            )
+            raise ValueError("converted_date must be in YYYY-mm-dd format")
         return value
 
 

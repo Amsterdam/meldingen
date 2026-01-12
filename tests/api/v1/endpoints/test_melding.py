@@ -1897,7 +1897,7 @@ class TestMeldingQuestionAnswer:
         assert isinstance(question, Question)
 
         text = "dit is het antwoord op de vraag"
-        data = {"text": text}
+        data = {"text":  text, "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -1953,7 +1953,7 @@ class TestMeldingQuestionAnswer:
         await db_session.delete(panel_components[0])
         await db_session.commit()
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type":  AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -2016,7 +2016,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -2048,7 +2048,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=999, question_id=question.id),
@@ -2079,7 +2079,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
@@ -2107,7 +2107,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
@@ -2146,7 +2146,7 @@ class TestMeldingQuestionAnswer:
         question = await panel_components[0].awaitable_attrs.question
         assert isinstance(question, Question)
 
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
@@ -2196,7 +2196,7 @@ class TestMeldingQuestionAnswer:
         assert isinstance(question, Question)
 
         text = "dit is het antwoord op de vraag"
-        data = {"text": text}
+        data = {"text": text, "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -2218,7 +2218,7 @@ class TestMeldingQuestionAnswer:
         client: AsyncClient,
         melding: Melding,
     ) -> None:
-        data = {"text": "dit is het antwoord op de vraag"}
+        data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=999),
@@ -2229,7 +2229,7 @@ class TestMeldingQuestionAnswer:
         assert response.status_code == HTTP_404_NOT_FOUND
 
         data = response.json()
-        assert data.get("detail") == "Question component not found for question_id 999"
+        assert data.get("detail") == "Not Found"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -2250,7 +2250,7 @@ class TestMeldingQuestionAnswer:
         db_session.add(question)
         await db_session.commit()
 
-        data = {"text": "Ja, dit is een vraag"}
+        data = {"text": "Ja, dit is een vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
             app.url_path_for(
@@ -2263,7 +2263,7 @@ class TestMeldingQuestionAnswer:
         assert response.status_code == HTTP_404_NOT_FOUND
 
         data = response.json()
-        assert data.get("detail") == f"Question component not found for question_id {question.id}"
+        assert data.get("detail") == "Not Found"
 
     @pytest.mark.parametrize(
         ["melding_token", "classification_name"],
@@ -2299,7 +2299,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"time": "16:45"},
+            json={"time": "16:45", "type": AnswerTypeEnum.time},
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -2348,7 +2348,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"time": time_value},
+            json={"time": time_value, "type": AnswerTypeEnum.time},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2384,7 +2384,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"date": date_input},
+            json={"date": date_input, "type": AnswerTypeEnum.date},
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -2420,7 +2420,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"date": "invalid-date-format"},
+            json={"date": "invalid-date-format", "type": AnswerTypeEnum.date},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2428,7 +2428,7 @@ class TestMeldingQuestionAnswer:
         body = response.json()
         detail = body.get("detail")
         assert len(detail) == 1
-        assert detail[0].get("msg") == "Input should be a valid dictionary or instance of DateAnswerObject"
+        assert detail[0].get("msg") == "Input should be a valid dictionary or object to extract fields from"
 
     @pytest.mark.parametrize(
         ["melding_token", "converted_date_input"],
@@ -2467,7 +2467,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"date": date_input},
+            json={"date": date_input, "type": AnswerTypeEnum.date},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2475,9 +2475,9 @@ class TestMeldingQuestionAnswer:
         body = response.json()
         detail = body.get("detail")
         assert len(detail) == 1
-        assert detail[0].get("msg") == "converted_date must be in YYYY-mm-dd format"
+        assert detail[0].get("msg") == "Value error, converted_date must be in YYYY-mm-dd format"
         assert detail[0].get("type") == "value_error"
-        assert detail[0].get("input") == {"converted_date": converted_date_input}
+        assert detail[0].get("input") == converted_date_input
 
     @pytest.mark.parametrize(
         ["melding_token"],
@@ -2505,7 +2505,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"values_and_labels": select_input},
+            json={"values_and_labels": select_input, "type": AnswerTypeEnum.value_label},
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -2541,7 +2541,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"text": "invalid-answer-field"},
+            json={"text": "invalid-answer-field", "type": AnswerTypeEnum.value_label},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2551,7 +2551,7 @@ class TestMeldingQuestionAnswer:
         assert len(detail) == 1
         assert detail[0].get("msg") == "Field required"
         assert detail[0].get("type") == "missing"
-        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+        assert detail[0].get("loc") == ['body', 'value_label', 'values_and_labels']
 
     @pytest.mark.parametrize(
         ["melding_token"],
@@ -2579,7 +2579,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"values_and_labels": radio_input},
+            json={"values_and_labels": radio_input, "type": AnswerTypeEnum.value_label},
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -2595,7 +2595,7 @@ class TestMeldingQuestionAnswer:
         ["melding_token"],
         [("supersecrettoken",)],
     )
-    async def test_create_radio_component_answer_invalid(
+    async def test_create_invalid_answer_without_type(
         self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
     ) -> None:
         components = await form_with_radio_component.awaitable_attrs.components
@@ -2615,7 +2615,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"time": "10:30"},
+            json={[{"value": "option_2", "label": "Option 2"}]},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2623,9 +2623,45 @@ class TestMeldingQuestionAnswer:
         body = response.json()
         detail = body.get("detail")
         assert len(detail) == 1
-        assert detail[0].get("msg") == "Field required"
-        assert detail[0].get("type") == "missing"
-        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+        assert detail[0].get("msg") == "Unable to extract tag using discriminator 'type'"
+        assert detail[0].get("type") == "union_tag_not_found"
+        assert detail[0].get("loc") == ["body"]
+        assert detail[0].get("input") == [{"value": "option_2", "label": "Option 2"}]
+
+
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
+    async def test_create_answer_non_matching_answer_types(
+        self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
+    ) -> None:
+        components = await form_with_radio_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"time": "10:30", "type": AnswerTypeEnum.time},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == f"Given answer type {AnswerTypeEnum.time} does not match expected type {AnswerTypeEnum.value_label}"
 
     @pytest.mark.parametrize(
         ["melding_token"],
@@ -2657,7 +2693,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"values_and_labels": checkbox_input},
+            json={"values_and_labels": checkbox_input, "type": AnswerTypeEnum.value_label},
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -2697,7 +2733,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"date": {"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"}},
+            json={"date": {"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"}, "type": AnswerTypeEnum.value_label},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2707,7 +2743,7 @@ class TestMeldingQuestionAnswer:
         assert len(detail) == 1
         assert detail[0].get("msg") == "Field required"
         assert detail[0].get("type") == "missing"
-        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+        assert detail[0].get("loc") == ["body", "value_label", "values_and_labels"]
 
 
 class TestMeldingUpdateAnswer:
@@ -3110,7 +3146,7 @@ class TestMeldingUpdateAnswer:
         assert len(detail) == 1
         assert detail[0].get("msg") == "Field required"
         assert detail[0].get("type") == "missing"
-        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+        assert detail[0].get("loc") == ["body", "value_label", "values_and_labels"]
 
     @pytest.mark.parametrize(
         ["melding_token", "classification_name"],
@@ -3203,7 +3239,7 @@ class TestMeldingUpdateAnswer:
         assert len(detail) == 1
         assert detail[0].get("msg") == "Field required"
         assert detail[0].get("type") == "missing"
-        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+        assert detail[0].get("loc") == ["body", "value_label", "values_and_labels"]
 
     @pytest.mark.parametrize(
         ["melding_token", "classification_name"],
@@ -3296,7 +3332,7 @@ class TestMeldingUpdateAnswer:
         assert len(detail) == 1
         assert detail[0].get("msg") == "Field required"
         assert detail[0].get("type") == "missing"
-        assert detail[0].get("loc") == ["value_label", "values_and_labels"]
+        assert detail[0].get("loc") == ["body", "value_label", "values_and_labels"]
 
 
 class TestMeldingUploadAttachment:
