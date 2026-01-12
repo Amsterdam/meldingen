@@ -134,7 +134,7 @@ class AddContactInfo(BaseTransition[Melding]):
 class Submit(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.CONTACT_INFO_ADDED]
+        return [MeldingStates.CONTACT_INFO_ADDED, MeldingStates.PLANNED, MeldingStates.AWAITING_PROCESSING, MeldingStates.PROCESSING, MeldingStates.REOPENED]
 
     @property
     def to_state(self) -> str:
@@ -154,7 +154,7 @@ class RequestProcessing(BaseTransition[Melding]):
 class Plan(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.SUBMITTED]
+        return [MeldingStates.SUBMITTED, MeldingStates.AWAITING_PROCESSING]
 
     @property
     def to_state(self) -> str:
