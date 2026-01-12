@@ -15,12 +15,12 @@ It also allows the backend to save more metadata, such as the converted date for
 This required the following changes: 
 1. Creation of new Answer model subclasses (e.g., TextAnswer, DateAnswer, TimeAnswer, ValueLabelAnswer). Each model requires different fields to store the answer, but they are stored in the same database table. Through polymorphic identities on the type column, the backend determines which subclass to create. 
 2. The frontend has to determine what shape the answer has based on the FormIOQuestionComponent and send the correct data structure to the backend. For example:  
-   1. TextAnswer: `{"text": "This is my answer" }`
-   2. TimeAnswer: `{"time": "14:30" }`
-   3. DateAnswer: `{"date": {"value": "day - 1", label: "Yesterday the 23rd of December", converted_date: "2025-12-23"}}`
-   4. ValueLabelAnswer: `{"values_and_labels": [{"value": "option_1", "label": "Option 1" }, {"value": "option_3", "label": "Option 3" }]`
-3. The backend derives the AnswerType based on the question component type (for new answers) or based on the stored answer data (for existing answers) and uses the correct model for validation and storage. This is done in a `Depends()` step, instead of through Pydantic before the request hits the path operation. We do this because we want the backend to find out what type should be given, before it starts to validate the incoming request body. 
-   1. This only works if the component type which is being answered is mapped to an answer type. The only exception is the panel component type which doesn't hold a question. 
+   1. TextAnswer: `{"text": "This is my answer", "type: "text" }`
+   2. TimeAnswer: `{"time": "14:30" , "type": "time" }`
+   3. DateAnswer: `{"date": {"value": "day - 1", label: "Yesterday the 23rd of December", converted_date: "2025-12-23"}, "type": "date" }`
+   4. ValueLabelAnswer: `{"values_and_labels": [{"value": "option_1", "label": "Option 1" }, {"value": "option_3", "label": "Option 3" }, ], "type": "value_label" }`
+3. The backend derives the AnswerType based on the question component type (for new answers) or based on the stored answer data (for existing answers) and uses the correct model for validation and storage.
+   1. This only works if the question component type which is being answered is mapped to an answer type. The only exception is the panel component type which doesn't hold a question. 
        - See: `FormIoComponentToAnswerTypeMap` in models.py
 
 
