@@ -1598,7 +1598,6 @@ class TestMeldingSubmitLocation(BaseTokenAuthenticationTest):
 class BaseMeldingBackofficeTransitionTest(BaseUnauthorizedTest):
     route_name: str
     target_state: MeldingStates
-    initial_states: list[MeldingStates]
 
     def get_route_name(self) -> str:
         return self.route_name
