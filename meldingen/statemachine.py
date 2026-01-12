@@ -8,18 +8,6 @@ from meldingen.models import Melding
 from meldingen.repositories import AnswerRepository, FormRepository
 
 
-class BaseBackofficeTransition(BaseTransition[Melding], metaclass=ABCMeta):
-    state_for_transition: str
-
-    @property
-    def from_states(self) -> list[str]:
-        return [s for s in get_all_backoffice_states()]
-
-    @property
-    def to_state(self) -> str:
-        return self.state_for_transition
-
-
 # guards
 class HasLocation(BaseGuard[Melding]):
     async def __call__(self, obj: Melding) -> bool:
@@ -146,39 +134,107 @@ class AddContactInfo(BaseTransition[Melding]):
 class Submit(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.CONTACT_INFO_ADDED] + ["MeldingStates." + s.name for s in get_all_backoffice_states()]
+        return [
+            MeldingStates.CONTACT_INFO_ADDED,
+            MeldingStates.PLANNED,
+            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PROCESSING,
+            MeldingStates.REOPENED,
+        ]
 
     @property
     def to_state(self) -> str:
         return MeldingStates.SUBMITTED
 
 
-class RequestProcessing(BaseBackofficeTransition):
-    state_for_transition = MeldingStates.AWAITING_PROCESSING
+class RequestProcessing(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.SUBMITTED]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.AWAITING_PROCESSING
 
 
-class Plan(BaseBackofficeTransition):
-    state_for_transition = MeldingStates.PLANNED
+class Plan(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.SUBMITTED, MeldingStates.AWAITING_PROCESSING]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.PLANNED
 
 
-class Process(BaseBackofficeTransition):
-    state_for_transition = MeldingStates.PROCESSING
+class Process(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [
+            MeldingStates.SUBMITTED,
+            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PLANNED,
+            MeldingStates.CANCELED,
+            MeldingStates.REOPENED,
+        ]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.PROCESSING
 
 
-class Complete(BaseBackofficeTransition):
-    state_for_transition = MeldingStates.COMPLETED
+class Complete(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [
+            MeldingStates.SUBMITTED,
+            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PROCESSING,
+            MeldingStates.PLANNED,
+            MeldingStates.REOPEN_REQUESTED,
+            MeldingStates.REOPENED,
+        ]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.COMPLETED
 
 
-class RequestReopen(BaseBackofficeTransition):
-    state_for_transition = MeldingStates.REOPEN_REQUESTED
+class RequestReopen(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.COMPLETED]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.REOPEN_REQUESTED
 
 
-class Reopen(BaseBackofficeTransition):
-    state_for_transition = MeldingStates.REOPENED
+class Reopen(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [MeldingStates.REOPEN_REQUESTED, MeldingStates.COMPLETED]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.REOPENED
 
 
-class Cancel(BaseBackofficeTransition):
-    state_for_transition = MeldingStates.CANCELED
+class Cancel(BaseTransition[Melding]):
+    @property
+    def from_states(self) -> list[str]:
+        return [
+            MeldingStates.SUBMITTED,
+            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PROCESSING,
+            MeldingStates.PLANNED,
+            MeldingStates.REOPEN_REQUESTED,
+            MeldingStates.REOPENED,
+        ]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.CANCELED
 
 
 # state machine

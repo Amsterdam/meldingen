@@ -47,6 +47,7 @@ from meldingen.models import (
     ValueLabelAnswer,
 )
 from meldingen.repositories import MeldingRepository
+from meldingen.statemachine import Process
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -1597,7 +1598,6 @@ class TestMeldingSubmitLocation(BaseTokenAuthenticationTest):
 class BaseMeldingBackofficeTransitionTest(BaseUnauthorizedTest):
     route_name: str
     target_state: MeldingStates
-    initial_state: MeldingStates = MeldingStates.SUBMITTED
 
     def get_route_name(self) -> str:
         return self.route_name
@@ -1608,13 +1608,7 @@ class BaseMeldingBackofficeTransitionTest(BaseUnauthorizedTest):
     def get_path_params(self) -> dict[str, Any]:
         return {"melding_id": 1}
 
-    @pytest.mark.anyio
-    @pytest.mark.parametrize(
-        ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.SUBMITTED)], indirect=True
-    )
-    async def test_successful_transition(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
-    ) -> None:
+    async def run_transition_test(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
         response = await client.request(
             self.get_method(), app.url_path_for(self.get_route_name(), melding_id=melding.id)
         )
@@ -1651,30 +1645,119 @@ class TestMeldingRequestProcessing(BaseMeldingBackofficeTransitionTest):
     route_name = "melding:request-processing"
     target_state = MeldingStates.AWAITING_PROCESSING
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [
+            ("Er ligt poep.", MeldingStates.SUBMITTED),
+        ],
+        indirect=True,
+    )
+    async def test_successful_transition(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        await super().run_transition_test(app, client, auth_user, melding)
+
 
 class TestMeldingProcess(BaseMeldingBackofficeTransitionTest):
     route_name = "melding:process"
     target_state = MeldingStates.PROCESSING
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [
+            ("Er ligt poep.", MeldingStates.SUBMITTED),
+            ("Er ligt poep.", MeldingStates.AWAITING_PROCESSING),
+            ("Er ligt poep.", MeldingStates.PLANNED),
+            ("Er ligt poep.", MeldingStates.CANCELED),
+            ("Er ligt poep.", MeldingStates.REOPENED),
+        ],
+        indirect=True,
+    )
+    async def test_successful_transition(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        await super().run_transition_test(app, client, auth_user, melding)
 
 
 class TestMeldingPlan(BaseMeldingBackofficeTransitionTest):
     route_name = "melding:plan"
     target_state = MeldingStates.PLANNED
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [
+            ("Er ligt poep.", MeldingStates.SUBMITTED),
+            ("Er ligt poep.", MeldingStates.AWAITING_PROCESSING),
+        ],
+        indirect=True,
+    )
+    async def test_successful_transition(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        await super().run_transition_test(app, client, auth_user, melding)
+
 
 class TestMeldingRequestReopen(BaseMeldingBackofficeTransitionTest):
     route_name = "melding:request-reopen"
     target_state = MeldingStates.REOPEN_REQUESTED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [
+            ("Er ligt poep.", MeldingStates.COMPLETED),
+        ],
+        indirect=True,
+    )
+    async def test_successful_transition(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        await super().run_transition_test(app, client, auth_user, melding)
 
 
 class TestMeldingReopen(BaseMeldingBackofficeTransitionTest):
     route_name = "melding:reopen"
     target_state = MeldingStates.REOPENED
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [
+            ("Er ligt poep.", MeldingStates.REOPEN_REQUESTED),
+            ("Er ligt poep.", MeldingStates.COMPLETED),
+        ],
+        indirect=True,
+    )
+    async def test_successful_transition(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        await super().run_transition_test(app, client, auth_user, melding)
+
 
 class TestMeldingCancel(BaseMeldingBackofficeTransitionTest):
     route_name = "melding:cancel"
     target_state = MeldingStates.CANCELED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [
+            ("Er ligt poep.", MeldingStates.SUBMITTED),
+            ("Er ligt poep.", MeldingStates.AWAITING_PROCESSING),
+            ("Er ligt poep.", MeldingStates.PROCESSING),
+            ("Er ligt poep.", MeldingStates.PLANNED),
+            ("Er ligt poep.", MeldingStates.REOPEN_REQUESTED),
+            ("Er ligt poep.", MeldingStates.REOPENED),
+        ],
+        indirect=True,
+    )
+    async def test_successful_transition(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        await super().run_transition_test(app, client, auth_user, melding)
 
 
 class TestMeldingComplete(BaseUnauthorizedTest):
@@ -1689,7 +1772,16 @@ class TestMeldingComplete(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_text", "melding_state"], [("Er ligt poep op de stoep.", MeldingStates.PROCESSING)], indirect=True
+        ["melding_text", "melding_state"],
+        [
+            ("Er ligt poep op de stoep.", MeldingStates.SUBMITTED),
+            ("Er ligt poep op de stoep.", MeldingStates.AWAITING_PROCESSING),
+            ("Er ligt poep op de stoep.", MeldingStates.PROCESSING),
+            ("Er ligt poep op de stoep.", MeldingStates.PLANNED),
+            ("Er ligt poep op de stoep.", MeldingStates.REOPEN_REQUESTED),
+            ("Er ligt poep op de stoep.", MeldingStates.REOPENED),
+        ],
+        indirect=True,
     )
     async def test_complete_melding(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
         response = await client.request(
@@ -4380,7 +4472,13 @@ class TestMeldingSubmit(BaseTokenAuthenticationTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_state", "melding_token", "melding_email", "mailpit_api"],
-        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com", "http://mailpit:8025")],
+        [
+            (MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+            (MeldingStates.PLANNED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+            (MeldingStates.AWAITING_PROCESSING, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+            (MeldingStates.PROCESSING, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+            (MeldingStates.REOPENED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+        ],
         indirect=True,
     )
     async def test_submit_melding(self, app: FastAPI, client: AsyncClient, melding: Melding, mailpit_api: API) -> None:
@@ -4808,9 +4906,7 @@ class TestMeldingGetNextPossibleStates(BaseUnauthorizedTest):
 
         body = response.json()
 
-        assert body == {
-            "states": ["request_processing", "process", "plan", "cancel", "request_reopen", "reopen", "complete"]
-        }
+        assert body == {"states": ["request_processing", "process", "plan", "cancel", "complete"]}
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_state"], [[MeldingStates.LOCATION_SUBMITTED]])
