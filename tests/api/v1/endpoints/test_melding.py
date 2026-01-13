@@ -2615,7 +2615,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"time": "10:30"}
+            json={"time": "10:30"},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -2626,7 +2626,7 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("msg") == "Unable to extract tag using discriminator 'type'"
         assert detail[0].get("type") == "union_tag_not_found"
         assert detail[0].get("loc") == ["body"]
-        assert detail[0].get("input") == {'time': '10:30'}
+        assert detail[0].get("input") == {"time": "10:30"}
 
     @pytest.mark.parametrize(
         ["melding_token"],

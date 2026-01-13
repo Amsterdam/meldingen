@@ -18,7 +18,7 @@ This required the following changes:
    1. TextAnswer: `{"text": "This is my answer", "type: "text" }`
    2. TimeAnswer: `{"time": "14:30" , "type": "time" }`
    3. DateAnswer: `{"date": {"value": "day - 1", label: "Yesterday the 23rd of December", converted_date: "2025-12-23"}, "type": "date" }`
-   4. ValueLabelAnswer: `{"values_and_labels": [{"value": "option_1", "label": "Option 1" }, {"value": "option_3", "label": "Option 3" }, ], "type": "value_label" }`
+   4. ValueLabelAnswer: `{"values_and_labels": [{"value": "option_1", "label": "Option 1" }, {"value": "option_3", "label": "Option 3" }, ], "type": "value_label"}`
 3. The backend derives the AnswerType based on the question component type (for new answers) or based on the stored answer data (for existing answers) and uses the correct model for validation and storage.
    1. This only works if the question component type which is being answered is mapped to an answer type. The only exception is the panel component type which doesn't hold a question. 
        - See: `FormIoComponentToAnswerTypeMap` in models.py
@@ -28,7 +28,7 @@ This required the following changes:
 ### Alternatives Considered
 - Keeping a single Answer model with optional fields for each answer type. This would make the model harder to validate, as we would need to check which fields are filled based on the question component type. It would also make it harder to extend in the future if we want to add more answer types.
 - Using a JSON field to store the answer data. This would make it harder to query and filter answers based on their content, as we would need to parse the JSON data each time.
-- Create different models to store different answer types but only accept one attribute (e.g., "answer") in our endpoints. Basically skipping consequence 2. This would make it more complex to validate and parse the data, as we would need to check the type of the data and convert it accordingly.
+- Create different models to store different answer types but only accept one attribute (e.g., "answer") in our endpoints. Basically skipping consequence 2. Besides the extra conversion step, this would make it more vague on what the jsonlogic conditions should look like when created in a FormIO Question Component. This is because the jsonlogic will be evaluted on the "text" attribute whereas the POST body would contain an "answer" attribute. 
 
 ### References
 - Feature Conditionele vragen en vraagtypes: https://gemeente-amsterdam.atlassian.net/browse/SIG-6879
