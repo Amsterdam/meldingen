@@ -156,7 +156,7 @@ from meldingen.schemas.output_factories import (
     MeldingUpdateOutputFactory,
     StatesOutputFactory,
 )
-from meldingen.schemas.types import GeoJson, InvalidDateFormatException
+from meldingen.schemas.types import GeoJson
 from meldingen.validators import MeldingPrimaryFormValidator
 
 router = APIRouter()
@@ -660,11 +660,6 @@ async def resolve_answer_type_through_question_id(
         return TypeAdapter(AnswerInputUnion).validate_python(body)
     except ValidationError as e:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors()) from e
-    except InvalidDateFormatException as e:
-        raise HTTPException(
-            status_code=HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
-        ) from e
 
 
 @router.post(
@@ -697,7 +692,7 @@ async def answer_additional_question(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     question_id: Annotated[int, Path(description="The id of the question.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    answer_input: Annotated[AnswerInputUnion, Depends(resolve_answer_type_through_question_id)],
+    answer_input: AnswerInputUnion,
     action: Annotated[AnswerCreateAction, Depends(melding_answer_create_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutputUnion:
@@ -711,32 +706,6 @@ async def answer_additional_question(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
 
     return await produce_output(answer)
-
-
-async def resolve_answer_type_through_answer_id(
-    request: Request,
-    answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
-    answer_id: int,
-) -> AnswerInputUnion:
-    """Dependency that dynamically selects the correct AnswerInputUnion member based on the answer type."""
-    answer = await answer_repository.retrieve(answer_id)
-
-    if answer is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"Answer not found for answer_id {answer_id}")
-
-    body = await request.json()
-    body["type"] = answer.type
-
-    # Use type adapter to validate a Union and create correct union member
-    try:
-        return TypeAdapter(AnswerInputUnion).validate_python(body)
-    except ValidationError as e:
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors()) from e
-    except InvalidDateFormatException as e:
-        raise HTTPException(
-            status_code=HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
-        ) from e
 
 
 @router.patch(
@@ -768,7 +737,7 @@ async def update_answer(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     answer_id: Annotated[int, Path(description="The id of the answer.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    answer_input: Annotated[AnswerInputUnion, Depends(resolve_answer_type_through_answer_id)],
+    answer_input: AnswerInputUnion,
     action: Annotated[AnswerUpdateAction, Depends(melding_answer_update_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutputUnion:

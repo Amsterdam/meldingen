@@ -42,14 +42,6 @@ class FormIOConditional(BaseModel):
     eq: str | int | float | bool | None
 
 
-class InvalidDateFormatException(Exception):
-    """Raised when a date is not in the expected format."""
-
-    def __init__(self, msg: str, input: dict[str, Any]) -> None:
-        self.msg = msg
-        self.input = input
-
-
 class DateAnswerObject(BaseModel):
     """Used to display an answer in a date answer component."""
 
@@ -61,15 +53,11 @@ class DateAnswerObject(BaseModel):
     @classmethod
     def validate_converted_date(cls, value: str) -> str:
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
-            raise InvalidDateFormatException(
-                msg="converted_date must be in YYYY-mm-dd format", input={"converted_date": value}
-            )
+            raise ValueError("converted_date must be in YYYY-mm-dd format")
         try:
             datetime.date.fromisoformat(value)
         except ValueError:
-            raise InvalidDateFormatException(
-                msg="converted_date must be in YYYY-mm-dd format", input={"converted_date": value}
-            )
+            raise ValueError("converted_date must be in YYYY-mm-dd format")
         return value
 
 

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 from meldingen.models import (
+    AnswerTypeEnum,
     Classification,
     Form,
     FormIoComponentTypeEnum,
@@ -127,7 +128,7 @@ async def answer_additional_questions(
     response = await client.post(
         app.url_path_for(ROUTE_ANSWER_QUESTION, melding_id=my_melding["id"], question_id=question_id),
         params={"token": token},
-        json={"text": text},
+        json={"text": text, "type": AnswerTypeEnum.text},
     )
 
     assert response.status_code == HTTP_201_CREATED
