@@ -3323,6 +3323,53 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         assert detail[0].get("type") == "missing"
         assert detail[0].get("loc") == ["body", "value_label", "values_and_labels"]
 
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            ),
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_answer_empty_type(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+    ) -> None:
+        questions = await form_with_classification.awaitable_attrs.questions
+        assert len(questions) == 1
+
+        answer = TextAnswer(
+            text="This is the answer",
+            question=questions[0],
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.text,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"text": "This is another answer", "type": ""},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert (
+            detail[0].get("msg")
+            == "Input tag '' found using 'type' does not match any of the expected tags: <AnswerTypeEnum.text: 'text'>, <AnswerTypeEnum.time: 'time'>, <AnswerTypeEnum.date: 'date'>, <AnswerTypeEnum.value_label: 'value_label'>"
+        )
+
 
 class TestMeldingUploadAttachment:
     ROUTE_NAME_CREATE: Final[str] = "melding:attachment"
