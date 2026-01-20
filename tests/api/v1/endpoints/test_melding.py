@@ -2671,7 +2671,7 @@ class TestMeldingQuestionAnswer:
     )
     async def test_create_answer_empty_type(
         self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding_with_classification: Melding
-    ):
+    ) -> None:
         components = await form_with_time_component.awaitable_attrs.components
         assert len(components) == 1
 
