@@ -51,7 +51,8 @@ from meldingen.actions.asset_type import (
     AssetTypeDeleteAction,
     AssetTypeListAction,
     AssetTypeRetrieveAction,
-    AssetTypeUpdateAction, WfsRetrieveAction,
+    AssetTypeUpdateAction,
+    WfsRetrieveAction,
 )
 from meldingen.actions.attachment import (
     DeleteAttachmentAction,

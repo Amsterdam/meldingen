@@ -50,14 +50,14 @@ class TestRetrieveContainerWfs:
     async def test_retrieve_wfs(
         self, app: FastAPI, client: AsyncClient, asset_type: AssetType, auth_user: None
     ) -> None:
-        response = await client.get(app.url_path_for(self.get_route_name(), name=asset_type.name))
+        response = await client.get(app.url_path_for(self.get_route_name(), asset_type_id=asset_type.id))
         assert response.status_code == HTTP_200_OK
 
     @pytest.mark.anyio
     async def test_retrieve_wfs_non_existing_asset_type(
         self, app: FastAPI, client: AsyncClient, asset_type: AssetType, auth_user: None
     ) -> None:
-        response = await client.get(app.url_path_for(self.get_route_name(), name=asset_type.name + "-incorrect-name"))
+        response = await client.get(app.url_path_for(self.get_route_name(), asset_type_id=asset_type.id + 1))
         status = response.status_code
 
         assert status == HTTP_404_NOT_FOUND
@@ -68,7 +68,7 @@ class TestRetrieveContainerWfs:
         self, app: FastAPI, client: AsyncClient, asset_type: AssetType, auth_user: None
     ) -> None:
         response = await client.get(
-            app.url_path_for(self.get_route_name(), name=asset_type.name), params={"service": "NotWfs"}
+            app.url_path_for(self.get_route_name(), asset_type_id=asset_type.id), params={"service": "NotWfs"}
         )
         status = response.status_code
         content = response.json()
