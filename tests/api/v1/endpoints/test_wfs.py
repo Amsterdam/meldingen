@@ -35,7 +35,7 @@ class ValidMockProxyWfsProviderFactory(BaseWfsProviderFactory):
 )
 class TestRetrieveContainerWfs:
     def get_route_name(self) -> str:
-        return "wfs:retrieve"
+        return "asset-type:retrieve-wfs"
 
     def get_method(self) -> str:
         return "GET"

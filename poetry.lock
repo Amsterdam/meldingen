@@ -2776,7 +2776,7 @@ name = "meldingen-core"
 version = "0.1.0"
 description = "Framework agnostic package containing the core code for the meldingen project."
 optional = false
-python-versions = "^3.13"
+python-versions = ">=3.13"
 groups = ["main"]
 files = []
 develop = false
@@ -2787,8 +2787,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "6d5268c2553d46da3ab6fb02ab83fe5cc6adb5ec"
+reference = "feature/wfs-action-with-asset-type-id"
+resolved_reference = "8b2775411042f22469b577cdc9c23b20902383f9"
 
 [[package]]
 name = "mergedeep"
@@ -5995,4 +5995,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "af2e14a35ebf20976d241ebfa7cbaf40dcb60aa83430508bcf6026fa616c7f97"
+content-hash = "132b71bb1b11e6773f77c85bcfde899acdd8df24b52b846036cd988702711b67"
