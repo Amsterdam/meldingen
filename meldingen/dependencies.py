@@ -51,7 +51,7 @@ from meldingen.actions.asset_type import (
     AssetTypeDeleteAction,
     AssetTypeListAction,
     AssetTypeRetrieveAction,
-    AssetTypeUpdateAction,
+    AssetTypeUpdateAction, WfsRetrieveAction,
 )
 from meldingen.actions.attachment import (
     DeleteAttachmentAction,
@@ -100,7 +100,6 @@ from meldingen.actions.user import (
     UserRetrieveAction,
     UserUpdateAction,
 )
-from meldingen.actions.wfs import WfsRetrieveAction
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
