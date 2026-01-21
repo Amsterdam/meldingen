@@ -2,9 +2,8 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from geojson_pydantic import FeatureCollection
-from starlette.responses import StreamingResponse
-
 from meldingen_core.exceptions import NotFoundException
+from starlette.responses import StreamingResponse
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions.asset_type import (
@@ -150,7 +149,7 @@ async def delete_asset_type(
     response_model=FeatureCollection,
 )
 async def retrieve_wfs(
-    action: Annotated[WfsRetrieveAction[AssetType], Depends(wfs_retrieve_action)],
+    action: Annotated[WfsRetrieveAction, Depends(wfs_retrieve_action)],
     asset_type_id: Annotated[int, Path(description="The asset type id.", ge=1)],
     type_names: str = "app:container",
     count: int = 1000,
