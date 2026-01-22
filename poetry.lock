@@ -2787,8 +2787,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feature/wfs-action-with-asset-type-id"
-resolved_reference = "8b2775411042f22469b577cdc9c23b20902383f9"
+reference = "HEAD"
+resolved_reference = "2cb906f08ce40680fb8e0134a4f203301e89db02"
 
 [[package]]
 name = "mergedeep"
@@ -5995,4 +5995,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "132b71bb1b11e6773f77c85bcfde899acdd8df24b52b846036cd988702711b67"
+content-hash = "af2e14a35ebf20976d241ebfa7cbaf40dcb60aa83430508bcf6026fa616c7f97"
