@@ -108,3 +108,32 @@ def test_length_operator_positive(jsonlogic_validator: JSONLogicValidator) -> No
 def test_length_operator_too_many_arguments(jsonlogic_validator: JSONLogicValidator) -> None:
     with pytest.raises(JSONLogicSyntaxError):
         jsonlogic_validator('{"if": [{"<=":[{"length": {"var": ["text"]}},3,5]},true,"Too long"]}', {"text": "ABC"})
+
+
+def test_two_length_operators(jsonlogic_validator: JSONLogicValidator) -> None:
+    logic = """
+    {
+        "if": [
+            { ">=": [ { "length": { "var": ["text"] } }, 2 ] },
+            { "if": [
+                { "<=": [ { "length": { "var": ["text"] } }, 3 ] },
+                true,
+                "Too long"
+            ] },
+            "Too short"
+        ]
+    }
+    """
+    # Passes both (length 2 or 3)
+    jsonlogic_validator(logic, {"text": "AB"})
+    jsonlogic_validator(logic, {"text": "ABC"})
+
+    # Fails min
+    with pytest.raises(JSONLogicValidationException) as exc_min:
+        jsonlogic_validator(logic, {"text": "A"})
+    assert exc_min.value.msg == "Too short"
+
+    # Fails max
+    with pytest.raises(JSONLogicValidationException) as exc_max:
+        jsonlogic_validator(logic, {"text": "ABCD"})
+    assert exc_max.value.msg == "Too long"
