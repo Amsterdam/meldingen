@@ -111,7 +111,7 @@ def test_length_operator_too_many_arguments(jsonlogic_validator: JSONLogicValida
 
 
 def test_two_length_operators(jsonlogic_validator: JSONLogicValidator) -> None:
-    logic = '''
+    logic = """
     {
         "if": [
             { ">=": [ { "length": { "var": ["text"] } }, 2 ] },
@@ -123,7 +123,7 @@ def test_two_length_operators(jsonlogic_validator: JSONLogicValidator) -> None:
             "Too short"
         ]
     }
-    '''
+    """
     # Passes both (length 2 or 3)
     jsonlogic_validator(logic, {"text": "AB"})
     jsonlogic_validator(logic, {"text": "ABC"})
