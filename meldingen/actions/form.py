@@ -8,6 +8,7 @@ from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.actions.base import BaseListAction
+from meldingen.answer import AnswerValidator
 from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.factories import AnswerFactory
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
@@ -269,7 +270,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
     _token_verifier: TokenVerifier[Melding]
     _question_repository: QuestionRepository
     _component_repository: FormIoQuestionComponentRepository
-    _jsonlogic_validate: JSONLogicValidator
+    _validate_answer: AnswerValidator
     _create_answer: AnswerFactory
 
     def __init__(
@@ -278,14 +279,14 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         token_verifier: TokenVerifier[Melding],
         question_repository: QuestionRepository,
         component_repository: FormIoQuestionComponentRepository,
-        jsonlogic_validator: JSONLogicValidator,
+        answer_validator: AnswerValidator,
         answer_factory: AnswerFactory,
     ):
         super().__init__(repository)
         self._token_verifier = token_verifier
         self._question_repository = question_repository
         self._component_repository = component_repository
-        self._jsonlogic_validate = jsonlogic_validator
+        self._validate_answer = answer_validator
         self._create_answer = answer_factory
 
     async def __call__(self, melding_id: int, token: str, question_id: int, answer_input: AnswerInputUnion) -> Answer:
@@ -300,7 +301,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         5. The form must have a classification
         6. The melding classification must be the same as the form classification
         7. The type of the answer must correspond to the answer type that is expected from the question
-        8. If the question has JSONlogic validation, the answer must pass this validation
+        8. Validate answer on specific rules of the question component (e.g. JSONlogic for text answers)
         """
         # Question must exist
         question = await self._question_repository.retrieve(question_id)
@@ -347,15 +348,8 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
                 ],
             )
 
-        # Validate JSONlogic on TextAnswerInput only
-        if form_component.jsonlogic is not None and isinstance(answer_input, TextAnswerInput):
-            try:
-                self._jsonlogic_validate(form_component.jsonlogic, {"text": answer_input.text})
-            except JSONLogicValidationException as e:
-                raise HTTPException(
-                    status_code=HTTP_422_UNPROCESSABLE_CONTENT,
-                    detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
-                ) from e
+        # Validate answer on specific rules of the question component
+        await self._validate_answer(form_component, answer_input)
 
         answer = self._create_answer(answer_input, melding, question)
 

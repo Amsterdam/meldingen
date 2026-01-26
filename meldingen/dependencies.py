@@ -102,7 +102,8 @@ from meldingen.actions.user import (
     UserUpdateAction,
 )
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
-from meldingen.answer import AnswerPurger
+from meldingen.answer import AnswerPurger, FormIOValuesComponentValidator, SelectComponentAnswerValidator, \
+    TextComponentAnswerValidator, AnswerValidator
 from meldingen.asset import AssetPurger
 from meldingen.classification import DummyClassifierAdapter, OpenAIClassifierAdapter
 from meldingen.config import settings
@@ -644,6 +645,29 @@ def jsonlogic_validator(
 ) -> JSONLogicValidator:
     return JSONLogicValidator(reference_parser)
 
+def form_io_values_component_validator() -> FormIOValuesComponentValidator:
+    return FormIOValuesComponentValidator()
+
+def select_component_answer_validator() -> SelectComponentAnswerValidator:
+    return SelectComponentAnswerValidator()
+
+def text_component_answer_validator(
+    jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
+) -> TextComponentAnswerValidator:
+    return TextComponentAnswerValidator(jsonlogic_validator)
+
+
+def answer_validator(
+    form_io_values_component_validator: Annotated[FormIOValuesComponentValidator, Depends(form_io_values_component_validator)],
+    select_component_answer_validator: Annotated[SelectComponentAnswerValidator, Depends(select_component_answer_validator)],
+    text_component_answer_validator: Annotated[TextComponentAnswerValidator, Depends(text_component_answer_validator)],
+) -> AnswerValidator:
+    return AnswerValidator(
+        form_io_values_component_validator,
+        select_component_answer_validator,
+        text_component_answer_validator,
+    )
+
 
 def form_io_question_component_repository(
     session: Annotated[AsyncSession, Depends(database_session)],
@@ -656,7 +680,7 @@ def melding_answer_create_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
-    jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
+    answer_validator: Annotated[JSONLogicValidator, Depends(answer_validator)],
     answer_factory: Annotated[AnswerFactory, Depends(answer_factory)],
 ) -> AnswerCreateAction:
     return AnswerCreateAction(
@@ -664,7 +688,7 @@ def melding_answer_create_action(
         token_verifier,
         question_repository,
         component_repository,
-        jsonlogic_validator,
+        answer_validator,
         answer_factory,
     )
 

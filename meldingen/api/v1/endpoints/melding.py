@@ -62,6 +62,7 @@ from meldingen.actions.melding import (
     MeldingRetrieveAction,
     MeldingSubmitAction,
 )
+from meldingen.answer import InvalidAnswerException
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (
     default_response,
@@ -704,6 +705,8 @@ async def answer_additional_question(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
     except MeldingNotClassifiedException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
+    except InvalidAnswerException as e:
+        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=[{"msg": e.msg, "type": "value_error"}]) from e
 
     return await produce_output(answer)
 

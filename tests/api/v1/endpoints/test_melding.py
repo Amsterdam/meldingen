@@ -2595,6 +2595,45 @@ class TestMeldingQuestionAnswer:
         ["melding_token"],
         [("supersecrettoken",)],
     )
+    async def test_create_radio_component_answer_value_not_an_option(self,
+        app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
+    ) -> None:
+        components = await form_with_radio_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        radio_input = [{"value": "option_4", "label": "Option 4"}]  # option_4 does not exist
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"values_and_labels": radio_input, "type": AnswerTypeEnum.value_label},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Selected value 'option_4' is not a valid option"
+
+
+
+
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
     async def test_create_invalid_answer_without_type(
         self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding_with_classification: Melding
     ) -> None:
