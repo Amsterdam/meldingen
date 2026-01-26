@@ -86,7 +86,6 @@ def add_custom_open_api_scheme(app: FastAPI) -> dict[str, Any]:
                 "authorizationCode": {
                     "authorizationUrl": settings.auth_url,
                     "tokenUrl": settings.token_url,
-                    "x-scalar-client-id": settings.auth_client_id,
                     "scopes": {scope: "" for scope in settings.auth_scopes},
                 }
             },
