@@ -1458,7 +1458,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         for value in values:
             assert value.get("label") == f"label{i}"
             assert value.get("value") == f"value{i}"
-            i = i + 1 @ pytest.mark.anyio
+            i = i + 1
 
     async def test_update_form_with_time_field(
         self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form
