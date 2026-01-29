@@ -1,6 +1,6 @@
 import logging
 from functools import lru_cache
-from typing import Annotated, Any, AsyncIterator
+from typing import Annotated, Any, AsyncIterator, Literal
 
 from amsterdam_mail_service_client.api.default_api import DefaultApi
 from amsterdam_mail_service_client.api_client import ApiClient
@@ -35,7 +35,10 @@ from meldingen_core.managers import RelationshipManager
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from meldingen_core.wfs import WfsProviderFactory
-from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
+from pydantic_ai import Agent
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
@@ -322,17 +325,40 @@ def answer_factory() -> AnswerFactory:
     return AnswerFactory()
 
 
-def openai_client() -> AsyncOpenAI:
-    return AsyncOpenAI(base_url=settings.llm_base_url)
+# def openai_client() -> AsyncOpenAI:
+#     return AsyncOpenAI(base_url=settings.llm_base_url)
 
 
-def classifier_adapter(
-    client: Annotated[AsyncOpenAI, Depends(openai_client)],
-    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
-) -> BaseClassifierAdapter:
+def classifier_agent() -> Agent | None:
+
     if settings.llm_enabled:
-        return OpenAIClassifierAdapter(client, settings.llm_model_identifier, repository)
+        model = OpenAIChatModel(
+            settings.llm_model_identifier,
+            provider = OpenAIProvider(
+                base_url=settings.llm_base_url
+            )
+        )
 
+        # # Get allowed classifications
+        # classifications_list = [c.name for c in await repository.list()]
+        # # Dynamically create a Literal type for allowed values
+        # ClassificationModel = make_classification_model(classifications_list)
+
+        # Prepare the prompt
+        system_prompt = (
+            """Je bent een classificeerder van meldingen die in de openbare ruimte gebeuren. 
+            Je krijgt een korte omschrijving van een melding en je geeft terug welke classificatie het beste past bij de melding.
+            """
+        )
+
+        return Agent(model, system_prompt=system_prompt)
+
+    return None
+
+
+def classifier_adapter(agent: Annotated[Agent, Depends(classifier_agent)], repository: Annotated[ClassificationRepository, Depends(classification_repository)]) -> OpenAIClassifierAdapter | DummyClassifierAdapter:
+    if settings.llm_enabled:
+        return OpenAIClassifierAdapter(agent, repository)
     return DummyClassifierAdapter()
 
 
