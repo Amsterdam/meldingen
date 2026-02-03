@@ -262,7 +262,7 @@ Feature: Melding Form
         | SUBMIT_LOCATION |
         | ADD_CONTACT_INFO |
 
-    Scenario: qA melder can add an asset to a melding
+    Scenario: A melder can add an asset to a melding
         # Initial melding and classification with asset type
         Given there is an asset type containers with max_assets 3
         And the classification test has asset type containers
