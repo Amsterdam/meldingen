@@ -1,5 +1,6 @@
 from pytest_bdd import scenario
 
+from tests.scenarios.context.asset import *  # noqa
 from tests.scenarios.context.attachment import *  # noqa
 from tests.scenarios.context.classification import *  # noqa
 from tests.scenarios.context.contact import *  # noqa
@@ -54,4 +55,19 @@ def test_melding_contact_info_added_can_go_back(anyio_backend: str, test_databas
 
 @scenario("create_melding.feature", "A melding that has been submitted can not go back to a previous state")
 def test_melding_submitted_can_not_go_back(anyio_backend: str, test_database: None) -> None:
+    pass
+
+
+@scenario("create_melding.feature", "A melder can add an asset to a melding")
+def test_add_asset_to_melding(anyio_backend: str, test_database: None) -> None:
+    pass
+
+
+@scenario("create_melding.feature", "A melder cannot exceed max_assets limit")
+def test_cannot_exceed_max_assets(anyio_backend: str, test_database: None) -> None:
+    pass
+
+
+@scenario("create_melding.feature", "A melder can add an asset after removing one when at max_assets")
+def test_add_asset_after_removal(anyio_backend: str, test_database: None) -> None:
     pass
