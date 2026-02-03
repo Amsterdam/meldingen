@@ -261,3 +261,66 @@ Feature: Melding Form
         | ADD_ATTACHMENTS |
         | SUBMIT_LOCATION |
         | ADD_CONTACT_INFO |
+
+    Scenario: A melder can add an asset to a melding
+        # Initial melding and classification with asset type
+        Given there is an asset type containers with max_assets 3
+        And the classification test has asset type containers
+        When I create a melding with text "test"
+        Then the melding should be classified as "test"
+        And the state of the melding should be "classified"
+        And the melding should contain a token
+        # Add asset
+        When I add an asset with external_id "container-123" to my melding
+        Then the asset should be added successfully
+        And the melding should have 1 asset(s)
+
+    Scenario: A melder cannot exceed max_assets limit
+        # Initial melding and classification with asset type
+        Given there is an asset type containers with max_assets 2
+        And the classification test has asset type containers
+        When I create a melding with text "test"
+        Then the melding should be classified as "test"
+        And the state of the melding should be "classified"
+        And the melding should contain a token
+        # Add first asset
+        When I add an asset with external_id "container-1" to my melding
+        Then the asset should be added successfully
+        And the melding should have 1 asset(s)
+        # Add second asset
+        When I add an asset with external_id "container-2" to my melding
+        Then the asset should be added successfully
+        And the melding should have 2 asset(s)
+        # Try to add third asset (should fail)
+        When I add an asset with external_id "container-3" to my melding
+        Then I should be told that the maximum number of assets has been reached
+        And the melding should have 2 asset(s)
+
+    Scenario: A melder can add an asset after removing one when at max_assets
+        # Initial melding and classification with asset type
+        Given there is an asset type containers with max_assets 2
+        And the classification test has asset type containers
+        When I create a melding with text "test"
+        Then the melding should be classified as "test"
+        And the state of the melding should be "classified"
+        And the melding should contain a token
+        # Add first asset
+        When I add an asset with external_id "container-1" to my melding
+        Then the asset should be added successfully
+        And the melding should have 1 asset(s)
+        # Add second asset
+        When I add an asset with external_id "container-2" to my melding
+        Then the asset should be added successfully
+        And the melding should have 2 asset(s)
+        # Try to add third asset (should fail)
+        When I add an asset with external_id "container-3" to my melding
+        Then I should be told that the maximum number of assets has been reached
+        And the melding should have 2 asset(s)
+        # Remove first asset
+        When I remove the asset with external_id "container-1" from my melding
+        Then the asset should be removed successfully
+        And the melding should have 1 asset(s)
+        # Add third asset (should now succeed)
+        When I add an asset with external_id "container-3" to my melding
+        Then the asset addition should succeed
+        And the melding should have 2 asset(s)
