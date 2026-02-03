@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import FastAPI
 from httpx import AsyncClient, Response
 from pytest_bdd import given, parsers, then, when
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
@@ -32,10 +33,6 @@ async def there_is_an_asset_type(name: str, max_assets: int, db_session: AsyncSe
 async def classification_has_asset_type(
     classification_name: str, asset_type_name: str, db_session: AsyncSession, asset_type: AssetType
 ) -> Classification:
-    from sqlalchemy import select
-
-    from meldingen.models import Classification
-
     # Fetch existing classification
     stmt = select(Classification).where(Classification.name == classification_name)
     result = await db_session.execute(stmt)
