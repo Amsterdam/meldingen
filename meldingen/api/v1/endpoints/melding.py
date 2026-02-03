@@ -1057,8 +1057,8 @@ async def add_asset(
     token: Annotated[str, Query(description="The token of the melding.")],
     input: MeldingAssetInput,
     action: Annotated[MeldingAddAssetAction, Depends(melding_add_asset_action)],
-    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
-) -> MeldingOutput:
+    produce_output: Annotated[MeldingUpdateOutputFactory, Depends(melding_update_output_factory)],
+) -> MeldingUpdateOutput:
     try:
         melding = await action(melding_id, input.external_id, input.asset_type_id, token)
     except NotFoundException as e:
