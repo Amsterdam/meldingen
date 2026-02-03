@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import FastAPI
 from httpx import AsyncClient, Response
-from pytest_bdd import parsers, given, when, then
+from pytest_bdd import given, parsers, then, when
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
@@ -14,10 +14,7 @@ from tests.scenarios.conftest import async_step
 @async_step
 async def there_is_an_asset_type(name: str, max_assets: int, db_session: AsyncSession) -> AssetType:
     asset_type = AssetType(
-        name=name,
-        class_name="meldingen_core.assets.DummyAsset",
-        arguments={},
-        max_assets=max_assets
+        name=name, class_name="meldingen_core.assets.DummyAsset", arguments={}, max_assets=max_assets
     )
 
     db_session.add(asset_type)
@@ -29,16 +26,14 @@ async def there_is_an_asset_type(name: str, max_assets: int, db_session: AsyncSe
 
 @given(
     parsers.parse("the classification {classification_name:l} has asset type {asset_type_name:l}"),
-    target_fixture="classification"
+    target_fixture="classification",
 )
 @async_step
 async def classification_has_asset_type(
-    classification_name: str,
-    asset_type_name: str,
-    db_session: AsyncSession,
-    asset_type: AssetType
+    classification_name: str, asset_type_name: str, db_session: AsyncSession, asset_type: AssetType
 ) -> Classification:
     from sqlalchemy import select
+
     from meldingen.models import Classification
 
     # Fetch existing classification
@@ -54,22 +49,15 @@ async def classification_has_asset_type(
     return classification
 
 
-@when(
-    parsers.parse('I add an asset with external_id "{external_id:S}" to my melding'),
-    target_fixture="api_response"
-)
+@when(parsers.parse('I add an asset with external_id "{external_id:S}" to my melding'), target_fixture="api_response")
 @async_step
 async def add_asset_to_melding(
-    external_id: str,
-    my_melding: dict[str, Any],
-    asset_type: AssetType,
-    app: FastAPI,
-    client: AsyncClient
+    external_id: str, my_melding: dict[str, Any], asset_type: AssetType, app: FastAPI, client: AsyncClient
 ) -> Response:
     response = await client.post(
         app.url_path_for("melding:add-asset", melding_id=my_melding["id"]),
         params={"token": my_melding["token"]},
-        json={"external_id": external_id, "asset_type_id": asset_type.id}
+        json={"external_id": external_id, "asset_type_id": asset_type.id},
     )
 
     return response
@@ -89,14 +77,10 @@ def asset_added_successfully(api_response: Response, my_melding: dict[str, Any])
 @then(parsers.parse("the melding should have {count:d} asset(s)"))
 @async_step
 async def melding_should_have_assets_count(
-    count: int,
-    my_melding: dict[str, Any],
-    app: FastAPI,
-    client: AsyncClient
+    count: int, my_melding: dict[str, Any], app: FastAPI, client: AsyncClient
 ) -> None:
     response = await client.get(
-        app.url_path_for("melding:assets_melder", melding_id=my_melding["id"]),
-        params={"token": my_melding["token"]}
+        app.url_path_for("melding:assets_melder", melding_id=my_melding["id"]), params={"token": my_melding["token"]}
     )
 
     assert response.status_code == HTTP_200_OK
@@ -123,19 +107,15 @@ def asset_addition_succeeds(api_response: Response) -> None:
 
 @when(
     parsers.parse('I remove the asset with external_id "{external_id:S}" from my melding'),
-    target_fixture="api_response"
+    target_fixture="api_response",
 )
 @async_step
 async def remove_asset_from_melding(
-    external_id: str,
-    my_melding: dict[str, Any],
-    app: FastAPI,
-    client: AsyncClient
+    external_id: str, my_melding: dict[str, Any], app: FastAPI, client: AsyncClient
 ) -> Response:
     # First get the list of assets to find the asset_id
     list_response = await client.get(
-        app.url_path_for("melding:assets_melder", melding_id=my_melding["id"]),
-        params={"token": my_melding["token"]}
+        app.url_path_for("melding:assets_melder", melding_id=my_melding["id"]), params={"token": my_melding["token"]}
     )
 
     assert list_response.status_code == HTTP_200_OK
@@ -155,7 +135,7 @@ async def remove_asset_from_melding(
     # Delete the asset
     response = await client.delete(
         app.url_path_for("melding:delete-asset", melding_id=my_melding["id"], asset_id=asset_id),
-        params={"token": my_melding["token"]}
+        params={"token": my_melding["token"]},
     )
 
     return response
