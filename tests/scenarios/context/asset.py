@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
-from meldingen.models import Asset, AssetType, Classification, Melding
+from meldingen.models import AssetType, Classification
 from tests.scenarios.conftest import async_step
 
 
