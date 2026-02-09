@@ -125,7 +125,7 @@ class MeldingGetPossibleNextStatesAction:
         melding_state = melding.state
 
         return [
-            transition_name
+            transition.to_state
             for transition_name, transition in self._state_machine._state_machine._transitions.items()
             if melding_state in transition.from_states and melding_state in MeldingBackofficeStates
         ]
