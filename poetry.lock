@@ -2787,8 +2787,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "HEAD"
-resolved_reference = "2cb906f08ce40680fb8e0134a4f203301e89db02"
+reference = "feature/7011_poc-for-token-verifiction-in-implementation"
+resolved_reference = "c1155ec52761236435bc37517eb8aac88817dc84"
 
 [[package]]
 name = "mergedeep"
@@ -5995,4 +5995,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "10f9febb40202c711a6e1c1bdbba47d1b40f4d3ed54c6fb350266963c219aaa4"
+content-hash = "0327b9e89784f98dd60cf04d8f7f6e27bfda49d0eb79d0adf26be31c8273d906"
