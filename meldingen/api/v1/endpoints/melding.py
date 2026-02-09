@@ -71,7 +71,7 @@ from meldingen.api.v1 import (
     transition_not_allowed,
     unauthorized_response,
 )
-from meldingen.authentication import authenticate_user
+from meldingen.authentication import authenticate_user, verify_melding_token
 from meldingen.dependencies import (
     answer_output_factory,
     answer_repository,
@@ -342,21 +342,18 @@ async def update_melding(
     },
 )
 async def answer_questions(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_melding_token)],
     action: Annotated[MeldingAnswerQuestionsAction[Melding], Depends(melding_answer_questions_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
-        melding = await action(melding_id, token)
+        melding = await action(melding.id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except GuardException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="All required questions must be answered first")
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(melding)
 

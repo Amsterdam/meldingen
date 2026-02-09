@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Path, Query
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from jwt import (
     ExpiredSignatureError,
@@ -10,12 +10,14 @@ from jwt import (
     PyJWKClient,
     PyJWT,
 )
+from meldingen_core.exceptions import NotFoundException
+from meldingen_core.token import TokenException, TokenVerifier
 from sqlalchemy.exc import NoResultFound
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
 
 from meldingen.config import settings
-from meldingen.dependencies import jwks_client, py_jwt, user_repository
-from meldingen.models import User
+from meldingen.dependencies import jwks_client, py_jwt, token_verifier, user_repository
+from meldingen.models import Melding, User
 from meldingen.repositories import UserRepository
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
@@ -64,3 +66,16 @@ async def authenticate_user(
     email = payload.get(settings.auth_identifier_field)
 
     return await user_repository.find_by_email_or_create(email)
+
+
+async def verify_melding_token(
+    melding_id: Annotated[int, Path(ge=1)],
+    token: Annotated[str, Query()],
+    verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+) -> Melding:
+    try:
+        return await verifier(melding_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)

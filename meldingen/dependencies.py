@@ -487,9 +487,8 @@ def melding_add_contact_action(
 def melding_answer_questions_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> MeldingAnswerQuestionsAction[Melding]:
-    return MeldingAnswerQuestionsAction(state_machine, repository, token_verifier)
+    return MeldingAnswerQuestionsAction(state_machine, repository)
 
 
 def melding_add_attachments_action(
