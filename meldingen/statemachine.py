@@ -137,7 +137,7 @@ class Submit(BaseTransition[Melding]):
         return [
             MeldingStates.CONTACT_INFO_ADDED,
             MeldingStates.PLANNED,
-            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PROCESSING_REQUESTED,
             MeldingStates.PROCESSING,
             MeldingStates.REOPENED,
         ]
@@ -154,13 +154,13 @@ class RequestProcessing(BaseTransition[Melding]):
 
     @property
     def to_state(self) -> str:
-        return MeldingStates.AWAITING_PROCESSING
+        return MeldingStates.PROCESSING_REQUESTED
 
 
 class Plan(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.SUBMITTED, MeldingStates.AWAITING_PROCESSING]
+        return [MeldingStates.SUBMITTED, MeldingStates.PROCESSING_REQUESTED]
 
     @property
     def to_state(self) -> str:
@@ -172,7 +172,7 @@ class Process(BaseTransition[Melding]):
     def from_states(self) -> list[str]:
         return [
             MeldingStates.SUBMITTED,
-            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PROCESSING_REQUESTED,
             MeldingStates.PLANNED,
             MeldingStates.CANCELED,
             MeldingStates.REOPENED,
@@ -188,7 +188,7 @@ class Complete(BaseTransition[Melding]):
     def from_states(self) -> list[str]:
         return [
             MeldingStates.SUBMITTED,
-            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PROCESSING_REQUESTED,
             MeldingStates.PROCESSING,
             MeldingStates.PLANNED,
             MeldingStates.REOPEN_REQUESTED,
@@ -225,7 +225,7 @@ class Cancel(BaseTransition[Melding]):
     def from_states(self) -> list[str]:
         return [
             MeldingStates.SUBMITTED,
-            MeldingStates.AWAITING_PROCESSING,
+            MeldingStates.PROCESSING_REQUESTED,
             MeldingStates.PROCESSING,
             MeldingStates.PLANNED,
             MeldingStates.REOPEN_REQUESTED,

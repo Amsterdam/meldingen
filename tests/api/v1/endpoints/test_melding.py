@@ -1643,7 +1643,7 @@ class BaseMeldingBackofficeTransitionTest(BaseUnauthorizedTest):
 
 class TestMeldingRequestProcessing(BaseMeldingBackofficeTransitionTest):
     route_name = "melding:request-processing"
-    target_state = MeldingStates.AWAITING_PROCESSING
+    target_state = MeldingStates.PROCESSING_REQUESTED
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1668,7 +1668,7 @@ class TestMeldingProcess(BaseMeldingBackofficeTransitionTest):
         ["melding_text", "melding_state"],
         [
             ("Er ligt poep.", MeldingStates.SUBMITTED),
-            ("Er ligt poep.", MeldingStates.AWAITING_PROCESSING),
+            ("Er ligt poep.", MeldingStates.PROCESSING_REQUESTED),
             ("Er ligt poep.", MeldingStates.PLANNED),
             ("Er ligt poep.", MeldingStates.CANCELED),
             ("Er ligt poep.", MeldingStates.REOPENED),
@@ -1690,7 +1690,7 @@ class TestMeldingPlan(BaseMeldingBackofficeTransitionTest):
         ["melding_text", "melding_state"],
         [
             ("Er ligt poep.", MeldingStates.SUBMITTED),
-            ("Er ligt poep.", MeldingStates.AWAITING_PROCESSING),
+            ("Er ligt poep.", MeldingStates.PROCESSING_REQUESTED),
         ],
         indirect=True,
     )
@@ -1746,7 +1746,7 @@ class TestMeldingCancel(BaseMeldingBackofficeTransitionTest):
         ["melding_text", "melding_state"],
         [
             ("Er ligt poep.", MeldingStates.SUBMITTED),
-            ("Er ligt poep.", MeldingStates.AWAITING_PROCESSING),
+            ("Er ligt poep.", MeldingStates.PROCESSING_REQUESTED),
             ("Er ligt poep.", MeldingStates.PROCESSING),
             ("Er ligt poep.", MeldingStates.PLANNED),
             ("Er ligt poep.", MeldingStates.REOPEN_REQUESTED),
@@ -1775,7 +1775,7 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         ["melding_text", "melding_state"],
         [
             ("Er ligt poep op de stoep.", MeldingStates.SUBMITTED),
-            ("Er ligt poep op de stoep.", MeldingStates.AWAITING_PROCESSING),
+            ("Er ligt poep op de stoep.", MeldingStates.PROCESSING_REQUESTED),
             ("Er ligt poep op de stoep.", MeldingStates.PROCESSING),
             ("Er ligt poep op de stoep.", MeldingStates.PLANNED),
             ("Er ligt poep op de stoep.", MeldingStates.REOPEN_REQUESTED),
@@ -4547,7 +4547,7 @@ class TestMeldingSubmit(BaseTokenAuthenticationTest):
         [
             (MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
             (MeldingStates.PLANNED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
-            (MeldingStates.AWAITING_PROCESSING, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+            (MeldingStates.PROCESSING_REQUESTED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
             (MeldingStates.PROCESSING, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
             (MeldingStates.REOPENED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
         ],
@@ -4978,7 +4978,7 @@ class TestMeldingGetNextPossibleStates(BaseUnauthorizedTest):
 
         body = response.json()
 
-        assert body == {"states": ["request_processing", "process", "plan", "cancel", "complete"]}
+        assert body == {"states": ["processing_requested", "processing", "planned", "canceled", "completed"]}
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_state"], [[MeldingStates.LOCATION_SUBMITTED]])
