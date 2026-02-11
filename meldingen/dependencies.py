@@ -52,6 +52,7 @@ from meldingen.actions.asset_type import (
     AssetTypeListAction,
     AssetTypeRetrieveAction,
     AssetTypeUpdateAction,
+    ValidateAssetTypeWfsAction,
     WfsRetrieveAction,
 )
 from meldingen.actions.attachment import (
@@ -1321,6 +1322,12 @@ def asset_type_delete_action(
 
 def wfs_provider_factory() -> WfsProviderFactory:
     return WfsProviderFactory()
+
+
+def validate_asset_type_wfs_action(
+    provider_factory: Annotated[WfsProviderFactory, Depends(wfs_provider_factory)],
+) -> ValidateAssetTypeWfsAction:
+    return ValidateAssetTypeWfsAction(provider_factory)
 
 
 def wfs_retrieve_action(

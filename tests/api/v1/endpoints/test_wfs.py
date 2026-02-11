@@ -3,9 +3,15 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from fastapi import FastAPI
-from httpx import AsyncClient, Response
-from meldingen_core.wfs import BaseWfsProviderFactory
-from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
+from httpx import AsyncClient, HTTPStatusError, Response
+from meldingen_core.wfs import BaseWfsProviderFactory, InvalidWfsProviderException
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_CONTENT,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_502_BAD_GATEWAY,
+)
 
 from meldingen.models import AssetType
 from meldingen.wfs import ProxyWfsProvider, UrlProcessor
@@ -20,6 +26,29 @@ class ValidMockProxyWfsProviderFactory(BaseWfsProviderFactory):
         http_client.stream.return_value.__aenter__.return_value = response
 
         return ProxyWfsProvider(self._arguments["base_url"], UrlProcessor(), http_client)
+
+    async def validate(self) -> None:
+        if "base_url" not in self._arguments:
+            raise InvalidWfsProviderException("Missing 'base_url' in arguments")
+
+
+class FailingHttpWfsProviderFactory(BaseWfsProviderFactory):
+    """A WFS provider factory that simulates an upstream HTTP error."""
+
+    def __call__(self) -> ProxyWfsProvider:
+        mock_response = Mock(Response)
+        mock_response.status_code = 500
+
+        http_client = AsyncMock(AsyncClient)
+        http_client.send.return_value = mock_response
+        http_client.send.return_value.raise_for_status.side_effect = HTTPStatusError(
+            "Server Error", request=Mock(), response=mock_response
+        )
+
+        return ProxyWfsProvider(self._arguments["base_url"], UrlProcessor(), http_client)
+
+    async def validate(self) -> None:
+        pass
 
 
 @pytest.mark.anyio
@@ -76,3 +105,40 @@ class TestRetrieveContainerWfs:
 
         assert status == HTTP_422_UNPROCESSABLE_CONTENT
         assert detail[0].get("msg") == "Input should be 'WFS'"
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "asset_type_name, asset_type_class_name, asset_type_arguments",
+    [("invalid_provider", "nonexistent.module.Class", {})],
+)
+class TestRetrieveWfsInvalidProvider:
+    @pytest.mark.anyio
+    async def test_retrieve_wfs_invalid_provider_returns_500(
+        self, app: FastAPI, client: AsyncClient, asset_type: AssetType, auth_user: None
+    ) -> None:
+        response = await client.get(app.url_path_for("asset-type:retrieve-wfs", asset_type_id=asset_type.id))
+
+        assert response.status_code == HTTP_500_INTERNAL_SERVER_ERROR
+        assert "Failed to find module" in response.json()["detail"]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "asset_type_name, asset_type_class_name, asset_type_arguments",
+    [
+        (
+            "failing_http",
+            "tests.api.v1.endpoints.test_wfs.FailingHttpWfsProviderFactory",
+            {"base_url": "https://example.com"},
+        )
+    ],
+)
+class TestRetrieveWfsUpstreamError:
+    @pytest.mark.anyio
+    async def test_retrieve_wfs_upstream_error_returns_502(
+        self, app: FastAPI, client: AsyncClient, asset_type: AssetType, auth_user: None
+    ) -> None:
+        response = await client.get(app.url_path_for("asset-type:retrieve-wfs", asset_type_id=asset_type.id))
+
+        assert response.status_code == HTTP_502_BAD_GATEWAY

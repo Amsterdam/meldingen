@@ -1,21 +1,36 @@
 from typing import Any, override
+from unittest.mock import Mock
 
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
 from meldingen_core import SortingDirection
+from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory, InvalidWfsProviderException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
+from meldingen.dependencies import validate_asset_type_wfs_action
 from meldingen.models import AssetType
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
+
+
+class TestableWfsProviderFactory(BaseWfsProviderFactory):
+    """A WFS provider factory for testing validation. Validates base_url without HTTP calls."""
+
+    def __call__(self) -> BaseWfsProvider:
+        return Mock(BaseWfsProvider)
+
+    async def validate(self) -> None:
+        if "base_url" not in self._arguments:
+            raise InvalidWfsProviderException("Missing 'base_url' in arguments")
 
 
 class TestCreateAssetType(BaseUnauthorizedTest):
@@ -602,3 +617,138 @@ class TestDeleteAssetType(BaseUnauthorizedTest):
         response = await client.delete(app.url_path_for(self.get_route_name(), asset_type_id=asset_type.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
+
+
+@pytest.fixture
+def enable_wfs_validation(app: FastAPI) -> None:
+    """Remove the validation mock so real WFS validation runs."""
+    if validate_asset_type_wfs_action in app.dependency_overrides:
+        del app.dependency_overrides[validate_asset_type_wfs_action]
+
+
+class TestCreateAssetTypeValidation(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "asset-type:create"
+
+    def get_method(self) -> str:
+        return "POST"
+
+    @pytest.mark.anyio
+    async def test_create_with_invalid_class_name_returns_400(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, enable_wfs_validation: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.get_route_name()),
+            json={"name": "test", "class_name": "nonexistent.module.ClassName", "arguments": {}, "max_assets": 5},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert "Failed to find module" in response.json()["detail"]
+
+    @pytest.mark.anyio
+    async def test_create_with_invalid_arguments_returns_400(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, enable_wfs_validation: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.get_route_name()),
+            json={
+                "name": "test",
+                "class_name": "tests.api.v1.endpoints.test_asset_type.TestableWfsProviderFactory",
+                "arguments": {},
+                "max_assets": 5,
+            },
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert "Missing 'base_url'" in response.json()["detail"]
+
+    @pytest.mark.anyio
+    async def test_create_with_valid_class_and_arguments_returns_201(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, enable_wfs_validation: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.get_route_name()),
+            json={
+                "name": "test_valid",
+                "class_name": "tests.api.v1.endpoints.test_asset_type.TestableWfsProviderFactory",
+                "arguments": {"base_url": "http://example.com"},
+                "max_assets": 5,
+            },
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+
+class TestUpdateAssetTypeValidation(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "asset-type:update"
+
+    def get_method(self) -> str:
+        return "PATCH"
+
+    @override
+    def get_path_params(self) -> dict[str, Any]:
+        return {"asset_type_id": 123}
+
+    @pytest.mark.anyio
+    async def test_update_class_name_to_invalid_returns_400(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_type: AssetType, enable_wfs_validation: None
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.get_route_name(), asset_type_id=asset_type.id),
+            json={"class_name": "nonexistent.module.ClassName"},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert "Failed to find module" in response.json()["detail"]
+
+    @pytest.mark.anyio
+    async def test_update_arguments_to_invalid_returns_400(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        db_session: AsyncSession,
+        enable_wfs_validation: None,
+    ) -> None:
+        at = AssetType(
+            name="validation_test",
+            class_name="tests.api.v1.endpoints.test_asset_type.TestableWfsProviderFactory",
+            arguments={"base_url": "http://example.com"},
+            max_assets=5,
+        )
+        db_session.add(at)
+        await db_session.commit()
+
+        response = await client.patch(
+            app.url_path_for(self.get_route_name(), asset_type_id=at.id),
+            json={"arguments": {}},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert "Missing 'base_url'" in response.json()["detail"]
+
+    @pytest.mark.anyio
+    async def test_update_name_only_skips_validation(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_type: AssetType, enable_wfs_validation: None
+    ) -> None:
+        """Updating only name should not trigger WFS validation."""
+        response = await client.patch(
+            app.url_path_for(self.get_route_name(), asset_type_id=asset_type.id),
+            json={"name": "new_name"},
+        )
+
+        # asset_type has class_name "test.AssetTypeClassName" which is invalid,
+        # but name-only update should skip validation
+        assert response.status_code == HTTP_200_OK
+
+    @pytest.mark.anyio
+    async def test_update_not_found_with_wfs_fields(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, enable_wfs_validation: None
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.get_route_name(), asset_type_id=99999),
+            json={"class_name": "some.module.Class"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND

@@ -2,7 +2,7 @@ from typing import AsyncIterator, Literal
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from httpx import AsyncClient, Response
-from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory
+from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory, InvalidWfsProviderException
 
 
 class UrlProcessor:
@@ -87,3 +87,20 @@ class ProxyWfsProviderFactory(BaseWfsProviderFactory):
         base_url = self._arguments["base_url"]
 
         return ProxyWfsProvider(base_url, UrlProcessor(), AsyncClient())
+
+    async def validate(self) -> None:
+        if "base_url" not in self._arguments:
+            raise InvalidWfsProviderException("Missing 'base_url' in arguments")
+
+        base_url = self._arguments["base_url"]
+
+        try:
+            async with AsyncClient() as client:
+                response = await client.get(
+                    base_url,
+                    params={"SERVICE": "WFS", "REQUEST": "GetCapabilities"},
+                    timeout=10.0,
+                )
+                response.raise_for_status()
+        except Exception as e:
+            raise InvalidWfsProviderException(f"WFS service validation failed: {e}") from e
