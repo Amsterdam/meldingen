@@ -456,7 +456,7 @@ async def melding_submit(
         **default_response,
     },
 )
-async def melding_submit(
+async def melding_submit_melder(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingSubmitActionMelder, Depends(melding_submit_action_melder)],
