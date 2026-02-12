@@ -9,6 +9,7 @@ from meldingen_core.actions.melding import MeldingDeleteAssetAction as BaseMeldi
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
 from meldingen_core.actions.melding import MeldingSubmitAction as BaseMeldingSubmitAction
+from meldingen_core.actions.melding import MeldingSubmitActionMelder as BaseMeldingSubmitActionMelder
 from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters
@@ -73,6 +74,9 @@ class MeldingDeleteAssetAction(BaseMeldingDeleteAssetAction[Melding, Asset]): ..
 
 
 class MeldingSubmitAction(BaseMeldingSubmitAction[Melding]): ...
+
+
+class MeldingSubmitActionMelder(BaseMeldingSubmitActionMelder[Melding]): ...
 
 
 class AddLocationToMeldingAction:

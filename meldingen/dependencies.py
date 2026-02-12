@@ -93,6 +93,7 @@ from meldingen.actions.melding import (
     MeldingListAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
+    MeldingSubmitActionMelder,
 )
 from meldingen.actions.user import (
     UserCreateAction,
@@ -599,14 +600,21 @@ def melding_confirmation_mailer(
     )
 
 
-def melding_submit_action(
+def melding_submit_action_melder(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     token_invalidator: Annotated[TokenInvalidator, Depends(token_invalidator)],
     confirmation_mailer: Annotated[BaseMeldingConfirmationMailer[Melding], Depends(melding_confirmation_mailer)],
+) -> MeldingSubmitActionMelder:
+    return MeldingSubmitActionMelder(repository, state_machine, token_verifier, token_invalidator, confirmation_mailer)
+
+
+def melding_submit_action(
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingSubmitAction:
-    return MeldingSubmitAction(repository, state_machine, token_verifier, token_invalidator, confirmation_mailer)
+    return MeldingSubmitAction(repository, state_machine)
 
 
 def send_completed_mail_task(mailer: Annotated[BaseMailer, Depends(mailer)]) -> SendCompletedMailTask:
