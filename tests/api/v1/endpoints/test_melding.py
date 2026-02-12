@@ -4553,7 +4553,9 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
         ],
         indirect=True,
     )
-    async def test_submit_melding(self, app: FastAPI, client: AsyncClient, melding: Melding, mailpit_api: API) -> None:
+    async def test_submit_melding_melder(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, mailpit_api: API
+    ) -> None:
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding.id),
@@ -4580,7 +4582,9 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
             (MeldingStates.SUBMITTED, "supersecrettoken"),
         ],
     )
-    async def test_submit_melding_wrong_from_state(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+    async def test_submit_melding_melder_wrong_from_state(
+        self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding.id),
@@ -4598,13 +4602,65 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
         [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com", "http://mailpit:8025")],
         indirect=True,
     )
-    async def test_submit_melding_not_found(
+    async def test_submit_melding_melder_not_found(
         self, app: FastAPI, client: AsyncClient, melding: Melding, mailpit_api: API
     ) -> None:
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=325894768),
             params={"token": melding.token},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+
+class TestMeldingSubmit(BaseUnauthorizedTest):
+    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+
+    def get_route_name(self) -> str:
+        return "melding:submit"
+
+    def get_method(self) -> str:
+        return "PUT"
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_state", "melding_email"],
+        [
+            (MeldingStates.CONTACT_INFO_ADDED, "melder@example.com"),
+            (MeldingStates.PLANNED, "melder@example.com"),
+            (MeldingStates.PROCESSING_REQUESTED, "melder@example.com"),
+            (MeldingStates.PROCESSING, "melder@example.com"),
+            (MeldingStates.REOPENED, "melder@example.com"),
+        ],
+        indirect=True,
+    )
+    async def test_submit_melding(self, app: FastAPI, client: AsyncClient, melding: Melding, auth_user: None) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("state") == MeldingStates.SUBMITTED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_state", "melding_email"],
+        [(MeldingStates.CONTACT_INFO_ADDED, "melder@example.com")],
+        indirect=True,
+    )
+    async def test_submit_melding_not_found(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, auth_user: None
+    ) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=325894768),
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
