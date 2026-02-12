@@ -2787,8 +2787,8 @@ plugfs = {git = "https://github.com/Amsterdam/plugfs.git"}
 [package.source]
 type = "git"
 url = "https://github.com/Amsterdam/meldingen-core.git"
-reference = "feature/7123_add-submit-melding-endpoint-melder"
-resolved_reference = "3b56439f391146743c88bbf209fdcfbe57d36cae"
+reference = "HEAD"
+resolved_reference = "c5ac439eb8f946282b33219ab40b82ce85892528"
 
 [[package]]
 name = "mergedeep"
@@ -5995,4 +5995,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "6aac41b99066bd4daf74444157648498ab9835179cbe10342b7af62aca760dfb"
+content-hash = "10f9febb40202c711a6e1c1bdbba47d1b40f4d3ed54c6fb350266963c219aaa4"
