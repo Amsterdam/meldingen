@@ -4534,9 +4534,9 @@ class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_404_NOT_FOUND
 
 
-class TestMeldingSubmit(BaseTokenAuthenticationTest):
+class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
     def get_route_name(self) -> str:
-        return "melding:submit"
+        return "melding:submit_melder"
 
     def get_method(self) -> str:
         return "PUT"
