@@ -614,7 +614,7 @@ def melding_submit_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingSubmitAction:
-    return MeldingSubmitAction(repository, state_machine)
+    return MeldingSubmitAction(state_machine, repository)
 
 
 def send_completed_mail_task(mailer: Annotated[BaseMailer, Depends(mailer)]) -> SendCompletedMailTask:
