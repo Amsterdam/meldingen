@@ -30,6 +30,7 @@ from meldingen.dependencies import (
     database_session_manager,
     malware_scanner,
     public_id_generator,
+    validate_asset_type_wfs_action,
 )
 from meldingen.generators import PublicIdGenerator
 from meldingen.main import get_application
@@ -205,11 +206,18 @@ async def override_dependencies(
     def db_manager_override() -> DatabaseSessionManager:
         return db_manager
 
+    async def noop_validate(asset_type: Any) -> None:
+        pass
+
+    def mock_validate_action() -> Any:
+        return noop_validate
+
     app.dependency_overrides.update(
         {
             database_session: db_session_override,
             database_engine: db_engine_override,
             database_session_manager: db_manager_override,
+            validate_asset_type_wfs_action: mock_validate_action,
         }
     )
 
