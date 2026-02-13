@@ -440,8 +440,6 @@ async def melding_submit(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(melding)
 
