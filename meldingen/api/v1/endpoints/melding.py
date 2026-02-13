@@ -61,6 +61,7 @@ from meldingen.actions.melding import (
     MeldingListAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
+    MeldingSubmitActionMelder,
 )
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (
@@ -112,6 +113,7 @@ from meldingen.dependencies import (
     melding_request_reopen_action,
     melding_retrieve_action,
     melding_submit_action,
+    melding_submit_action_melder,
     melding_submit_location_action,
     melding_update_action,
     melding_update_output_factory,
@@ -425,11 +427,37 @@ async def submit_location(
         **not_found_response,
         **default_response,
     },
+    dependencies=[Depends(authenticate_user)],
 )
 async def melding_submit(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingSubmitAction, Depends(melding_submit_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except WrongStateException:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+
+    return await produce_output(melding)
+
+
+@router.put(
+    "/{melding_id}/submit/melder",
+    name="melding:submit_melder",
+    responses={
+        **transition_not_allowed,
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+    },
+)
+async def melding_submit_melder(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[MeldingSubmitActionMelder, Depends(melding_submit_action_melder)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:

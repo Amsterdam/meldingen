@@ -12,7 +12,7 @@ ROUTE_FINISH_ANSWERING_QUESTIONS: Final[str] = "melding:answer_questions"
 ROUTE_FINISH_UPLOADING_ATTACHMENTS: Final[str] = "melding:add-attachments"
 ROUTE_NAME_LOCATION_FINALIZE: Final[str] = "melding:submit-location"
 ROUTE_FINALIZE_CONTACT_INFO_ADD: Final[str] = "melding:add-contact-info"
-ROUTE_NAME_SUBMIT: Final[str] = "melding:submit"
+ROUTE_NAME_SUBMIT: Final[str] = "melding:submit_melder"
 
 TRANSITION_TO_ROUTE_MAP = {
     MeldingTransitions.ANSWER_QUESTIONS: ROUTE_FINISH_ANSWERING_QUESTIONS,
