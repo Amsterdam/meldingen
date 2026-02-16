@@ -3,7 +3,6 @@ from meldingen_core.actions.asset_type import AssetTypeDeleteAction as BaseAsset
 from meldingen_core.actions.asset_type import AssetTypeListAction as BaseAssetTypeListAction
 from meldingen_core.actions.asset_type import AssetTypeRetrieveAction as BaseAssetTypeRetrieveAction
 from meldingen_core.actions.asset_type import AssetTypeUpdateAction as BaseAssetTypeUpdateAction
-from meldingen_core.actions.asset_type import ValidateAssetTypeWfsAction as BaseValidateAssetTypeWfsAction
 from meldingen_core.actions.wfs import WfsRetrieveAction as BaseWfsRetrieveAction
 
 from meldingen.actions.base import BaseListAction
@@ -23,9 +22,6 @@ class AssetTypeUpdateAction(BaseAssetTypeUpdateAction[AssetType]): ...
 
 
 class AssetTypeDeleteAction(BaseAssetTypeDeleteAction[AssetType]): ...
-
-
-class ValidateAssetTypeWfsAction(BaseValidateAssetTypeWfsAction[AssetType]): ...
 
 
 class WfsRetrieveAction(BaseWfsRetrieveAction[AssetType]): ...

@@ -17,7 +17,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
-from meldingen.dependencies import validate_asset_type_wfs_action
+from meldingen.dependencies import wfs_provider_validator
 from meldingen.models import AssetType
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -26,11 +26,9 @@ class TestableWfsProviderFactory(BaseWfsProviderFactory):
     """A WFS provider factory for testing validation. Validates base_url without HTTP calls."""
 
     def __call__(self) -> BaseWfsProvider:
-        return Mock(BaseWfsProvider)
-
-    async def validate(self) -> None:
         if "base_url" not in self._arguments:
-            raise InvalidWfsProviderException("Missing 'base_url' in arguments")
+            raise ValueError("Missing 'base_url' in arguments")
+        return Mock(BaseWfsProvider)
 
 
 class TestCreateAssetType(BaseUnauthorizedTest):
@@ -622,8 +620,8 @@ class TestDeleteAssetType(BaseUnauthorizedTest):
 @pytest.fixture
 def enable_wfs_validation(app: FastAPI) -> None:
     """Remove the validation mock so real WFS validation runs."""
-    if validate_asset_type_wfs_action in app.dependency_overrides:
-        del app.dependency_overrides[validate_asset_type_wfs_action]
+    if wfs_provider_validator in app.dependency_overrides:
+        del app.dependency_overrides[wfs_provider_validator]
 
 
 class TestCreateAssetTypeValidation(BaseUnauthorizedTest):

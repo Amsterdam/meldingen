@@ -21,7 +21,6 @@ from meldingen.actions.asset_type import (
     AssetTypeListAction,
     AssetTypeRetrieveAction,
     AssetTypeUpdateAction,
-    ValidateAssetTypeWfsAction,
     WfsRetrieveAction,
 )
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
@@ -35,7 +34,6 @@ from meldingen.dependencies import (
     asset_type_repository,
     asset_type_retrieve_action,
     asset_type_update_action,
-    validate_asset_type_wfs_action,
     wfs_retrieve_action,
 )
 from meldingen.models import AssetType
@@ -57,17 +55,14 @@ router = APIRouter()
 async def create_asset_type(
     input: AssetTypeInput,
     action: Annotated[AssetTypeCreateAction, Depends(asset_type_create_action)],
-    validate_action: Annotated[ValidateAssetTypeWfsAction, Depends(validate_asset_type_wfs_action)],
     produce_output: Annotated[AssetTypeOutputFactory, Depends(asset_type_output_factory)],
 ) -> AssetTypeOutput:
     asset_type = AssetType(**input.model_dump())
 
     try:
-        await validate_action(asset_type)
+        await action(asset_type)
     except (InvalidWfsProviderException, ValueError) as e:
         raise HTTPException(HTTP_400_BAD_REQUEST, detail=str(e))
-
-    await action(asset_type)
 
     return produce_output(asset_type)
 
@@ -132,32 +127,16 @@ async def update_asset_type(
     input: AssetTypeUpdateInput,
     asset_type_id: Annotated[int, Path(description="The asset type id.", ge=1)],
     action: Annotated[AssetTypeUpdateAction, Depends(asset_type_update_action)],
-    validate_action: Annotated[ValidateAssetTypeWfsAction, Depends(validate_asset_type_wfs_action)],
-    retrieve_action: Annotated[AssetTypeRetrieveAction, Depends(asset_type_retrieve_action)],
     produce_output: Annotated[AssetTypeOutputFactory, Depends(asset_type_output_factory)],
 ) -> AssetTypeOutput:
     values = input.model_dump(exclude_unset=True)
-
-    if "class_name" in values or "arguments" in values:
-        current = await retrieve_action(asset_type_id)
-        if current is None:
-            raise HTTPException(HTTP_404_NOT_FOUND)
-
-        temp_asset_type = AssetType(
-            name=current.name,
-            class_name=values.get("class_name", current.class_name),
-            arguments=values.get("arguments", current.arguments),
-            max_assets=current.max_assets,
-        )
-        try:
-            await validate_action(temp_asset_type)
-        except (InvalidWfsProviderException, ValueError) as e:
-            raise HTTPException(HTTP_400_BAD_REQUEST, detail=str(e))
 
     try:
         asset_type = await action(asset_type_id, values)
     except NotFoundException:
         raise HTTPException(HTTP_404_NOT_FOUND)
+    except (InvalidWfsProviderException, ValueError) as e:
+        raise HTTPException(HTTP_400_BAD_REQUEST, detail=str(e))
 
     return produce_output(asset_type)
 

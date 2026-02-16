@@ -2,7 +2,8 @@ from typing import AsyncIterator, Literal
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from httpx import AsyncClient, Response
-from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory, InvalidWfsProviderException
+from meldingen_core.models import AssetType
+from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory, BaseWfsProviderValidator, InvalidWfsProviderException
 
 
 class UrlProcessor:
@@ -81,18 +82,17 @@ class ProxyWfsProvider(BaseWfsProvider):
 
 class ProxyWfsProviderFactory(BaseWfsProviderFactory):
     def __call__(self) -> ProxyWfsProvider:
-        if "base_url" not in self._arguments:
-            raise ValueError("Missing 'base_url' in arguments")
-
-        base_url = self._arguments["base_url"]
-
         return ProxyWfsProvider(base_url, UrlProcessor(), AsyncClient())
 
-    async def validate(self) -> None:
-        if "base_url" not in self._arguments:
+
+class ProxyWfsProviderValidator(BaseWfsProviderValidator):
+    async def __call__(self, asset_type: AssetType) -> None:
+        await super().__call__(asset_type)
+
+        if "base_url" not in asset_type.arguments:
             raise InvalidWfsProviderException("Missing 'base_url' in arguments")
 
-        base_url = self._arguments["base_url"]
+        base_url = asset_type.arguments["base_url"]
 
         try:
             async with AsyncClient() as client:
@@ -104,3 +104,5 @@ class ProxyWfsProviderFactory(BaseWfsProviderFactory):
                 response.raise_for_status()
         except Exception as e:
             raise InvalidWfsProviderException(f"WFS service validation failed: {e}") from e
+
+
