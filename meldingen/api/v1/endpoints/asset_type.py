@@ -183,7 +183,7 @@ async def retrieve_wfs(
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
     except InvalidWfsProviderException as e:
-        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except HTTPError as e:
         raise HTTPException(status_code=HTTP_502_BAD_GATEWAY, detail=str(e)) from e
 

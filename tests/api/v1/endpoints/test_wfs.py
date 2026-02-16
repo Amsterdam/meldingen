@@ -11,6 +11,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_CONTENT,
     HTTP_500_INTERNAL_SERVER_ERROR,
     HTTP_502_BAD_GATEWAY,
+    HTTP_400_BAD_REQUEST,
 )
 
 from meldingen.models import AssetType
@@ -114,12 +115,12 @@ class TestRetrieveContainerWfs:
 )
 class TestRetrieveWfsInvalidProvider:
     @pytest.mark.anyio
-    async def test_retrieve_wfs_invalid_provider_returns_500(
+    async def test_retrieve_wfs_invalid_provider_returns_400(
         self, app: FastAPI, client: AsyncClient, asset_type: AssetType, auth_user: None
     ) -> None:
         response = await client.get(app.url_path_for("asset-type:retrieve-wfs", asset_type_id=asset_type.id))
 
-        assert response.status_code == HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.status_code == HTTP_400_BAD_REQUEST
         assert "Failed to find module" in response.json()["detail"]
 
 
