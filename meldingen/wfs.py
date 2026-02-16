@@ -3,7 +3,12 @@ from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from httpx import AsyncClient, Response
 from meldingen_core.models import AssetType
-from meldingen_core.wfs import BaseWfsProvider, BaseWfsProviderFactory, BaseWfsProviderValidator, InvalidWfsProviderException
+from meldingen_core.wfs import (
+    BaseWfsProvider,
+    BaseWfsProviderFactory,
+    BaseWfsProviderValidator,
+    InvalidWfsProviderException,
+)
 
 
 class UrlProcessor:
@@ -82,7 +87,7 @@ class ProxyWfsProvider(BaseWfsProvider):
 
 class ProxyWfsProviderFactory(BaseWfsProviderFactory):
     def __call__(self) -> ProxyWfsProvider:
-        return ProxyWfsProvider(base_url, UrlProcessor(), AsyncClient())
+        return ProxyWfsProvider(self._arguments["base_url"], UrlProcessor(), AsyncClient())
 
 
 class ProxyWfsProviderValidator(BaseWfsProviderValidator):
@@ -104,5 +109,3 @@ class ProxyWfsProviderValidator(BaseWfsProviderValidator):
                 response.raise_for_status()
         except Exception as e:
             raise InvalidWfsProviderException(f"WFS service validation failed: {e}") from e
-
-
