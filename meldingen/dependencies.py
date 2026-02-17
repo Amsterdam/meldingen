@@ -34,7 +34,7 @@ from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.managers import RelationshipManager
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
-from meldingen_core.wfs import BaseWfsProviderValidator, AssetTypeToWfsProviderConverter
+from meldingen_core.wfs import AssetTypeToWfsProviderConverter, BaseWfsProviderValidator
 from openai import AsyncOpenAI
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
