@@ -61,7 +61,7 @@ async def create_asset_type(
 
     try:
         await action(asset_type)
-    except (InvalidWfsProviderException, ValueError) as e:
+    except InvalidWfsProviderException as e:
         raise HTTPException(HTTP_400_BAD_REQUEST, detail=str(e))
 
     return produce_output(asset_type)
@@ -135,7 +135,7 @@ async def update_asset_type(
         asset_type = await action(asset_type_id, values)
     except NotFoundException:
         raise HTTPException(HTTP_404_NOT_FOUND)
-    except (InvalidWfsProviderException, ValueError) as e:
+    except InvalidWfsProviderException as e:
         raise HTTPException(HTTP_400_BAD_REQUEST, detail=str(e))
 
     return produce_output(asset_type)
