@@ -7,11 +7,11 @@ from httpx import AsyncClient, HTTPStatusError, Response
 from meldingen_core.wfs import BaseWfsProviderFactory, InvalidWfsProviderException
 from starlette.status import (
     HTTP_200_OK,
+    HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_CONTENT,
     HTTP_500_INTERNAL_SERVER_ERROR,
     HTTP_502_BAD_GATEWAY,
-    HTTP_400_BAD_REQUEST,
 )
 
 from meldingen.models import AssetType

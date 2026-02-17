@@ -34,7 +34,7 @@ from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.managers import RelationshipManager
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
-from meldingen_core.wfs import BaseWfsProviderValidator, WfsProviderFactory
+from meldingen_core.wfs import BaseWfsProviderValidator, AssetTypeToWfsProviderConverter
 from openai import AsyncOpenAI
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
@@ -1334,15 +1334,15 @@ def asset_type_delete_action(
     return AssetTypeDeleteAction(repository)
 
 
-def wfs_provider_factory() -> WfsProviderFactory:
-    return WfsProviderFactory()
+def asset_type_to_wfs_provider_converter() -> AssetTypeToWfsProviderConverter:
+    return AssetTypeToWfsProviderConverter()
 
 
 def wfs_retrieve_action(
-    provider_factory: Annotated[WfsProviderFactory, Depends(wfs_provider_factory)],
+    converter: Annotated[AssetTypeToWfsProviderConverter, Depends(asset_type_to_wfs_provider_converter)],
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> WfsRetrieveAction:
-    return WfsRetrieveAction(provider_factory, repository)
+    return WfsRetrieveAction(converter, repository)
 
 
 def answer_output_factory() -> AnswerOutputFactory:

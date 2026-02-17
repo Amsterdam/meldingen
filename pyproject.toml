@@ -17,12 +17,12 @@ dependencies = [
     "amsterdam-mail-service-client @ git+https://github.com/Amsterdam/amsterdam-mail-service-client.git",
     "asgi-correlation-id (>=4.3.4,<5.0.0)",
     "asyncpg (>=0.30.0,<1.0.0)",
-    "azure-storage-blob (>=12.25.1,<12.29.0)", # 12.26.0 is incompatible with Azurite 3.34.0, relax constraint once a compatible version of Azurite is released
+    "azure-storage-blob (>=12.25.1,<12.26.0)", # 12.26.0 is incompatible with Azurite 3.34.0, relax constraint once a compatible version of Azurite is released
     "fastapi[standard] (>=0.115.7,<1.0.0)",
     "geoalchemy2 (>=0.17.0,<1.0.0)",
     "geojson-pydantic (>=1.2.0,<2.0.0)",
     "httpx[http2] (>=0.28.1,<1.0.0)",
-    "meldingen-core @ git+https://github.com/Amsterdam/meldingen-core.git@feature/7095_validate_asset_type",
+    "meldingen-core @ git+https://github.com/Amsterdam/meldingen-core.git",
     "mp-fsm @ git+https://github.com/Amsterdam/mp-fsm.git",
     "openai (>=1.99.1,<2.0.0)",
     "opentelemetry-exporter-otlp-proto-grpc (>=1.29.0,<2.0.0)",
