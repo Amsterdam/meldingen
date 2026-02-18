@@ -2,9 +2,18 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from geojson_pydantic import FeatureCollection
+from httpx import HTTPError
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.wfs import InvalidWfsProviderException
 from starlette.responses import StreamingResponse
-from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from starlette.status import (
+    HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_502_BAD_GATEWAY,
+)
 
 from meldingen.actions.asset_type import (
     AssetTypeCreateAction,
@@ -50,7 +59,10 @@ async def create_asset_type(
 ) -> AssetTypeOutput:
     asset_type = AssetType(**input.model_dump())
 
-    await action(asset_type)
+    try:
+        await action(asset_type)
+    except InvalidWfsProviderException as e:
+        raise HTTPException(HTTP_400_BAD_REQUEST, detail=str(e))
 
     return produce_output(asset_type)
 
@@ -117,10 +129,14 @@ async def update_asset_type(
     action: Annotated[AssetTypeUpdateAction, Depends(asset_type_update_action)],
     produce_output: Annotated[AssetTypeOutputFactory, Depends(asset_type_output_factory)],
 ) -> AssetTypeOutput:
+    values = input.model_dump(exclude_unset=True)
+
     try:
-        asset_type = await action(asset_type_id, input.model_dump(exclude_unset=True))
+        asset_type = await action(asset_type_id, values)
     except NotFoundException:
         raise HTTPException(HTTP_404_NOT_FOUND)
+    except InvalidWfsProviderException as e:
+        raise HTTPException(HTTP_400_BAD_REQUEST, detail=str(e))
 
     return produce_output(asset_type)
 
@@ -166,5 +182,9 @@ async def retrieve_wfs(
         )
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except InvalidWfsProviderException as e:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except HTTPError as e:
+        raise HTTPException(status_code=HTTP_502_BAD_GATEWAY, detail=str(e)) from e
 
     return StreamingResponse(iterator, media_type=output_format)

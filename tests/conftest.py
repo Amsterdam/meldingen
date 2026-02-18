@@ -30,6 +30,7 @@ from meldingen.dependencies import (
     database_session_manager,
     malware_scanner,
     public_id_generator,
+    wfs_provider_validator,
 )
 from meldingen.generators import PublicIdGenerator
 from meldingen.main import get_application
@@ -205,11 +206,18 @@ async def override_dependencies(
     def db_manager_override() -> DatabaseSessionManager:
         return db_manager
 
+    async def noop_validate(asset_type: Any) -> None:
+        pass
+
+    def mock_wfs_validator() -> Any:
+        return noop_validate
+
     app.dependency_overrides.update(
         {
             database_session: db_session_override,
             database_engine: db_engine_override,
             database_session_manager: db_manager_override,
+            wfs_provider_validator: mock_wfs_validator,
         }
     )
 
@@ -318,3 +326,10 @@ def address_api_client_override(app: FastAPI, address_api_mock_data: dict[str, A
         return api
 
     app.dependency_overrides[address_api_instance] = test_address_api
+
+
+@pytest.fixture
+def enable_wfs_validation(app: FastAPI) -> None:
+    """Remove the validation mock so real WFS validation runs."""
+    if wfs_provider_validator in app.dependency_overrides:
+        del app.dependency_overrides[wfs_provider_validator]

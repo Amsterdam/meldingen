@@ -34,7 +34,7 @@ from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.managers import RelationshipManager
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
-from meldingen_core.wfs import WfsProviderFactory
+from meldingen_core.wfs import AssetTypeToWfsProviderConverter, BaseWfsProviderValidator
 from openai import AsyncOpenAI
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
@@ -218,6 +218,7 @@ from meldingen.statemachine import (
 )
 from meldingen.token import TokenInvalidator, UrlSafeTokenGenerator
 from meldingen.validators import MediaTypeIntegrityValidator, MediaTypeValidator, MeldingPrimaryFormValidator
+from meldingen.wfs import ProxyWfsProviderValidator
 
 
 @lru_cache
@@ -1297,10 +1298,15 @@ def user_delete_action(repository: Annotated[UserRepository, Depends(user_reposi
     return UserDeleteAction(repository)
 
 
+def wfs_provider_validator() -> BaseWfsProviderValidator:
+    return ProxyWfsProviderValidator()
+
+
 def asset_type_create_action(
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+    validator: Annotated[BaseWfsProviderValidator, Depends(wfs_provider_validator)],
 ) -> AssetTypeCreateAction:
-    return AssetTypeCreateAction(repository)
+    return AssetTypeCreateAction(repository, validator)
 
 
 def asset_type_retrieve_action(
@@ -1317,8 +1323,9 @@ def asset_type_list_action(
 
 def asset_type_update_action(
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+    validator: Annotated[BaseWfsProviderValidator, Depends(wfs_provider_validator)],
 ) -> AssetTypeUpdateAction:
-    return AssetTypeUpdateAction(repository)
+    return AssetTypeUpdateAction(repository, validator)
 
 
 def asset_type_delete_action(
@@ -1327,15 +1334,15 @@ def asset_type_delete_action(
     return AssetTypeDeleteAction(repository)
 
 
-def wfs_provider_factory() -> WfsProviderFactory:
-    return WfsProviderFactory()
+def asset_type_to_wfs_provider_converter() -> AssetTypeToWfsProviderConverter:
+    return AssetTypeToWfsProviderConverter()
 
 
 def wfs_retrieve_action(
-    provider_factory: Annotated[WfsProviderFactory, Depends(wfs_provider_factory)],
+    converter: Annotated[AssetTypeToWfsProviderConverter, Depends(asset_type_to_wfs_provider_converter)],
     repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
 ) -> WfsRetrieveAction:
-    return WfsRetrieveAction(provider_factory, repository)
+    return WfsRetrieveAction(converter, repository)
 
 
 def answer_output_factory() -> AnswerOutputFactory:
