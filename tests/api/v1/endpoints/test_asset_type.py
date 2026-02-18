@@ -27,7 +27,7 @@ class TestableWfsProviderFactory(BaseWfsProviderFactory):
 
     def __call__(self) -> BaseWfsProvider:
         if "base_url" not in self._arguments:
-            raise ValueError("Missing 'base_url' in arguments")
+            raise InvalidWfsProviderException("Missing 'base_url' in arguments")
         return Mock(BaseWfsProvider)
 
 
