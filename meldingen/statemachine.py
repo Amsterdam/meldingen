@@ -160,7 +160,7 @@ class RequestProcessing(BaseTransition[Melding]):
 class Plan(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
-        return [MeldingStates.SUBMITTED, MeldingStates.PROCESSING_REQUESTED]
+        return [MeldingStates.SUBMITTED, MeldingStates.PROCESSING_REQUESTED, MeldingStates.PROCESSING]
 
     @property
     def to_state(self) -> str:
