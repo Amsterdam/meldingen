@@ -28,10 +28,6 @@ class ValidMockProxyWfsProviderFactory(BaseWfsProviderFactory):
 
         return ProxyWfsProvider(self._arguments["base_url"], UrlProcessor(), http_client)
 
-    async def validate(self) -> None:
-        if "base_url" not in self._arguments:
-            raise InvalidWfsProviderException("Missing 'base_url' in arguments")
-
 
 class FailingHttpWfsProviderFactory(BaseWfsProviderFactory):
     """A WFS provider factory that simulates an upstream HTTP error."""
@@ -47,9 +43,6 @@ class FailingHttpWfsProviderFactory(BaseWfsProviderFactory):
         )
 
         return ProxyWfsProvider(self._arguments["base_url"], UrlProcessor(), http_client)
-
-    async def validate(self) -> None:
-        pass
 
 
 @pytest.mark.anyio

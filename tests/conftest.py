@@ -326,3 +326,10 @@ def address_api_client_override(app: FastAPI, address_api_mock_data: dict[str, A
         return api
 
     app.dependency_overrides[address_api_instance] = test_address_api
+
+
+@pytest.fixture
+def enable_wfs_validation(app: FastAPI) -> None:
+    """Remove the validation mock so real WFS validation runs."""
+    if wfs_provider_validator in app.dependency_overrides:
+        del app.dependency_overrides[wfs_provider_validator]

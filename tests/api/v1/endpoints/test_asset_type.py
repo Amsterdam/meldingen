@@ -617,13 +617,6 @@ class TestDeleteAssetType(BaseUnauthorizedTest):
         assert response.status_code == HTTP_204_NO_CONTENT
 
 
-@pytest.fixture
-def enable_wfs_validation(app: FastAPI) -> None:
-    """Remove the validation mock so real WFS validation runs."""
-    if wfs_provider_validator in app.dependency_overrides:
-        del app.dependency_overrides[wfs_provider_validator]
-
-
 class TestCreateAssetTypeValidation(BaseUnauthorizedTest):
     def get_route_name(self) -> str:
         return "asset-type:create"
