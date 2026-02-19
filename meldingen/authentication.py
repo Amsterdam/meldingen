@@ -63,7 +63,7 @@ async def authenticate_user(
     except MissingRequiredClaimError:
         raise InvalidRequestException()
 
-    email = payload.get(settings.auth_identifier_field)
+    email = str(payload.get(settings.auth_identifier_field))
 
     return await user_repository.find_by_email_or_create(email)
 
