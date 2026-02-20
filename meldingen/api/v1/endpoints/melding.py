@@ -216,7 +216,7 @@ async def list_meldingen(
         Annotated[
             str,
             Query(
-                example=f"{MeldingStates.PROCESSING},{MeldingStates.COMPLETED}",
+                examples=f"{MeldingStates.PROCESSING},{MeldingStates.COMPLETED}",
                 description="Comma-seperated list of states that the melding should have. If left empty, meldingen will be filtered by backoffice states.",
             ),
         ]
