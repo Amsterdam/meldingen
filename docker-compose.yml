@@ -74,7 +74,8 @@ services:
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite:latest
-    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --debug /var/log/azurite.log -l /opt/azurite/data
+    # temporarily skip api version check: https://github.com/Azure/Azurite/issues/2623
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --debug /var/log/azurite.log -l /opt/azurite/data --skipApiVersionCheck
     ports:
       - "10000:10000"
     healthcheck:
