@@ -2314,10 +2314,10 @@ class TestMeldingQuestionAnswer:
     @pytest.mark.parametrize(
         ["time_value", "error_message"],
         [
-            ("invalid-time-format", r"String should match pattern '^\d{2}:\d{2}$'"),
-            ("24:00:00", r"String should match pattern '^\d{2}:\d{2}$'"),
-            ("1560", r"String should match pattern '^\d{2}:\d{2}$'"),
-            ("ab:cd", r"String should match pattern '^\d{2}:\d{2}$'"),
+            ("invalid-time-format", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("24:00:00", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("1560", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("ab:cd", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
             (1000, "Input should be a valid string"),
             (10.00, "Input should be a valid string"),
         ],
@@ -2997,10 +2997,10 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
     @pytest.mark.parametrize(
         ["time_value", "error_message"],
         [
-            ("invalid-time-format", r"String should match pattern '^\d{2}:\d{2}$'"),
-            ("24:00:00", r"String should match pattern '^\d{2}:\d{2}$'"),
-            ("1560", r"String should match pattern '^\d{2}:\d{2}$'"),
-            ("ab:cd", r"String should match pattern '^\d{2}:\d{2}$'"),
+            ("invalid-time-format", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("24:00:00", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("1560", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("ab:cd", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
             (1000, "Input should be a valid string"),
             (10.00, "Input should be a valid string"),
         ],
