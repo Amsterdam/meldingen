@@ -36,9 +36,9 @@ from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.azure import AzureProvider
 from pydantic_ai.providers.openai import OpenAIProvider
 from meldingen_core.wfs import AssetTypeToWfsProviderConverter, BaseWfsProviderValidator
-from openai import AsyncOpenAI
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
@@ -327,24 +327,32 @@ def answer_factory() -> AnswerFactory:
     return AnswerFactory()
 
 
-# def openai_client() -> AsyncOpenAI:
-#     return AsyncOpenAI(base_url=settings.llm_base_url)
 
 
-def classifier_agent() -> Agent | None:
+def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
 
-    if settings.llm_enabled:
-        model = OpenAIChatModel(
-            settings.llm_model_identifier,
-            provider = OpenAIProvider(
-                base_url=settings.llm_base_url
-            )
+    if settings.llm_provider == "azure":
+        return AzureProvider(
+            azure_endpoint=settings.llm_base_url,
+            api_key=settings.llm_api_key,
+            api_version="2025-01-01-preview",
         )
 
-        # # Get allowed classifications
-        # classifications_list = [c.name for c in await repository.list()]
-        # # Dynamically create a Literal type for allowed values
-        # ClassificationModel = make_classification_model(classifications_list)
+    if settings.llm_provider == "openai":
+        """We can use the open ai provider for many models besides the ones from Open AI"""
+        return OpenAIProvider(base_url=settings.llm_base_url)
+
+    return None
+
+
+
+def classifier_agent(provider: Annotated[AzureProvider | None, Depends(llm_provider_generator)]) -> Agent | None:
+
+    if settings.llm_enabled and provider is not None:
+        model = OpenAIChatModel(
+            settings.llm_model_identifier,
+            provider=provider
+        )
 
         # Prepare the prompt
         system_prompt = (

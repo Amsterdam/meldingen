@@ -1,7 +1,7 @@
 import logging
 from meldingen_core.classification import BaseClassifierAdapter
 from pydantic_ai import Agent
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 from typing import Literal
 
 from meldingen.repositories import ClassificationRepository
@@ -18,11 +18,15 @@ class ClassificationResponse(BaseModel):
     classification: str = Field(..., description="The chosen classification")
 
 
-async def build_classification_model(repository: ClassificationRepository) -> type[BaseModel]:
+async def build_classification_response_model(repository: ClassificationRepository) -> type[BaseModel]:
+    """Create a Pydantic model to ensure the LLM's response is one of the valid classification names inside the Literal tuple."""
+
     classifications_list = [c.name for c in await repository.list()]
-    annotations = {"classification": Literal[tuple(classifications_list)]}
-    namespace = {"__annotations__": annotations, "classification": Field(..., description="The chosen classification")}
-    return type("ClassificationResponse", (BaseModel,), namespace)
+    classification_type = Literal[tuple(classifications_list)]
+    return create_model(
+        "ClassificationResponse",
+        classification=(classification_type, Field(..., description="The chosen classification"))
+    )
 
 
 class OpenAIClassifierAdapter(BaseClassifierAdapter):
@@ -36,7 +40,7 @@ class OpenAIClassifierAdapter(BaseClassifierAdapter):
     async def __call__(self, text: str) -> str | None:
         user_prompt = f"Please classify: {text}"
         try:
-            ClassificationModel = await build_classification_model(self._repository)
+            ClassificationModel = await build_classification_response_model(self._repository)
             result = await self._agent.run(user_prompt, output_type=ClassificationModel)
             classification = result.output.classification
 
