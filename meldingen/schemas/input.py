@@ -231,7 +231,7 @@ class TextAnswerInput(BaseModel):
 
 
 class TimeAnswerInput(BaseModel):
-    time: Annotated[str, Field(pattern=r"^\d{2}:\d{2}$")]
+    time: Annotated[str, Field(pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")]
     type: Literal[AnswerTypeEnum.time]
 
 
