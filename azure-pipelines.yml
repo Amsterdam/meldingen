@@ -8,7 +8,7 @@ trigger:
 
 pr: none
 
-pool: Selfhosted Azure Devops Agents
+pool: ManagedDevOpsPools
 
 # These defaults need to be set as variables on the pipeline in the Devops webinterface
 parameters:
