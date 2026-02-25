@@ -241,7 +241,7 @@ async def form_with_multiple_questions(
         question = Question(text=f"Question {i}")
         questions.append(question)
         panel = FormIoPanelComponent(label=f"Panel {i}", key=f"Panel Key {i}", type="panel")
-        component = FormIoTextAreaComponent(label=f"Component {i}", key=f"Key {i}")
+        component = FormIoTimeComponent(label=f"Component {i}", key=f"Key {i}")
         component.question = question
         component.parent = panel
         component.required = is_required
