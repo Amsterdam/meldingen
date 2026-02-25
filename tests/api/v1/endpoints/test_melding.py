@@ -2931,6 +2931,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             question=questions[0],
             melding=melding_with_classification,
             type=AnswerTypeEnum.text,
+            original_question_text=questions[0].text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -2976,6 +2977,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             question=questions[0],
             melding=melding_with_classification,
             type=AnswerTypeEnum.time,
+            original_question_text=questions[0].text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3024,6 +3026,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             question=questions[0],
             melding=melding_with_classification,
             type=AnswerTypeEnum.time,
+            original_question_text=questions[0].text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3068,6 +3071,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             question=questions[0],
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
+            original_question_text=questions[0].text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3115,6 +3119,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             question=questions[0],
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
+            original_question_text=questions[0].text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3161,6 +3166,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             question=questions[0],
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
+            original_question_text=questions[0].text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3208,6 +3214,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             question=questions[0],
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
+            original_question_text=questions[0].text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3254,6 +3261,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             question=questions[0],
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
+            original_question_text=questions[0].text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3301,6 +3309,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             question=questions[0],
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
+            original_question_text=questions[0].text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3350,6 +3359,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             question=questions[0],
             melding=melding_with_classification,
             type=AnswerTypeEnum.text,
+            original_question_text=questions[0].text,
         )
         db_session.add(answer)
         await db_session.commit()
