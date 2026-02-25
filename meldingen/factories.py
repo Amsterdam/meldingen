@@ -56,12 +56,28 @@ class AnswerFactory:
 
         match answer_input.type:
             case AnswerTypeEnum.text:
-                return TextAnswer(type=answer_input.type, text=answer_input.text, melding=melding, question=question)
+                return TextAnswer(
+                    type=answer_input.type,
+                    text=answer_input.text,
+                    melding=melding,
+                    question=question,
+                    original_question_text=question.text,
+                )
             case AnswerTypeEnum.time:
-                return TimeAnswer(type=answer_input.type, time=answer_input.time, melding=melding, question=question)
+                return TimeAnswer(
+                    type=answer_input.type,
+                    time=answer_input.time,
+                    melding=melding,
+                    question=question,
+                    original_question_text=question.text,
+                )
             case AnswerTypeEnum.date:
                 return DateAnswer(
-                    type=answer_input.type, date=answer_input.date.model_dump(), melding=melding, question=question
+                    type=answer_input.type,
+                    date=answer_input.date.model_dump(),
+                    melding=melding,
+                    question=question,
+                    original_question_text=question.text,
                 )
             case AnswerTypeEnum.value_label:
                 return ValueLabelAnswer(
@@ -69,6 +85,7 @@ class AnswerFactory:
                     values_and_labels=[v.model_dump() for v in answer_input.values_and_labels],
                     melding=melding,
                     question=question,
+                    original_question_text=question.text,
                 )
             case _:
                 raise UnsupportedAnswerTypeException(f"Unsupported answer type: {answer_input.type}")

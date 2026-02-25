@@ -1914,6 +1914,7 @@ class TestMeldingQuestionAnswer:
         assert data.get("text") == text
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
+        assert data.get("original_question_text") is not None
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -4360,6 +4361,7 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         assert answer.get("type") == AnswerTypeEnum.text
         assert answer.get("created_at") is not None
         assert answer.get("updated_at") is not None
+        assert answer.get("original_question_text") == "Question 0"
 
         question = answer.get("question")
         assert question is not None
@@ -4387,7 +4389,9 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         for answer in answers:
             assert answer.type in answer_types
             assert answer.question_id in {answer_output.get("question").get("id") for answer_output in body}
-
+            assert answer.original_question_text in {
+                answer_output.get("original_question_text") for answer_output in body
+            }
             if answer.type == AnswerTypeEnum.text:
                 assert await answer.awaitable_attrs.text in {answer_output.get("text") for answer_output in body}
             elif answer.type == AnswerTypeEnum.time:
@@ -4456,6 +4460,7 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         assert answer.get("text") == "Answer 0"
         assert answer.get("created_at") is not None
         assert answer.get("updated_at") is not None
+        assert answer.get("original_question_text") == "Question 0"
 
         question = answer.get("question")
         assert question is not None
@@ -4486,6 +4491,9 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         for answer in answers:
             assert answer.type in answer_types
             assert answer.question_id in {answer_output.get("question").get("id") for answer_output in body}
+            assert answer.original_question_text in {
+                answer_output.get("original_question_text") for answer_output in body
+            }
 
             if answer.type == AnswerTypeEnum.text:
                 assert await answer.awaitable_attrs.text in {answer_output.get("text") for answer_output in body}

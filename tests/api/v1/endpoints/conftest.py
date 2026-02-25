@@ -271,6 +271,7 @@ async def melding_with_text_answers(
                 melding=melding_with_classification,
                 question=questions[i],
                 type=AnswerTypeEnum.text,
+                original_question_text=questions[i].text,
             )
         )
 
@@ -357,6 +358,7 @@ async def melding_with_different_answer_types(
         melding=melding_with_classification,
         question=Question(text="What is your name?", form=form, component=formio_text_area_component),
         type=AnswerTypeEnum.text,
+        original_question_text="What is your name?",
     )
 
     time_answer = TimeAnswer(
@@ -364,6 +366,7 @@ async def melding_with_different_answer_types(
         melding=melding_with_classification,
         question=Question(text="What time is it?", form=form, component=formio_time_component),
         type=AnswerTypeEnum.time,
+        original_question_text="What time is it?",
     )
 
     date_answer = DateAnswer(
@@ -371,6 +374,7 @@ async def melding_with_different_answer_types(
         date={"value": "-1", "label": "Gisteren 31 december", "converted_date": "2025-12-31"},
         question=Question(text="When did this happen?", form=form, component=formio_date_component),
         type=AnswerTypeEnum.date,
+        original_question_text="When did this happen?",
     )
 
     radio_answer = ValueLabelAnswer(
@@ -378,6 +382,7 @@ async def melding_with_different_answer_types(
         values_and_labels=[{"value": "option-2", "label": "Optie #2"}],
         question=Question(text="Kies een optie", form=form, component=formio_radio_component),
         type=AnswerTypeEnum.value_label,
+        original_question_text="Kies een optie",
     )
 
     select_answer = ValueLabelAnswer(
@@ -385,6 +390,7 @@ async def melding_with_different_answer_types(
         values_and_labels=[{"value": "option-1", "label": "Optie #1"}, {"value": "option-2", "label": "Optie #2"}],
         question=Question(text="Kies een optie", form=form, component=formio_select_component),
         type=AnswerTypeEnum.value_label,
+        original_question_text="Kies een optie",
     )
 
     checkbox_answer = ValueLabelAnswer(
@@ -392,6 +398,7 @@ async def melding_with_different_answer_types(
         values_and_labels=[{"value": "option-3", "label": "Optie #3"}],
         question=Question(text="Vink aan wat voor jou geldt", form=form, component=formio_checkbox_component),
         type=AnswerTypeEnum.value_label,
+        original_question_text="Vink aan wat voor jou geldt",
     )
 
     text_field_answer = TextAnswer(
@@ -399,6 +406,7 @@ async def melding_with_different_answer_types(
         melding=melding_with_classification,
         question=Question(text="Vul uw naam in", form=form, component=formio_text_field_component),
         type=AnswerTypeEnum.text,
+        original_question_text="Vul uw naam in",
     )
 
     db_session.add_all(
