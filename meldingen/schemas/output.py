@@ -237,6 +237,7 @@ class FormTimeComponentOutput(BaseFormComponentOutput):
 
 class AnswerOutput(BaseOutputModel):
     type: str
+    original_question_text: str
 
 
 class TextAnswerOutput(AnswerOutput):

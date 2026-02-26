@@ -773,6 +773,7 @@ class AnswerOutputFactory:
             "type": answer.type,
             "created_at": answer.created_at,
             "updated_at": answer.updated_at,
+            "original_question_text": answer.original_question_text,
         }
 
         # Subclass attributes are not eagerly loaded by default
@@ -810,6 +811,7 @@ class AnswerQuestionOutputFactory:
             "created_at": answer.created_at,
             "updated_at": answer.updated_at,
             "question": question,
+            "original_question_text": answer.original_question_text,
         }
 
         # Subclass attributes are not eagerly loaded by default

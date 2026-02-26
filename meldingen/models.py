@@ -478,6 +478,7 @@ class Answer(AsyncAttrs, BaseAnswer, BaseDBModel, kw_only=True):
     melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
     melding: Mapped[Melding] = relationship(back_populates="answers", default_factory=list)
     type: Mapped[str] = mapped_column(Enum(AnswerTypeEnum, name="answer_type"), default=AnswerTypeEnum.text)
+    original_question_text: Mapped[str] = mapped_column(String(), nullable=True, default=None)
 
 
 class TextAnswer(Answer):
