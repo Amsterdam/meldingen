@@ -328,6 +328,8 @@ def answer_factory() -> AnswerFactory:
 
 
 def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
+    if settings.llm_enabled is False:
+        return None
 
     if settings.llm_provider == "azure":
         return AzureProvider(
@@ -339,8 +341,6 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
     if settings.llm_provider == "openai":
         """We can use the open ai provider for many models besides the ones from Open AI"""
         return OpenAIProvider(base_url=settings.llm_base_url)
-
-    return None
 
 
 def classifier_agent(provider: Annotated[AzureProvider | None, Depends(llm_provider_generator)]) -> Agent | None:
