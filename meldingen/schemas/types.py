@@ -45,13 +45,17 @@ class FormIOConditional(BaseModel):
 class DateAnswerObject(BaseModel):
     """Used to display an answer in a date answer component."""
 
-    value: str  # the raw value selected by the user f.e. "day -1"
-    label: str
-    converted_date: str  # ISO 8601 formatted date
+    value: str  # the raw value selected by the user f.e. "day -1". Used by frontend to match the answer in the question component.
+    label: str  # the corresponding label for the value f.e. "Gisteren 1 september". Used by frontend.
+    converted_date: str | None  # ISO 8601 formatted date.
 
     @field_validator("converted_date")
     @classmethod
-    def validate_converted_date(cls, value: str) -> str:
+    def validate_converted_date(cls, value: str) -> str | None:
+        # We accept None types, because it can mean the user doesn't know the date.
+        if value is None:
+            return value
+
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
             raise ValueError("converted_date must be in YYYY-mm-dd format")
         try:
