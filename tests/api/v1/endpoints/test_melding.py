@@ -44,7 +44,7 @@ from meldingen.models import (
     StaticForm,
     TextAnswer,
     TimeAnswer,
-    ValueLabelAnswer,
+    ValueLabelAnswer, DateAnswer,
 )
 from meldingen.repositories import MeldingRepository
 from meldingen.statemachine import Process
@@ -2484,6 +2484,44 @@ class TestMeldingQuestionAnswer:
         ["melding_token"],
         [("supersecrettoken",)],
     )
+    async def test_create_date_answer_i_dont_know_option(
+        self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
+    ) -> None:
+        components = await form_with_date_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        date_input = {"value": "i_dont_know", "label": "Ik weet het niet", "converted_date": None}
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"date": date_input, "type": AnswerTypeEnum.date},
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        body = response.json()
+        assert body.get("id") is not None
+        assert body.get("date") == date_input
+        assert body.get("type") == AnswerTypeEnum.date
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token"],
+        [("supersecrettoken",)],
+    )
     async def test_create_select_component_answer(
         self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding_with_classification: Melding
     ) -> None:
@@ -2969,15 +3007,22 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         melding_with_classification: Melding,
         form_with_classification: Form,
     ) -> None:
-        questions = await form_with_classification.awaitable_attrs.questions
-        assert len(questions) == 1
+        components = await form_with_time_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
 
         answer = TimeAnswer(
             time="14:30",
-            question=questions[0],
+            question=question,
             melding=melding_with_classification,
             type=AnswerTypeEnum.time,
-            original_question_text=questions[0].text,
+            original_question_text=question.text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3014,19 +3059,26 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         client: AsyncClient,
         db_session: AsyncSession,
         melding_with_classification: Melding,
-        form_with_classification: Form,
+        form_with_time_component: Form,
         time_value: str | int | float,
         error_message: str,
     ) -> None:
-        questions = await form_with_classification.awaitable_attrs.questions
-        assert len(questions) == 1
+        components = await form_with_time_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
 
         answer = TimeAnswer(
             time="14:30",
-            question=questions[0],
+            question=question,
             melding=melding_with_classification,
             type=AnswerTypeEnum.time,
-            original_question_text=questions[0].text,
+            original_question_text=question.text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3055,23 +3107,192 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         ],
         indirect=["classification_name"],
     )
+    async def test_update_date_answer(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_date_component: Form,
+    ) -> None:
+        components = await form_with_date_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        answer = DateAnswer(
+            date={"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"},
+            question=question,
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.date,
+            original_question_text=question.text,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        new_date = {"value": "day -2", "label": "Eergisteren", "converted_date": "2025-12-30"}
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"date": new_date, "type": AnswerTypeEnum.date},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") == answer.id
+        assert body.get("date") == new_date
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            )
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_date_answer_invalid(
+            self,
+            app: FastAPI,
+            client: AsyncClient,
+            db_session: AsyncSession,
+            melding_with_classification: Melding,
+            form_with_date_component: Form,
+    ) -> None:
+        components = await form_with_date_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        answer = DateAnswer(
+            date={"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"},
+            question=question,
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.date,
+            original_question_text=question.text,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"date": "invalid-date-format", "type": AnswerTypeEnum.date},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Input should be a valid dictionary or object to extract fields from"
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                    "supersecrettoken",
+                    "test_classification",
+            )
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_date_answer_i_dont_know_option(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_date_component: Form,
+    ) -> None:
+        components = await form_with_date_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        answer = DateAnswer(
+            date={"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"},
+            question=question,
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.date,
+            original_question_text=question.text,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        new_date = {"value": "i_dont_know", "label": "Ik weet het niet", "converted_date": None}
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"date": new_date, "type": AnswerTypeEnum.date},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("id") == answer.id
+        assert body.get("date") == new_date
+        assert body.get("created_at") is not None
+        assert body.get("updated_at") is not None
+
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            (
+                "supersecrettoken",
+                "test_classification",
+            )
+        ],
+        indirect=["classification_name"],
+    )
     async def test_update_radio_component_answer(
         self,
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
         melding_with_classification: Melding,
-        form_with_classification: Form,
+        form_with_radio_component: Form,
     ) -> None:
-        questions = await form_with_classification.awaitable_attrs.questions
-        assert len(questions) == 1
+        components = await form_with_radio_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
 
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}],
-            question=questions[0],
+            question=question,
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
-            original_question_text=questions[0].text,
+            original_question_text=question.text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3109,17 +3330,24 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         client: AsyncClient,
         db_session: AsyncSession,
         melding_with_classification: Melding,
-        form_with_classification: Form,
+        form_with_radio_component: Form,
     ) -> None:
-        questions = await form_with_classification.awaitable_attrs.questions
-        assert len(questions) == 1
+        components = await form_with_radio_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
 
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}],
-            question=questions[0],
+            question=question,
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
-            original_question_text=questions[0].text,
+            original_question_text=question.text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3156,17 +3384,24 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         client: AsyncClient,
         db_session: AsyncSession,
         melding_with_classification: Melding,
-        form_with_classification: Form,
+        form_with_select_component: Form,
     ) -> None:
-        questions = await form_with_classification.awaitable_attrs.questions
-        assert len(questions) == 1
+        components = await form_with_select_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
 
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}, {"value": "option_3", "label": "Option 3"}],
-            question=questions[0],
+            question=question,
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
-            original_question_text=questions[0].text,
+            original_question_text=question.text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3204,17 +3439,24 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         client: AsyncClient,
         db_session: AsyncSession,
         melding_with_classification: Melding,
-        form_with_classification: Form,
+        form_with_select_component: Form,
     ) -> None:
-        questions = await form_with_classification.awaitable_attrs.questions
-        assert len(questions) == 1
+        components = await form_with_select_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
 
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}, {"value": "option_3", "label": "Option 3"}],
-            question=questions[0],
+            question=question,
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
-            original_question_text=questions[0].text,
+            original_question_text=question.text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3251,17 +3493,24 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         client: AsyncClient,
         db_session: AsyncSession,
         melding_with_classification: Melding,
-        form_with_classification: Form,
+        form_with_checkbox_component: Form,
     ) -> None:
-        questions = await form_with_classification.awaitable_attrs.questions
-        assert len(questions) == 1
+        components = await form_with_checkbox_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
 
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}],
-            question=questions[0],
+            question=question,
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
-            original_question_text=questions[0].text,
+            original_question_text=question.text,
         )
         db_session.add(answer)
         await db_session.commit()
@@ -3299,17 +3548,24 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         client: AsyncClient,
         db_session: AsyncSession,
         melding_with_classification: Melding,
-        form_with_classification: Form,
+        form_with_checkbox_component: Form,
     ) -> None:
-        questions = await form_with_classification.awaitable_attrs.questions
-        assert len(questions) == 1
+        components = await form_with_checkbox_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
 
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}],
-            question=questions[0],
+            question=question,
             melding=melding_with_classification,
             type=AnswerTypeEnum.value_label,
-            original_question_text=questions[0].text,
+            original_question_text=question.text,
         )
         db_session.add(answer)
         await db_session.commit()
