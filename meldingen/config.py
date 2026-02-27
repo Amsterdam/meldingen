@@ -103,8 +103,10 @@ Gemeente Amsterdam
     mail_melding_completed_subject: str = "Uw melding: {} afgehandeld"
 
     # LLM
-    llm_enabled: bool = False  # If True enables the OpenAIClassifierAdapter instead of the DummyClassifierAdapter
-    llm_provider: str =  "azure"  # The provider of the LLM, e.g. "azure" or "openai". This is used to determine how to format requests to the LLM API
+    llm_enabled: bool = False  # If True enables the AgentClassifierAdapter instead of the DummyClassifierAdapter
+    llm_provider: str = (
+        "azure"  # The provider of the LLM, e.g. "azure" or "openai". This is used to determine how to format requests to the LLM API
+    )
     llm_base_url: str = os.getenv(
         "LLM_URL", ""
     )  # LLM_URL is injected by docker compose and specifies the OpenAI compatible API endpoint base URL
@@ -112,6 +114,7 @@ Gemeente Amsterdam
         "LLM_MODEL", ""
     )  # LLM is injected by docker compose and specifies the model identifier
     llm_api_key: str = ""
+
 
 # Create an instance of the Settings model
 settings = Settings()

@@ -34,10 +34,6 @@ from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.managers import RelationshipManager
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
-from pydantic_ai import Agent
-from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.azure import AzureProvider
-from pydantic_ai.providers.openai import OpenAIProvider
 from meldingen_core.wfs import AssetTypeToWfsProviderConverter, BaseWfsProviderValidator
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
@@ -46,6 +42,10 @@ from pdok_api_client.api_client import ApiClient as PDOKApiClient
 from pdok_api_client.configuration import Configuration as PDOKApiConfiguration
 from plugfs.azure import AzureStorageBlobsAdapter
 from plugfs.filesystem import Adapter, Filesystem
+from pydantic_ai import Agent
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.azure import AzureProvider
+from pydantic_ai.providers.openai import OpenAIProvider
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions.asset import ListAssetsAction, MelderListAssetsAction
@@ -108,7 +108,7 @@ from meldingen.actions.user import (
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
-from meldingen.classification import DummyClassifierAdapter, OpenAIClassifierAdapter
+from meldingen.classification import AgentClassifierAdapter, DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import (
@@ -327,8 +327,6 @@ def answer_factory() -> AnswerFactory:
     return AnswerFactory()
 
 
-
-
 def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
 
     if settings.llm_provider == "azure":
@@ -345,30 +343,27 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
     return None
 
 
-
 def classifier_agent(provider: Annotated[AzureProvider | None, Depends(llm_provider_generator)]) -> Agent | None:
 
     if settings.llm_enabled and provider is not None:
-        model = OpenAIChatModel(
-            settings.llm_model_identifier,
-            provider=provider
-        )
+        model = OpenAIChatModel(settings.llm_model_identifier, provider=provider)
 
         # Prepare the prompt
-        system_prompt = (
-            """Je bent een classificeerder van meldingen die in de openbare ruimte gebeuren. 
+        system_prompt = """Je bent een classificeerder van meldingen die in de openbare ruimte gebeuren. 
             Je krijgt een korte omschrijving van een melding en je geeft terug welke classificatie het beste past bij de melding.
             """
-        )
 
         return Agent(model, system_prompt=system_prompt)
 
     return None
 
 
-def classifier_adapter(agent: Annotated[Agent, Depends(classifier_agent)], repository: Annotated[ClassificationRepository, Depends(classification_repository)]) -> OpenAIClassifierAdapter | DummyClassifierAdapter:
+def classifier_adapter(
+    agent: Annotated[Agent, Depends(classifier_agent)],
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+) -> AgentClassifierAdapter | DummyClassifierAdapter:
     if settings.llm_enabled:
-        return OpenAIClassifierAdapter(agent, repository)
+        return AgentClassifierAdapter(agent, repository)
     return DummyClassifierAdapter()
 
 
