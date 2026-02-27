@@ -38,13 +38,14 @@ from meldingen.models import (
     AssetType,
     Attachment,
     Classification,
+    DateAnswer,
     Form,
     Melding,
     Question,
     StaticForm,
     TextAnswer,
     TimeAnswer,
-    ValueLabelAnswer, DateAnswer,
+    ValueLabelAnswer,
 )
 from meldingen.repositories import MeldingRepository
 from meldingen.statemachine import Process
@@ -3005,7 +3006,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         client: AsyncClient,
         db_session: AsyncSession,
         melding_with_classification: Melding,
-        form_with_classification: Form,
+        form_with_time_component: Form,
     ) -> None:
         components = await form_with_time_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3163,12 +3164,12 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         indirect=["classification_name"],
     )
     async def test_update_date_answer_invalid(
-            self,
-            app: FastAPI,
-            client: AsyncClient,
-            db_session: AsyncSession,
-            melding_with_classification: Melding,
-            form_with_date_component: Form,
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_date_component: Form,
     ) -> None:
         components = await form_with_date_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3208,8 +3209,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         ["melding_token", "classification_name"],
         [
             (
-                    "supersecrettoken",
-                    "test_classification",
+                "supersecrettoken",
+                "test_classification",
             )
         ],
         indirect=["classification_name"],
