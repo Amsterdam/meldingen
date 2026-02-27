@@ -111,7 +111,7 @@ Gemeente Amsterdam
     llm_model_identifier: str = os.getenv(
         "LLM_MODEL", ""
     )  # LLM is injected by docker compose and specifies the model identifier
-    llm_api_key: str
+    llm_api_key: str = ""
 
 # Create an instance of the Settings model
 settings = Settings()
