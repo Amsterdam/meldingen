@@ -227,7 +227,7 @@ class FormSelectComponentOutput(StaticFormSelectComponentOutput):
 
 
 class FormDateComponentOutput(BaseFormComponentOutput):
-    day_range: int | None = Field(default=None)
+    day_range: int
     question: int
 
 
