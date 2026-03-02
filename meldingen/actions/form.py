@@ -43,7 +43,7 @@ from meldingen.repositories import (
 )
 from meldingen.schemas.input import (
     AnswerInputUnion,
-    FormComponent,
+    FormComponentUnion,
     FormInput,
     FormPanelComponentInput,
     StaticFormInput,
@@ -90,7 +90,7 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
         component_values.reorder()
 
     async def _create_components(
-        self, parent: Form | FormIoPanelComponent, components: Sequence[FormComponent]
+        self, parent: Form | FormIoPanelComponent, components: Sequence[FormComponentUnion]
     ) -> None:
         parent_components = await parent.awaitable_attrs.components
         parent_components.clear()
@@ -465,7 +465,7 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
         component_values.reorder()
 
     async def _create_components(
-        self, parent: StaticForm | FormIoPanelComponent, components: Sequence[FormComponent]
+        self, parent: StaticForm | FormIoPanelComponent, components: Sequence[FormComponentUnion]
     ) -> None:
         parent_components = await parent.awaitable_attrs.components
         parent_components.clear()
