@@ -345,7 +345,7 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
     return None
 
 
-def classifier_agent(provider: Annotated[AzureProvider | None, Depends(llm_provider_generator)]) -> Agent | None:
+def classifier_agent(provider: Annotated[AzureProvider | OpenAIProvider | None, Depends(llm_provider_generator)]) -> Agent | None:
 
     if settings.llm_enabled and provider is not None:
         model = OpenAIChatModel(settings.llm_model_identifier, provider=provider)
