@@ -1,6 +1,6 @@
 import logging
 from functools import lru_cache
-from typing import Annotated, Any, AsyncIterator
+from typing import Annotated, Any, AsyncIterator, Literal
 
 from amsterdam_mail_service_client.api.default_api import DefaultApi
 from amsterdam_mail_service_client.api_client import ApiClient
@@ -35,7 +35,6 @@ from meldingen_core.managers import RelationshipManager
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from meldingen_core.wfs import AssetTypeToWfsProviderConverter, BaseWfsProviderValidator
-from openai import AsyncOpenAI
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
@@ -43,6 +42,10 @@ from pdok_api_client.api_client import ApiClient as PDOKApiClient
 from pdok_api_client.configuration import Configuration as PDOKApiConfiguration
 from plugfs.azure import AzureStorageBlobsAdapter
 from plugfs.filesystem import Adapter, Filesystem
+from pydantic_ai import Agent
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.azure import AzureProvider
+from pydantic_ai.providers.openai import OpenAIProvider
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from meldingen.actions.asset import ListAssetsAction, MelderListAssetsAction
@@ -102,10 +105,11 @@ from meldingen.actions.user import (
     UserRetrieveAction,
     UserUpdateAction,
 )
+from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
+from meldingen.adapters.classification.dummy_classifier import DummyClassifierAdapter
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
-from meldingen.classification import DummyClassifierAdapter, OpenAIClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import (
@@ -324,17 +328,47 @@ def answer_factory() -> AnswerFactory:
     return AnswerFactory()
 
 
-def openai_client() -> AsyncOpenAI:
-    return AsyncOpenAI(base_url=settings.llm_base_url)
+def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
+    if settings.llm_enabled is False:
+        return None
+
+    if settings.llm_provider == "azure":
+        return AzureProvider(
+            azure_endpoint=settings.llm_base_url,
+            api_key=settings.llm_api_key,
+            api_version="2025-01-01-preview",
+        )
+
+    if settings.llm_provider == "openai":
+        """We can use the open ai provider for many models besides the ones from Open AI"""
+        return OpenAIProvider(base_url=settings.llm_base_url)
+
+    return None
+
+
+def classifier_agent(
+    provider: Annotated[AzureProvider | OpenAIProvider | None, Depends(llm_provider_generator)],
+) -> Agent | None:
+
+    if settings.llm_enabled and provider is not None:
+        model = OpenAIChatModel(settings.llm_model_identifier, provider=provider)
+
+        # Prepare the prompt
+        system_prompt = """Je bent een classificeerder van meldingen die in de openbare ruimte gebeuren. 
+            Je krijgt een korte omschrijving van een melding en je geeft terug welke classificatie het beste past bij de melding.
+            """
+
+        return Agent(model, system_prompt=system_prompt)
+
+    return None
 
 
 def classifier_adapter(
-    client: Annotated[AsyncOpenAI, Depends(openai_client)],
+    agent: Annotated[Agent, Depends(classifier_agent)],
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
-) -> BaseClassifierAdapter:
+) -> AgentClassifierAdapter | DummyClassifierAdapter:
     if settings.llm_enabled:
-        return OpenAIClassifierAdapter(client, settings.llm_model_identifier, repository)
-
+        return AgentClassifierAdapter(agent, repository)
     return DummyClassifierAdapter()
 
 
