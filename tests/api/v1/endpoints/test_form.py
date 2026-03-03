@@ -936,8 +936,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert violation.get("type") == "union_tag_invalid"
         assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0]
         assert (
-            violation.get("msg")
-            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
+            violation.get("msg") == "Input tag 'panel' found using 'type' does not match any of the expected tags: "
             "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
             "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>, "
             "<FormIoComponentTypeEnum.select: 'select'>, <FormIoComponentTypeEnum.date: 'date'>, <FormIoComponentTypeEnum.time: 'time'>"
@@ -2453,6 +2452,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "input": False,
                     "components": [
                         {
+                            "title": "Panel 2 title",
                             "label": "panel-2",
                             "key": "panel",
                             "type": "panel",
@@ -2487,8 +2487,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         assert violation.get("type") == "union_tag_invalid"
         assert violation.get("loc") == ["body", "components", 0, "panel", "components", 0]
         assert (
-            violation.get("msg")
-            == "Input tag 'panel' found using component_discriminator() does not match any of the expected tags: "
+            violation.get("msg") == "Input tag 'panel' found using 'type' does not match any of the expected tags: "
             "<FormIoComponentTypeEnum.text_area: 'textarea'>, <FormIoComponentTypeEnum.text_field: 'textfield'>, "
             "<FormIoComponentTypeEnum.radio: 'radio'>, <FormIoComponentTypeEnum.checkbox: 'selectboxes'>, "
             "<FormIoComponentTypeEnum.select: 'select'>, <FormIoComponentTypeEnum.date: 'date'>, <FormIoComponentTypeEnum.time: 'time'>"
