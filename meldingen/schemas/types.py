@@ -51,7 +51,7 @@ class DateAnswerObject(BaseModel):
 
     @field_validator("converted_date")
     @classmethod
-    def validate_converted_date(cls, value: str) -> str | None:
+    def validate_converted_date(cls, value: str | None) -> str | None:
         # We accept None types, because it can mean the user doesn't know the date.
         if value is None:
             return value

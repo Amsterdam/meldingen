@@ -2519,6 +2519,13 @@ class TestMeldingQuestionAnswer:
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
+        date = body.get("date", None)
+        assert date is not None
+
+        assert date.get("converted_date") is None
+        assert date.get("value") == "i_dont_know"
+        assert date.get("label") == "Ik weet het niet"
+
     @pytest.mark.parametrize(
         ["melding_token"],
         [("supersecrettoken",)],
@@ -3259,6 +3266,13 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         assert body.get("date") == new_date
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
+
+        date = body.get("date", None)
+        assert date is not None
+
+        assert date.get("converted_date") is None
+        assert date.get("value") == "i_dont_know"
+        assert date.get("label") == "Ik weet het niet"
 
     @pytest.mark.parametrize(
         ["melding_token", "classification_name"],
