@@ -108,7 +108,8 @@ from meldingen.actions.user import (
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
-from meldingen.classification import AgentClassifierAdapter, DummyClassifierAdapter
+from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
+from meldingen.adapters.classification.dummy_classifier import DummyClassifierAdapter
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import (
