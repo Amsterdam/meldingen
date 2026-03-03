@@ -1,18 +1,11 @@
 import logging
 from typing import Literal
 
-from meldingen_core.classification import BaseClassifierAdapter
 from pydantic import BaseModel, Field, create_model
-from pydantic_ai import Agent
 
 from meldingen.repositories import ClassificationRepository
 
 logger = logging.getLogger(__name__)
-
-
-class DummyClassifierAdapter(BaseClassifierAdapter):
-    async def __call__(self, text: str) -> str:
-        return text
 
 
 class ClassificationResponse(BaseModel):
@@ -20,7 +13,7 @@ class ClassificationResponse(BaseModel):
 
 
 async def build_dynamic_classification_response_model(repository: ClassificationRepository) -> type[BaseModel]:
-    """Create a Pydantic model to ensure the LLM's response is one of the valid classification names inside the Literal tuple."""
+    """Function to create a dynamic Pydantic model to ensure the LLM's response is one of the valid classification names inside the Literal tuple."""
 
     classifications_list = [c.name for c in await repository.list()]
     classification_type = Literal[tuple(classifications_list)]
@@ -28,27 +21,3 @@ async def build_dynamic_classification_response_model(repository: Classification
         "ClassificationResponse",
         classification=(classification_type, Field(..., description="The chosen classification")),
     )
-
-
-class AgentClassifierAdapter(BaseClassifierAdapter):
-    _agent: Agent
-    _repository: ClassificationRepository
-
-    def __init__(self, agent: Agent, repository: ClassificationRepository):
-        self._agent = agent
-        self._repository = repository
-
-    async def __call__(self, text: str) -> str | None:
-        user_prompt = f"Please classify: {text}"
-        try:
-            ClassificationModel = await build_dynamic_classification_response_model(self._repository)
-            result = await self._agent.run(user_prompt, output_type=ClassificationModel)
-            classification = getattr(result.output, "classification", None)
-
-            print(f"Classification according to LLM: {classification}")
-        except Exception as e:
-            logger.error(f"Pydantic AI validation failed: {e}")
-
-            print(f"Pydantic AI validation failed: {e}")
-            return None
-        return classification
