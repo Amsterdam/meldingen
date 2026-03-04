@@ -5,7 +5,7 @@ from httpx import AsyncClient
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 
 
-class TestCreateAssetType(BaseUnauthorizedTest):
+class TestStatic(BaseUnauthorizedTest):
     def get_route_name(self) -> str:
         return "static:robots"
 
