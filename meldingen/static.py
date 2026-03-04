@@ -5,6 +5,6 @@ router = APIRouter()
 
 
 @router.get("/robots.txt", response_class=PlainTextResponse, include_in_schema=False, name="static:robots")
-def robots():
+def robots() -> str:
     data = """User-agent: *\nDisallow: /"""
     return data
