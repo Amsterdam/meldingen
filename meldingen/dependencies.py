@@ -107,6 +107,8 @@ from meldingen.actions.user import (
 )
 from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
 from meldingen.adapters.classification.dummy_classifier import DummyClassifierAdapter
+from meldingen.adapters.malware.azure_defender_for_storage_scanner import AzureDefenderForStorageMalwareScanner
+from meldingen.adapters.malware.dummy_scanner import DummyMalwareScanner
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
@@ -152,7 +154,6 @@ from meldingen.mail import (
     SendCompletedMailTask,
     SendConfirmationMailTask,
 )
-from meldingen.malware import AzureDefenderForStorageMalwareScanner, DummyMalwareScanner
 from meldingen.models import Answer, Asset, Classification, Melding
 from meldingen.reclassification import Reclassifier
 from meldingen.repositories import (
