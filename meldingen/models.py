@@ -77,9 +77,12 @@ asset_melding = Table(
 
 
 class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
+    __table_args__ = (CheckConstraint("urgency in (-1, 0, 1)", name="ck_melding_urgency"),)
+
     public_id: Mapped[str] = mapped_column(String(), unique=True, init=False)
     text: Mapped[str] = mapped_column(String)
     state: Mapped[str] = mapped_column(String, default=MeldingStates.NEW)
+    urgency: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
     classification: Mapped[Classification | None] = relationship(default=None, lazy="joined")
     token: Mapped[str | None] = mapped_column(String, default=None)
