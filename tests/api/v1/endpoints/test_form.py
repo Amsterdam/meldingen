@@ -24,6 +24,7 @@ from meldingen.models import (
     FormIoQuestionComponent,
     FormIoRadioComponent,
     FormIoTextAreaComponent,
+    Melding,
 )
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -527,6 +528,113 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         components = await form.awaitable_attrs.components
         await self._assert_components(data.get("components"), components)
+
+    @pytest.mark.anyio
+    async def test_update_form_does_not_recreate_components_and_keeps_answers_working(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form_with_multiple_questions: Form,
+        melding_with_text_answers: Melding,
+    ) -> None:
+        async def snapshot_component_ids(form: Form) -> dict[str, dict[str, int]]:
+            panels_by_key: dict[str, int] = {}
+            components_by_key: dict[str, int] = {}
+
+            panels = await form.awaitable_attrs.components
+            for panel in panels:
+                assert isinstance(panel, FormIoPanelComponent)
+                panels_by_key[panel.key] = panel.id
+
+                children = await panel.awaitable_attrs.components
+                for child in children:
+                    components_by_key[child.key] = child.id
+
+            return {"panels": panels_by_key, "components": components_by_key}
+
+        before = await snapshot_component_ids(form_with_multiple_questions)
+        assert len(before) > 0
+
+        panels = await form_with_multiple_questions.awaitable_attrs.components
+        update_components: list[dict[str, Any]] = []
+
+        for panel in panels:
+            assert isinstance(panel, FormIoPanelComponent)
+
+            children = await panel.awaitable_attrs.components
+            child_payloads: list[dict[str, Any]] = []
+            for child in children:
+                # Keep the key stable; other fields may change during an update.
+                base_child: dict[str, Any] = {
+                    "label": child.label or "Component",
+                    "description": child.description or "",
+                    "key": child.key,
+                    "type": child.type,
+                    "input": True,
+                }
+
+                if child.type == FormIoComponentTypeEnum.text_area:
+                    base_child.update({
+                        "autoExpand": True,
+                        "maxCharCount": 255,
+                    })
+                elif child.type == FormIoComponentTypeEnum.text_field:
+                    pass
+                elif child.type == FormIoComponentTypeEnum.time:
+                    pass
+                elif child.type == FormIoComponentTypeEnum.date:
+                    base_child.update({
+                        "dayRange": 7,
+                    })
+                else:
+                    # This fixture should only contain supported question components.
+                    raise AssertionError(f"Unsupported component type in fixture: {child.type}")
+
+                child_payloads.append(base_child)
+
+            panel_payload = {
+                "label": panel.label or "Panel",
+                # Title is required by the input schema; keep key stable.
+                "title": (panel.label or "Panel") + " title",
+                "key": panel.key,
+                "type": FormIoComponentTypeEnum.panel,
+                "input": False,
+                "components": child_payloads,
+            }
+            # Guardrail: keys are the stable identifier coming from FormIO.
+            # assert panel_payload["key"] == panel.key
+            # for child_payload, child in zip(child_payloads, children, strict=True):
+            #     assert child_payload["key"] == child.key
+
+            update_components.append(panel_payload)
+
+        update_payload = {
+            "title": form_with_multiple_questions.title,
+            "display": "form",
+            "components": update_components,
+        }
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, form_id=form_with_multiple_questions.id),
+            json=update_payload,
+        )
+        assert response.status_code == HTTP_200_OK
+
+        after = await snapshot_component_ids(form_with_multiple_questions)
+
+        # Regression guard: saving a form should not replace the underlying components.
+        # If components are recreated, their DB IDs change and existing answers can no longer
+        # resolve question->component for rendering.
+        assert before["panels"] == after["panels"]
+        assert before["components"] == after["components"]
+
+        answers_response = await client.get(
+            app.url_path_for("melding:answers", melding_id=melding_with_text_answers.id),
+        )
+        assert answers_response.status_code == HTTP_200_OK
+        assert isinstance(answers_response.json(), list)
+        assert len(answers_response.json()) == 10
 
     @pytest.mark.anyio
     async def test_update_form_with_jsonlogic(
