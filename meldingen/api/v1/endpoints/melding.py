@@ -683,34 +683,6 @@ async def cancel_melding(
     return await produce_output(melding)
 
 
-async def resolve_answer_type_through_question_id(
-    request: Request,
-    question_id: int,
-    form_question_component_repository: FormIoQuestionComponentRepository = Depends(
-        form_io_question_component_repository
-    ),
-) -> AnswerInputUnion:
-    """Dependency that dynamically selects the correct AnswerInputUnion member based on the question type."""
-
-    try:
-        component = await form_question_component_repository.find_component_by_question_id(question_id)
-    except NotFoundException:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND, detail=f"Question component not found for question_id {question_id}"
-        )
-
-    answer_type = FormIoComponentToAnswerTypeMap.get(FormIoComponentTypeEnum(component.type))
-
-    body = await request.json()
-    body["type"] = answer_type
-
-    # Use type adapter to validate a python Union and create correct union member
-    try:
-        return TypeAdapter(AnswerInputUnion).validate_python(body)
-    except ValidationError as e:
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors()) from e
-
-
 @router.post(
     "/{melding_id}/question/{question_id}",
     name="melding:answer-question",
@@ -719,7 +691,6 @@ async def resolve_answer_type_through_question_id(
     responses={
         **not_found_response,
         **unauthorized_response,
-        **default_response,
         **{
             HTTP_400_BAD_REQUEST: {
                 "description": "",
