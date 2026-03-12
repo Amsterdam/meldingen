@@ -21,7 +21,7 @@ from meldingen_core.repositories import (
 from sqlalchemy import ColumnExpressionArgument, Select, delete, desc, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Relationship
+from sqlalchemy.orm import Relationship, selectinload
 from sqlalchemy.sql import func
 
 from meldingen.models import (
@@ -329,7 +329,20 @@ class AnswerRepository(BaseSQLAlchemyRepository[Answer], BaseAnswerRepository[An
 
     async def find_by_melding(self, melding_id: int) -> Sequence[Answer]:
         _type = self.get_model_type()
-        statement = select(_type).where(_type.melding_id == melding_id)
+        statement = (
+            select(_type).where(_type.melding_id == melding_id)
+            # The answers endpoint renders the related question and uses
+            # question.component.parent(panel) for sorting/grouping.
+            # Eager-load these relationships to avoid async lazy-load IO
+            # during serialization (which can raise MissingGreenlet).
+            .options(
+                selectinload(Answer.question),
+                selectinload(Answer.question).selectinload(Question.component),
+                selectinload(Answer.question)
+                .selectinload(Question.component)
+                .selectinload(FormIoQuestionComponent.parent),
+            )
+        )
 
         results = await self._session.execute(statement)
 
