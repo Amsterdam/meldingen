@@ -37,7 +37,6 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
 
         for question in questions:
             component = await question.awaitable_attrs.component
-
             if component is not None and component.required is True and question.id not in answered_question_ids:
                 return False
 
