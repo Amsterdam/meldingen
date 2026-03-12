@@ -211,7 +211,6 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
             if key not in seen_keys:
                 await self._delete_component(parent_components, component)
 
-
     async def _update_component(self, existing_component: FormIoComponent, component_input: FormComponentUnion) -> None:
         input_values = component_input.model_dump()
 
@@ -278,9 +277,8 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
                 if question.text != existing_component.label:
                     question.text = existing_component.label
                     await self._question_repository.save(question, commit=False)
-                    
 
-    async def _delete_component(self, parent_components: list[FormIoComponent],  component: FormIoComponent) -> None:
+    async def _delete_component(self, parent_components: list[FormIoComponent], component: FormIoComponent) -> None:
         if component in parent_components:
             parent_components.remove(component)
         return

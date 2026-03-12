@@ -575,18 +575,22 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                 }
 
                 if child.type == FormIoComponentTypeEnum.text_area:
-                    base_child.update({
-                        "autoExpand": True,
-                        "maxCharCount": 255,
-                    })
+                    base_child.update(
+                        {
+                            "autoExpand": True,
+                            "maxCharCount": 255,
+                        }
+                    )
                 elif child.type == FormIoComponentTypeEnum.text_field:
                     pass
                 elif child.type == FormIoComponentTypeEnum.time:
                     pass
                 elif child.type == FormIoComponentTypeEnum.date:
-                    base_child.update({
-                        "dayRange": 7,
-                    })
+                    base_child.update(
+                        {
+                            "dayRange": 7,
+                        }
+                    )
                 else:
                     # This fixture should only contain supported question components.
                     raise AssertionError(f"Unsupported component type in fixture: {child.type}")
