@@ -670,7 +670,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                 {
                     "title": "Panel 2 title",
                     "label": "panel-2",
-                    "key": "panel",
+                    "key": "panel2",
                     "type": "panel",
                     "input": False,
                     "components": [
@@ -691,14 +691,14 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                 {
                     "title": "Panel 3 title",
                     "label": "panel-3",
-                    "key": "panel",
+                    "key": "panel3",
                     "type": "panel",
                     "input": False,
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
                             "description": "",
-                            "key": "waarom-meld-u-dit-bij-ons",
+                            "key": "waarom-meld-u-dit-bij-ons2",
                             "type": FormIoComponentTypeEnum.select,
                             "input": True,
                             "widget": "html5",
@@ -720,14 +720,14 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                 {
                     "title": "Panel 4 title",
                     "label": "panel-4",
-                    "key": "panel",
+                    "key": "panel4",
                     "type": "panel",
                     "input": False,
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
                             "description": "",
-                            "key": "waarom-meld-u-dit-bij-ons",
+                            "key": "waarom-meld-u-dit-bij-ons3",
                             "type": FormIoComponentTypeEnum.checkbox,
                             "input": True,
                             "values": [
@@ -745,14 +745,14 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                 {
                     "title": "Panel 5 title",
                     "label": "panel-5",
-                    "key": "panel",
+                    "key": "panel5",
                     "type": "panel",
                     "input": False,
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
                             "description": "",
-                            "key": "waarom-meld-u-dit-bij-ons",
+                            "key": "waarom-meld-u-dit-bij-ons4",
                             "type": FormIoComponentTypeEnum.radio,
                             "input": True,
                             "values": [

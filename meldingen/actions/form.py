@@ -116,15 +116,7 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
         else:
             value_data = component_values.pop("values", [])
 
-            component_values.pop("validate_", None)
-
-            if component.validate_ is not None:
-                if component.validate_.json_ is not None:
-                    component_values["jsonlogic"] = component.validate_.json_.model_dump_json(by_alias=True)
-
-                if component.validate_.required is not None:
-                    component_values["required"] = component.validate_.required
-                    component_values["required_error_message"] = component.validate_.required_error_message
+            self._add_validation_fields(component_values, component.validate_)
 
             if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
                 c_component = FormIoCheckBoxComponent(**component_values)
@@ -176,11 +168,122 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
             else:
                 raise Exception(f"Unsupported component type: {component_values.get('type')}")
 
-    async def _update_component(self, existing_component: FormIoComponent, component_input: FormComponentUnion) -> None:
-        pass
+    def _add_validation_fields(self, values: dict[str, Any], validate: FormComponentInputValidate | None) -> None:
+        values.pop("validate_", None)
 
-    async def _delete_component(self, component: FormIoComponent) -> None:
-        pass
+        if validate is None:
+            return
+
+        if validate.json_ is not None:
+            values["jsonlogic"] = validate.json_.model_dump_json(by_alias=True)
+
+        if validate.required is not None:
+            values["required"] = validate.required
+            values["required_error_message"] = validate.required_error_message
+
+    async def _sync_component_tree(
+        self, parent: Form | FormIoPanelComponent, input_components: Sequence[FormComponentUnion]
+    ) -> None:
+        parent_components = await parent.awaitable_attrs.components
+        existing_by_key = {component.key: component for component in parent_components}
+
+        seen_keys: set[str] = set()
+
+        position = 0
+
+        for component in input_components:
+            if component.key in seen_keys:
+                raise Exception(f"Duplicate component key '{component.key}' found. Must be unique within the form.")
+            print('component position', component.type)
+
+            # The order of the input components determines the positions of the components in the db
+            position += 1
+            component.position = position
+
+            seen_keys.add(component.key)
+
+            if component.key in existing_by_key:
+                await self._update_component(existing_by_key[component.key], component)
+            else:
+                await self._create_component(parent, component)
+
+        for key, component in existing_by_key.items():
+            if key not in seen_keys:
+                await self._delete_component(parent_components, component)
+
+
+    async def _update_component(self, existing_component: FormIoComponent, component_input: FormComponentUnion) -> None:
+        input_values = component_input.model_dump()
+
+        # Updated component must have the same type as the existing component, otherwise we cannot update in place and need to delete and re-create
+        expected_type = input_values.get("type")
+        if existing_component.type != expected_type:
+            raise HTTPException(
+                detail=f"Component key '{component_input.key}' type mismatch: expected {existing_component.type}",
+                status_code=HTTP_400_BAD_REQUEST,
+            )
+
+        # If the component is a panel, we need to sync the nested components instead and update the panel attributes.
+        if isinstance(component_input, FormPanelComponentInput):
+            if not isinstance(existing_component, FormIoPanelComponent):
+                raise HTTPException(
+                    status_code=HTTP_400_BAD_REQUEST,
+                    detail=f"Component key '{component_input.key}' type mismatch: expected panel",
+                )
+
+            input_values.pop("components")
+
+            for attr, value in input_values.items():
+                setattr(existing_component, attr, value)
+
+            await self._sync_component_tree(existing_component, component_input.components)
+            return
+
+        # Remove nested collection data so we don't accidentally assign raw lists to relationship attributes
+        value_data = input_values.pop("values", None)
+        data = input_values.pop("data", None)
+
+        # Overwrite validation fields
+        self._add_validation_fields(input_values, component_input.validate_)
+
+        # Update attributes within the component model's scope
+        for attr, value in input_values.items():
+            setattr(existing_component, attr, value)
+
+        # Overwrite nested attributes for label and values components
+        if isinstance(existing_component, BaseFormIoValuesComponent) and value_data is not None:
+            existing_values = await existing_component.awaitable_attrs.values
+            existing_values.clear()
+            for value in value_data:
+                existing_values.append(FormIoComponentValue(**value))
+            existing_values.reorder()
+
+        # Overwrite nested attributes for select component with data.values
+        if isinstance(existing_component, FormIoSelectComponent) and data is not None:
+            if existing_component.data is None:
+                existing_component.data = FormIoSelectComponentData()
+
+            select_values = await existing_component.data.awaitable_attrs.values
+            select_values.clear()
+            for value in data.get("values", []):
+                select_values.append(FormIoSelectComponentValue(**value))
+            select_values.reorder()
+
+        if isinstance(existing_component, FormIoQuestionComponent):
+            question = await existing_component.awaitable_attrs.question
+            if question is None:
+                # ensure a Question exists for this component
+                await self._create_question(existing_component)
+            else:
+                if question.text != existing_component.label:
+                    question.text = existing_component.label
+                    await self._question_repository.save(question, commit=False)
+                    
+
+    async def _delete_component(self, parent_components: list[FormIoComponent],  component: FormIoComponent) -> None:
+        if component in parent_components:
+            parent_components.remove(component)
+        return
 
 
 class FormCreateAction(BaseFormCreateUpdateAction):
@@ -261,27 +364,8 @@ class FormUpdateAction(BaseFormCreateUpdateAction):
         for key, value in form_data.items():
             setattr(obj, key, value)
 
-        # Loop through all the form_input components and update, create or delete the existing components accordingly
-        # This is based on the FormIO keys which are unique per component within a form
-        existing_components = await obj.awaitable_attrs.components
-        existing_by_key = {component.key: component for component in existing_components}
-
-        seen_keys: set[str] = set()
-
-        for component in form_input.components:
-            seen_keys.add(component.key)
-
-            if component.key in existing_by_key:
-                await self._update_component(existing_by_key[component.key], component)
-            else:
-                await self._create_component(obj, component)
-
-        for key, component in existing_by_key.items():
-            if key not in seen_keys:
-                await self._delete_component(component)
-
-        # Reorder once at the end to persist the desired component order
-        existing_components.reorder()
+        # Sync components (create/update/delete) based on FormIO keys
+        await self._sync_component_tree(obj, form_input.components)
 
         await self._repository.save(obj)
 
