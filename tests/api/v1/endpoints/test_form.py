@@ -538,7 +538,13 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         form_with_multiple_questions: Form,
         melding_with_text_answers: Melding,
     ) -> None:
+        """Updating a form should not replace the underlying components with new ones.
+        If this happens the relation between the answer/question and its component is broken
+        This test makes sure of that by comparing the DB IDs of panels and components before and after the update.
+        The update in this test should not add or remove any components, only update their properties."""
+
         async def snapshot_component_ids(form: Form) -> dict[str, dict[str, int]]:
+            """ Helper function to snapshot the DB IDs of panels and components of a form. """
             panels_by_key: dict[str, int] = {}
             components_by_key: dict[str, int] = {}
 
@@ -567,8 +573,8 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             for child in children:
                 # Keep the key stable; other fields may change during an update.
                 base_child: dict[str, Any] = {
-                    "label": child.label or "Component",
-                    "description": child.description or "",
+                    "label": "Updated label",
+                    "description": "Updated description",
                     "key": child.key,
                     "type": child.type,
                     "input": True,
@@ -591,25 +597,17 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "dayRange": 7,
                         }
                     )
-                else:
-                    # This fixture should only contain supported question components.
-                    raise AssertionError(f"Unsupported component type in fixture: {child.type}")
 
                 child_payloads.append(base_child)
 
             panel_payload = {
-                "label": panel.label or "Panel",
-                # Title is required by the input schema; keep key stable.
-                "title": (panel.label or "Panel") + " title",
+                "label": "Updated Panel",
+                "title": "Updated Panel title",
                 "key": panel.key,
                 "type": FormIoComponentTypeEnum.panel,
                 "input": False,
                 "components": child_payloads,
             }
-            # Guardrail: keys are the stable identifier coming from FormIO.
-            # assert panel_payload["key"] == panel.key
-            # for child_payload, child in zip(child_payloads, children, strict=True):
-            #     assert child_payload["key"] == child.key
 
             update_components.append(panel_payload)
 
@@ -627,9 +625,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
 
         after = await snapshot_component_ids(form_with_multiple_questions)
 
-        # Regression guard: saving a form should not replace the underlying components.
-        # If components are recreated, their DB IDs change and existing answers can no longer
-        # resolve question->component for rendering.
+        # Test that the update doesn't create new components
         assert before["panels"] == after["panels"]
         assert before["components"] == after["components"]
 
