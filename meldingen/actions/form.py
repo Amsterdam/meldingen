@@ -94,13 +94,8 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
     async def _create_components(
         self, parent: Form | FormIoPanelComponent, components: Sequence[FormComponentUnion]
     ) -> None:
-        parent_components = await parent.awaitable_attrs.components
-        parent_components.clear()
-
         for component in components:
             await self._create_component(parent, component)
-
-        parent_components.reorder()
 
     async def _create_component(self, parent: Form | FormIoPanelComponent, component: FormComponentUnion) -> None:
         parent_components = await parent.awaitable_attrs.components
@@ -112,7 +107,7 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
             panel_component = FormIoPanelComponent(**component_values)
             parent_components.append(panel_component)
 
-            await self._create_components(parent=panel_component, components=component.components)
+            await self._sync_component_tree(panel_component, component.components)
         else:
             value_data = component_values.pop("values", [])
 
@@ -189,27 +184,25 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
 
         seen_keys: set[str] = set()
 
-        position = 0
-
         for component in input_components:
             if component.key in seen_keys:
                 raise Exception(f"Duplicate component key '{component.key}' found. Must be unique within the form.")
-            print('component position', component.type)
-
-            # The order of the input components determines the positions of the components in the db
-            position += 1
-            component.position = position
 
             seen_keys.add(component.key)
 
             if component.key in existing_by_key:
+                # Re-add the component to reflect the order from the input list
+                parent_components.remove(existing_by_key[component.key])
+                parent_components.append(existing_by_key[component.key])
                 await self._update_component(existing_by_key[component.key], component)
             else:
                 await self._create_component(parent, component)
 
         for key, component in existing_by_key.items():
             if key not in seen_keys:
-                await self._delete_component(parent_components, component)
+                parent_components.remove(component)
+
+        parent_components.reorder()
 
     async def _update_component(self, existing_component: FormIoComponent, component_input: FormComponentUnion) -> None:
         input_values = component_input.model_dump()
@@ -277,11 +270,6 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
                 if question.text != existing_component.label:
                     question.text = existing_component.label
                     await self._question_repository.save(question, commit=False)
-
-    async def _delete_component(self, parent_components: list[FormIoComponent], component: FormIoComponent) -> None:
-        if component in parent_components:
-            parent_components.remove(component)
-        return
 
 
 class FormCreateAction(BaseFormCreateUpdateAction):
