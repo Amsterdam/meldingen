@@ -16,6 +16,7 @@ from meldingen.models import (
     BaseFormIoValuesComponent,
     Form,
     FormIoCheckBoxComponent,
+    FormIoComponent,
     FormIoComponentToAnswerTypeMap,
     FormIoComponentTypeEnum,
     FormIoComponentValue,
@@ -43,6 +44,7 @@ from meldingen.repositories import (
 )
 from meldingen.schemas.input import (
     AnswerInputUnion,
+    FormComponentInputValidate,
     FormComponentUnion,
     FormInput,
     FormPanelComponentInput,
@@ -92,83 +94,182 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
     async def _create_components(
         self, parent: Form | FormIoPanelComponent, components: Sequence[FormComponentUnion]
     ) -> None:
-        parent_components = await parent.awaitable_attrs.components
-        parent_components.clear()
-
         for component in components:
-            component_values = component.model_dump()
+            await self._create_component(parent, component)
 
-            if isinstance(component, FormPanelComponentInput):
-                component_values.pop("components")
+    async def _create_component(self, parent: Form | FormIoPanelComponent, component: FormComponentUnion) -> None:
+        parent_components = await parent.awaitable_attrs.components
+        component_values = component.model_dump()
 
-                panel_component = FormIoPanelComponent(**component_values)
-                parent_components.append(panel_component)
+        if isinstance(component, FormPanelComponentInput):
+            component_values.pop("components")
 
-                await self._create_components(parent=panel_component, components=component.components)
+            panel_component = FormIoPanelComponent(**component_values)
+            parent_components.append(panel_component)
+
+            await self._sync_component_tree(panel_component, component.components)
+        else:
+            value_data = component_values.pop("values", [])
+
+            self._add_validation_fields(component_values, component.validate_)
+
+            if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
+                c_component = FormIoCheckBoxComponent(**component_values)
+                await self._create_component_values(component=c_component, values=value_data)
+
+                parent_components.append(c_component)
+                await self._create_question(component=c_component)
+            elif component_values.get("type") == FormIoComponentTypeEnum.radio:
+                r_component = FormIoRadioComponent(**component_values)
+                await self._create_component_values(component=r_component, values=value_data)
+
+                parent_components.append(r_component)
+                await self._create_question(component=r_component)
+            elif component_values.get("type") == FormIoComponentTypeEnum.select:
+                data = component_values.pop("data")
+                assert data is not None
+
+                select_component = FormIoSelectComponent(**component_values)
+
+                select_component_data = FormIoSelectComponentData()
+                select_component_data_values = await select_component_data.awaitable_attrs.values
+
+                for value in data.get("values"):
+                    component_value = FormIoSelectComponentValue(**value)
+                    select_component_data_values.append(component_value)
+
+                select_component_data_values.reorder()
+
+                select_component.data = select_component_data
+
+                parent_components.append(select_component)
+                await self._create_question(select_component)
+            elif component_values.get("type") == FormIoComponentTypeEnum.text_area:
+                text_area_component = FormIoTextAreaComponent(**component_values)
+                parent_components.append(text_area_component)
+                await self._create_question(text_area_component)
+            elif component_values.get("type") == FormIoComponentTypeEnum.text_field:
+                text_field_component = FormIoTextFieldComponent(**component_values)
+                parent_components.append(text_field_component)
+                await self._create_question(text_field_component)
+            elif component_values.get("type") == FormIoComponentTypeEnum.date:
+                date_component = FormIoDateComponent(**component_values)
+                parent_components.append(date_component)
+                await self._create_question(date_component)
+            elif component_values.get("type") == FormIoComponentTypeEnum.time:
+                time_component = FormIoTimeComponent(**component_values)
+                parent_components.append(time_component)
+                await self._create_question(time_component)
             else:
-                value_data = component_values.pop("values", [])
+                raise Exception(f"Unsupported component type: {component_values.get('type')}")
 
-                component_values.pop("validate_")
+    def _add_validation_fields(self, values: dict[str, Any], validate: FormComponentInputValidate | None) -> None:
+        values.pop("validate_", None)
 
-                if component.validate_ is not None:
-                    if component.validate_.json_ is not None:
-                        component_values["jsonlogic"] = component.validate_.json_.model_dump_json(by_alias=True)
+        if validate is None:
+            return
 
-                    if component.validate_.required is not None:
-                        component_values["required"] = component.validate_.required
-                        component_values["required_error_message"] = component.validate_.required_error_message
+        if validate.json_ is not None:
+            values["jsonlogic"] = validate.json_.model_dump_json(by_alias=True)
 
-                if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
-                    c_component = FormIoCheckBoxComponent(**component_values)
-                    await self._create_component_values(component=c_component, values=value_data)
+        if validate.required is not None:
+            values["required"] = validate.required
+            values["required_error_message"] = validate.required_error_message
 
-                    parent_components.append(c_component)
-                    await self._create_question(component=c_component)
-                elif component_values.get("type") == FormIoComponentTypeEnum.radio:
-                    r_component = FormIoRadioComponent(**component_values)
-                    await self._create_component_values(component=r_component, values=value_data)
+    async def _sync_component_tree(
+        self, parent: Form | FormIoPanelComponent, input_components: Sequence[FormComponentUnion]
+    ) -> None:
+        parent_components = await parent.awaitable_attrs.components
+        existing_by_key = {component.key: component for component in parent_components}
 
-                    parent_components.append(r_component)
-                    await self._create_question(component=r_component)
-                elif component_values.get("type") == FormIoComponentTypeEnum.select:
-                    data = component_values.pop("data")
-                    assert data is not None
+        seen_keys: set[str] = set()
 
-                    select_component = FormIoSelectComponent(**component_values)
+        for component in input_components:
+            if component.key in seen_keys:
+                raise Exception(f"Duplicate component key '{component.key}' found. Must be unique within the form.")
 
-                    select_component_data = FormIoSelectComponentData()
-                    select_component_data_values = await select_component_data.awaitable_attrs.values
+            seen_keys.add(component.key)
 
-                    for value in data.get("values"):
-                        component_value = FormIoSelectComponentValue(**value)
-                        select_component_data_values.append(component_value)
+            if component.key in existing_by_key:
+                # Re-add the component to reflect the order from the input list
+                parent_components.remove(existing_by_key[component.key])
+                parent_components.append(existing_by_key[component.key])
+                await self._update_component(existing_by_key[component.key], component)
+            else:
+                await self._create_component(parent, component)
 
-                    select_component_data_values.reorder()
-
-                    select_component.data = select_component_data
-
-                    parent_components.append(select_component)
-                    await self._create_question(select_component)
-                elif component_values.get("type") == FormIoComponentTypeEnum.text_area:
-                    text_area_component = FormIoTextAreaComponent(**component_values)
-                    parent_components.append(text_area_component)
-                    await self._create_question(text_area_component)
-                elif component_values.get("type") == FormIoComponentTypeEnum.text_field:
-                    text_field_component = FormIoTextFieldComponent(**component_values)
-                    parent_components.append(text_field_component)
-                    await self._create_question(text_field_component)
-                elif component_values.get("type") == FormIoComponentTypeEnum.date:
-                    date_component = FormIoDateComponent(**component_values)
-                    parent_components.append(date_component)
-                    await self._create_question(date_component)
-                elif component_values.get("type") == FormIoComponentTypeEnum.time:
-                    time_component = FormIoTimeComponent(**component_values)
-                    parent_components.append(time_component)
-                    await self._create_question(time_component)
-                else:
-                    raise Exception(f"Unsupported component type: {component_values.get('type')}")
+        for key, component in existing_by_key.items():
+            if key not in seen_keys:
+                parent_components.remove(component)
 
         parent_components.reorder()
+
+    async def _update_component(self, existing_component: FormIoComponent, component_input: FormComponentUnion) -> None:
+        input_values = component_input.model_dump()
+
+        # Updated component must have the same type as the existing component, otherwise we cannot update in place and need to delete and re-create
+        expected_type = input_values.get("type")
+        if existing_component.type != expected_type:
+            raise HTTPException(
+                detail=f"Component key '{component_input.key}' type mismatch: expected {existing_component.type}",
+                status_code=HTTP_400_BAD_REQUEST,
+            )
+
+        # If the component is a panel, we need to sync the nested components instead and update the panel attributes.
+        if isinstance(component_input, FormPanelComponentInput):
+            if not isinstance(existing_component, FormIoPanelComponent):
+                raise HTTPException(
+                    status_code=HTTP_400_BAD_REQUEST,
+                    detail=f"Component key '{component_input.key}' type mismatch: expected panel",
+                )
+
+            input_values.pop("components")
+
+            for attr, value in input_values.items():
+                setattr(existing_component, attr, value)
+
+            await self._sync_component_tree(existing_component, component_input.components)
+            return
+
+        # Remove nested collection data so we don't accidentally assign raw lists to relationship attributes
+        value_data = input_values.pop("values", None)
+        data = input_values.pop("data", None)
+
+        # Overwrite validation fields
+        self._add_validation_fields(input_values, component_input.validate_)
+
+        # Update attributes within the component model's scope
+        for attr, value in input_values.items():
+            setattr(existing_component, attr, value)
+
+        # Overwrite nested attributes for label and values components
+        if isinstance(existing_component, BaseFormIoValuesComponent) and value_data is not None:
+            existing_values = await existing_component.awaitable_attrs.values
+            existing_values.clear()
+            for value in value_data:
+                existing_values.append(FormIoComponentValue(**value))
+            existing_values.reorder()
+
+        # Overwrite nested attributes for select component with data.values
+        if isinstance(existing_component, FormIoSelectComponent) and data is not None:
+            if existing_component.data is None:
+                existing_component.data = FormIoSelectComponentData()
+
+            select_values = await existing_component.data.awaitable_attrs.values
+            select_values.clear()
+            for value in data.get("values", []):
+                select_values.append(FormIoSelectComponentValue(**value))
+            select_values.reorder()
+
+        if isinstance(existing_component, FormIoQuestionComponent):
+            question = await existing_component.awaitable_attrs.question
+            if question is None:
+                # ensure a Question exists for this component
+                await self._create_question(existing_component)
+            else:
+                if question.text != existing_component.label:
+                    question.text = existing_component.label
+                    await self._question_repository.save(question, commit=False)
 
 
 class FormCreateAction(BaseFormCreateUpdateAction):
@@ -249,7 +350,9 @@ class FormUpdateAction(BaseFormCreateUpdateAction):
         for key, value in form_data.items():
             setattr(obj, key, value)
 
-        await self._create_components(obj, form_input.components)
+        # Sync components (create/update/delete) based on FormIO keys
+        await self._sync_component_tree(obj, form_input.components)
+
         await self._repository.save(obj)
 
         return obj
