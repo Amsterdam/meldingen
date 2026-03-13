@@ -82,7 +82,6 @@ class FormPanelComponentInput(BaseModel):
     conditional: FormIOConditional | None = Field(default=None)
 
     components: list["FormComponentInputUnion"]
-    position: int = Field(default=1)
 
 
 # Panel is not allowed validator
@@ -104,7 +103,6 @@ class FormComponentInput(BaseModel):
     input: bool
     validate_: FormComponentInputValidate | None = Field(default=None, alias="validate")
     conditional: FormIOConditional | None = Field(default=None)
-    position: int = Field(default=1)
 
 
 class FormTextAreaComponentInput(FormComponentInput):
