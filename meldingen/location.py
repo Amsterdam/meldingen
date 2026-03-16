@@ -3,7 +3,8 @@ import json
 from geoalchemy2.elements import WKBElement
 from geoalchemy2.shape import from_shape, to_shape
 from geojson_pydantic import Point as GeoJsonPoint
-from shapely import Geometry, Point, to_geojson
+from shapely import Point, to_geojson
+from shapely.geometry.base import BaseGeometry
 
 from meldingen.models import Melding
 from meldingen.repositories import MeldingRepository
@@ -32,7 +33,7 @@ class ShapeToWKBTransformer:
     def __init__(self, spatial_ref_id: int = 4326) -> None:
         self._spatial_ref_id = spatial_ref_id
 
-    def __call__(self, shape: Geometry) -> WKBElement:
+    def __call__(self, shape: BaseGeometry) -> WKBElement:
         return from_shape(shape, self._spatial_ref_id)
 
 
@@ -42,7 +43,7 @@ class ShapeToGeoJSONTransformer:
     def __init__(self, geojson_factory: GeoJsonFeatureFactory) -> None:
         self._transform_to_geojson = geojson_factory
 
-    def __call__(self, shape: Geometry) -> GeoJson:
+    def __call__(self, shape: BaseGeometry) -> GeoJson:
         geometry = json.loads(to_geojson(shape))
 
         return self._transform_to_geojson(geometry=geometry)

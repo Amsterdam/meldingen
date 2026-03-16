@@ -22,7 +22,7 @@ Black is a code formatter for Python. To check if the code complies with Black
 formatting standards, run the following command:
 
 ```bash
-docker-compose run --rm meldingen poetry run black . --check
+docker compose run --rm meldingen uv run black . --check
 ```
 
 This command checks whether the code in the project directory conforms to 
@@ -34,7 +34,7 @@ iSort is used for sorting Python imports. To ensure proper import sorting
 within the Meldingen application, execute the following command:
 
 ```bash
-docker-compose run --rm meldingen poetry run isort .
+docker compose run --rm meldingen uv run isort .
 ```
 
 This command sorts the imports in Python files in the project directory 
@@ -46,7 +46,7 @@ MyPy is a static type checker for Python. To perform strict type checking
 across the Meldingen application, use the following command:
 
 ```bash
-docker-compose run --rm meldingen poetry run mypy --strict .
+docker compose run --rm meldingen bash -c 'uv run mypy --strict . | uv run mypy-baseline filter'
 ```
 
 This command runs MyPy with strict mode enabled, checking Python files in the 

@@ -7,22 +7,22 @@ repos:
     hooks:
       - id: black
         name: Black
-        description: This hook runs Black through poetry
-        entry: poetry run black . --check
+        description: This hook runs Black through uv
+        entry: uv run black . --check
         language: system
         always_run: true
         pass_filenames: false
       - id: isort
         name: iSort
-        description: This hook runs iSort through poetry
-        entry: poetry run isort -c .
+        description: This hook runs iSort through uv
+        entry: uv run isort . --check
         language: system
         always_run: true
         pass_filenames: false
       - id: mypy
         name: MyPy
-        description: This hook runs MypY through poetry
-        entry: bash -c 'poetry run mypy --strict . | poetry run mypy-baseline filter'
+        description: This hook runs MyPy through uv
+        entry: bash -c 'uv run mypy --strict . | uv run mypy-baseline filter'
         language: system
         always_run: true
         pass_filenames: false

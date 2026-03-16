@@ -3,47 +3,33 @@ FROM python:3.13-slim-bookworm
 WORKDIR /opt/meldingen
 
 RUN set -eux; \
-    apt update -yq; \
-    apt install -yq \
-      curl \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+      git \
       libmagic1 \
-      media-types
+      media-types \
+    && rm -rf /var/lib/apt/lists/*
 
 # Add user
 RUN groupadd --gid 1000 meldingen && useradd --uid 1000 --gid 1000 --system meldingen
 
-# Install Poetry
-RUN set eux; \
-    curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python; \
-    cd /usr/local/bin; \
-    ln -s /opt/poetry/bin/poetry; \
-    poetry config virtualenvs.create false; \
-    poetry self add poetry-plugin-sort
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN set -eux; \
-    apt remove curl -yq; \
-    apt autoremove -yq; \
-    apt clean
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV UV_PROJECT_ENVIRONMENT="/usr/local"
 
-COPY ./pyproject.toml ./poetry.lock /opt/meldingen/
+COPY pyproject.toml uv.lock* ./
 
 # Allow installing dev dependencies to run tests
 ARG INSTALL_DEV=false
-RUN set -eux; \
-    if [ "$INSTALL_DEV" = "true" ]; then \
-      poetry install --no-root --no-directory; \
+RUN if [ "$INSTALL_DEV" = "true" ]; then \
+      uv sync --frozen --no-install-project; \
     else \
-      poetry install --no-root --no-directory --only main; \
+      uv sync --frozen --no-install-project --no-dev; \
     fi
 
 COPY . /opt/meldingen
-
-RUN set -eux; \
-    if [ "$INSTALL_DEV" = "true" ]; then \
-      poetry install; \
-    else \
-      poetry install --only main; \
-    fi
 
 ENV PYTHONPATH=/opt/meldingen
 
