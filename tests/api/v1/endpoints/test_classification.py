@@ -29,13 +29,16 @@ class TestClassificationCreate(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     async def test_create_classification(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
-        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME), json={"name": "bla", "instructions": "test instructions"}
+        )
 
         assert response.status_code == HTTP_201_CREATED
 
         data = response.json()
         assert data.get("id") > 0
         assert data.get("name") == "bla"
+        assert data.get("instructions") == "test instructions"
         assert data.get("form", "") is None
         assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None
@@ -46,7 +49,8 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         self, app: FastAPI, client: AsyncClient, auth_user: None, asset_type: AssetType
     ) -> None:
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME), json={"name": "bla", "asset_type": asset_type.id}
+            app.url_path_for(self.ROUTE_NAME),
+            json={"name": "bla", "asset_type": asset_type.id, "instructions": "asset type instructions"},
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -54,6 +58,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         data = response.json()
         assert data.get("id") > 0
         assert data.get("name") == "bla"
+        assert data.get("instructions") == "asset type instructions"
         assert data.get("form", "") is None
         assert data.get("asset_type") == asset_type.id
         assert data.get("created_at") is not None
@@ -360,6 +365,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         data = response.json()
         assert data.get("id") == classification.id
         assert data.get("name") == "bla"
+        assert data.get("instructions") == classification.instructions
         assert data.get("form", "") is None
         assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None
@@ -443,13 +449,15 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"name": "bladiebla"}
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id),
+            json={"name": "bladiebla", "instructions": "updated instructions"},
         )
 
         assert response.status_code == HTTP_200_OK
 
         data = response.json()
         assert data.get("name") == "bladiebla"
+        assert data.get("instructions") == "updated instructions"
         assert data.get("form", "") is None
         assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None

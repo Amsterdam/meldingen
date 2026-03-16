@@ -39,11 +39,13 @@ class AssetTypeOutput(BaseOutputModel):
 
 class SimpleClassificationOutput(BaseOutputModel):
     name: str
+    instructions: str | None = Field(default=None)
     asset_type: AssetTypeOutput | None = Field(default=None)
 
 
 class ClassificationOutput(BaseOutputModel):
     name: str
+    instructions: str | None = Field(default=None)
     form: int | None = None
     asset_type: int | None = None
 

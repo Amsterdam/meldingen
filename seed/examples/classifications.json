@@ -1,11 +1,14 @@
 [
    {
-        "name": "Container glas kapot"
+        "name": "Container glas kapot",
+        "instructions": "Classify as 'Container glas kapot' if the melding text describes a broken glass container."
     },
     {
-        "name": "Container glas vol"
+        "name": "Container glas vol",
+        "instructions": "Classify as 'Container glas vol' if the melding text describes a full glass container."
     },
     {
-        "name": "Container is kapot"
+        "name": "Container is kapot",
+        "instructions": "Classify as 'Container is kapot' if the melding text describes a broken container (not limited to glass)."
     }
 ]

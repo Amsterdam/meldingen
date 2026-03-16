@@ -21,6 +21,7 @@ from meldingen.validators import create_non_match_validator
 
 class ClassificationInput(BaseModel):
     name: str = Field(min_length=1)
+    instructions: str | None = Field(default=None)
 
 
 class ClassificationCreateInput(ClassificationInput):
@@ -29,6 +30,7 @@ class ClassificationCreateInput(ClassificationInput):
 
 class ClassificationUpdateInput(BaseModel):
     name: str | None = Field(min_length=1, default=None)
+    instructions: str | None = Field(default=None)
     asset_type: int | None = Field(default=None)
 
 
