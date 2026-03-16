@@ -561,7 +561,9 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
             return {"panels": panels_by_key, "components": components_by_key}
 
         before = await snapshot_component_ids(form_with_multiple_questions)
-        assert len(before) > 0
+        # Ensure the snapshot contains at least one panel and one component.
+        assert before["panels"]
+        assert before["components"]
 
         panels = await form_with_multiple_questions.awaitable_attrs.components
         update_components: list[dict[str, Any]] = []
