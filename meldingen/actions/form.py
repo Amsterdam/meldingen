@@ -9,7 +9,7 @@ from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_
 
 from meldingen.actions.base import BaseListAction
 from meldingen.exceptions import MeldingNotClassifiedException
-from meldingen.factories import AnswerFactory
+from meldingen.factories import AnswerFactory, FormIoQuestionComponentFactory
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
 from meldingen.models import (
     Answer,
@@ -56,14 +56,17 @@ from meldingen.schemas.input import (
 class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
     _repository: FormRepository
     _question_repository: QuestionRepository
+    _produce_question_component: FormIoQuestionComponentFactory
 
     def __init__(
         self,
         repository: FormRepository,
         question_repository: QuestionRepository,
+        form_io_question_component_factory: FormIoQuestionComponentFactory,
     ) -> None:
         super().__init__(repository)
         self._question_repository = question_repository
+        self._produce_question_component = form_io_question_component_factory
 
     async def _create_question(self, component: FormIoQuestionComponent) -> None:
         form = await component.awaitable_attrs.form
@@ -109,28 +112,23 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
 
             await self._sync_component_tree(panel_component, component.components)
         else:
+            # Remove nested collection data so we don't accidentally assign raw lists to relationship attributes
             value_data = component_values.pop("values", [])
+            data = component_values.pop("data", {})
 
             self._add_validation_fields(component_values, component.validate_)
+            component_values.pop("validate_", None)
 
-            if component_values.get("type") == FormIoComponentTypeEnum.checkbox:
-                c_component = FormIoCheckBoxComponent(**component_values)
-                await self._create_component_values(component=c_component, values=value_data)
+            question_component = self._produce_question_component(component)
+            parent_components.append(question_component)
 
-                parent_components.append(c_component)
-                await self._create_question(component=c_component)
-            elif component_values.get("type") == FormIoComponentTypeEnum.radio:
-                r_component = FormIoRadioComponent(**component_values)
-                await self._create_component_values(component=r_component, values=value_data)
+            await self._create_question(component=question_component)
 
-                parent_components.append(r_component)
-                await self._create_question(component=r_component)
-            elif component_values.get("type") == FormIoComponentTypeEnum.select:
-                data = component_values.pop("data")
+            if isinstance(question_component, (FormIoCheckBoxComponent, FormIoRadioComponent)):
+                await self._create_component_values(component=question_component, values=value_data)
+
+            elif isinstance(question_component, FormIoSelectComponent):
                 assert data is not None
-
-                select_component = FormIoSelectComponent(**component_values)
-
                 select_component_data = FormIoSelectComponentData()
                 select_component_data_values = await select_component_data.awaitable_attrs.values
 
@@ -139,35 +137,14 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
                     select_component_data_values.append(component_value)
 
                 select_component_data_values.reorder()
+                question_component.data = select_component_data
 
-                select_component.data = select_component_data
 
-                parent_components.append(select_component)
-                await self._create_question(select_component)
-            elif component_values.get("type") == FormIoComponentTypeEnum.text_area:
-                text_area_component = FormIoTextAreaComponent(**component_values)
-                parent_components.append(text_area_component)
-                await self._create_question(text_area_component)
-            elif component_values.get("type") == FormIoComponentTypeEnum.text_field:
-                text_field_component = FormIoTextFieldComponent(**component_values)
-                parent_components.append(text_field_component)
-                await self._create_question(text_field_component)
-            elif component_values.get("type") == FormIoComponentTypeEnum.date:
-                date_component = FormIoDateComponent(**component_values)
-                parent_components.append(date_component)
-                await self._create_question(date_component)
-            elif component_values.get("type") == FormIoComponentTypeEnum.time:
-                time_component = FormIoTimeComponent(**component_values)
-                parent_components.append(time_component)
-                await self._create_question(time_component)
-            else:
-                raise Exception(f"Unsupported component type: {component_values.get('type')}")
-
-    def _add_validation_fields(self, values: dict[str, Any], validate: FormComponentInputValidate | None) -> None:
+    def _add_validation_fields(self, values: dict[str, Any], validate: FormComponentInputValidate | None) -> dict[str, Any]:
         values.pop("validate_", None)
 
         if validate is None:
-            return
+            return values
 
         if validate.json_ is not None:
             values["jsonlogic"] = validate.json_.model_dump_json(by_alias=True)
@@ -175,6 +152,8 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
         if validate.required is not None:
             values["required"] = validate.required
             values["required_error_message"] = validate.required_error_message
+
+        return values
 
     async def _sync_component_tree(
         self, parent: Form | FormIoPanelComponent, input_components: Sequence[FormComponentUnion]
@@ -205,7 +184,7 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
         parent_components.reorder()
 
     async def _update_component(self, existing_component: FormIoComponent, component_input: FormComponentUnion) -> None:
-        input_values = component_input.model_dump()
+        input_values = component_input.model_dump(exclude_unset=True)
 
         # Updated component must have the same type as the existing component, otherwise we cannot update in place and need to delete and re-create
         expected_type = input_values.get("type")
@@ -235,8 +214,15 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
         value_data = input_values.pop("values", None)
         data = input_values.pop("data", None)
 
-        # Overwrite validation fields
-        self._add_validation_fields(input_values, component_input.validate_)
+        input_values.pop("validate_")
+
+        if component_input.validate_ is not None:
+            if component_input.validate_.json_ is not None:
+                input_values["jsonlogic"] = component_input.validate_.json_.model_dump_json(by_alias=True)
+
+            if component_input.validate_.required is not None:
+                input_values["required"] = component_input.validate_.required
+                input_values["required_error_message"] = component_input.validate_.required_error_message
 
         # Update attributes within the component model's scope
         for attr, value in input_values.items():
@@ -280,8 +266,9 @@ class FormCreateAction(BaseFormCreateUpdateAction):
         repository: FormRepository,
         classification_repository: ClassificationRepository,
         question_repository: QuestionRepository,
+        form_io_question_component_factory: FormIoQuestionComponentFactory,
     ):
-        super().__init__(repository, question_repository)
+        super().__init__(repository, question_repository, form_io_question_component_factory)
         self._classification_repository = classification_repository
 
     async def __call__(self, form_input: FormInput) -> Form:
@@ -320,8 +307,9 @@ class FormUpdateAction(BaseFormCreateUpdateAction):
         repository: FormRepository,
         classification_repository: ClassificationRepository,
         question_repository: QuestionRepository,
+        form_io_question_component_factory: FormIoQuestionComponentFactory,
     ):
-        super().__init__(repository, question_repository)
+        super().__init__(repository, question_repository, form_io_question_component_factory)
         self._classification_repository = classification_repository
 
     async def __call__(self, pk: int, form_input: FormInput) -> Form:
