@@ -190,7 +190,10 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
         expected_type = input_values.get("type")
         if existing_component.type != expected_type:
             raise HTTPException(
-                detail=f"Component key '{component_input.key}' type mismatch: expected {existing_component.type}",
+                detail=(
+                    f"Component key '{component_input.key}' type mismatch: "
+                    f"expected {existing_component.type}, got {expected_type}"
+                ),
                 status_code=HTTP_400_BAD_REQUEST,
             )
 
