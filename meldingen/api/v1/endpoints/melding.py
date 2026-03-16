@@ -173,7 +173,7 @@ async def create_melding(
     generate_public_id: Annotated[PublicIdGenerator, Depends(public_id_generator)],
     produce_output: Annotated[MeldingCreateOutputFactory, Depends(melding_create_output_factory)],
 ) -> MeldingCreateOutput:
-    melding_dict = melding_input.model_dump()
+    melding_dict = melding_input.model_dump(exclude_unset=True)
 
     await validate_using_jsonlogic(melding_dict)
 
@@ -319,7 +319,7 @@ async def update_melding(
     action: Annotated[MeldingUpdateAction[Melding, Classification], Depends(melding_update_action)],
     produce_output: Annotated[MeldingUpdateOutputFactory, Depends(melding_update_output_factory)],
 ) -> MeldingUpdateOutput:
-    melding_dict = melding_input.model_dump()
+    melding_dict = melding_input.model_dump(exclude_unset=True)
 
     await validate_using_jsonlogic(melding_dict)
 

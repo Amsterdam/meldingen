@@ -65,6 +65,7 @@ class TestMeldingCreate:
         assert data.get("id") > 0
         assert data.get("text") == "This is a test melding."
         assert data.get("state") == MeldingStates.NEW
+        assert data.get("urgency") == 0
         assert data.get("classification") is None
         assert data.get("token") is not None
         assert data.get("created_at") is not None
@@ -85,11 +86,34 @@ class TestMeldingCreate:
         assert data.get("id") > 0
         assert data.get("text") == "This is a test melding."
         assert data.get("state") == MeldingStates.NEW
+        assert data.get("urgency") == 0
         assert data.get("classification") is None
         assert data.get("token") is not None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
         assert data.get("public_id") == "MELPUB"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("urgency", [-1, 0, 1])
+    async def test_create_melding_with_urgency(self, app: FastAPI, client: AsyncClient, urgency: int) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE),
+            json={"text": "This is a test melding.", "urgency": urgency},
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("urgency") == urgency
+
+    @pytest.mark.anyio
+    async def test_create_melding_invalid_urgency(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE),
+            json={"text": "This is a test melding.", "urgency": 2},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
     @pytest.mark.anyio
     async def test_create_melding_with_classification(
@@ -799,6 +823,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert body.get("id") == melding.id
         assert body.get("text") == melding.text
         assert body.get("state") == MeldingStates.NEW
+        assert body.get("urgency") == 0
         assert body.get("classification") is None
         assert body.get("geo_location", "") is None
         assert body.get("email", "") is None
@@ -945,12 +970,66 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         assert body.get("id") == melding.id
         assert body.get("text") == "classification_name"
         assert body.get("state") == MeldingStates.CLASSIFIED
+        assert body.get("urgency") == 0
         assert body.get("classification").get("id") == classification.id
         assert body.get("classification").get("name") == classification.name
         assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("public_id") == melding.public_id
         assert body.get("token") == "supersecuretoken"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "melding_urgency", "classification_name"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", 1, "classification_name")],
+        indirect=True,
+    )
+    async def test_update_melding_without_urgency_keeps_existing_value(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, classification: Classification
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "supersecuretoken"},
+            json={"text": "classification_name"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("urgency") == 1
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "classification_name"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "classification_name")],
+        indirect=True,
+    )
+    async def test_update_melding_sets_urgency(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, classification: Classification
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "supersecuretoken"},
+            json={"text": "classification_name", "urgency": -1},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("urgency") == -1
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken")],
+        indirect=True,
+    )
+    async def test_update_melding_invalid_urgency(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            params={"token": "supersecuretoken"},
+            json={"text": "classification_name", "urgency": 123},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -4804,6 +4883,7 @@ class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
         assert body.get("id") == melding.id
         assert body.get("text") == melding.text
         assert body.get("state") == MeldingStates.NEW
+        assert body.get("urgency") == 0
         assert body.get("classification") is None
         assert body.get("geo_location", "") is None
         assert body.get("email", "") is None

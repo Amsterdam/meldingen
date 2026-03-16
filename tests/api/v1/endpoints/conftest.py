@@ -153,6 +153,14 @@ def melding_city(request: FixtureRequest) -> str | None:
 
 
 @pytest.fixture
+def melding_urgency(request: FixtureRequest) -> int | None:
+    if hasattr(request, "param") and request.param is not None:
+        return int(request.param)
+    else:
+        return None
+
+
+@pytest.fixture
 async def melding(
     db_session: AsyncSession,
     melding_text: str,
@@ -168,6 +176,7 @@ async def melding(
     melding_city: str | None,
     melding_email: str | None,
     melding_phone: str | None,
+    melding_urgency: int | None,
 ) -> Melding:
     melding = Melding(text=melding_text)
     melding.public_id = melding_public_id
@@ -191,6 +200,9 @@ async def melding(
     melding.house_number = melding_house_number
     melding.house_number_addition = melding_house_number_addition
     melding.city = melding_city
+
+    if melding_urgency is not None:
+        melding.urgency = melding_urgency
 
     db_session.add(melding)
     await db_session.commit()
