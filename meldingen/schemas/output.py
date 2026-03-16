@@ -125,6 +125,7 @@ class BaseFormPanelComponentOutput(BaseModel):
     type: str
     input: bool
 
+    position: int
     conditional: FormIOConditional | None = Field(default=None)
 
 
