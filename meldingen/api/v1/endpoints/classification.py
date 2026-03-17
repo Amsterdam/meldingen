@@ -47,6 +47,7 @@ async def _hydrate_output(classification: Classification) -> ClassificationOutpu
         id=classification.id,
         form=form_id,
         name=classification.name,
+        instructions=classification.instructions,
         asset_type=classification.asset_type_id,
         created_at=classification.created_at,
         updated_at=classification.updated_at,
