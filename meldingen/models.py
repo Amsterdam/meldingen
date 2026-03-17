@@ -63,6 +63,7 @@ class Asset(BaseDBModel, BaseAsset):
 
 class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
     name: Mapped[str] = mapped_column(String, unique=True)
+    instructions: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     form: Mapped[Optional["Form"]] = relationship(default=None, back_populates="classification")
     asset_type_id: Mapped[int | None] = mapped_column(ForeignKey(AssetType.id), default=None)
     asset_type: Mapped[AssetType | None] = relationship(default=None)

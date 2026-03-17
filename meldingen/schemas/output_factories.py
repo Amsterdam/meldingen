@@ -663,6 +663,7 @@ class SimpleClassificationOutputFactory:
         return SimpleClassificationOutput(
             id=classification.id,
             name=classification.name,
+            instructions=classification.instructions,
             asset_type=self._output_asset_type(asset_type) if asset_type else None,
             created_at=classification.created_at,
             updated_at=classification.updated_at,
