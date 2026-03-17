@@ -65,10 +65,12 @@ async def create_classification(
     classification_input: ClassificationCreateInput,
     action: Annotated[ClassificationCreateAction, Depends(classification_create_action)],
 ) -> ClassificationOutput:
-    classification = Classification(classification_input.name)
+    values = classification_input.model_dump()
+    asset_type_id = values.pop("asset_type")
+    classification = Classification(**values)
 
     try:
-        await action(classification, classification_input.asset_type)
+        await action(classification, asset_type_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Asset type not found")
 
