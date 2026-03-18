@@ -12,15 +12,22 @@ from meldingen.models import (
     AssetType,
     Attachment,
     DateAnswer,
+    FormIoCheckBoxComponent,
+    FormIoComponentTypeEnum,
+    FormIoDateComponent,
+    FormIoQuestionComponent,
+    FormIoRadioComponent,
+    FormIoSelectComponent,
+    FormIoTextAreaComponent,
+    FormIoTextFieldComponent,
+    FormIoTimeComponent,
     Melding,
     Question,
     TextAnswer,
     TimeAnswer,
     ValueLabelAnswer,
-    FormIoSelectComponent, FormIoComponentTypeEnum, FormIoDateComponent, FormIoTimeComponent, FormIoTextFieldComponent,
-    FormIoTextAreaComponent, FormIoRadioComponent, FormIoCheckBoxComponent, FormIoQuestionComponent,
 )
-from meldingen.schemas.input import AnswerInputUnion, FormComponentInputUnion, FormComponentInput
+from meldingen.schemas.input import AnswerInputUnion
 
 
 class AttachmentFactory(BaseAttachmentFactory[Attachment, Melding]):
@@ -56,32 +63,37 @@ class UnsupportedAnswerTypeException(Exception):
 class AnswerFactory:
 
     def __call__(self, answer_input: AnswerInputUnion, melding: Melding, question: Question) -> Answer:
-        fields = {
-            "type": answer_input.type,
-            "melding": melding,
-            "question": question,
-            "original_question_text": question.text,
-        }
-
         match answer_input.type:
             case AnswerTypeEnum.text:
                 return TextAnswer(
-                    **fields,
+                    type=answer_input.type,
+                    melding=melding,
+                    question=question,
+                    original_question_text=question.text,
                     text=answer_input.text,
                 )
             case AnswerTypeEnum.time:
                 return TimeAnswer(
-                    **fields,
+                    type=answer_input.type,
+                    melding=melding,
+                    question=question,
+                    original_question_text=question.text,
                     time=answer_input.time,
                 )
             case AnswerTypeEnum.date:
                 return DateAnswer(
-                    **fields,
+                    type=answer_input.type,
+                    melding=melding,
+                    question=question,
+                    original_question_text=question.text,
                     date=answer_input.date.model_dump(),
                 )
             case AnswerTypeEnum.value_label:
                 return ValueLabelAnswer(
-                    **fields,
+                    type=answer_input.type,
+                    melding=melding,
+                    question=question,
+                    original_question_text=question.text,
                     values_and_labels=[v.model_dump() for v in answer_input.values_and_labels],
                 )
             case _:
@@ -95,12 +107,14 @@ class UnsupportedFormComponentTypeException(Exception):
 class FormIoQuestionComponentFactory:
 
     def __call__(self, validated_component_input: dict[str, Any]) -> FormIoQuestionComponent:
-        match validated_component_input.get("type"):
+        component_type = validated_component_input.get("type")
+
+        match component_type:
             case FormIoComponentTypeEnum.text_area:
                 return FormIoTextAreaComponent(
                     **validated_component_input,
                 )
-            case FormIoComponentTypeEnum.text_field :
+            case FormIoComponentTypeEnum.text_field:
                 return FormIoTextFieldComponent(
                     **validated_component_input,
                 )
@@ -125,6 +139,6 @@ class FormIoQuestionComponentFactory:
                     **validated_component_input,
                 )
             case FormIoComponentTypeEnum.panel:
-                    raise UnsupportedFormComponentTypeException("Panel components are not supported in this context.")
+                raise UnsupportedFormComponentTypeException("Panel components are not supported in this context.")
             case _:
-                raise UnsupportedFormComponentTypeException(f"Unsupported form component type: {validated_component_input.type}")
+                raise UnsupportedFormComponentTypeException(f"Unsupported form component type: {component_type}")

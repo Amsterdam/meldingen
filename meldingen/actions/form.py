@@ -28,7 +28,7 @@ from meldingen.models import (
     FormIoSelectComponentValue,
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
-     Melding,
+    Melding,
     Question,
     StaticForm,
 )
@@ -66,31 +66,40 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
         self._question_repository = question_repository
         self._produce_question_component = form_io_question_component_factory
 
-    async def _create_question(self, component: FormIoQuestionComponent) -> None:
-        form = await component.awaitable_attrs.form
-        if form is None:
-            parent = await component.awaitable_attrs.parent
-            if parent is not None:
-                form = await parent.awaitable_attrs.form
-
-        if form is None:
-            raise Exception("Failed to get form from component or parent!")
-
-        question = Question(text=component.label, form=form)
-        await self._question_repository.save(question, commit=False)
-
-        component.question = question
-
-    async def _create_component_values(
-        self, component: BaseFormIoValuesComponent, values: list[dict[str, Any]]
+    async def _sync_component_tree(
+        self, parent: Form | FormIoPanelComponent, input_components: Sequence[FormComponentUnion]
     ) -> None:
-        component_values = await component.awaitable_attrs.values
+        """This method syncs the component tree of a Form or FormIoPanelComponent with the given input components.
+        It updates existing components, creates new components and deletes removed components based on the unique FormIO keys.
+        The order of the components is also updated to match the input list."""
 
-        for value in values:
-            component_value = FormIoComponentValue(**value)
-            component_values.append(component_value)
+        parent_components = await parent.awaitable_attrs.components
+        existing_by_key = {component.key: component for component in parent_components}
 
-        component_values.reorder()
+        # Keep track of seen keys that are in the input_components list.
+        # The ones who are not seen but do exist in our DB should be deleted
+        seen_keys: set[str] = set()
+
+        for component in input_components:
+            if component.key in seen_keys:
+                raise Exception(f"Duplicate component key '{component.key}' found. Must be unique within the form.")
+
+            seen_keys.add(component.key)
+
+            if component.key in existing_by_key:
+                # Re-add the component to reflect the order from the input list
+                parent_components.remove(existing_by_key[component.key])
+                parent_components.append(existing_by_key[component.key])
+
+                await self._update_component(existing_by_key[component.key], component)
+            else:
+                await self._create_component(parent, component)
+
+        for key, component in existing_by_key.items():
+            if key not in seen_keys:
+                parent_components.remove(component)
+
+        parent_components.reorder()
 
     async def _create_components(
         self, parent: Form | FormIoPanelComponent, components: Sequence[FormComponentUnion]
@@ -135,50 +144,6 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
 
                 select_component_data_values.reorder()
                 question_component.data = select_component_data
-
-
-    def _transform_validation_fields(self, values: dict[str, Any], validate: FormComponentInputValidate | None) -> dict[str, Any]:
-        values.pop("validate_", None)
-
-        if validate is None:
-            return values
-
-        if validate.json_ is not None:
-            values["jsonlogic"] = validate.json_.model_dump_json(by_alias=True)
-
-        if validate.required is not None:
-            values["required"] = validate.required
-            values["required_error_message"] = validate.required_error_message
-
-        return values
-
-    async def _sync_component_tree(
-        self, parent: Form | FormIoPanelComponent, input_components: Sequence[FormComponentUnion]
-    ) -> None:
-        parent_components = await parent.awaitable_attrs.components
-        existing_by_key = {component.key: component for component in parent_components}
-
-        seen_keys: set[str] = set()
-
-        for component in input_components:
-            if component.key in seen_keys:
-                raise Exception(f"Duplicate component key '{component.key}' found. Must be unique within the form.")
-
-            seen_keys.add(component.key)
-
-            if component.key in existing_by_key:
-                # Re-add the component to reflect the order from the input list
-                parent_components.remove(existing_by_key[component.key])
-                parent_components.append(existing_by_key[component.key])
-                await self._update_component(existing_by_key[component.key], component)
-            else:
-                await self._create_component(parent, component)
-
-        for key, component in existing_by_key.items():
-            if key not in seen_keys:
-                parent_components.remove(component)
-
-        parent_components.reorder()
 
     async def _update_component(self, existing_component: FormIoComponent, component_input: FormComponentUnion) -> None:
         input_values = component_input.model_dump(exclude_unset=True)
@@ -248,6 +213,53 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
                 if question.text != existing_component.label:
                     question.text = existing_component.label
                     await self._question_repository.save(question, commit=False)
+
+    async def _create_question(self, component: FormIoQuestionComponent) -> None:
+        form = await component.awaitable_attrs.form
+        if form is None:
+            parent = await component.awaitable_attrs.parent
+            if parent is not None:
+                form = await parent.awaitable_attrs.form
+
+        if form is None:
+            raise Exception("Failed to get form from component or parent!")
+
+        question = Question(text=component.label, form=form)
+        await self._question_repository.save(question, commit=False)
+
+        component.question = question
+
+    async def _create_component_values(
+        self, component: BaseFormIoValuesComponent, values: list[dict[str, Any]]
+    ) -> None:
+        component_values = await component.awaitable_attrs.values
+
+        for value in values:
+            component_value = FormIoComponentValue(**value)
+            component_values.append(component_value)
+
+        component_values.reorder()
+
+    def _transform_validation_fields(
+        self, values: dict[str, Any], validate: FormComponentInputValidate | None
+    ) -> dict[str, Any]:
+        """The validation fields can't be dumped by alias directly onto the component model because the validate_ field is not part of the component model
+        Therefore we need to transform the validate_ field into the corresponding jsonlogic, required and required_error_message fields expected by the component model
+        """
+
+        values.pop("validate_", None)
+
+        if validate is None:
+            return values
+
+        if validate.json_ is not None:
+            values["jsonlogic"] = validate.json_.model_dump_json(by_alias=True)
+
+        if validate.required is not None:
+            values["required"] = validate.required
+            values["required_error_message"] = validate.required_error_message
+
+        return values
 
 
 class FormCreateAction(BaseFormCreateUpdateAction):
