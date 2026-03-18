@@ -20,7 +20,6 @@ from meldingen.models import (
     FormIoComponentToAnswerTypeMap,
     FormIoComponentTypeEnum,
     FormIoComponentValue,
-    FormIoDateComponent,
     FormIoPanelComponent,
     FormIoQuestionComponent,
     FormIoRadioComponent,
@@ -29,8 +28,7 @@ from meldingen.models import (
     FormIoSelectComponentValue,
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
-    FormIoTimeComponent,
-    Melding,
+     Melding,
     Question,
     StaticForm,
 )
@@ -116,10 +114,9 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
             value_data = component_values.pop("values", [])
             data = component_values.pop("data", {})
 
-            self._add_validation_fields(component_values, component.validate_)
-            component_values.pop("validate_", None)
+            component_values_with_validate = self._transform_validation_fields(component_values, component.validate_)
 
-            question_component = self._produce_question_component(component)
+            question_component = self._produce_question_component(component_values_with_validate)
             parent_components.append(question_component)
 
             await self._create_question(component=question_component)
@@ -140,7 +137,7 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
                 question_component.data = select_component_data
 
 
-    def _add_validation_fields(self, values: dict[str, Any], validate: FormComponentInputValidate | None) -> dict[str, Any]:
+    def _transform_validation_fields(self, values: dict[str, Any], validate: FormComponentInputValidate | None) -> dict[str, Any]:
         values.pop("validate_", None)
 
         if validate is None:
@@ -217,18 +214,10 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
         value_data = input_values.pop("values", None)
         data = input_values.pop("data", None)
 
-        input_values.pop("validate_")
-
-        if component_input.validate_ is not None:
-            if component_input.validate_.json_ is not None:
-                input_values["jsonlogic"] = component_input.validate_.json_.model_dump_json(by_alias=True)
-
-            if component_input.validate_.required is not None:
-                input_values["required"] = component_input.validate_.required
-                input_values["required_error_message"] = component_input.validate_.required_error_message
+        input_with_validate_fields = self._transform_validation_fields(input_values, component_input.validate_)
 
         # Update attributes within the component model's scope
-        for attr, value in input_values.items():
+        for attr, value in input_with_validate_fields.items():
             setattr(existing_component, attr, value)
 
         # Overwrite nested attributes for label and values components

@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import AsyncIterator
+from typing import Any
 
 from meldingen_core.factories import BaseAssetFactory, BaseAttachmentFactory
 from plugfs.filesystem import Filesystem
@@ -93,39 +94,37 @@ class UnsupportedFormComponentTypeException(Exception):
 
 class FormIoQuestionComponentFactory:
 
-    def __call__(self, component_input: FormComponentInputUnion) -> FormIoQuestionComponent:
-        dumped = component_input.model_dump(exclude={"validate_", "values", "data"})
-
-        match component_input.type:
+    def __call__(self, validated_component_input: dict[str, Any]) -> FormIoQuestionComponent:
+        match validated_component_input.get("type"):
             case FormIoComponentTypeEnum.text_area:
                 return FormIoTextAreaComponent(
-                    **dumped,
+                    **validated_component_input,
                 )
             case FormIoComponentTypeEnum.text_field :
                 return FormIoTextFieldComponent(
-                    **dumped,
+                    **validated_component_input,
                 )
             case FormIoComponentTypeEnum.time:
                 return FormIoTimeComponent(
-                    **dumped,
+                    **validated_component_input,
                 )
             case FormIoComponentTypeEnum.date:
                 return FormIoDateComponent(
-                    **dumped,
+                    **validated_component_input,
                 )
             case FormIoComponentTypeEnum.select:
                 return FormIoSelectComponent(
-                    **dumped,
+                    **validated_component_input,
                 )
             case FormIoComponentTypeEnum.radio:
                 return FormIoRadioComponent(
-                    **dumped,
+                    **validated_component_input,
                 )
             case FormIoComponentTypeEnum.checkbox:
                 return FormIoCheckBoxComponent(
-                    **dumped,
+                    **validated_component_input,
                 )
             case FormIoComponentTypeEnum.panel:
                     raise UnsupportedFormComponentTypeException("Panel components are not supported in this context.")
             case _:
-                raise UnsupportedFormComponentTypeException(f"Unsupported form component type: {component_input.type}")
+                raise UnsupportedFormComponentTypeException(f"Unsupported form component type: {validated_component_input.type}")
