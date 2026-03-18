@@ -22,6 +22,7 @@ from meldingen_core.actions.melding import (
     MeldingRequestReopenAction,
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
+    MeldingUpdateActionMelder,
 )
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.filters import MeldingListFilters
@@ -116,6 +117,7 @@ from meldingen.dependencies import (
     melding_submit_action_melder,
     melding_submit_location_action,
     melding_update_action,
+    melding_update_action_melder,
     melding_update_output_factory,
     melding_upload_attachment_action,
     public_id_generator,
@@ -138,6 +140,7 @@ from meldingen.schemas.input import (
     MeldingAssetInput,
     MeldingContactInput,
     MeldingInput,
+    MeldingUpdateInput,
 )
 from meldingen.schemas.output import (
     AnswerOutputUnion,
@@ -310,13 +313,34 @@ async def retrieve_melding_melder(
     name="melding:update",
     status_code=HTTP_200_OK,
     responses={**unauthorized_response, **not_found_response},
+    dependencies=[Depends(authenticate_user)],
 )
 async def update_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    melding_input: MeldingUpdateInput,
+    action: Annotated[MeldingUpdateAction[Melding], Depends(melding_update_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(pk=melding_id, values=melding_input.model_dump(exclude_unset=True))
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    return await produce_output(melding)
+
+
+@router.patch(
+    "/{melding_id}/melder",
+    name="melding:update_melder",
+    status_code=HTTP_200_OK,
+    responses={**unauthorized_response, **not_found_response},
+)
+async def update_melding_melder(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     melding_input: MeldingInput,
     validate_using_jsonlogic: Annotated[MeldingPrimaryFormValidator, Depends(melding_primary_form_validator)],
-    action: Annotated[MeldingUpdateAction[Melding, Classification], Depends(melding_update_action)],
+    action: Annotated[MeldingUpdateActionMelder[Melding, Classification], Depends(melding_update_action_melder)],
     produce_output: Annotated[MeldingUpdateOutputFactory, Depends(melding_update_output_factory)],
 ) -> MeldingUpdateOutput:
     melding_dict = melding_input.model_dump(exclude_unset=True)

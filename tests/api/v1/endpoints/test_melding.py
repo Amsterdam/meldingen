@@ -94,23 +94,10 @@ class TestMeldingCreate:
         assert data.get("public_id") == "MELPUB"
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("urgency", [-1, 0, 1])
-    async def test_create_melding_with_urgency(self, app: FastAPI, client: AsyncClient, urgency: int) -> None:
+    async def test_create_melding_ignores_urgency(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE),
-            json={"text": "This is a test melding.", "urgency": urgency},
-        )
-
-        assert response.status_code == HTTP_201_CREATED
-
-        data = response.json()
-        assert data.get("urgency") == urgency
-
-    @pytest.mark.anyio
-    async def test_create_melding_invalid_urgency(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.post(
-            app.url_path_for(self.ROUTE_NAME_CREATE),
-            json={"text": "This is a test melding.", "urgency": 2},
+            json={"text": "This is a test melding.", "urgency": 1},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -908,8 +895,8 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
 
-class TestMeldingUpdate(BaseTokenAuthenticationTest):
-    ROUTE_NAME: Final[str] = "melding:update"
+class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
+    ROUTE_NAME: Final[str] = "melding:update_melder"
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -980,53 +967,17 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_token", "melding_urgency", "classification_name"],
-        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", 1, "classification_name")],
-        indirect=True,
-    )
-    async def test_update_melding_without_urgency_keeps_existing_value(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, classification: Classification
-    ) -> None:
-        response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
-            params={"token": "supersecuretoken"},
-            json={"text": "classification_name"},
-        )
-
-        assert response.status_code == HTTP_200_OK
-        body = response.json()
-        assert body.get("urgency") == 1
-
-    @pytest.mark.anyio
-    @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "classification_name"],
         [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken", "classification_name")],
         indirect=True,
     )
-    async def test_update_melding_sets_urgency(
+    async def test_update_melding_rejects_urgency(
         self, app: FastAPI, client: AsyncClient, melding: Melding, classification: Classification
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             json={"text": "classification_name", "urgency": -1},
-        )
-
-        assert response.status_code == HTTP_200_OK
-        body = response.json()
-        assert body.get("urgency") == -1
-
-    @pytest.mark.anyio
-    @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_token"],
-        [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken")],
-        indirect=True,
-    )
-    async def test_update_melding_invalid_urgency(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
-        response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
-            params={"token": "supersecuretoken"},
-            json={"text": "classification_name", "urgency": 123},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -1401,6 +1352,66 @@ class TestMeldingUpdate(BaseTokenAuthenticationTest):
         )
 
         assert response.status_code == HTTP_200_OK
+
+
+class TestMeldingUpdate(BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "melding:update"
+    METHOD: Final[str] = "PATCH"
+    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
+
+    @pytest.mark.anyio
+    async def test_update_urgency(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"urgency": 1},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("urgency") == 1
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("urgency", [-1, 0, 1])
+    async def test_update_urgency_valid_values(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding, urgency: int
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"urgency": urgency},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("urgency") == urgency
+
+    @pytest.mark.anyio
+    async def test_update_urgency_invalid_value(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"urgency": 2},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+    @pytest.mark.anyio
+    async def test_update_not_found(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=999999),
+            json={"urgency": 1},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
 
 
 class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
