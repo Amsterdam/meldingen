@@ -35,6 +35,8 @@ class ClassificationUpdateInput(BaseModel):
 
 
 class MeldingInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     text: str = Field(min_length=1)
 
 
