@@ -74,7 +74,7 @@ async def test_build_dynamic_classification_response_model_accepts_valid_name() 
     model = await build_dynamic_classification_response_model(repository)
     instance = model(classification="Zwerfvuil")
 
-    assert instance.classification == "Zwerfvuil"
+    assert getattr(instance, "classification") == "Zwerfvuil"
 
 
 @pytest.mark.anyio
