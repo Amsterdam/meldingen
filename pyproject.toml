@@ -117,4 +117,4 @@ module-root = "."
 module-name = "meldingen"
 
 [tool.uv.sources]
-meldingen-core = { git = "https://github.com/Amsterdam/meldingen-core.git", rev = "bugfix/7146_only-allow-behandelaars-to-set-urgency" }
+meldingen-core = { git = "https://github.com/Amsterdam/meldingen-core.git" }
