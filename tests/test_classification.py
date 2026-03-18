@@ -25,8 +25,8 @@ async def test_build_classification_prompt_with_instructions() -> None:
 
     prompt = await build_classification_prompt(repository)
 
-    assert "- Zwerfvuil: Meldingen over rondslingerend afval" in prompt
-    assert "- Straatverlichting: Kapotte of niet werkende lantaarns" in prompt
+    assert "- **Zwerfvuil**: Meldingen over rondslingerend afval" in prompt
+    assert "- **Straatverlichting**: Kapotte of niet werkende lantaarns" in prompt
 
 
 @pytest.mark.anyio
@@ -40,8 +40,8 @@ async def test_build_classification_prompt_without_instructions() -> None:
 
     prompt = await build_classification_prompt(repository)
 
-    assert "- Groenvoorziening" in prompt
-    assert "- Groenvoorziening:" not in prompt
+    assert "- **Groenvoorziening**" in prompt
+    assert "- **Groenvoorziening**:" not in prompt
 
 
 @pytest.mark.anyio
@@ -56,9 +56,9 @@ async def test_build_classification_prompt_mixed() -> None:
 
     prompt = await build_classification_prompt(repository)
 
-    assert "- Zwerfvuil: Rondslingerend afval" in prompt
-    assert "- Groenvoorziening" in prompt
-    assert "- Groenvoorziening:" not in prompt
+    assert "- **Zwerfvuil**: Rondslingerend afval" in prompt
+    assert "- **Groenvoorziening**" in prompt
+    assert "- **Groenvoorziening**:" not in prompt
 
 
 @pytest.mark.anyio
