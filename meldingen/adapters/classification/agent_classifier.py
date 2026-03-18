@@ -3,7 +3,7 @@ import logging
 from meldingen_core.classification import BaseClassifierAdapter
 from pydantic_ai import Agent
 
-from meldingen.classification import build_dynamic_classification_response_model
+from meldingen.classification import build_classification_prompt, build_dynamic_classification_response_model
 from meldingen.repositories import ClassificationRepository
 
 logger = logging.getLogger(__name__)
@@ -18,8 +18,9 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
         self._repository = repository
 
     async def __call__(self, text: str) -> str | None:
-        user_prompt = f"Please classify: {text}"
         try:
+            classification_prompt = await build_classification_prompt(self._repository)
+            user_prompt = f"{classification_prompt}\n\nMelding: {text}"
             ClassificationModel = await build_dynamic_classification_response_model(self._repository)
             result = await self._agent.run(user_prompt, output_type=ClassificationModel)
             classification = getattr(result.output, "classification", None)
