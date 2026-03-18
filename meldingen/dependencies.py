@@ -120,6 +120,7 @@ from meldingen.factories import (
     AttachmentFactory,
     AzureFilesystemFactory,
     BaseFilesystemFactory,
+    FormIoQuestionComponentFactory,
 )
 from meldingen.generators import PublicIdGenerator
 from meldingen.image import (
@@ -1245,6 +1246,10 @@ def form_time_output_factory(
     return FormTimeComponentOutputFactory(_validate_adder)
 
 
+def form_io_question_component_factory() -> FormIoQuestionComponentFactory:
+    return FormIoQuestionComponentFactory()
+
+
 def form_component_output_factory(
     text_area_factory: Annotated[FormTextAreaComponentOutputFactory, Depends(form_text_area_output_factory)],
     text_field_factory: Annotated[FormTextFieldInputComponentOutputFactory, Depends(form_text_field_input_factory)],
@@ -1275,8 +1280,13 @@ def form_create_action(
     repository: Annotated[FormRepository, Depends(form_repository)],
     classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
+    form_io_question_component_factory: Annotated[
+        FormIoQuestionComponentFactory, Depends(form_io_question_component_factory)
+    ],
 ) -> FormCreateAction:
-    return FormCreateAction(repository, classification_repository, question_repository)
+    return FormCreateAction(
+        repository, classification_repository, question_repository, form_io_question_component_factory
+    )
 
 
 def form_list_action(repository: Annotated[FormRepository, Depends(form_repository)]) -> FormListAction:
@@ -1297,8 +1307,13 @@ def form_update_action(
     repository: Annotated[FormRepository, Depends(form_repository)],
     classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
+    form_io_question_component_factory: Annotated[
+        FormIoQuestionComponentFactory, Depends(form_io_question_component_factory)
+    ],
 ) -> FormUpdateAction:
-    return FormUpdateAction(repository, classification_repository, question_repository)
+    return FormUpdateAction(
+        repository, classification_repository, question_repository, form_io_question_component_factory
+    )
 
 
 def form_delete_action(repository: Annotated[FormRepository, Depends(form_repository)]) -> FormDeleteAction:

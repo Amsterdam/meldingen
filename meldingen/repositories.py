@@ -21,7 +21,7 @@ from meldingen_core.repositories import (
 from sqlalchemy import ColumnExpressionArgument, Select, delete, desc, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Relationship
+from sqlalchemy.orm import Relationship, selectinload
 from sqlalchemy.sql import func
 
 from meldingen.models import (
@@ -328,8 +328,17 @@ class AnswerRepository(BaseSQLAlchemyRepository[Answer], BaseAnswerRepository[An
         return Answer
 
     async def find_by_melding(self, melding_id: int) -> Sequence[Answer]:
+        """Used to fetch answers with their related questions and components, to avoid n+1 query problem when fetching answers for a melding."""
         _type = self.get_model_type()
-        statement = select(_type).where(_type.melding_id == melding_id)
+        statement = (
+            select(_type)
+            .where(_type.melding_id == melding_id)
+            .options(
+                selectinload(Answer.question)
+                .selectinload(Question.component)
+                .selectinload(FormIoQuestionComponent.parent),
+            )
+        )
 
         results = await self._session.execute(statement)
 

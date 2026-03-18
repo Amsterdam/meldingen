@@ -23,6 +23,7 @@ from meldingen.models import (
     FormIoTextFieldComponent,
     FormIoTimeComponent,
     Melding,
+    Question,
     StaticForm,
     TextAnswer,
     TimeAnswer,
@@ -850,11 +851,16 @@ class AnswerListOutputFactory:
         self._output_answer = answer_output_factory
 
     async def __call__(self, answers: Sequence[Answer]) -> list[AnswerQuestionOutputUnion]:
-        flattened = {}
+        flattened: dict[int, AnswerQuestionOutputUnion] = {}
         for answer in answers:
-            question = await answer.awaitable_attrs.question
-            component = await question.awaitable_attrs.component
-            panel = await component.awaitable_attrs.parent
+            question = answer.question
+
+            component = question.component
+            assert component is not None, "Question is expected to have a component"
+
+            panel = component.parent
+            assert panel is not None, "Component is expected to have a parent panel"
+
             question_output = QuestionOutput(
                 id=question.id,
                 text=question.text,
