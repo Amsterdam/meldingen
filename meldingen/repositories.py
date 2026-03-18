@@ -328,16 +328,11 @@ class AnswerRepository(BaseSQLAlchemyRepository[Answer], BaseAnswerRepository[An
         return Answer
 
     async def find_by_melding(self, melding_id: int) -> Sequence[Answer]:
+        """Used to fetch answers with their related questions and components, to avoid n+1 query problem when fetching answers for a melding."""
         _type = self.get_model_type()
         statement = (
             select(_type).where(_type.melding_id == melding_id)
-            # The answers endpoint renders the related question and uses
-            # question.component.parent(panel) for sorting/grouping.
-            # Eager-load these relationships to avoid async lazy-load IO
-            # during serialization (which can raise MissingGreenlet).
             .options(
-                selectinload(Answer.question),
-                selectinload(Answer.question).selectinload(Question.component),
                 selectinload(Answer.question)
                 .selectinload(Question.component)
                 .selectinload(FormIoQuestionComponent.parent),
