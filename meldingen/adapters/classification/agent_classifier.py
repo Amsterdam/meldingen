@@ -20,7 +20,7 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
     async def __call__(self, text: str) -> str | None:
         try:
             classification_prompt = await build_classification_prompt(self._repository)
-            user_prompt = f"{classification_prompt}\n\nMelding: {text}"
+            user_prompt = f"{classification_prompt}{text}"
             ClassificationModel = await build_dynamic_classification_response_model(self._repository)
             result = await self._agent.run(user_prompt, output_type=ClassificationModel)
             classification = getattr(result.output, "classification", None)

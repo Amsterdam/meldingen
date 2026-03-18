@@ -27,11 +27,6 @@ async def build_classification_prompt(repository: ClassificationRepository) -> s
     """Build a prompt section listing all classifications with their instructions."""
 
     classifications = await repository.list()
-    lines = [f"- {c.name}: {c.instructions}" if c.instructions else f"- {c.name}" for c in classifications]
+    lines = [f"- **{c.name}**: {c.instructions}" if c.instructions else f"- **{c.name}**" for c in classifications]
 
-    return (
-        "Hieronder staan de beschikbare classificaties met hun instructies.\n"
-        "Kies de classificatie die het beste past bij de melding en geef alleen de naam van de classificatie terug.\n\n"
-        "Classificaties:\n" + "\n".join(lines) + "\n\n"
-        "Hierna volgt de meldtekst. Gebruik deze meldtekst om uit de bovenstaande categorieën de beste classificatie te kiezen. Geef ook terug waarom je hiervoor gekozen hebt."
-    )
+    return "Beschikbare classificaties:\n" + "\n".join(lines) + "\n\n" + "Meldtekst:\n"
