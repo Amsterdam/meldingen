@@ -72,12 +72,11 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
         """This method syncs the component tree of a Form or FormIoPanelComponent with the given input components.
         It updates existing components, creates new components and deletes removed components based on the unique FormIO keys.
         The order of the components is also updated to match the input list."""
-
         parent_components = await parent.awaitable_attrs.components
-        existing_by_key = {component.key: component for component in parent_components}
 
-        # Keep track of seen keys that are in the input_components list.
+        # Keep track of existing keys in the DB and keys given in the input list.
         # The ones who are not seen but do exist in our DB should be deleted
+        existing_by_key = {component.key: component for component in parent_components}
         seen_keys: set[str] = set()
 
         for component in input_components:

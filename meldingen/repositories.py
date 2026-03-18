@@ -331,7 +331,8 @@ class AnswerRepository(BaseSQLAlchemyRepository[Answer], BaseAnswerRepository[An
         """Used to fetch answers with their related questions and components, to avoid n+1 query problem when fetching answers for a melding."""
         _type = self.get_model_type()
         statement = (
-            select(_type).where(_type.melding_id == melding_id)
+            select(_type)
+            .where(_type.melding_id == melding_id)
             .options(
                 selectinload(Answer.question)
                 .selectinload(Question.component)
