@@ -2421,7 +2421,7 @@ class TestMeldingQuestionAnswer:
         client: AsyncClient,
         melding_with_classification: Melding,
         form_with_time_component: Form,
-        time_value: str | int,
+        time_value: str | int | float | None,
         error_message: str,
     ) -> None:
         components = await form_with_time_component.awaitable_attrs.components
