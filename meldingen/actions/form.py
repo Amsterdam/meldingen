@@ -197,6 +197,7 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
             existing_data = await existing_component.awaitable_attrs.data
             if existing_data is None:
                 existing_component.data = FormIoSelectComponentData()
+                existing_data = existing_component.data
 
             select_values = await existing_data.awaitable_attrs.values
             select_values.clear()
