@@ -2450,7 +2450,7 @@ class TestMeldingQuestionAnswer:
         detail = body.get("detail")
         assert len(detail) == 1
         assert detail[0].get("msg") == error_message
-        assert detail[0].get("type") == "string_type"
+        assert detail[0].get("type") == "pattern_mismatch"
 
     @pytest.mark.parametrize(
         ["melding_token"],
