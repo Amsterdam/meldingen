@@ -7,7 +7,6 @@ from uuid import uuid4
 import pytest
 from azure.storage.blob.aio import ContainerClient
 from fastapi import FastAPI
-from geoalchemy2.shape import to_shape
 from httpx import AsyncClient
 from mailpit.client.api import API
 from meldingen_core import SortingDirection
@@ -1103,9 +1102,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
 
         body = response.json()
         assert body.get("classification").get("name") == classification_with_asset_type.name
-        geom = to_shape(melding.geo_location)
-
-        assert body["geo_location"]["geometry"]["coordinates"] == [geom.x, geom.y]
+        assert body.get("geo_location").get("geometry").get("coordinates") == [52.3680, 4.8970]
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1183,9 +1180,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
 
         body = response.json()
         assert body.get("classification").get("name") == classification.name
-        geom = to_shape(melding_with_classification_with_asset_type.geo_location)
-
-        assert body["geo_location"]["geometry"]["coordinates"] == [geom.x, geom.y]
+        assert body.get("geo_location").get("geometry").get("coordinates") == [52.3680, 4.8970]
 
         new_assets = await melding_with_classification_with_asset_type.awaitable_attrs.assets
 
@@ -1286,9 +1281,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        geom = to_shape(melding_with_classification_with_asset_type.geo_location)
-
-        assert body["geo_location"]["geometry"]["coordinates"] == [geom.x, geom.y]
+        assert body.get("geo_location").get("geometry").get("coordinates") == [52.3680, 4.8970]
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
