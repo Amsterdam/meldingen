@@ -1,4 +1,4 @@
-.PHONY: help build push up rebuild debug lint typecheck test
+.PHONY: help build push up rebuild lint typecheck typecheck-sync test test-coverage
 
 REGISTRY ?= localhost:5000
 VERSION ?= latest
@@ -8,7 +8,7 @@ GID:=$(shell id --group)
 TEST ?= # used to add testpath as argument to pytest, e.g. TEST=tests/api/v1/endpoints/test_melding.py
 
 dc = docker compose
-dc_debug = $(dc) -f docker-compose.yml -f docker-compose.debug.yml
+api = $(dc) run --rm --user=root meldingen
 
 help:
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
@@ -21,25 +21,21 @@ up: ## Start Docker Compose stack (detached)
 rebuild: ## Rebuild and start Docker Compose stack (detached)
 	$(dc) up -d --build
 
-debug: ## Start API with debugpy enabled (attach from VS Code)
-	$(dc_debug) up -d --build
-	@echo "Now attach from VS Code using: Python: Attach (Docker Compose / debugpy)"
-
 lint: ## Auto-fix formatting (black + isort)
-	$(dc) run --rm meldingen poetry run black .
-	$(dc) run --rm meldingen poetry run isort .
+	$(api) uv run black .
+	$(api) uv run isort .
 
 typecheck: ## Run mypy type checking
-	$(dc) run --rm --user=root meldingen poetry run mypy --strict . | mypy-baseline filter
+	$(api) sh -c "uv run mypy --strict . | uv run mypy-baseline filter
 
 typecheck-sync: ## Run mypy type checking and update baseline
-	$(dc) run --rm --user=root meldingen poetry run mypy --strict . | mypy-baseline sync
+	$(api) sh -c "rm -rf .mypy_cache && uv run mypy --strict . | uv run mypy-baseline sync"
 
 test: ## Run pytest (optional: make test TEST=tests/...)
-	$(dc) run --rm meldingen pytest --test-alembic -v -n auto $(TEST)
+	$(api) pytest --test-alembic -v -n auto $(TEST)
 
 test-coverage:
-	$(dc) run --rm meldingen pytest --test-alembic --cov --cov-fail-under=95 -n auto --cov-report=html -v $(TEST)
+	$(api) pytest --test-alembic --cov --cov-fail-under=95 -n auto --cov-report=html -v $(TEST)
 
 
 ### CI ###

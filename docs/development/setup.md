@@ -62,23 +62,6 @@ docker compose build
 docker compose up -d
 ```
 
-## Debugging in VS Code (Docker Compose attach)
-
-VS Code can only "attach" to a running Python process if that process runs a debug server. For Python/FastAPI, that is typically `debugpy`.
-
-This repository includes a Compose override file that installs `debugpy` only inside the running dev container (so it is not added to the project's dependencies).
-
-1. Start the stack with the debug override:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
-```
-
-2. In VS Code, run the launch configuration named: `Python: Attach (Docker Compose / debugpy)`.
-
-Notes:
-- The debug port is `5678`.
-- If you run into breakpoint issues with reload, try disabling reload in the debug command.
 
 ## Authentication and authorization
 
