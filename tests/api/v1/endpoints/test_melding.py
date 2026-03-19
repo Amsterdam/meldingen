@@ -1084,7 +1084,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         ],
         indirect=True,
     )
-    async def test_update_melding_removes_location_after_reclassification(
+    async def test_update_melding_retains_location_after_reclassification(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -1102,7 +1102,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
 
         body = response.json()
         assert body.get("classification").get("name") == classification_with_asset_type.name
-        assert body.get("geo_location") == None
+        assert body.get("geo_location").get("geometry").get("coordinates") == [52.3680, 4.8970]
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1156,7 +1156,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         ],
         indirect=True,
     )
-    async def test_update_melding_retains_assets_after_reclassification_with_same_asset_type_but_removes_location(
+    async def test_update_melding_retains_assets_after_reclassification_with_same_asset_type(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -1180,7 +1180,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
 
         body = response.json()
         assert body.get("classification").get("name") == classification.name
-        assert body.get("geo_location") is None
+        assert body.get("geo_location").get("geometry").get("coordinates") == [52.3680, 4.8970]
 
         new_assets = await melding_with_classification_with_asset_type.awaitable_attrs.assets
 
@@ -1265,7 +1265,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         ],
         indirect=True,
     )
-    async def test_update_melding_removes_location_after_reclassification_with_same_asset_type(
+    async def test_update_melding_retains_location_after_reclassification_with_same_asset_type(
         self,
         app: FastAPI,
         client: AsyncClient,
@@ -1281,7 +1281,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("geo_location") is None
+        assert body.get("geo_location").get("geometry").get("coordinates") == [52.3680, 4.8970]
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(

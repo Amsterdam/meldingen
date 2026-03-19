@@ -139,7 +139,6 @@ from meldingen.jsonlogic import JSONLogicValidator
 from meldingen.location import (
     GeoJsonFeatureFactory,
     LocationOutputTransformer,
-    LocationPurger,
     MeldingLocationIngestor,
     ShapePointFactory,
     ShapeToGeoJSONTransformer,
@@ -484,10 +483,6 @@ def answer_purger(
     return AnswerPurger(melding_repository)
 
 
-def location_purger(repository: Annotated[MeldingRepository, Depends(melding_repository)]) -> LocationPurger:
-    return LocationPurger(repository)
-
-
 def asset_purger(repository: Annotated[MeldingRepository, Depends(melding_repository)]) -> AssetPurger:
     return AssetPurger(repository)
 
@@ -500,10 +495,9 @@ def melding_asset_relationship_manager(
 
 def reclassifier(
     answer_purger: Annotated[AnswerPurger, Depends(answer_purger)],
-    location_purger: Annotated[LocationPurger, Depends(location_purger)],
     asset_purger: Annotated[AssetPurger, Depends(asset_purger)],
 ) -> Reclassifier:
-    return Reclassifier(answer_purger, location_purger, asset_purger)
+    return Reclassifier(answer_purger, asset_purger)
 
 
 def melding_update_action(
