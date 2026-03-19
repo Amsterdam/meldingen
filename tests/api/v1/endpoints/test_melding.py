@@ -2891,7 +2891,7 @@ class TestMeldingQuestionAnswer:
         melding_with_classification: Melding,
         melding_token: str,
         form_with_time_component: Form,
-        time_value: str | int,
+        time_value: str | int | float | None,
         error_message: str,
     ) -> None:
 
