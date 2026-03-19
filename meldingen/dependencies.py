@@ -26,6 +26,7 @@ from meldingen_core.actions.melding import (
     MeldingRequestReopenAction,
     MeldingSubmitLocationAction,
     MeldingUpdateAction,
+    MeldingUpdateActionMelder,
 )
 from meldingen_core.classification import BaseClassifierAdapter, Classifier
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
@@ -507,12 +508,18 @@ def reclassifier(
 
 def melding_update_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> MeldingUpdateAction[Melding]:
+    return MeldingUpdateAction(repository)
+
+
+def melding_update_action_melder(
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     classifier: Annotated[Classifier[Classification], Depends(classifier)],
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     reclassifier: Annotated[Reclassifier, Depends(reclassifier)],
-) -> MeldingUpdateAction[Melding, Classification]:
-    return MeldingUpdateAction(repository, token_verifier, classifier, state_machine, reclassifier)
+) -> MeldingUpdateActionMelder[Melding, Classification]:
+    return MeldingUpdateActionMelder(repository, token_verifier, classifier, state_machine, reclassifier)
 
 
 def melding_add_contact_action(

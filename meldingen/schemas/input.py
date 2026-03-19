@@ -35,8 +35,13 @@ class ClassificationUpdateInput(BaseModel):
 
 
 class MeldingInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     text: str = Field(min_length=1)
-    urgency: Literal[-1, 0, 1] = Field(default=0)
+
+
+class MeldingUpdateInput(BaseModel):
+    urgency: Literal[-1, 0, 1]
 
 
 class MeldingContactInput(BaseModel):
