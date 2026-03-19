@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import AsyncIterator
+from typing import Any
 
 from meldingen_core.factories import BaseAssetFactory, BaseAttachmentFactory
 from plugfs.filesystem import Filesystem
@@ -11,6 +12,15 @@ from meldingen.models import (
     AssetType,
     Attachment,
     DateAnswer,
+    FormIoCheckBoxComponent,
+    FormIoComponentTypeEnum,
+    FormIoDateComponent,
+    FormIoQuestionComponent,
+    FormIoRadioComponent,
+    FormIoSelectComponent,
+    FormIoTextAreaComponent,
+    FormIoTextFieldComponent,
+    FormIoTimeComponent,
     Melding,
     Question,
     TextAnswer,
@@ -53,39 +63,82 @@ class UnsupportedAnswerTypeException(Exception):
 class AnswerFactory:
 
     def __call__(self, answer_input: AnswerInputUnion, melding: Melding, question: Question) -> Answer:
-
         match answer_input.type:
             case AnswerTypeEnum.text:
                 return TextAnswer(
                     type=answer_input.type,
-                    text=answer_input.text,
                     melding=melding,
                     question=question,
                     original_question_text=question.text,
+                    text=answer_input.text,
                 )
             case AnswerTypeEnum.time:
                 return TimeAnswer(
                     type=answer_input.type,
-                    time=answer_input.time,
                     melding=melding,
                     question=question,
                     original_question_text=question.text,
+                    time=answer_input.time,
                 )
             case AnswerTypeEnum.date:
                 return DateAnswer(
                     type=answer_input.type,
-                    date=answer_input.date.model_dump(),
                     melding=melding,
                     question=question,
                     original_question_text=question.text,
+                    date=answer_input.date.model_dump(),
                 )
             case AnswerTypeEnum.value_label:
                 return ValueLabelAnswer(
                     type=answer_input.type,
-                    values_and_labels=[v.model_dump() for v in answer_input.values_and_labels],
                     melding=melding,
                     question=question,
                     original_question_text=question.text,
+                    values_and_labels=[v.model_dump() for v in answer_input.values_and_labels],
                 )
             case _:
                 raise UnsupportedAnswerTypeException(f"Unsupported answer type: {answer_input.type}")
+
+
+class UnsupportedFormComponentTypeException(Exception):
+    pass
+
+
+class FormIoQuestionComponentFactory:
+
+    def __call__(self, validated_component_input: dict[str, Any]) -> FormIoQuestionComponent:
+        component_type = validated_component_input.get("type")
+
+        match component_type:
+            case FormIoComponentTypeEnum.text_area:
+                return FormIoTextAreaComponent(
+                    **validated_component_input,
+                )
+            case FormIoComponentTypeEnum.text_field:
+                return FormIoTextFieldComponent(
+                    **validated_component_input,
+                )
+            case FormIoComponentTypeEnum.time:
+                return FormIoTimeComponent(
+                    **validated_component_input,
+                )
+            case FormIoComponentTypeEnum.date:
+                return FormIoDateComponent(
+                    **validated_component_input,
+                )
+            case FormIoComponentTypeEnum.select:
+                return FormIoSelectComponent(
+                    **validated_component_input,
+                )
+            case FormIoComponentTypeEnum.radio:
+                return FormIoRadioComponent(
+                    **validated_component_input,
+                )
+            case FormIoComponentTypeEnum.checkbox:
+                return FormIoCheckBoxComponent(
+                    **validated_component_input,
+                )
+            case FormIoComponentTypeEnum.panel:
+                raise UnsupportedFormComponentTypeException("Panel components are not supported in this context.")
+            case _:
+                raise UnsupportedFormComponentTypeException(f"Unsupported form component type: {component_type}")

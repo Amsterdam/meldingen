@@ -24,6 +24,8 @@ from meldingen.models import (
     FormIoQuestionComponent,
     FormIoRadioComponent,
     FormIoTextAreaComponent,
+    FormIoTimeComponent,
+    Melding,
 )
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -529,6 +531,231 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         await self._assert_components(data.get("components"), components)
 
     @pytest.mark.anyio
+    async def test_update_form_does_not_recreate_components_and_keeps_answers_working(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form_with_multiple_questions: Form,
+        melding_with_text_answers: Melding,
+    ) -> None:
+        """Updating a form should not replace the underlying components with new ones.
+        If this happens the relation between the answer/question and its component is broken
+        This test makes sure of that by comparing the DB IDs of panels and components before and after the update.
+        The update in this test should not add or remove any components, only update their properties."""
+
+        async def snapshot_component_ids(form: Form) -> dict[str, dict[str, int]]:
+            """Helper function to snapshot the DB IDs of panels and components of a form."""
+            panels_by_key: dict[str, int] = {}
+            components_by_key: dict[str, int] = {}
+
+            panels = await form.awaitable_attrs.components
+            for panel in panels:
+                assert isinstance(panel, FormIoPanelComponent)
+                panels_by_key[panel.key] = panel.id
+
+                children = await panel.awaitable_attrs.components
+                for child in children:
+                    components_by_key[child.key] = child.id
+
+            return {"panels": panels_by_key, "components": components_by_key}
+
+        before = await snapshot_component_ids(form_with_multiple_questions)
+        # Ensure the snapshot contains at least one panel and one component.
+        assert before["panels"]
+        assert before["components"]
+
+        panels = await form_with_multiple_questions.awaitable_attrs.components
+        update_components: list[dict[str, Any]] = []
+
+        for panel in panels:
+            assert isinstance(panel, FormIoPanelComponent)
+
+            children = await panel.awaitable_attrs.components
+            child_payloads: list[dict[str, Any]] = []
+            for child in children:
+                # Keep the key stable; other fields may change during an update.
+                base_child: dict[str, Any] = {
+                    "label": "Updated label",
+                    "description": "Updated description",
+                    "key": child.key,
+                    "type": child.type,
+                    "input": True,
+                }
+
+                if child.type == FormIoComponentTypeEnum.text_area:
+                    base_child.update(
+                        {
+                            "autoExpand": True,
+                            "maxCharCount": 255,
+                        }
+                    )
+                elif child.type == FormIoComponentTypeEnum.text_field:
+                    pass
+                elif child.type == FormIoComponentTypeEnum.time:
+                    pass
+                elif child.type == FormIoComponentTypeEnum.date:
+                    base_child.update(
+                        {
+                            "dayRange": 7,
+                        }
+                    )
+
+                child_payloads.append(base_child)
+
+            panel_payload = {
+                "label": "Updated Panel",
+                "title": "Updated Panel title",
+                "key": panel.key,
+                "type": FormIoComponentTypeEnum.panel,
+                "input": False,
+                "components": child_payloads,
+            }
+
+            update_components.append(panel_payload)
+
+        update_payload = {
+            "title": form_with_multiple_questions.title,
+            "display": "form",
+            "components": update_components,
+        }
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, form_id=form_with_multiple_questions.id),
+            json=update_payload,
+        )
+        assert response.status_code == HTTP_200_OK
+
+        after = await snapshot_component_ids(form_with_multiple_questions)
+
+        # Test that the update doesn't create new components
+        assert before["panels"] == after["panels"]
+        assert before["components"] == after["components"]
+
+        answers_response = await client.get(
+            app.url_path_for("melding:answers", melding_id=melding_with_text_answers.id),
+        )
+        assert answers_response.status_code == HTTP_200_OK
+        assert isinstance(answers_response.json(), list)
+        assert len(answers_response.json()) == 10
+
+    @pytest.mark.anyio
+    async def test_update_form_with_deleting_components(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_multiple_questions: Form
+    ) -> None:
+        """Updating a form with fewer components should delete the components that are not in the update payload"""
+
+        panels = await form_with_multiple_questions.awaitable_attrs.components
+        assert len(panels) > 0
+
+        panel_to_keep = panels[0]
+        assert isinstance(panel_to_keep, FormIoPanelComponent)
+
+        update_payload = {
+            "title": form_with_multiple_questions.title,
+            "display": "form",
+            "components": [
+                {
+                    "label": panel_to_keep.label,
+                    "title": "Panel",
+                    "key": panel_to_keep.key,
+                    "type": panel_to_keep.type,
+                    "input": panel_to_keep.input,
+                    "components": [],
+                },
+            ],
+        }
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, form_id=form_with_multiple_questions.id),
+            json=update_payload,
+        )
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        components = data.get("components", [])
+        assert len(components) == 1
+        assert components[0].get("key") == panel_to_keep.key
+        assert components[0].get("title") == panel_to_keep.title
+        assert components[0].get("components") == []
+
+    @pytest.mark.anyio
+    async def test_update_form_with_adding_component_changes_order(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_time_component: Form
+    ) -> None:
+        """Updating a form with more components should add the new components to the form"""
+
+        panels = await form_with_time_component.awaitable_attrs.components
+        assert len(panels) > 0
+
+        panel = panels[0]
+        assert isinstance(panel, FormIoPanelComponent)
+
+        panel_components = await panel.awaitable_attrs.components
+        time_component = panel_components[0]
+        assert isinstance(time_component, FormIoTimeComponent)
+
+        update_payload = {
+            "title": form_with_time_component.title,
+            "display": "form",
+            "components": [
+                {
+                    "label": panel.label,
+                    "title": panel.title,
+                    "key": panel.key,
+                    "type": panel.type,
+                    "input": panel.input,
+                    "components": [
+                        {
+                            "label": "New question",
+                            "description": "Description of the new question",
+                            "key": "new-question",
+                            "type": "textfield",
+                            "input": True,
+                        },
+                        {
+                            "label": time_component.label,
+                            "description": time_component.description,
+                            "key": "tijd",
+                            "type": time_component.type,
+                            "input": time_component.input,
+                        },
+                    ],
+                },
+            ],
+        }
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, form_id=form_with_time_component.id),
+            json=update_payload,
+        )
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        components = data.get("components", [])
+        assert len(components) == 1
+
+        response_panel = components[0]
+        assert response_panel.get("key") == panel.key
+        assert response_panel.get("title") == panel.title
+
+        response_panel_components = response_panel.get("components", [])
+        assert len(response_panel_components) == 2
+
+        response_new_question = response_panel_components[0]
+
+        assert response_new_question.get("key") == "new-question"
+        assert response_new_question.get("label") == "New question"
+        assert response_new_question.get("type") == "textfield"
+        assert response_new_question.get("position") == 1
+
+        response_time_question = response_panel_components[1]
+        assert response_time_question.get("label") == time_component.label
+        assert response_time_question.get("type") == time_component.type
+        assert response_time_question.get("key") == time_component.key
+        assert response_time_question.get("position") == 2
+
+    @pytest.mark.anyio
     async def test_update_form_with_jsonlogic(
         self, app: FastAPI, client: AsyncClient, auth_user: None, form: Form
     ) -> None:
@@ -562,7 +789,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                 {
                     "title": "Panel 2 title",
                     "label": "panel-2",
-                    "key": "panel",
+                    "key": "panel2",
                     "type": "panel",
                     "input": False,
                     "components": [
@@ -583,14 +810,14 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                 {
                     "title": "Panel 3 title",
                     "label": "panel-3",
-                    "key": "panel",
+                    "key": "panel3",
                     "type": "panel",
                     "input": False,
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
                             "description": "",
-                            "key": "waarom-meld-u-dit-bij-ons",
+                            "key": "waarom-meld-u-dit-bij-ons2",
                             "type": FormIoComponentTypeEnum.select,
                             "input": True,
                             "widget": "html5",
@@ -612,14 +839,14 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                 {
                     "title": "Panel 4 title",
                     "label": "panel-4",
-                    "key": "panel",
+                    "key": "panel4",
                     "type": "panel",
                     "input": False,
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
                             "description": "",
-                            "key": "waarom-meld-u-dit-bij-ons",
+                            "key": "waarom-meld-u-dit-bij-ons3",
                             "type": FormIoComponentTypeEnum.checkbox,
                             "input": True,
                             "values": [
@@ -637,14 +864,14 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                 {
                     "title": "Panel 5 title",
                     "label": "panel-5",
-                    "key": "panel",
+                    "key": "panel5",
                     "type": "panel",
                     "input": False,
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
                             "description": "",
-                            "key": "waarom-meld-u-dit-bij-ons",
+                            "key": "waarom-meld-u-dit-bij-ons4",
                             "type": FormIoComponentTypeEnum.radio,
                             "input": True,
                             "values": [
