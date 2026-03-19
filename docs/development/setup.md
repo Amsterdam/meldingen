@@ -62,7 +62,6 @@ docker compose build
 docker compose up -d
 ```
 
-
 ## Authentication and authorization
 
 Docker Compose automatically runs a script to add new users to the database.
