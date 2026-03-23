@@ -117,4 +117,4 @@ module-root = "."
 module-name = "meldingen"
 
 [tool.uv.sources]
-meldingen-core = { git = "https://github.com/Amsterdam/meldingen-core.git" }
+meldingen-core = { git = "https://github.com/Amsterdam/meldingen-core.git", rev = "feature/7206-search-query-param-list-endpoints" }

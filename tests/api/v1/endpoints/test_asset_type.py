@@ -469,7 +469,6 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
 
         assert response.headers.get("content-range") == f"asset-type {offset}-{limit - 1 + offset}/10"
 
-
     @pytest.mark.anyio
     async def test_list_asset_types_filtered_by_q(
         self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
