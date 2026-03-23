@@ -194,10 +194,12 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
 
         # Overwrite nested attributes for select component with data.values
         if isinstance(existing_component, FormIoSelectComponent) and data is not None:
-            if existing_component.data is None:
+            existing_data = await existing_component.awaitable_attrs.data
+            if existing_data is None:
                 existing_component.data = FormIoSelectComponentData()
+                existing_data = existing_component.data
 
-            select_values = await existing_component.data.awaitable_attrs.values
+            select_values = await existing_data.awaitable_attrs.values
             select_values.clear()
             for value in data.get("values", []):
                 select_values.append(FormIoSelectComponentValue(**value))
