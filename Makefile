@@ -26,7 +26,7 @@ lint: ## Auto-fix formatting (black + isort)
 	$(api) uv run isort .
 
 typecheck: ## Run mypy type checking
-	$(api) sh -c "uv run mypy --strict . | uv run mypy-baseline filter
+	$(api) sh -c "uv run mypy --strict . | uv run mypy-baseline filter"
 
 typecheck-sync: ## Run mypy type checking and update baseline
 	$(api) sh -c "rm -rf .mypy_cache && uv run mypy --strict . | uv run mypy-baseline sync"
