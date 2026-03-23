@@ -117,7 +117,8 @@ async def list_asset_types(
         name_contains=q,
     )
 
-    await content_range_header_adder(response, pagination)
+    filters = [AssetType.name.ilike(f"%{q}%")] if q is not None else None
+    await content_range_header_adder(response, pagination, filters)
 
     return [produce_output(asset_type) for asset_type in asset_types]
 

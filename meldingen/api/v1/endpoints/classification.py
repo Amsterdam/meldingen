@@ -102,7 +102,8 @@ async def list_classifications(
         name_contains=q,
     )
 
-    await content_range_header_adder(response, pagination)
+    filters = [Classification.name.ilike(f"%{q}%")] if q is not None else None
+    await content_range_header_adder(response, pagination, filters)
 
     return [await _hydrate_output(classification) for classification in classifications]
 
