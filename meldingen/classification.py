@@ -21,3 +21,12 @@ async def build_dynamic_classification_response_model(repository: Classification
         "ClassificationResponse",
         classification=(classification_type, Field(..., description="The chosen classification")),
     )
+
+
+async def build_classification_prompt(repository: ClassificationRepository) -> str:
+    """Build a prompt section listing all classifications with their instructions."""
+
+    classifications = await repository.list()
+    lines = [f"- **{c.name}**: {c.instructions}" if c.instructions else f"- **{c.name}**" for c in classifications]
+
+    return "Beschikbare classificaties:\n" + "\n".join(lines) + "\n\n" + "Meldtekst:\n"
