@@ -89,12 +89,17 @@ async def list_classifications(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[ClassificationListAction, Depends(classification_list_action)],
+    q: str | None = None,
 ) -> list[ClassificationOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
     classifications = await action(
-        limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+        limit=limit,
+        offset=offset,
+        sort_attribute_name=sort.get_attribute_name(),
+        sort_direction=sort.get_direction(),
+        name_contains=q,
     )
 
     await content_range_header_adder(response, pagination)

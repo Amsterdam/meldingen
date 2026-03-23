@@ -85,9 +85,13 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
+        name_contains: str | None = None,
     ) -> Sequence[T]:
         _type = self.get_model_type()
         statement = select(_type)
+
+        if name_contains is not None:
+            statement = statement.where(_type.name.ilike(f"%{name_contains}%"))
 
         statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
 

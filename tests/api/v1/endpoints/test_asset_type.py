@@ -470,6 +470,41 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
         assert response.headers.get("content-range") == f"asset-type {offset}-{limit - 1 + offset}/10"
 
 
+    @pytest.mark.anyio
+    async def test_list_asset_types_filtered_by_q(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "3"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["name"] == "3"
+
+    @pytest.mark.anyio
+    async def test_list_asset_types_filtered_by_q_case_insensitive(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "3"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 1
+
+    @pytest.mark.anyio
+    async def test_list_asset_types_filtered_by_q_no_results(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "nonexistent"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 0
+
+
 class TestUpdateAssetType(BaseUnauthorizedTest):
     def get_route_name(self) -> str:
         return "asset-type:update"

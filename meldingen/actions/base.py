@@ -19,10 +19,15 @@ class BaseListAction(BaseCoreListAction[T]):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
+        name_contains: str | None = None,
     ) -> Sequence[T]:
         try:
-            return await super().__call__(
-                limit=limit, offset=offset, sort_attribute_name=sort_attribute_name, sort_direction=sort_direction
+            return await self._repository.list(
+                limit=limit,
+                offset=offset,
+                sort_attribute_name=sort_attribute_name,
+                sort_direction=sort_direction,
+                name_contains=name_contains,
             )
         except AttributeNotFoundException as e:
             raise HTTPException(

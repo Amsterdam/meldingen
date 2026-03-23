@@ -104,12 +104,17 @@ async def list_asset_types(
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[AssetTypeListAction, Depends(asset_type_list_action)],
     produce_output: Annotated[AssetTypeOutputFactory, Depends(asset_type_output_factory)],
+    q: str | None = None,
 ) -> list[AssetTypeOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
     asset_types = await action(
-        limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+        limit=limit,
+        offset=offset,
+        sort_attribute_name=sort.get_attribute_name(),
+        sort_direction=sort.get_direction(),
+        name_contains=q,
     )
 
     await content_range_header_adder(response, pagination)
