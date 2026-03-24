@@ -1642,7 +1642,7 @@ requires-dist = [
     { name = "geoalchemy2", specifier = ">=0.17.0,<1.0.0" },
     { name = "geojson-pydantic", specifier = ">=1.2.0,<2.0.0" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.28.1,<1.0.0" },
-    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git?rev=feature%2F7206-search-query-param-list-endpoints" },
+    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git" },
     { name = "mp-fsm", git = "https://github.com/Amsterdam/mp-fsm.git" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.29.0,<2.0.0" },
     { name = "opentelemetry-instrumentation-aiohttp-client", specifier = ">=0.55b1,<1.0" },
@@ -1691,7 +1691,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?rev=feature%2F7206-search-query-param-list-endpoints#ccb244a4d0a73c6a99401278330782d5de21d4f8" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git#8e5f1dfc2a6a862ac786deebafc2d70707c0ae21" }
 dependencies = [
     { name = "plugfs" },
 ]
