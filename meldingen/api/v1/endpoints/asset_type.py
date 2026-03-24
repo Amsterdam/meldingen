@@ -6,6 +6,7 @@ from httpx import HTTPError
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import NameListFilters
 from meldingen_core.wfs import InvalidWfsProviderException
+from sqlalchemy import ColumnExpressionArgument
 from starlette.responses import StreamingResponse
 from starlette.status import (
     HTTP_201_CREATED,
@@ -118,8 +119,10 @@ async def list_asset_types(
         filters=NameListFilters(name_contains=q) if q is not None else None,
     )
 
-    filters = [AssetType.name.ilike(f"%{q}%")] if q is not None else None
-    await content_range_header_adder(response, pagination, filters)
+    content_range_filters: list[ColumnExpressionArgument[bool]] | None = (
+        [AssetType.name.ilike(f"%{q}%")] if q is not None else None
+    )
+    await content_range_header_adder(response, pagination, content_range_filters)
 
     return [produce_output(asset_type) for asset_type in asset_types]
 
