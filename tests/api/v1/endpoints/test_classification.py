@@ -322,6 +322,55 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         assert body[0].get("form") == form_with_classification.id
 
     @pytest.mark.anyio
+    async def test_list_classifications_filtered_by_q(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"q": "category: 3"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["name"] == "category: 3"
+        assert response.headers.get("content-range") == "classification 0-49/1"
+
+    @pytest.mark.anyio
+    async def test_list_classifications_filtered_by_q_partial_match(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"q": "categ"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 10
+        assert response.headers.get("content-range") == "classification 0-49/10"
+
+    @pytest.mark.anyio
+    async def test_list_classifications_filtered_by_q_case_insensitive(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"q": "CATEGORY"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 10
+        assert response.headers.get("content-range") == "classification 0-49/10"
+
+    @pytest.mark.anyio
+    async def test_list_classifications_filtered_by_q_no_results(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"q": "nonexistent"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 0
+        assert response.headers.get("content-range") == "classification 0-49/0"
+
+    @pytest.mark.anyio
     async def test_list_classifications_sort_on_relationship(
         self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
     ) -> None:

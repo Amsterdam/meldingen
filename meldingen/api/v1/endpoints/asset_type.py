@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from geojson_pydantic import FeatureCollection
 from httpx import HTTPError
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import NameListFilters
 from meldingen_core.wfs import InvalidWfsProviderException
+from sqlalchemy import ColumnExpressionArgument
 from starlette.responses import StreamingResponse
 from starlette.status import (
     HTTP_201_CREATED,
@@ -104,15 +106,23 @@ async def list_asset_types(
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[AssetTypeListAction, Depends(asset_type_list_action)],
     produce_output: Annotated[AssetTypeOutputFactory, Depends(asset_type_output_factory)],
+    q: str | None = None,
 ) -> list[AssetTypeOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
     asset_types = await action(
-        limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+        limit=limit,
+        offset=offset,
+        sort_attribute_name=sort.get_attribute_name(),
+        sort_direction=sort.get_direction(),
+        filters=NameListFilters(name_contains=q) if q is not None else None,
     )
 
-    await content_range_header_adder(response, pagination)
+    content_range_filters: list[ColumnExpressionArgument[bool]] | None = (
+        [AssetType.name.ilike(f"%{q}%")] if q is not None else None
+    )
+    await content_range_header_adder(response, pagination, content_range_filters)
 
     return [produce_output(asset_type) for asset_type in asset_types]
 

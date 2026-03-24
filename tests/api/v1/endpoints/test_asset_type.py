@@ -323,64 +323,64 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
                 "id",
                 SortingDirection.ASC,
                 [
-                    {"name": "0", "class_name": "package.module.ClassName0", "arguments": {}},
-                    {"name": "1", "class_name": "package.module.ClassName1", "arguments": {}},
-                    {"name": "2", "class_name": "package.module.ClassName2", "arguments": {}},
-                    {"name": "3", "class_name": "package.module.ClassName3", "arguments": {}},
-                    {"name": "4", "class_name": "package.module.ClassName4", "arguments": {}},
-                    {"name": "5", "class_name": "package.module.ClassName5", "arguments": {}},
-                    {"name": "6", "class_name": "package.module.ClassName6", "arguments": {}},
-                    {"name": "7", "class_name": "package.module.ClassName7", "arguments": {}},
-                    {"name": "8", "class_name": "package.module.ClassName8", "arguments": {}},
-                    {"name": "9", "class_name": "package.module.ClassName9", "arguments": {}},
+                    {"name": "asset type: 0", "class_name": "package.module.ClassName0", "arguments": {}},
+                    {"name": "asset type: 1", "class_name": "package.module.ClassName1", "arguments": {}},
+                    {"name": "asset type: 2", "class_name": "package.module.ClassName2", "arguments": {}},
+                    {"name": "asset type: 3", "class_name": "package.module.ClassName3", "arguments": {}},
+                    {"name": "asset type: 4", "class_name": "package.module.ClassName4", "arguments": {}},
+                    {"name": "asset type: 5", "class_name": "package.module.ClassName5", "arguments": {}},
+                    {"name": "asset type: 6", "class_name": "package.module.ClassName6", "arguments": {}},
+                    {"name": "asset type: 7", "class_name": "package.module.ClassName7", "arguments": {}},
+                    {"name": "asset type: 8", "class_name": "package.module.ClassName8", "arguments": {}},
+                    {"name": "asset type: 9", "class_name": "package.module.ClassName9", "arguments": {}},
                 ],
             ),
             (
                 "id",
                 SortingDirection.DESC,
                 [
-                    {"name": "9", "class_name": "package.module.ClassName9", "arguments": {}},
-                    {"name": "8", "class_name": "package.module.ClassName8", "arguments": {}},
-                    {"name": "7", "class_name": "package.module.ClassName7", "arguments": {}},
-                    {"name": "6", "class_name": "package.module.ClassName6", "arguments": {}},
-                    {"name": "5", "class_name": "package.module.ClassName5", "arguments": {}},
-                    {"name": "4", "class_name": "package.module.ClassName4", "arguments": {}},
-                    {"name": "3", "class_name": "package.module.ClassName3", "arguments": {}},
-                    {"name": "2", "class_name": "package.module.ClassName2", "arguments": {}},
-                    {"name": "1", "class_name": "package.module.ClassName1", "arguments": {}},
-                    {"name": "0", "class_name": "package.module.ClassName0", "arguments": {}},
+                    {"name": "asset type: 9", "class_name": "package.module.ClassName9", "arguments": {}},
+                    {"name": "asset type: 8", "class_name": "package.module.ClassName8", "arguments": {}},
+                    {"name": "asset type: 7", "class_name": "package.module.ClassName7", "arguments": {}},
+                    {"name": "asset type: 6", "class_name": "package.module.ClassName6", "arguments": {}},
+                    {"name": "asset type: 5", "class_name": "package.module.ClassName5", "arguments": {}},
+                    {"name": "asset type: 4", "class_name": "package.module.ClassName4", "arguments": {}},
+                    {"name": "asset type: 3", "class_name": "package.module.ClassName3", "arguments": {}},
+                    {"name": "asset type: 2", "class_name": "package.module.ClassName2", "arguments": {}},
+                    {"name": "asset type: 1", "class_name": "package.module.ClassName1", "arguments": {}},
+                    {"name": "asset type: 0", "class_name": "package.module.ClassName0", "arguments": {}},
                 ],
             ),
             (
                 "name",
                 SortingDirection.ASC,
                 [
-                    {"name": "0", "class_name": "package.module.ClassName0", "arguments": {}},
-                    {"name": "1", "class_name": "package.module.ClassName1", "arguments": {}},
-                    {"name": "2", "class_name": "package.module.ClassName2", "arguments": {}},
-                    {"name": "3", "class_name": "package.module.ClassName3", "arguments": {}},
-                    {"name": "4", "class_name": "package.module.ClassName4", "arguments": {}},
-                    {"name": "5", "class_name": "package.module.ClassName5", "arguments": {}},
-                    {"name": "6", "class_name": "package.module.ClassName6", "arguments": {}},
-                    {"name": "7", "class_name": "package.module.ClassName7", "arguments": {}},
-                    {"name": "8", "class_name": "package.module.ClassName8", "arguments": {}},
-                    {"name": "9", "class_name": "package.module.ClassName9", "arguments": {}},
+                    {"name": "asset type: 0", "class_name": "package.module.ClassName0", "arguments": {}},
+                    {"name": "asset type: 1", "class_name": "package.module.ClassName1", "arguments": {}},
+                    {"name": "asset type: 2", "class_name": "package.module.ClassName2", "arguments": {}},
+                    {"name": "asset type: 3", "class_name": "package.module.ClassName3", "arguments": {}},
+                    {"name": "asset type: 4", "class_name": "package.module.ClassName4", "arguments": {}},
+                    {"name": "asset type: 5", "class_name": "package.module.ClassName5", "arguments": {}},
+                    {"name": "asset type: 6", "class_name": "package.module.ClassName6", "arguments": {}},
+                    {"name": "asset type: 7", "class_name": "package.module.ClassName7", "arguments": {}},
+                    {"name": "asset type: 8", "class_name": "package.module.ClassName8", "arguments": {}},
+                    {"name": "asset type: 9", "class_name": "package.module.ClassName9", "arguments": {}},
                 ],
             ),
             (
                 "name",
                 SortingDirection.DESC,
                 [
-                    {"name": "9", "class_name": "package.module.ClassName9", "arguments": {}},
-                    {"name": "8", "class_name": "package.module.ClassName8", "arguments": {}},
-                    {"name": "7", "class_name": "package.module.ClassName7", "arguments": {}},
-                    {"name": "6", "class_name": "package.module.ClassName6", "arguments": {}},
-                    {"name": "5", "class_name": "package.module.ClassName5", "arguments": {}},
-                    {"name": "4", "class_name": "package.module.ClassName4", "arguments": {}},
-                    {"name": "3", "class_name": "package.module.ClassName3", "arguments": {}},
-                    {"name": "2", "class_name": "package.module.ClassName2", "arguments": {}},
-                    {"name": "1", "class_name": "package.module.ClassName1", "arguments": {}},
-                    {"name": "0", "class_name": "package.module.ClassName0", "arguments": {}},
+                    {"name": "asset type: 9", "class_name": "package.module.ClassName9", "arguments": {}},
+                    {"name": "asset type: 8", "class_name": "package.module.ClassName8", "arguments": {}},
+                    {"name": "asset type: 7", "class_name": "package.module.ClassName7", "arguments": {}},
+                    {"name": "asset type: 6", "class_name": "package.module.ClassName6", "arguments": {}},
+                    {"name": "asset type: 5", "class_name": "package.module.ClassName5", "arguments": {}},
+                    {"name": "asset type: 4", "class_name": "package.module.ClassName4", "arguments": {}},
+                    {"name": "asset type: 3", "class_name": "package.module.ClassName3", "arguments": {}},
+                    {"name": "asset type: 2", "class_name": "package.module.ClassName2", "arguments": {}},
+                    {"name": "asset type: 1", "class_name": "package.module.ClassName1", "arguments": {}},
+                    {"name": "asset type: 0", "class_name": "package.module.ClassName0", "arguments": {}},
                 ],
             ),
         ],
@@ -422,8 +422,8 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
                 "name",
                 SortingDirection.DESC,
                 [
-                    {"name": "7", "class_name": "package.module.ClassName7", "arguments": {}},
-                    {"name": "6", "class_name": "package.module.ClassName6", "arguments": {}},
+                    {"name": "asset type: 7", "class_name": "package.module.ClassName7", "arguments": {}},
+                    {"name": "asset type: 6", "class_name": "package.module.ClassName6", "arguments": {}},
                 ],
             ),
             (
@@ -432,9 +432,9 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
                 "name",
                 SortingDirection.ASC,
                 [
-                    {"name": "1", "class_name": "package.module.ClassName1", "arguments": {}},
-                    {"name": "2", "class_name": "package.module.ClassName2", "arguments": {}},
-                    {"name": "3", "class_name": "package.module.ClassName3", "arguments": {}},
+                    {"name": "asset type: 1", "class_name": "package.module.ClassName1", "arguments": {}},
+                    {"name": "asset type: 2", "class_name": "package.module.ClassName2", "arguments": {}},
+                    {"name": "asset type: 3", "class_name": "package.module.ClassName3", "arguments": {}},
                 ],
             ),
         ],
@@ -468,6 +468,55 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
             assert data[i]["updated_at"] is not None
 
         assert response.headers.get("content-range") == f"asset-type {offset}-{limit - 1 + offset}/10"
+
+    @pytest.mark.anyio
+    async def test_list_asset_types_filtered_by_q(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "asset type: 3"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["name"] == "asset type: 3"
+        assert response.headers.get("content-range") == "asset-type 0-49/1"
+
+    @pytest.mark.anyio
+    async def test_list_asset_types_filtered_by_q_partial_match(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "asset"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 10
+        assert response.headers.get("content-range") == "asset-type 0-49/10"
+
+    @pytest.mark.anyio
+    async def test_list_asset_types_filtered_by_q_case_insensitive(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "ASSET TYPE"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 10
+        assert response.headers.get("content-range") == "asset-type 0-49/10"
+
+    @pytest.mark.anyio
+    async def test_list_asset_types_filtered_by_q_no_results(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "nonexistent"})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 0
+        assert response.headers.get("content-range") == "asset-type 0-49/0"
 
 
 class TestUpdateAssetType(BaseUnauthorizedTest):

@@ -2,6 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import NameListFilters
+from sqlalchemy import ColumnExpressionArgument
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions.classification import (
@@ -89,15 +91,23 @@ async def list_classifications(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[ClassificationListAction, Depends(classification_list_action)],
+    q: str | None = None,
 ) -> list[ClassificationOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
     classifications = await action(
-        limit=limit, offset=offset, sort_attribute_name=sort.get_attribute_name(), sort_direction=sort.get_direction()
+        limit=limit,
+        offset=offset,
+        sort_attribute_name=sort.get_attribute_name(),
+        sort_direction=sort.get_direction(),
+        filters=NameListFilters(name_contains=q) if q is not None else None,
     )
 
-    await content_range_header_adder(response, pagination)
+    content_range_filters: list[ColumnExpressionArgument[bool]] | None = (
+        [Classification.name.ilike(f"%{q}%")] if q is not None else None
+    )
+    await content_range_header_adder(response, pagination, content_range_filters)
 
     return [await _hydrate_output(classification) for classification in classifications]
 
