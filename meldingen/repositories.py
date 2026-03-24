@@ -4,7 +4,7 @@ from typing import Any, List, TypeVar
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import ListFilters, MeldingListFilters
+from meldingen_core.filters import MeldingListFilters, NameListFilters
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.repositories import (
     BaseAnswerRepository,
@@ -85,7 +85,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        filters: ListFilters | None = None,
+        filters: NameListFilters | None = None,
     ) -> Sequence[T]:
         _type = self.get_model_type()
         statement = select(_type)

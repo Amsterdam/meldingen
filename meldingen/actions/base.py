@@ -4,7 +4,7 @@ from typing import TypeVar
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseListAction as BaseCoreListAction
-from meldingen_core.filters import ListFilters
+from meldingen_core.filters import NameListFilters
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.repositories import AttributeNotFoundException
@@ -20,7 +20,7 @@ class BaseListAction(BaseCoreListAction[T]):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        filters: ListFilters | None = None,
+        filters: NameListFilters | None = None,
     ) -> Sequence[T]:
         try:
             return await self._repository.list(
