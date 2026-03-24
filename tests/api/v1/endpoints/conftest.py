@@ -1337,7 +1337,7 @@ async def asset_type(
 async def asset_types(db_session: AsyncSession) -> list[AssetType]:
     asset_types = []
     for i in range(10):
-        asset_type = AssetType(f"{i}", f"package.module.ClassName{i}", {}, 3)
+        asset_type = AssetType(f"asset type: {i}", f"package.module.ClassName{i}", {}, 3)
         db_session.add(asset_type)
         asset_types.append(asset_type)
 

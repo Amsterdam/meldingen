@@ -332,6 +332,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         data = response.json()
         assert len(data) == 1
         assert data[0]["name"] == "category: 3"
+        assert response.headers.get("content-range") == "classification 0-49/1"
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q_partial_match(
@@ -343,6 +344,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
         assert len(data) == 10
+        assert response.headers.get("content-range") == "classification 0-49/10"
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q_case_insensitive(
@@ -354,6 +356,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
         assert len(data) == 10
+        assert response.headers.get("content-range") == "classification 0-49/10"
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q_no_results(
@@ -365,6 +368,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
         assert len(data) == 0
+        assert response.headers.get("content-range") == "classification 0-49/0"
 
     @pytest.mark.anyio
     async def test_list_classifications_sort_on_relationship(
