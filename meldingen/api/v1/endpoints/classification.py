@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import ListFilters
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions.classification import (
@@ -99,7 +100,7 @@ async def list_classifications(
         offset=offset,
         sort_attribute_name=sort.get_attribute_name(),
         sort_direction=sort.get_direction(),
-        name_contains=q,
+        filters=ListFilters(name_contains=q) if q is not None else None,
     )
 
     filters = [Classification.name.ilike(f"%{q}%")] if q is not None else None

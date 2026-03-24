@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from geojson_pydantic import FeatureCollection
 from httpx import HTTPError
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import ListFilters
 from meldingen_core.wfs import InvalidWfsProviderException
 from starlette.responses import StreamingResponse
 from starlette.status import (
@@ -114,7 +115,7 @@ async def list_asset_types(
         offset=offset,
         sort_attribute_name=sort.get_attribute_name(),
         sort_direction=sort.get_direction(),
-        name_contains=q,
+        filters=ListFilters(name_contains=q) if q is not None else None,
     )
 
     filters = [AssetType.name.ilike(f"%{q}%")] if q is not None else None
