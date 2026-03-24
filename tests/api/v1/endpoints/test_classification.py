@@ -325,7 +325,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
     async def test_list_classifications_filtered_by_q(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"q": "category: 3"})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "category: 3"}'})
 
         assert response.status_code == HTTP_200_OK
 
@@ -338,7 +338,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
     async def test_list_classifications_filtered_by_q_partial_match(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"q": "categ"})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "categ"}'})
 
         assert response.status_code == HTTP_200_OK
 
@@ -350,7 +350,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
     async def test_list_classifications_filtered_by_q_case_insensitive(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"q": "CATEGORY"})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "CATEGORY"}'})
 
         assert response.status_code == HTTP_200_OK
 
@@ -362,7 +362,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
     async def test_list_classifications_filtered_by_q_no_results(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"q": "nonexistent"})
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "nonexistent"}'})
 
         assert response.status_code == HTTP_200_OK
 

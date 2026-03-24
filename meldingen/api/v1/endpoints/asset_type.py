@@ -25,7 +25,15 @@ from meldingen.actions.asset_type import (
     AssetTypeUpdateAction,
     WfsRetrieveAction,
 )
-from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
+from meldingen.api.utils import (
+    ContentRangeHeaderAdder,
+    FilterParams,
+    PaginationParams,
+    SortParams,
+    filter_param,
+    pagination_params,
+    sort_param,
+)
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import (
@@ -106,10 +114,11 @@ async def list_asset_types(
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[AssetTypeListAction, Depends(asset_type_list_action)],
     produce_output: Annotated[AssetTypeOutputFactory, Depends(asset_type_output_factory)],
-    q: str | None = None,
+    filter_params: Annotated[FilterParams, Depends(filter_param)],
 ) -> list[AssetTypeOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
+    q = filter_params.q
 
     asset_types = await action(
         limit=limit,

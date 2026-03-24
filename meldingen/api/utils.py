@@ -2,7 +2,7 @@ from typing import Annotated, Generic, List, TypedDict, TypeVar
 
 from fastapi import Depends, HTTPException, Query, Response
 from meldingen_core import SortingDirection
-from pydantic import RootModel, ValidationError
+from pydantic import BaseModel, RootModel, ValidationError
 from sqlalchemy import ColumnExpressionArgument
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
@@ -40,6 +40,24 @@ def sort_param(sort: Annotated[str, Query()] = f'["id","{SortingDirection.ASC}"]
         errors = e.errors()
         for error in errors:
             error["loc"] = ("query", "sort")
+
+        raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, errors)
+
+
+class FilterParams(BaseModel, extra="forbid"):
+    q: str | None = None
+
+
+def filter_param(filter: Annotated[str | None, Query()] = None) -> FilterParams:
+    if filter is None:
+        return FilterParams()
+
+    try:
+        return FilterParams.model_validate_json(filter)
+    except ValidationError as e:
+        errors = e.errors()
+        for error in errors:
+            error["loc"] = ("query", "filter")
 
         raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, errors)
 
