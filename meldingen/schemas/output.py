@@ -54,7 +54,7 @@ class MeldingOutput(BaseOutputModel):
     public_id: str
     text: str
     state: str
-    urgency: Literal[-1, 0, 1] = 0
+    urgency: Literal[-1, 0, 1]
     classification: SimpleClassificationOutput | None = Field(default=None)
     geo_location: GeoJson | None = Field(default=None)
     street: str | None = Field(default=None)
