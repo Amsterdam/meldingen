@@ -1691,7 +1691,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?rev=feature%2F7206-search-query-param-list-endpoints#40bb8b04842f424cfad21bcea60738fc1681a16f" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?rev=feature%2F7206-search-query-param-list-endpoints#ccb244a4d0a73c6a99401278330782d5de21d4f8" }
 dependencies = [
     { name = "plugfs" },
 ]
