@@ -473,7 +473,9 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
     async def test_list_asset_types_filtered_by_q(
         self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
     ) -> None:
-        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "asset type: 3"})
+        response = await client.get(
+            app.url_path_for(self.get_route_name()), params={"filter": '{"q": "asset type: 3"}'}
+        )
 
         assert response.status_code == HTTP_200_OK
 
@@ -486,7 +488,7 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
     async def test_list_asset_types_filtered_by_q_partial_match(
         self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
     ) -> None:
-        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "asset"})
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"filter": '{"q": "asset"}'})
 
         assert response.status_code == HTTP_200_OK
 
@@ -498,7 +500,7 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
     async def test_list_asset_types_filtered_by_q_case_insensitive(
         self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
     ) -> None:
-        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "ASSET TYPE"})
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"filter": '{"q": "ASSET TYPE"}'})
 
         assert response.status_code == HTTP_200_OK
 
@@ -510,7 +512,7 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
     async def test_list_asset_types_filtered_by_q_no_results(
         self, app: FastAPI, client: AsyncClient, auth_user: None, asset_types: list[AssetType]
     ) -> None:
-        response = await client.get(app.url_path_for(self.get_route_name()), params={"q": "nonexistent"})
+        response = await client.get(app.url_path_for(self.get_route_name()), params={"filter": '{"q": "nonexistent"}'})
 
         assert response.status_code == HTTP_200_OK
 
