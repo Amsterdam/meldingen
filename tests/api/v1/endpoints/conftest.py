@@ -875,7 +875,7 @@ def conditional(request: FixtureRequest) -> dict[str, Any] | None:
     if hasattr(request, "param"):
         return dict(request.param)
     else:
-        return {"show": True, "when": "A", "eq": "B"}
+        return None
 
 
 @pytest.fixture
@@ -1101,6 +1101,138 @@ async def form_with_time_component(
     await db_session.commit()
 
     return form
+
+
+@pytest.fixture
+async def form_with_mixed_required_components(db_session: AsyncSession, classification: Classification) -> Form:
+    form = Form(title="mixed_required_form", display=FormIoFormDisplayEnum.form, classification=classification)
+
+    panel = FormIoPanelComponent(
+        title="Panel 1",
+        label="Page 1",
+        key="page1-mixed",
+        input=False,
+        type=FormIoComponentTypeEnum.panel,
+    )
+
+    conditional_component = FormIoTextAreaComponent(
+        label="Conditional required",
+        description="",
+        key="conditional-required",
+        type=FormIoComponentTypeEnum.text_area,
+        input=True,
+        required=True,
+        conditional={"when": "show_conditional", "eq": True},
+    )
+
+    required_component = FormIoTextFieldComponent(
+        label="Required no conditional",
+        description="",
+        key="required-no-conditional",
+        type=FormIoComponentTypeEnum.text_field,
+        input=True,
+        required=True,
+        conditional=None,
+    )
+
+    form_components = await form.awaitable_attrs.components
+    form_components.append(panel)
+
+    panel_components = await panel.awaitable_attrs.components
+    panel_components.extend([conditional_component, required_component])
+
+    conditional_question = Question(text="Conditional question", form=form, component=conditional_component)
+    required_question = Question(text="Required question", form=form, component=required_component)
+
+    form.questions = [conditional_question, required_question]
+
+    db_session.add_all(
+        [
+            form,
+            panel,
+            conditional_component,
+            required_component,
+            conditional_question,
+            required_question,
+        ]
+    )
+    await db_session.commit()
+
+    return form
+
+
+@pytest.fixture
+async def melding_with_mixed_required_components(
+    db_session: AsyncSession, form_with_mixed_required_components: Form, melding_with_classification: Melding
+) -> Melding:
+
+    # Only answer the conditional required question; leave the non-conditional required question unanswered.
+    questions = await form_with_mixed_required_components.awaitable_attrs.questions
+    conditional_question = None
+    for q in questions:
+        component = await q.awaitable_attrs.component
+        if component.conditional is not None:
+            conditional_question = q
+            break
+
+    assert conditional_question is not None
+
+    db_session.add(
+        TextAnswer(
+            text="Answered conditional question",
+            melding=melding_with_classification,
+            question=conditional_question,
+            type=AnswerTypeEnum.text,
+        )
+    )
+
+    db_session.add(melding_with_classification)
+    await db_session.commit()
+    await db_session.refresh(melding_with_classification)
+
+    return melding_with_classification
+
+
+@pytest.fixture
+async def melding_with_mixed_required_components_all_answered(
+    db_session: AsyncSession, form_with_mixed_required_components: Form, melding_with_classification: Melding
+) -> Melding:
+    questions = await form_with_mixed_required_components.awaitable_attrs.questions
+
+    conditional_question = None
+    required_question = None
+    for q in questions:
+        component = await q.awaitable_attrs.component
+        if component.conditional is not None:
+            conditional_question = q
+        else:
+            required_question = q
+
+    assert conditional_question is not None
+    assert required_question is not None
+
+    db_session.add_all(
+        [
+            TextAnswer(
+                text="Answered conditional question",
+                melding=melding_with_classification,
+                question=conditional_question,
+                type=AnswerTypeEnum.text,
+            ),
+            TextAnswer(
+                text="Answered required question",
+                melding=melding_with_classification,
+                question=required_question,
+                type=AnswerTypeEnum.text,
+            ),
+            melding_with_classification,
+        ]
+    )
+
+    await db_session.commit()
+    await db_session.refresh(melding_with_classification)
+
+    return melding_with_classification
 
 
 @pytest.fixture
