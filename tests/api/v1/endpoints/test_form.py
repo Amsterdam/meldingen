@@ -1342,7 +1342,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                         },
                     ],
                 },
-            ]
+            ],
         }
 
         response = await client.put(app.url_path_for(self.ROUTE_NAME, form_id=form.id), json=form_data)
@@ -1502,7 +1502,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                   "components": [
+                    "components": [
                         {
                             "label": "Heeft u meer informatie die u met ons wilt delen?",
                             "description": "Help tekst bij de vraag.",
@@ -1531,10 +1531,54 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert len(detail) == 4
 
         expected_violations = {
-            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "eq", "str"): "Input should be a valid string",
-            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "eq", "int"): "Input should be a valid integer",
-            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "eq", "float"): "Input should be a valid number",
-            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "eq", "bool"): "Input should be a valid boolean",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "str",
+            ): "Input should be a valid string",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "int",
+            ): "Input should be a valid integer",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "float",
+            ): "Input should be a valid number",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "bool",
+            ): "Input should be a valid boolean",
         }
 
         for violation in detail:
@@ -2330,7 +2374,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                                 ]
                             },
                         },
-                    ]
+                    ],
                 },
             ],
         }
@@ -2387,7 +2431,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                                 "eq": "",
                             },
                         },
-                    ]
+                    ],
                 },
             ],
         }
@@ -2494,7 +2538,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                   "components": [
+                    "components": [
                         {
                             "label": "Heeft u meer informatie die u met ons wilt delen?",
                             "description": "Help tekst bij de vraag.",
@@ -2509,7 +2553,7 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                                 "eq": invalid_eq,
                             },
                         },
-                    ]
+                    ],
                 },
             ],
         }
@@ -2523,10 +2567,54 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         assert len(detail) == 4
 
         expected_violations = {
-            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "eq", "str"): "Input should be a valid string",
-            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "eq", "int"): "Input should be a valid integer",
-            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "eq", "float"): "Input should be a valid number",
-            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "eq", "bool"): "Input should be a valid boolean",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "str",
+            ): "Input should be a valid string",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "int",
+            ): "Input should be a valid integer",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "float",
+            ): "Input should be a valid number",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "bool",
+            ): "Input should be a valid boolean",
         }
 
         for violation in detail:
