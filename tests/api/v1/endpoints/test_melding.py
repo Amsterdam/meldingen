@@ -4825,7 +4825,7 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         db_session: AsyncSession,
         auth_user: None,
     ) -> None:
-        '""" When a component is removed we should be able to show the answers """'
+        """When a component is removed we should be able to show the answers."""
 
         answers = await melding_with_some_answers.awaitable_attrs.answers
         assert len(answers) == 5
