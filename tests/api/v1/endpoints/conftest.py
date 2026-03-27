@@ -707,7 +707,7 @@ def jsonlogic(request: FixtureRequest) -> str | None:
 @pytest.fixture
 def formio_text_area_component(
     db_session: AsyncSession,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
     is_required: bool,
     jsonlogic: str | None,
 ) -> FormIoTextAreaComponent:
@@ -731,7 +731,7 @@ def formio_text_area_component(
 
 @pytest.fixture
 async def formio_select_component(
-    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool
+    db_session: AsyncSession, conditional: dict[str, Any] | None, is_required: bool
 ) -> FormIoSelectComponent:
     component = FormIoSelectComponent(
         label="Kies een optie",
@@ -772,7 +772,7 @@ async def formio_select_component(
 
 @pytest.fixture
 async def formio_radio_component(
-    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool
+    db_session: AsyncSession, conditional: dict[str, Any] | None, is_required: bool
 ) -> FormIoRadioComponent:
     component = FormIoRadioComponent(
         label="Kies een optie",
@@ -811,7 +811,7 @@ async def formio_radio_component(
 
 @pytest.fixture
 async def formio_text_field_component(
-    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool, jsonlogic: str | None
+    db_session: AsyncSession, conditional: dict[str, Any] | None, is_required: bool, jsonlogic: str | None
 ) -> FormIoTextFieldComponent:
     component = FormIoTextFieldComponent(
         label="Vul uw naam in",
@@ -832,7 +832,7 @@ async def formio_text_field_component(
 
 @pytest.fixture
 async def formio_checkbox_component(
-    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool
+    db_session: AsyncSession, conditional: dict[str, Any] | None, is_required: bool
 ) -> FormIoCheckBoxComponent:
     component = FormIoCheckBoxComponent(
         label="Vink aan wat voor jou geldt",
@@ -875,7 +875,7 @@ def conditional(request: FixtureRequest) -> dict[str, Any] | None:
     if hasattr(request, "param"):
         return dict(request.param)
     else:
-        return {"show": True, "when": "A", "eq": "B"}
+        return None
 
 
 @pytest.fixture
@@ -941,7 +941,7 @@ async def form_with_date_component(
     form_panel: FormIoPanelComponent,
     formio_date_component: FormIoDateComponent,
     melding_with_classification: Melding,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(
         title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
@@ -972,7 +972,7 @@ async def form_with_select_component(
     form_panel: FormIoPanelComponent,
     formio_select_component: FormIoSelectComponent,
     melding_with_classification: Melding,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(
         title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
@@ -1003,7 +1003,7 @@ async def form_with_checkbox_component(
     form_panel: FormIoPanelComponent,
     formio_checkbox_component: FormIoCheckBoxComponent,
     melding_with_classification: Melding,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(
         title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
@@ -1034,7 +1034,7 @@ async def form_with_radio_component(
     form_panel: FormIoPanelComponent,
     formio_radio_component: FormIoRadioComponent,
     melding_with_classification: Melding,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(
         title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
@@ -1079,7 +1079,7 @@ async def form_with_time_component(
     form_panel: FormIoPanelComponent,
     formio_time_component: FormIoTimeComponent,
     melding_with_classification: Melding,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(
         title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
@@ -1104,11 +1104,143 @@ async def form_with_time_component(
 
 
 @pytest.fixture
+async def form_with_mixed_required_components(db_session: AsyncSession, classification: Classification) -> Form:
+    form = Form(title="mixed_required_form", display=FormIoFormDisplayEnum.form, classification=classification)
+
+    panel = FormIoPanelComponent(
+        title="Panel 1",
+        label="Page 1",
+        key="page1-mixed",
+        input=False,
+        type=FormIoComponentTypeEnum.panel,
+    )
+
+    conditional_component = FormIoTextAreaComponent(
+        label="Conditional required",
+        description="",
+        key="conditional-required",
+        type=FormIoComponentTypeEnum.text_area,
+        input=True,
+        required=True,
+        conditional={"when": "show_conditional", "eq": True},
+    )
+
+    required_component = FormIoTextFieldComponent(
+        label="Required no conditional",
+        description="",
+        key="required-no-conditional",
+        type=FormIoComponentTypeEnum.text_field,
+        input=True,
+        required=True,
+        conditional=None,
+    )
+
+    form_components = await form.awaitable_attrs.components
+    form_components.append(panel)
+
+    panel_components = await panel.awaitable_attrs.components
+    panel_components.extend([conditional_component, required_component])
+
+    conditional_question = Question(text="Conditional question", form=form, component=conditional_component)
+    required_question = Question(text="Required question", form=form, component=required_component)
+
+    form.questions = [conditional_question, required_question]
+
+    db_session.add_all(
+        [
+            form,
+            panel,
+            conditional_component,
+            required_component,
+            conditional_question,
+            required_question,
+        ]
+    )
+    await db_session.commit()
+
+    return form
+
+
+@pytest.fixture
+async def melding_with_mixed_required_components(
+    db_session: AsyncSession, form_with_mixed_required_components: Form, melding_with_classification: Melding
+) -> Melding:
+
+    # Only answer the conditional required question; leave the non-conditional required question unanswered.
+    questions = await form_with_mixed_required_components.awaitable_attrs.questions
+    conditional_question = None
+    for q in questions:
+        component = await q.awaitable_attrs.component
+        if component.conditional is not None:
+            conditional_question = q
+            break
+
+    assert conditional_question is not None
+
+    db_session.add(
+        TextAnswer(
+            text="Answered conditional question",
+            melding=melding_with_classification,
+            question=conditional_question,
+            type=AnswerTypeEnum.text,
+        )
+    )
+
+    db_session.add(melding_with_classification)
+    await db_session.commit()
+    await db_session.refresh(melding_with_classification)
+
+    return melding_with_classification
+
+
+@pytest.fixture
+async def melding_with_mixed_required_components_all_answered(
+    db_session: AsyncSession, form_with_mixed_required_components: Form, melding_with_classification: Melding
+) -> Melding:
+    questions = await form_with_mixed_required_components.awaitable_attrs.questions
+
+    conditional_question = None
+    required_question = None
+    for q in questions:
+        component = await q.awaitable_attrs.component
+        if component.conditional is not None:
+            conditional_question = q
+        else:
+            required_question = q
+
+    assert conditional_question is not None
+    assert required_question is not None
+
+    db_session.add_all(
+        [
+            TextAnswer(
+                text="Answered conditional question",
+                melding=melding_with_classification,
+                question=conditional_question,
+                type=AnswerTypeEnum.text,
+            ),
+            TextAnswer(
+                text="Answered required question",
+                melding=melding_with_classification,
+                question=required_question,
+                type=AnswerTypeEnum.text,
+            ),
+            melding_with_classification,
+        ]
+    )
+
+    await db_session.commit()
+    await db_session.refresh(melding_with_classification)
+
+    return melding_with_classification
+
+
+@pytest.fixture
 async def form_with_classification(
     db_session: AsyncSession,
     form_title: str,
     formio_text_area_component: FormIoTextAreaComponent,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 
@@ -1118,7 +1250,6 @@ async def form_with_classification(
         key="page1",
         input=False,
         type=FormIoComponentTypeEnum.panel,
-        conditional=conditional,
     )
 
     panel_components = await panel.awaitable_attrs.components

@@ -1526,6 +1526,54 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken")],
+        indirect=True,
+    )
+    async def test_answer_questions_missing_answer_on_non_conditional_but_required_component(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_mixed_required_components: Melding,
+    ) -> None:
+        """Transition should be blocked when at least one question is required and is not conditional"""
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_mixed_required_components.id),
+            params={"token": melding_with_mixed_required_components.token},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        assert body.get("detail") == "All required questions must be answered first"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken")],
+        indirect=True,
+    )
+    async def test_answer_questions_all_required_answered_with_some_conditional(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_mixed_required_components_all_answered: Melding,
+    ) -> None:
+        """Transition should be allowed when all required questions are answered, even when some of them are conditional"""
+
+        response = await client.put(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_mixed_required_components_all_answered.id),
+            params={"token": melding_with_mixed_required_components_all_answered.token},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "classification_name", "is_required"],
         [("De restafvalcontainer is vol.", MeldingStates.CLASSIFIED, "supersecrettoken", "test_classification", True)],
         indirect=True,

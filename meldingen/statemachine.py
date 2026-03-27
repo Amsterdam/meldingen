@@ -23,6 +23,10 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
         self._form_repository = form_repository
 
     async def __call__(self, obj: Melding) -> bool:
+        """Before transitioning to next state, check if all the additional questions that are marked as required have been answered.
+        There is an exception on questions that are rendered conditionally, because the conditional logic is only evaluated in the frontend.
+        Therefore, all components that have a conditional are handled as not required"""
+
         assert obj.classification_id is not None
 
         try:
@@ -37,7 +41,12 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
 
         for question in questions:
             component = await question.awaitable_attrs.component
-            if component is not None and component.required is True and question.id not in answered_question_ids:
+            if (
+                component is not None
+                and component.required is True
+                and question.id not in answered_question_ids
+                and component.conditional is None
+            ):
                 return False
 
         return True

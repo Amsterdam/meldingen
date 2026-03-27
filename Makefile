@@ -34,6 +34,9 @@ typecheck-sync: ## Run mypy type checking and update baseline
 test: ## Run pytest (optional: make test TEST=tests/...)
 	$(api) pytest --test-alembic -v -n auto $(TEST)
 
+test-pdb: ## Run pytest with python debugger on failure (optional: make test-pdb TEST=tests/...)
+	$(api) pytest --test-alembic -v -n auto --pdb $(TEST)
+
 test-coverage: ## Run pytest with coverage and enforce minimum threshold
 	$(api) pytest --test-alembic --cov --cov-fail-under=95 -n auto --cov-report=html -v $(TEST)
 

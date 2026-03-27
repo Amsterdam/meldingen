@@ -61,7 +61,6 @@ class BaseFormTest:
         assert data.get("key") == component.key
         assert data.get("type") == component.type
         assert data.get("input") == component.input
-        assert data.get("conditional") == component.conditional
 
         component_data = data.get("components", [])
         assert isinstance(component_data, list)  # This is here for mypy
@@ -1196,11 +1195,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "heeft-u-meer-informatie",
-                        "eq": "ja",
-                    },
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
@@ -1224,11 +1218,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel-2",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "heeft-u-meer-informatie",
-                        "eq": "nee",
-                    },
                     "components": [
                         {
                             "label": "Selecteer een optie?",
@@ -1264,11 +1253,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel-3",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "waarom-meld-u-dit-bij-ons",
-                        "eq": "vanwege reden x",
-                    },
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
@@ -1341,12 +1325,22 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": None,
-                        "when": None,
-                        "eq": "",
-                    },
-                    "components": [],
+                    "components": [
+                        {
+                            "label": "Heeft u meer informatie die u met ons wilt delen?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-meer-informatie",
+                            "type": FormIoComponentTypeEnum.text_area,
+                            "input": True,
+                            "autoExpand": False,
+                            "maxCharCount": None,
+                            "conditional": {
+                                "show": None,
+                                "when": None,
+                                "eq": "",
+                            },
+                        },
+                    ],
                 },
             ],
         }
@@ -1356,12 +1350,12 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert response.status_code == HTTP_200_OK
         body = response.json()
 
-        components = body.get("components")
-        assert len(components) == 2
+        components = body.get("components")[1].get("components")
+        assert len(components) == 1
 
-        assert components[1]["conditional"]["when"] is None
-        assert components[1]["conditional"]["show"] is None
-        assert components[1]["conditional"]["eq"] == ""
+        assert components[0]["conditional"]["when"] is None
+        assert components[0]["conditional"]["show"] is None
+        assert components[0]["conditional"]["eq"] == ""
 
     @pytest.mark.anyio
     async def test_update_form_with_conditional_empty_when(
@@ -1386,12 +1380,22 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": " ",
-                        "eq": "ja",
-                    },
-                    "components": [],
+                    "components": [
+                        {
+                            "label": "Heeft u meer informatie die u met ons wilt delen?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-meer-informatie",
+                            "type": FormIoComponentTypeEnum.text_area,
+                            "input": True,
+                            "autoExpand": False,
+                            "maxCharCount": None,
+                            "conditional": {
+                                "show": True,
+                                "when": " ",
+                                "eq": "ja",
+                            },
+                        },
+                    ],
                 },
             ],
         }
@@ -1401,12 +1405,12 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        components = body.get("components")
-        assert len(components) == 2
+        components = body.get("components")[1].get("components")
+        assert len(components) == 1
 
-        assert components[1]["conditional"]["when"] == ""
-        assert components[1]["conditional"]["show"] is True
-        assert components[1]["conditional"]["eq"] == "ja"
+        assert components[0]["conditional"]["when"] == ""
+        assert components[0]["conditional"]["show"] is True
+        assert components[0]["conditional"]["eq"] == "ja"
 
     @pytest.mark.anyio
     async def test_update_form_with_conditional_missing_elements(
@@ -1431,10 +1435,20 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        # Missing 'show', 'when', 'eq' keys
-                    },
-                    "components": [],
+                    "components": [
+                        {
+                            "label": "Heeft u meer informatie die u met ons wilt delen?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-meer-informatie",
+                            "type": FormIoComponentTypeEnum.text_area,
+                            "input": True,
+                            "autoExpand": False,
+                            "maxCharCount": None,
+                            "conditional": {
+                                # Missing 'show', 'when', 'eq' keys
+                            },
+                        },
+                    ],
                 },
             ],
         }
@@ -1448,9 +1462,9 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert len(detail) == 3  # Expecting three violations for missing keys
 
         expected_violations = {
-            ("body", "components", 1, "panel", "conditional", "show"): "Field required",
-            ("body", "components", 1, "panel", "conditional", "when"): "Field required",
-            ("body", "components", 1, "panel", "conditional", "eq"): "Field required",
+            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "show"): "Field required",
+            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "when"): "Field required",
+            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "eq"): "Field required",
         }
 
         for violation in detail:
@@ -1488,12 +1502,22 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "heeft-u-meer-informatie",
-                        "eq": invalid_eq,
-                    },
-                    "components": [],
+                    "components": [
+                        {
+                            "label": "Heeft u meer informatie die u met ons wilt delen?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-meer-informatie",
+                            "type": FormIoComponentTypeEnum.text_area,
+                            "input": True,
+                            "autoExpand": False,
+                            "maxCharCount": None,
+                            "conditional": {
+                                "show": True,
+                                "when": "heeft-u-meer-informatie",
+                                "eq": invalid_eq,
+                            },
+                        },
+                    ],
                 },
             ],
         }
@@ -1507,10 +1531,54 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert len(detail) == 4
 
         expected_violations = {
-            ("body", "components", 1, "panel", "conditional", "eq", "str"): "Input should be a valid string",
-            ("body", "components", 1, "panel", "conditional", "eq", "int"): "Input should be a valid integer",
-            ("body", "components", 1, "panel", "conditional", "eq", "float"): "Input should be a valid number",
-            ("body", "components", 1, "panel", "conditional", "eq", "bool"): "Input should be a valid boolean",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "str",
+            ): "Input should be a valid string",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "int",
+            ): "Input should be a valid integer",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "float",
+            ): "Input should be a valid number",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "bool",
+            ): "Input should be a valid boolean",
         }
 
         for violation in detail:
@@ -1699,11 +1767,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "somefield",
-                        "eq": "somevalue",
-                    },
                     "components": [
                         {
                             "label": "Hoe laat was dit?",
@@ -1750,11 +1813,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert panel.get("label") == "panel-1"
         assert panel.get("key") == "panel"
         assert panel.get("type") == "panel"
-        assert panel.get("conditional") == {
-            "show": True,
-            "when": "somefield",
-            "eq": "somevalue",
-        }
         assert not panel.get("input")
 
         panel_components: list[dict[str, Any]] = components[0].get("components")
@@ -1789,11 +1847,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "somefield",
-                        "eq": "somevalue",
-                    },
                     "components": [
                         {
                             "label": "Welke dag was dit?",
@@ -1841,11 +1894,6 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
         assert panel.get("label") == "panel-1"
         assert panel.get("key") == "panel"
         assert panel.get("type") == "panel"
-        assert panel.get("conditional") == {
-            "show": True,
-            "when": "somefield",
-            "eq": "somevalue",
-        }
         assert not panel.get("input")
 
         panel_components: list[dict[str, Any]] = components[0].get("components")
@@ -2128,11 +2176,6 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "somefield",
-                        "eq": "somevalue",
-                    },
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
@@ -2179,11 +2222,6 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         assert panel.get("label") == "panel-1"
         assert panel.get("key") == "panel"
         assert panel.get("type") == "panel"
-        assert panel.get("conditional") == {
-            "show": True,
-            "when": "somefield",
-            "eq": "somevalue",
-        }
         assert not panel.get("input")
 
         panel_components: list[dict[str, Any]] = components[0].get("components")
@@ -2217,11 +2255,6 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": FormIoComponentTypeEnum.panel,
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "somefield",
-                        "eq": "somevalue",
-                    },
                     "components": [
                         {
                             "label": "Waarom meld u dit bij ons?",
@@ -2267,11 +2300,6 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         assert panel.get("key") == "panel"
         assert panel.get("type") == FormIoComponentTypeEnum.panel
         assert panel.get("input") is False
-        assert panel.get("conditional") == {
-            "show": True,
-            "when": "somefield",
-            "eq": "somevalue",
-        }
 
         panel_components = panel.get("components")
         assert len(panel_components) == 1
@@ -2325,12 +2353,28 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": " ",
-                        "eq": "ja",
-                    },
-                    "components": [],
+                    "components": [
+                        {
+                            "label": "Waarom meld u dit bij ons?",
+                            "description": "",
+                            "key": "waarom-meld-u-dit-bij-ons",
+                            "type": FormIoComponentTypeEnum.select,
+                            "input": True,
+                            "widget": "html5",
+                            "placeholder": "This is a placeholder value",
+                            "conditional": {
+                                "show": True,
+                                "when": " ",
+                                "eq": "ja",
+                            },
+                            "data": {
+                                "values": [
+                                    {"label": "label1", "value": "value1"},
+                                    {"label": "label2", "value": "value2"},
+                                ]
+                            },
+                        },
+                    ],
                 },
             ],
         }
@@ -2340,12 +2384,12 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         assert response.status_code == HTTP_201_CREATED
 
         body = response.json()
-        components = body.get("components")
-        assert len(components) == 2
+        components = body.get("components")[1].get("components")
+        assert len(components) == 1
 
-        assert components[1]["conditional"]["when"] == ""
-        assert components[1]["conditional"]["show"] is True
-        assert components[1]["conditional"]["eq"] == "ja"
+        assert components[0]["conditional"]["when"] == ""
+        assert components[0]["conditional"]["show"] is True
+        assert components[0]["conditional"]["eq"] == "ja"
 
     @pytest.mark.anyio
     async def test_create_form_with_conditional_with_none_values(
@@ -2372,12 +2416,22 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": None,
-                        "when": None,
-                        "eq": "",
-                    },
-                    "components": [],
+                    "components": [
+                        {
+                            "label": "Heeft u meer informatie die u met ons wilt delen?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-meer-informatie",
+                            "type": FormIoComponentTypeEnum.text_area,
+                            "input": True,
+                            "autoExpand": False,
+                            "maxCharCount": None,
+                            "conditional": {
+                                "show": None,
+                                "when": None,
+                                "eq": "",
+                            },
+                        },
+                    ],
                 },
             ],
         }
@@ -2387,12 +2441,12 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         assert response.status_code == HTTP_201_CREATED
         body = response.json()
 
-        components = body.get("components")
-        assert len(components) == 2
+        components = body.get("components")[1].get("components")
+        assert len(components) == 1
 
-        assert components[1]["conditional"]["when"] is None
-        assert components[1]["conditional"]["show"] is None
-        assert components[1]["conditional"]["eq"] == ""
+        assert components[0]["conditional"]["when"] is None
+        assert components[0]["conditional"]["show"] is None
+        assert components[0]["conditional"]["eq"] == ""
 
     @pytest.mark.anyio
     async def test_create_form_with_conditional_missing_elements(
@@ -2417,10 +2471,20 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        # Missing 'show', 'when', 'eq' keys
-                    },
-                    "components": [],
+                    "components": [
+                        {
+                            "label": "Heeft u meer informatie die u met ons wilt delen?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-meer-informatie",
+                            "type": FormIoComponentTypeEnum.text_area,
+                            "input": True,
+                            "autoExpand": False,
+                            "maxCharCount": None,
+                            "conditional": {
+                                # Missing 'show', 'when', 'eq' keys
+                            },
+                        },
+                    ],
                 },
             ],
         }
@@ -2434,9 +2498,9 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         assert len(detail) == 3
 
         expected_violations = {
-            ("body", "components", 1, "panel", "conditional", "show"): "Field required",
-            ("body", "components", 1, "panel", "conditional", "when"): "Field required",
-            ("body", "components", 1, "panel", "conditional", "eq"): "Field required",
+            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "show"): "Field required",
+            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "when"): "Field required",
+            ("body", "components", 1, "panel", "components", 0, "textarea", "conditional", "eq"): "Field required",
         }
 
         for violation in detail:
@@ -2474,12 +2538,22 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "heeft-u-meer-informatie",
-                        "eq": invalid_eq,
-                    },
-                    "components": [],
+                    "components": [
+                        {
+                            "label": "Heeft u meer informatie die u met ons wilt delen?",
+                            "description": "Help tekst bij de vraag.",
+                            "key": "heeft-u-meer-informatie",
+                            "type": FormIoComponentTypeEnum.text_area,
+                            "input": True,
+                            "autoExpand": False,
+                            "maxCharCount": None,
+                            "conditional": {
+                                "show": True,
+                                "when": "heeft-u-meer-informatie",
+                                "eq": invalid_eq,
+                            },
+                        },
+                    ],
                 },
             ],
         }
@@ -2493,10 +2567,54 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         assert len(detail) == 4
 
         expected_violations = {
-            ("body", "components", 1, "panel", "conditional", "eq", "str"): "Input should be a valid string",
-            ("body", "components", 1, "panel", "conditional", "eq", "int"): "Input should be a valid integer",
-            ("body", "components", 1, "panel", "conditional", "eq", "float"): "Input should be a valid number",
-            ("body", "components", 1, "panel", "conditional", "eq", "bool"): "Input should be a valid boolean",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "str",
+            ): "Input should be a valid string",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "int",
+            ): "Input should be a valid integer",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "float",
+            ): "Input should be a valid number",
+            (
+                "body",
+                "components",
+                1,
+                "panel",
+                "components",
+                0,
+                "textarea",
+                "conditional",
+                "eq",
+                "bool",
+            ): "Input should be a valid boolean",
         }
 
         for violation in detail:
@@ -2732,11 +2850,6 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "somefield",
-                        "eq": "somevalue",
-                    },
                     "components": [
                         {
                             "label": "Hoe laat was dit?",
@@ -2783,11 +2896,6 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         assert panel.get("label") == "panel-1"
         assert panel.get("key") == "panel"
         assert panel.get("type") == "panel"
-        assert panel.get("conditional") == {
-            "show": True,
-            "when": "somefield",
-            "eq": "somevalue",
-        }
         assert not panel.get("input")
 
         panel_components: list[dict[str, Any]] = components[0].get("components")
@@ -2821,11 +2929,6 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
                     "key": "panel",
                     "type": "panel",
                     "input": False,
-                    "conditional": {
-                        "show": True,
-                        "when": "somefield",
-                        "eq": "somevalue",
-                    },
                     "components": [
                         {
                             "label": "Welke dag was dit?",
@@ -2873,11 +2976,6 @@ class TestFormCreate(BaseUnauthorizedTest, BaseFormTest):
         assert panel.get("label") == "panel-1"
         assert panel.get("key") == "panel"
         assert panel.get("type") == "panel"
-        assert panel.get("conditional") == {
-            "show": True,
-            "when": "somefield",
-            "eq": "somevalue",
-        }
         assert not panel.get("input")
 
         panel_components: list[dict[str, Any]] = components[0].get("components")

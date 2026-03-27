@@ -84,7 +84,6 @@ class FormPanelComponentInput(BaseModel):
     key: Annotated[str, Field(min_length=3)]
     type: Literal[FormIoComponentTypeEnum.panel]
     input: bool = False
-    conditional: FormIOConditional | None = Field(default=None)
 
     components: list["FormComponentInputUnion"]
 
