@@ -1250,7 +1250,6 @@ async def form_with_classification(
         key="page1",
         input=False,
         type=FormIoComponentTypeEnum.panel,
-        conditional=conditional,
     )
 
     panel_components = await panel.awaitable_attrs.components
