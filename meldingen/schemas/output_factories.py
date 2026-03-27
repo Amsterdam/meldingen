@@ -880,11 +880,8 @@ class AnswerListOutputFactory:
             else:
                 component_position = highest_component_position + 1
 
-            if panel_position > highest_panel_position:
-                highest_panel_position = panel_position
-
-            if component_position > highest_component_position:
-                highest_component_position = component_position
+            highest_panel_position = max(highest_panel_position, panel_position)
+            highest_component_position = max(highest_component_position, component_position)
 
             flattened[int(f"{panel_position}00000{component_position}")] = output
 
