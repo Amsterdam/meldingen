@@ -494,6 +494,7 @@ async def melding_with_some_answers(
                 melding=melding_with_classification,
                 question=questions[i],
                 type=AnswerTypeEnum.text,
+                original_question_text=questions[i].text,
             )
         )
 

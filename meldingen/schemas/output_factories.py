@@ -851,14 +851,15 @@ class AnswerListOutputFactory:
 
     async def __call__(self, answers: Sequence[Answer]) -> list[AnswerQuestionOutputUnion]:
         flattened: dict[int, AnswerQuestionOutputUnion] = {}
+
+        highest_panel_position = 0
+        highest_component_position = 0
+
         for answer in answers:
             question = answer.question
 
             component = question.component
-            assert component is not None, "Question is expected to have a component"
-
-            panel = component.parent
-            assert panel is not None, "Component is expected to have a parent panel"
+            panel = component.parent if component else None
 
             question_output = QuestionOutput(
                 id=question.id,
@@ -868,7 +869,24 @@ class AnswerListOutputFactory:
             )
             output = await self._output_answer(answer, question_output)
 
-            flattened[int(f"{panel.position}00000{component.position}")] = output
+            # Use this fallback to deal with panels or components which have been deleted
+            if panel and panel.position is not None:
+                panel_position = panel.position
+            else:
+                panel_position = highest_panel_position + 1
+
+            if component and component.position is not None:
+                component_position = component.position
+            else:
+                component_position = highest_component_position + 1
+
+            if panel_position > highest_panel_position:
+                highest_panel_position = panel_position
+
+            if component_position > highest_component_position:
+                highest_component_position = component_position
+
+            flattened[int(f"{panel_position}00000{component_position}")] = output
 
         _sorted = dict(sorted(flattened.items()))
 
