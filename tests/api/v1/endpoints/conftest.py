@@ -707,7 +707,7 @@ def jsonlogic(request: FixtureRequest) -> str | None:
 @pytest.fixture
 def formio_text_area_component(
     db_session: AsyncSession,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
     is_required: bool,
     jsonlogic: str | None,
 ) -> FormIoTextAreaComponent:
@@ -731,7 +731,7 @@ def formio_text_area_component(
 
 @pytest.fixture
 async def formio_select_component(
-    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool
+    db_session: AsyncSession, conditional: dict[str, Any] | None, is_required: bool
 ) -> FormIoSelectComponent:
     component = FormIoSelectComponent(
         label="Kies een optie",
@@ -772,7 +772,7 @@ async def formio_select_component(
 
 @pytest.fixture
 async def formio_radio_component(
-    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool
+    db_session: AsyncSession, conditional: dict[str, Any] | None, is_required: bool
 ) -> FormIoRadioComponent:
     component = FormIoRadioComponent(
         label="Kies een optie",
@@ -811,7 +811,7 @@ async def formio_radio_component(
 
 @pytest.fixture
 async def formio_text_field_component(
-    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool, jsonlogic: str | None
+    db_session: AsyncSession, conditional: dict[str, Any] | None, is_required: bool, jsonlogic: str | None
 ) -> FormIoTextFieldComponent:
     component = FormIoTextFieldComponent(
         label="Vul uw naam in",
@@ -832,7 +832,7 @@ async def formio_text_field_component(
 
 @pytest.fixture
 async def formio_checkbox_component(
-    db_session: AsyncSession, conditional: dict[str, Any], is_required: bool
+    db_session: AsyncSession, conditional: dict[str, Any] | None, is_required: bool
 ) -> FormIoCheckBoxComponent:
     component = FormIoCheckBoxComponent(
         label="Vink aan wat voor jou geldt",
@@ -941,7 +941,7 @@ async def form_with_date_component(
     form_panel: FormIoPanelComponent,
     formio_date_component: FormIoDateComponent,
     melding_with_classification: Melding,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(
         title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
@@ -972,7 +972,7 @@ async def form_with_select_component(
     form_panel: FormIoPanelComponent,
     formio_select_component: FormIoSelectComponent,
     melding_with_classification: Melding,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(
         title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
@@ -1003,7 +1003,7 @@ async def form_with_checkbox_component(
     form_panel: FormIoPanelComponent,
     formio_checkbox_component: FormIoCheckBoxComponent,
     melding_with_classification: Melding,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(
         title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
@@ -1034,7 +1034,7 @@ async def form_with_radio_component(
     form_panel: FormIoPanelComponent,
     formio_radio_component: FormIoRadioComponent,
     melding_with_classification: Melding,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(
         title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
@@ -1079,7 +1079,7 @@ async def form_with_time_component(
     form_panel: FormIoPanelComponent,
     formio_time_component: FormIoTimeComponent,
     melding_with_classification: Melding,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(
         title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
@@ -1240,7 +1240,7 @@ async def form_with_classification(
     db_session: AsyncSession,
     form_title: str,
     formio_text_area_component: FormIoTextAreaComponent,
-    conditional: dict[str, Any],
+    conditional: dict[str, Any] | None,
 ) -> Form:
     form = Form(title=form_title, display=FormIoFormDisplayEnum.form)
 

@@ -1536,7 +1536,7 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         client: AsyncClient,
         melding_with_mixed_required_components: Melding,
     ) -> None:
-        """ " Transition should be blocked when at least one question is required and is not conditional"""
+        """Transition should be blocked when at least one question is required and is not conditional"""
 
         response = await client.put(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_mixed_required_components.id),

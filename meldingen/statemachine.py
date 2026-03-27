@@ -23,7 +23,7 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
         self._form_repository = form_repository
 
     async def __call__(self, obj: Melding) -> bool:
-        """ Before transitioning to next state, check if all the additional questions that are marked as required have been answered.
+        """Before transitioning to next state, check if all the additional questions that are marked as required have been answered.
         There is an exception on questions that are rendered conditionally, because the conditional logic is only evaluated in the frontend.
         Therefore, all components that have a conditional are handled as not required"""
 
