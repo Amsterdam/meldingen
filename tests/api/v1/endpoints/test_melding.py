@@ -4816,6 +4816,41 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
             elif answer.type == AnswerTypeEnum.time:
                 assert await answer.awaitable_attrs.time in {answer_output.get("time") for answer_output in body}
 
+    @pytest.mark.anyio
+    async def test_list_answers_with_removed_component(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_some_answers: Melding,
+        db_session: AsyncSession,
+        auth_user: None,
+    ) -> None:
+        """When a component is removed we should be able to show the answers."""
+
+        answers = await melding_with_some_answers.awaitable_attrs.answers
+        assert len(answers) == 5
+
+        component = answers[0].question.component
+        panel = await component.awaitable_attrs.parent
+        panel.components.remove(component)
+
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_some_answers.id),
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert isinstance(body, list)
+        assert len(body) == 5
+
+        returned_question_ids = [answer_output.get("question").get("id") for answer_output in body]
+        assert sorted(returned_question_ids) == sorted(returned_question_ids)
+
 
 class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
     def get_route_name(self) -> str:
@@ -4918,6 +4953,44 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
                 assert await answer.awaitable_attrs.text in {answer_output.get("text") for answer_output in body}
             elif answer.type == AnswerTypeEnum.time:
                 assert await answer.awaitable_attrs.time in {answer_output.get("time") for answer_output in body}
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_list_answers_with_removed_component(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_some_answers: Melding,
+        db_session: AsyncSession,
+        auth_user: None,
+    ) -> None:
+        """When a component is deleted the answer should still be shown"""
+
+        answers = await melding_with_some_answers.awaitable_attrs.answers
+        assert len(answers) == 5
+
+        component = answers[0].question.component
+        assert component is not None
+        panel = await component.awaitable_attrs.parent
+        panel.components.remove(component)
+
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_some_answers.id),
+            params={"token": melding_with_some_answers.token},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+
+        assert isinstance(body, list)
+        assert len(body) == 5
+
+        returned_question_ids = [answer_output.get("question").get("id") for answer_output in body]
+        assert sorted(returned_question_ids) == sorted(returned_question_ids)
 
 
 class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
