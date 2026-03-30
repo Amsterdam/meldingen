@@ -44,7 +44,7 @@ def sort_param(sort: Annotated[str, Query()] = f'["id","{SortingDirection.ASC}"]
         raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, errors)
 
 
-class FilterParams(BaseModel, extra="forbid"):
+class FilterParams(BaseModel, extra="ignore"):
     q: str | None = None
 
 
