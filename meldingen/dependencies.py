@@ -5,6 +5,7 @@ from typing import Annotated, Any, AsyncIterator, Literal
 from amsterdam_mail_service_client.api.default_api import DefaultApi
 from amsterdam_mail_service_client.api_client import ApiClient
 from amsterdam_mail_service_client.configuration import Configuration
+from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from azure.storage.blob.aio import ContainerClient
 from fastapi import BackgroundTasks, Depends
 from httpx import AsyncClient
@@ -36,6 +37,7 @@ from meldingen_core.managers import RelationshipManager
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from meldingen_core.wfs import AssetTypeToWfsProviderConverter, BaseWfsProviderValidator
+from openai import AsyncAzureOpenAI
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
@@ -335,11 +337,21 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
         return None
 
     if settings.llm_provider == "azure":
-        return AzureProvider(
+        if settings.llm_api_key:
+            return AzureProvider(
+                azure_endpoint=settings.llm_base_url,
+                api_key=settings.llm_api_key,
+                api_version="2025-01-01-preview",
+            )
+
+        credential = DefaultAzureCredential()
+        token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
+        client = AsyncAzureOpenAI(
             azure_endpoint=settings.llm_base_url,
-            api_key=settings.llm_api_key,
+            azure_ad_token_provider=token_provider,
             api_version="2025-01-01-preview",
         )
+        return AzureProvider(openai_client=client)
 
     if settings.llm_provider == "openai":
         """We can use the open ai provider for many models besides the ones from Open AI"""
