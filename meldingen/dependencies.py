@@ -338,12 +338,22 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
 
     if settings.llm_provider == "azure":
         if settings.llm_api_key:
+            logger.info(
+                "Using Azure OpenAI with API key, endpoint=%s, model=%s",
+                settings.llm_base_url,
+                settings.llm_model_identifier,
+            )
             return AzureProvider(
                 azure_endpoint=settings.llm_base_url,
                 api_key=settings.llm_api_key,
                 api_version="2025-01-01-preview",
             )
 
+        logger.info(
+            "Using Azure OpenAI with Managed Identity, endpoint=%s, model=%s",
+            settings.llm_base_url,
+            settings.llm_model_identifier,
+        )
         credential = DefaultAzureCredential()
         token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
         client = AsyncAzureOpenAI(

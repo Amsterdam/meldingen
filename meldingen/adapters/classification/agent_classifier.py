@@ -25,10 +25,8 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
             result = await self._agent.run(user_prompt, output_type=ClassificationModel)
             classification = getattr(result.output, "classification", None)
 
-            print(f"Classification according to LLM: {classification}")
+            logger.info(f"Classification according to LLM: {classification}")
         except Exception as e:
-            logger.error(f"Pydantic AI validation failed: {e}")
-
-            print(f"Pydantic AI validation failed: {e}")
+            logger.error(f"LLM classification failed: {e}", exc_info=True)
             return None
         return classification
