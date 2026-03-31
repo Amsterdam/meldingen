@@ -26,7 +26,11 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
             classification = getattr(result.output, "classification", None)
 
             logger.info(f"Classification according to LLM: {classification}")
+            print(f"Classification according to LLM: {classification}")
         except Exception as e:
             logger.error(f"LLM classification failed: {e}", exc_info=True)
+            import traceback
+
+            traceback.print_exc()
             return None
         return classification
