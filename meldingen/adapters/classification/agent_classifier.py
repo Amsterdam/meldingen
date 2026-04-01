@@ -29,6 +29,19 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
             print(f"Classification according to LLM: {classification}")
         except Exception as e:
             logger.error(f"LLM classification failed: {e}", exc_info=True)
+
+            # Walk the exception chain to find the root cause (SSL details, DNS errors, etc.)
+            cause: BaseException = e
+            chain = [f"{type(cause).__name__}: {cause}"]
+            while cause.__cause__ is not None:
+                cause = cause.__cause__
+                chain.append(f"{type(cause).__module__}.{type(cause).__name__}: {cause}")
+            logger.error(f"LLM error chain: {' -> '.join(chain)}")
+
+            # Log underlying connection details if available
+            if hasattr(e, "request"):
+                logger.error(f"LLM request URL: {e.request.url}")  # type: ignore[union-attr]
+
             import traceback
 
             traceback.print_exc()
