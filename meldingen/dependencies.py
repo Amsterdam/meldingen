@@ -113,7 +113,6 @@ from meldingen.adapters.malware.dummy_scanner import DummyMalwareScanner
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
-from meldingen.classification import get_classification_system_prompt
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import (
@@ -355,7 +354,7 @@ def classifier_agent(
 
     if settings.llm_enabled and provider is not None:
         model = OpenAIChatModel(settings.llm_model_identifier, provider=provider)
-        return Agent(model, system_prompt=get_classification_system_prompt())
+        return Agent(model, system_prompt=settings.llm_classification_system_prompt)
 
     return None
 
