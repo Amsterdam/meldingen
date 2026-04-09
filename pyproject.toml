@@ -111,6 +111,10 @@ omit = [
 
 [tool.pytest.ini_options]
 bdd_features_base_dir = "tests/scenarios/features"
+addopts = "--ignore=tests/llm_eval"
+markers = [
+    "llm_eval: real-LLM classifier evaluation tests; not collected by default. Run explicitly with `pytest tests/llm_eval/`.",
+]
 
 [tool.uv.build-backend]
 module-root = "."

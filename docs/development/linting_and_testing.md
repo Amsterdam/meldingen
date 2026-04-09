@@ -16,6 +16,28 @@ docker-compose run --rm meldingen pytest --test-alembic -v
 This command runs PyTest within the Meldingen container, executing tests while 
 providing verbose output.
 
+## LLM classification evaluation
+
+There is an **opt-in** test suite that evaluates the current LLM classification behavior against a dataset of example melding teksten.
+
+To run it, set `LLM_EVAL=1` and run only the `llm`-marked tests:
+
+```bash
+docker compose run --rm \
+	-e LLM_EVAL=1 \
+	-e API_LLM_ENABLED=true \
+	-e API_LLM_PROVIDER=azure \
+	-e LLM_URL='https://<your-azure-openai-endpoint>' \
+	-e LLM_MODEL='<your-deployment-name>' \
+	-e API_LLM_API_KEY='<optional-if-not-using-managed-identity>' \
+	meldingen pytest -q -m llm
+```
+
+Data inputs:
+
+- **Classifications (names + instructions)**: set `LLM_EVAL_CLASSIFICATIONS_PATH` (defaults to `seed/examples/classifications.json`).
+- **Evaluation cases**: set `LLM_EVAL_DATASET_PATH` (defaults to `tests/fixtures/llm_classification_cases.jsonl`).
+
 ## Black
 
 Black is a code formatter for Python. To check if the code complies with Black 

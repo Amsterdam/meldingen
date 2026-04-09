@@ -1,0 +1,86 @@
+{
+  "classifications": [
+    {
+      "name": "Zwerfvuil",
+      "instructions": "Meldingen over rondslingerend afval, vuilniszakken naast containers, troep op straat of in parken, en volle of vieze openbare prullenbakken."
+    },
+    {
+      "name": "Grofvuil",
+      "instructions": "Meldingen over grote ongewenste voorwerpen op straat zoals oude meubels, matrassen, witgoed of bouwafval die niet in een prullenbak passen."
+    },
+    {
+      "name": "Straatverlichting",
+      "instructions": "Meldingen over kapotte, knipperende of niet werkende lantaarnpalen en straatlantaarns, of donkere plekken op straat door defecte verlichting."
+    },
+    {
+      "name": "Wegonderhoud",
+      "instructions": "Meldingen over gaten in de weg, losse of verzakte stoeptegels, beschadigd asfalt, kapotte fietspaden of onveilige rijbanen."
+    },
+    {
+      "name": "Groenvoorziening",
+      "instructions": "Meldingen over bomen, struiken, gras, plantsoenen of groen in de openbare ruimte: omgewaaide takken, overhangend groen, dode bomen, slecht onderhouden plantsoenen."
+    },
+    {
+      "name": "Overlast personen",
+      "instructions": "Meldingen over geluidsoverlast, hangjongeren, dronken personen, drugsgebruik of ander asociaal gedrag van mensen in de openbare ruimte."
+    },
+    {
+      "name": "Dieren",
+      "instructions": "Meldingen over (dode) dieren in de openbare ruimte, plaagdieren zoals ratten of duiven, hondenpoep, of bijvoorbeeld een wesp- of bijennest."
+    },
+    {
+      "name": "Riolering en water",
+      "instructions": "Meldingen over verstopte riolen, wateroverlast, lekkende putdeksels, vervuiling in grachten of stilstaand water op straat."
+    },
+    {
+      "name": "Verkeer en parkeren",
+      "instructions": "Meldingen over fout geparkeerde auto's, fietsen of scooters, kapotte verkeersborden of verkeerslichten en overige verkeersveiligheid."
+    },
+    {
+      "name": "Graffiti",
+      "instructions": "Meldingen over graffiti, tags, posters, stickers of andere ongewenste bekladding op gebouwen, bruggen, verkeersborden of straatmeubilair."
+    }
+  ],
+  "test_cases": [
+    {
+      "text": "Er staan al drie dagen vuilniszakken naast de container op de hoek van de Kinkerstraat. Het stinkt en ratten lopen er omheen.",
+      "expected": "Zwerfvuil"
+    },
+    {
+      "text": "Voor mijn huis op de Prinsengracht staat sinds gisteren een oude bank op de stoep. Niemand komt hem ophalen.",
+      "expected": "Grofvuil"
+    },
+    {
+      "text": "De lantaarnpaal voor nummer 12 in de Jan Pieter Heijestraat doet het al een week niet meer. 's Avonds is het pikkedonker.",
+      "expected": "Straatverlichting"
+    },
+    {
+      "text": "Op het fietspad langs de Amstel zit een groot gat. Ik ben er gisteren bijna met mijn fiets in gevallen.",
+      "expected": "Wegonderhoud"
+    },
+    {
+      "text": "Er is een hele dikke tak van een boom in het Vondelpark naar beneden gevallen, hij ligt op het pad.",
+      "expected": "Groenvoorziening"
+    },
+    {
+      "text": "Elke avond hangen er jongeren op het pleintje voor mijn huis. Ze maken keiharde muziek tot diep in de nacht.",
+      "expected": "Overlast personen"
+    },
+    {
+      "text": "Er ligt een dode duif midden op de stoep bij de tramhalte op het Leidseplein.",
+      "expected": "Dieren"
+    },
+    {
+      "text": "De put op de hoek van mijn straat loopt over bij elke regenbui. Het hele kruispunt staat blank.",
+      "expected": "Riolering en water"
+    },
+    {
+      "text": "Er staat al twee weken een auto zonder kentekenplaten op een gehandicaptenparkeerplaats voor mijn deur.",
+      "expected": "Verkeer en parkeren"
+    },
+    {
+      "text": "Iemand heeft de hele zijgevel van het schoolgebouw aan de Spuistraat ondergespoten met graffiti.",
+      "expected": "Graffiti"
+    }
+  ]
+}

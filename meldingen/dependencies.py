@@ -124,6 +124,7 @@ from meldingen.factories import (
     FormIoQuestionComponentFactory,
 )
 from meldingen.generators import PublicIdGenerator
+from meldingen.classification import get_classification_system_prompt
 from meldingen.image import (
     ImageOptimizerTask,
     IMGProxyImageOptimizer,
@@ -339,6 +340,7 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
             azure_endpoint=settings.llm_base_url,
             api_key=settings.llm_api_key,
             api_version="2025-01-01-preview",
+
         )
 
     if settings.llm_provider == "openai":
@@ -354,19 +356,7 @@ def classifier_agent(
 
     if settings.llm_enabled and provider is not None:
         model = OpenAIChatModel(settings.llm_model_identifier, provider=provider)
-
-        system_prompt = (
-            "Je bent een expert classificeerder van meldingen over de openbare ruimte in de gemeente Amsterdam.\n\n"
-            "Regels:\n"
-            "1. Je krijgt een lijst classificaties, elk met een instructie die beschrijft wanneer deze classificatie van toepassing is.\n"
-            "2. Je krijgt een meldtekst van een burger.\n"
-            "3. Vergelijk de meldtekst met ELKE classificatie-instructie en bepaal welke het beste past.\n"
-            "4. Als meerdere classificaties deels van toepassing lijken, kies dan de classificatie "
-            "waarvan de instructie het meest specifiek overeenkomt met het hoofdonderwerp van de melding.\n"
-            "5. Geef ALLEEN de exacte naam van de gekozen classificatie terug, niets anders.\n"
-        )
-
-        return Agent(model, system_prompt=system_prompt)
+        return Agent(model, system_prompt=get_classification_system_prompt())
 
     return None
 
