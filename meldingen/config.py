@@ -114,6 +114,20 @@ Gemeente Amsterdam
         "LLM_MODEL", ""
     )  # LLM is injected by docker compose and specifies the model identifier
     llm_api_key: str = ""
+    # System prompt used by the LLM classifier. Defaults to the Amsterdam-specific
+    # prompt; other deployments can override via the API_LLM_CLASSIFICATION_SYSTEM_PROMPT
+    # environment variable.
+    llm_classification_system_prompt: str = (
+        "Je bent een expert classificeerder van meldingen over de openbare ruimte in de gemeente Amsterdam.\n\n"
+        "Regels:\n"
+        "1. Je krijgt een lijst classificaties, elk met een instructie die beschrijft wanneer deze classificatie van toepassing is.\n"
+        "2. Je krijgt een meldtekst van een burger.\n"
+        "3. Vergelijk de meldtekst met ELKE classificatie-instructie en bepaal welke het beste past.\n"
+        "4. Als meerdere classificaties deels van toepassing lijken, kies dan de classificatie "
+        "waarvan de instructie het meest specifiek overeenkomt met het hoofdonderwerp van de melding.\n"
+        "5. Antwoord uitsluitend met het vereiste JSON-object dat de gekozen classificatie bevat. "
+        "Geef geen uitleg, geen redenering, geen commentaar en geen extra tekst — alleen het JSON-object.\n"
+    )
 
 
 # Create an instance of the Settings model

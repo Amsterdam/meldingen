@@ -354,19 +354,7 @@ def classifier_agent(
 
     if settings.llm_enabled and provider is not None:
         model = OpenAIChatModel(settings.llm_model_identifier, provider=provider)
-
-        system_prompt = (
-            "Je bent een expert classificeerder van meldingen over de openbare ruimte in de gemeente Amsterdam.\n\n"
-            "Regels:\n"
-            "1. Je krijgt een lijst classificaties, elk met een instructie die beschrijft wanneer deze classificatie van toepassing is.\n"
-            "2. Je krijgt een meldtekst van een burger.\n"
-            "3. Vergelijk de meldtekst met ELKE classificatie-instructie en bepaal welke het beste past.\n"
-            "4. Als meerdere classificaties deels van toepassing lijken, kies dan de classificatie "
-            "waarvan de instructie het meest specifiek overeenkomt met het hoofdonderwerp van de melding.\n"
-            "5. Geef ALLEEN de exacte naam van de gekozen classificatie terug, niets anders.\n"
-        )
-
-        return Agent(model, system_prompt=system_prompt)
+        return Agent(model, system_prompt=settings.llm_classification_system_prompt)
 
     return None
 

@@ -111,6 +111,13 @@ omit = [
 
 [tool.pytest.ini_options]
 bdd_features_base_dir = "tests/scenarios/features"
+# llm_eval-marked tests are excluded from the default run because they hit a
+# real LLM. The default `pytest` invocation skips them; to opt in, override the
+# marker filter on the command line, e.g. `pytest tests/llm_eval/ -m llm_eval`.
+addopts = "-m 'not llm_eval'"
+markers = [
+    "llm_eval: real-LLM classifier evaluation tests; excluded from the default run via `-m 'not llm_eval'`. Run explicitly with `pytest tests/llm_eval/ -m llm_eval`.",
+]
 
 [tool.uv.build-backend]
 module-root = "."
