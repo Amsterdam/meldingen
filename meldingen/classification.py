@@ -16,6 +16,8 @@ CLASSIFICATION_SYSTEM_PROMPT = (
     "3. Vergelijk de meldtekst met ELKE classificatie-instructie en bepaal welke het beste past.\n"
     "4. Als meerdere classificaties deels van toepassing lijken, kies dan de classificatie "
     "waarvan de instructie het meest specifiek overeenkomt met het hoofdonderwerp van de melding.\n"
+    "5. Antwoord uitsluitend met het vereiste JSON-object dat de gekozen classificatie bevat. "
+    "Geef geen uitleg, geen redenering, geen commentaar en geen extra tekst — alleen het JSON-object.\n"
 )
 
 

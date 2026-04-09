@@ -18,25 +18,25 @@ providing verbose output.
 
 ## LLM classification evaluation
 
-There is an **opt-in** test suite that evaluates the current LLM classification behavior against a dataset of example melding teksten.
+There is an **opt-in** test suite at `tests/llm_eval/` that evaluates the current LLM classification behavior against a fixed dataset of example melding teksten. It exercises the real `AgentClassifierAdapter` (same prompt, same agent wiring as production), but swaps the database-backed `ClassificationRepository` for a mock that returns the categories defined in the dataset file, so the suite is reproducible and version-controlled.
 
-To run it, set `LLM_EVAL=1` and run only the `llm`-marked tests:
+Every test in the suite is decorated with `@pytest.mark.llm_eval`, and `pyproject.toml` sets `addopts = "-m 'not llm_eval'"` so the default `pytest` run skips it. To run it, override the marker filter on the command line and provide the LLM environment variables:
 
 ```bash
 docker compose run --rm \
-	-e LLM_EVAL=1 \
 	-e API_LLM_ENABLED=true \
 	-e API_LLM_PROVIDER=azure \
 	-e LLM_URL='https://<your-azure-openai-endpoint>' \
 	-e LLM_MODEL='<your-deployment-name>' \
 	-e API_LLM_API_KEY='<optional-if-not-using-managed-identity>' \
-	meldingen pytest -q -m llm
+	meldingen pytest tests/llm_eval/ -m llm_eval -v
 ```
 
-Data inputs:
+The `-m llm_eval` flag is required: it overrides the default `-m 'not llm_eval'` from `pyproject.toml`, otherwise pytest would still filter the suite out even with the path specified.
 
-- **Classifications (names + instructions)**: set `LLM_EVAL_CLASSIFICATIONS_PATH` (defaults to `seed/examples/classifications.json`).
-- **Evaluation cases**: set `LLM_EVAL_DATASET_PATH` (defaults to `tests/fixtures/llm_classification_cases.jsonl`).
+If `API_LLM_ENABLED` is unset or false, every test in the suite is skipped with an explanatory message.
+
+**Dataset:** all classifications and evaluation cases live in a single JSON file at [`tests/llm_eval/test_cases.json`](../../tests/llm_eval/test_cases.json). Edit that file directly to add categories or new test cases — no code changes needed. Each test case becomes a separate parametrized pytest invocation.
 
 ## Black
 

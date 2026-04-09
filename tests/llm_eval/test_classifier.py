@@ -36,7 +36,8 @@ TEST_DATA_PATH = Path(__file__).parent / "test_cases.json"
 
 def _load_test_data() -> dict[str, Any]:
     with TEST_DATA_PATH.open() as f:
-        return json.load(f)
+        data: dict[str, Any] = json.load(f)
+    return data
 
 
 _TEST_DATA = _load_test_data()

@@ -113,6 +113,7 @@ from meldingen.adapters.malware.dummy_scanner import DummyMalwareScanner
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
+from meldingen.classification import get_classification_system_prompt
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import (
@@ -124,7 +125,6 @@ from meldingen.factories import (
     FormIoQuestionComponentFactory,
 )
 from meldingen.generators import PublicIdGenerator
-from meldingen.classification import get_classification_system_prompt
 from meldingen.image import (
     ImageOptimizerTask,
     IMGProxyImageOptimizer,
@@ -340,7 +340,6 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
             azure_endpoint=settings.llm_base_url,
             api_key=settings.llm_api_key,
             api_version="2025-01-01-preview",
-
         )
 
     if settings.llm_provider == "openai":
