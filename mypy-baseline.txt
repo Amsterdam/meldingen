@@ -25,8 +25,8 @@ meldingen/models.py:0: error: Incompatible types in assignment (expression has t
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "list[meldingen.models.Asset]", base class "Melding" defined the type as "MutableSequence[meldingen_core.models.Asset]")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
 meldingen/models.py:0: error: Incompatible types in assignment (expression has type "dict[str, bool]", base class "FormIoComponent" defined the type as "tuple[CheckConstraint]")  [assignment]
-migrations/env.py:0: error: Argument 1 to "async_engine_from_config" has incompatible type "dict[str, str] | None"; expected "dict[str, Any]"  [arg-type]
 meldingen/classification.py:0: error: Invalid type alias: expression is not a valid type  [valid-type]
+migrations/env.py:0: error: Argument 1 to "async_engine_from_config" has incompatible type "dict[str, str] | None"; expected "dict[str, Any]"  [arg-type]
 tests/api/v1/endpoints/test_form.py:0: error: Need type annotation for "new_data"  [var-annotated]
 tests/api/v1/endpoints/test_melding.py:0: error: Skipping analyzing "mailpit.client.api": module is installed, but missing library stubs or py.typed marker  [import-untyped]
 tests/api/v1/endpoints/test_melding.py:0: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
@@ -40,7 +40,7 @@ meldingen/main.py:0: note: Following member(s) of "ContentSizeLimitMiddleware" h
 meldingen/main.py:0: note: Expected:
 meldingen/main.py:0: note: def __call__(Callable[[Any, Callable[[], Awaitable[Any]], Callable[[Any], Awaitable[None]]], Awaitable[None]], /, max_size: int) -> Callable[[Any, Callable[[], Awaitable[Any]], Callable[[Any], Awaitable[None]]], Awaitable[None]]
 meldingen/main.py:0: note: Got:
-meldingen/main.py:0: note: def __init__(app: FastAPI, max_size: int) -> ContentSizeLimitMiddleware
+meldingen/main.py:0: note: def ContentSizeLimitMiddleware(app: FastAPI, max_size: int) -> ContentSizeLimitMiddleware
 meldingen/main.py:0: note: "_MiddlewareFactory[[int]].__call__" has type "def __call__(self, Callable[[Any, Callable[[], Awaitable[Any]], Callable[[Any], Awaitable[None]]], Awaitable[None]], /, max_size: int) -> Callable[[Any, Callable[[], Awaitable[Any]], Callable[[Any], Awaitable[None]]], Awaitable[None]]"
 tests/conftest.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
 tests/conftest.py:0: error: Call to untyped function "visit_drop_table" in typed context  [no-untyped-call]
