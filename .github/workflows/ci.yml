@@ -140,5 +140,8 @@ jobs:
       - name: Pull images
         run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
+      - name: mypy-baseline
+        run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} mypy --strict . || true
+
       - name: mypy
         run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "mypy --strict . | mypy-baseline filter"
