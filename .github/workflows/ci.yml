@@ -141,4 +141,4 @@ jobs:
         run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
       - name: mypy (baseline)
-        run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "mypy --strict --cache-dir=/tmp/.mypy_cache . 2>&1 | mypy-baseline filter"
+        run: docker run --rm --user root -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "mypy --strict . 2>&1 | mypy-baseline filter"
