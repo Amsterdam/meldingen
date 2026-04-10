@@ -141,4 +141,4 @@ jobs:
         run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
       - name: mypy
-        run: docker run -v --user=root $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "uv run mypy --strict . | uv run mypy-baseline filter"
+        run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "mypy --strict . | mypy-baseline filter"
