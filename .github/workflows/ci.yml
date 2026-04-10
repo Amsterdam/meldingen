@@ -140,5 +140,5 @@ jobs:
       - name: Pull images
         run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
-      - name: mypy (baseline)
+      - name: mypy
         run: docker run --rm --user root -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "rm -rf .mypy_cache && mypy --strict . | mypy-baseline filter"
