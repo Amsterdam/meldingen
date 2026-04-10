@@ -140,9 +140,5 @@ jobs:
       - name: Pull images
         run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
-      - name: mypy (raw output)
-        continue-on-error: true
-        run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} mypy --strict --cache-dir=/tmp/.mypy_cache .
-
       - name: mypy (baseline)
-        run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} bash -lc "set -o pipefail; mypy --strict --cache-dir=/tmp/.mypy_cache . 2>&1 | mypy-baseline filter"
+        run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} bash -c "mypy --strict --cache-dir=/tmp/.mypy_cache . 2>&1 | mypy-baseline filter"
