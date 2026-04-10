@@ -248,7 +248,7 @@ class TextAnswerOutput(AnswerOutput):
 
 
 class TimeAnswerOutput(AnswerOutput):
-    time: str
+    time: str | None
     type: Literal[AnswerTypeEnum.time]
 
 
