@@ -3274,7 +3274,6 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
-
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_token", "classification_name"],
