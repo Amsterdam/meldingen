@@ -163,8 +163,8 @@ class FormTimeComponentInput(FormComponentInput):
 
 """
 Use this union when you want to allow only input components, and not the panel.
-The panel is a holder for other input components, and therefore cannot be part of the FormComponentInputUnion. 
-F.e. A panel should be allowed to hold another panel, only a valid input component. 
+The panel is a holder for other input components, and therefore cannot be part of the FormComponentInputUnion.
+F.e. A panel should be allowed to hold another panel, only a valid input component.
 """
 FormComponentInputUnion = Annotated[
     Union[
@@ -180,9 +180,9 @@ FormComponentInputUnion = Annotated[
 ]
 
 """
-Use this union when you want to allow all components, including the panel. 
-The panel component is a special case, because it can contain other components. 
-This is used at the root of a Form, where input components and panels are both allowed. 
+Use this union when you want to allow all components, including the panel.
+The panel component is a special case, because it can contain other components.
+This is used at the root of a Form, where input components and panels are both allowed.
 """
 FormComponentUnion = Annotated[
     Union[
@@ -205,7 +205,7 @@ class TextAnswerInput(BaseModel):
 
 
 class TimeAnswerInput(BaseModel):
-    time: Annotated[str, Field(pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")]
+    time: Annotated[str, StringConstraints(pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")] | None
     type: Literal[AnswerTypeEnum.time]
 
 

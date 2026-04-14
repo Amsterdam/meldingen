@@ -48,7 +48,6 @@ def test_time_answer_input_valid(time_str: str) -> None:
         "12-34",
         "12:345",
         "",
-        None,
         " 12:34",
         "12:34 ",
         "12:34:00",
