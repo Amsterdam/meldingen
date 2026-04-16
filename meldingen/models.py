@@ -503,7 +503,7 @@ class TimeAnswer(Answer):
 
     __table_args__ = {"extend_existing": True}
 
-    time: Mapped[str] = mapped_column(String(), nullable=True)
+    time: Mapped[str | None] = mapped_column(String(), nullable=True)
 
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:

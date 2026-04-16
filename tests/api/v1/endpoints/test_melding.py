@@ -2405,13 +2405,30 @@ class TestMeldingQuestionAnswer:
         data = response.json()
         assert data.get("detail") == "Not Found"
 
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_token", "classification_name"],
+        ["melding_token", "classification_name", "time_value"],
         [
             (
                 "supersecrettoken",
                 "test_classification",
-            )
+                "16:45",
+            ),
+            (
+                "supersecrettoken",
+                "test_classification",
+                "09:30",
+            ),
+            (
+                "supersecrettoken",
+                "test_classification",
+                "00:00",
+            ),
+            (
+                "supersecrettoken",
+                "test_classification",
+                None,
+            ),
         ],
         indirect=["classification_name"],
     )
@@ -2421,6 +2438,7 @@ class TestMeldingQuestionAnswer:
         client: AsyncClient,
         melding_with_classification: Melding,
         form_with_time_component: Form,
+        time_value: str | None,
     ) -> None:
         components = await form_with_time_component.awaitable_attrs.components
         assert len(components) == 1
@@ -2439,7 +2457,7 @@ class TestMeldingQuestionAnswer:
                 question_id=question.id,
             ),
             params={"token": melding_with_classification.token},
-            json={"time": "16:45", "type": AnswerTypeEnum.time},
+            json={"time": time_value, "type": AnswerTypeEnum.time},
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -2447,10 +2465,11 @@ class TestMeldingQuestionAnswer:
         body = response.json()
         assert body.get("id") is not None
         assert body.get("type") == AnswerTypeEnum.time
-        assert body.get("time") == "16:45"
+        assert body.get("time") == time_value
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["time_value", "error_message"],
         [
@@ -2497,6 +2516,55 @@ class TestMeldingQuestionAnswer:
         detail = body.get("detail")
         assert len(detail) == 1
         assert detail[0].get("msg") == error_message
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            ("supersecrettoken", "test_classification"),
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_create_time_answer_missing_time(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_classification: Melding,
+        form_with_time_component: Form,
+    ) -> None:
+        """
+        Test creating a time answer without providing the required 'time' field in the request body.
+        Users are allowed to add a None time answer to signify they "don't know" the time, but this can only be done explicitly.
+        """
+
+        components = await form_with_time_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        response = await client.post(
+            app.url_path_for(
+                self.ROUTE_NAME_CREATE,
+                melding_id=melding_with_classification.id,
+                question_id=question.id,
+            ),
+            params={"token": melding_with_classification.token},
+            json={"type": AnswerTypeEnum.time},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Field required"
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["body", "time", "time"]
 
     @pytest.mark.parametrize(
         ["melding_token"],
@@ -3135,13 +3203,30 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_token", "classification_name"],
+        ["melding_token", "classification_name", "time_value"],
         [
             (
                 "supersecrettoken",
                 "test_classification",
-            )
+                "16:45",
+            ),
+            (
+                "supersecrettoken",
+                "test_classification",
+                "09:30",
+            ),
+            (
+                "supersecrettoken",
+                "test_classification",
+                "00:00",
+            ),
+            (
+                "supersecrettoken",
+                "test_classification",
+                None,
+            ),
         ],
         indirect=["classification_name"],
     )
@@ -3152,6 +3237,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         db_session: AsyncSession,
         melding_with_classification: Melding,
         form_with_time_component: Form,
+        time_value: str | None,
     ) -> None:
         components = await form_with_time_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3177,17 +3263,75 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
             params={"token": melding_with_classification.token},
-            json={"time": "16:45", "type": AnswerTypeEnum.time},
+            json={"time": time_value, "type": AnswerTypeEnum.time},
         )
 
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
         assert body.get("id") == answer.id
-        assert body.get("time") == "16:45"
+        assert body.get("time") == time_value
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            ("supersecrettoken", "test_classification"),
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_time_answer_missing_time(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_classification: Melding,
+        form_with_time_component: Form,
+    ) -> None:
+        """
+        Test updating a time answer without providing the required 'time' field in the request body.
+        Users are allowed to add a None time answer to signify they "don't know" the time, but this can only be done explicitly.
+        """
+
+        components = await form_with_time_component.awaitable_attrs.components
+        assert len(components) == 1
+
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+
+        question = await panel_components[0].awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        answer = TimeAnswer(
+            time="14:30",
+            question=question,
+            melding=melding_with_classification,
+            type=AnswerTypeEnum.time,
+            original_question_text=question.text,
+        )
+        db_session.add(answer)
+        await db_session.commit()
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
+            params={"token": melding_with_classification.token},
+            json={"type": AnswerTypeEnum.time},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        assert len(detail) == 1
+        assert detail[0].get("msg") == "Field required"
+        assert detail[0].get("type") == "missing"
+        assert detail[0].get("loc") == ["body", "time", "time"]
+
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["time_value", "error_message"],
         [
