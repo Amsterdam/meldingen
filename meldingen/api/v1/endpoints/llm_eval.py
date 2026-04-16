@@ -49,7 +49,7 @@ class _InMemoryClassificationRepository:
         return self._classifications
 
 
-_service_unavailable_response = {
+_service_unavailable_response: dict[str | int, dict[str, Any]] = {
     HTTP_503_SERVICE_UNAVAILABLE: {
         "description": "LLM is not enabled or not configured.",
         "content": {
