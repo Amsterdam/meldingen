@@ -41,11 +41,11 @@ dependency.
 
 ## Updating Dependencies
 
-To update existing dependencies to their latest compatible versions, use the 
+To update existing dependencies to their latest compatible versions, use the
 following command:
 
 ```bash
-docker compose run --rm --user=root meldingen uv lock
+docker compose run --rm --user=root meldingen uv lock --upgrade
 ```
 
 This command updates the lockfile (`uv.lock`) to the latest compatible versions based
