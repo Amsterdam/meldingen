@@ -25,4 +25,4 @@ api_router.include_router(static_form.router, prefix="/static-form", tags=["stat
 api_router.include_router(asset_type.router, prefix="/asset-type", tags=["asset-type"])
 api_router.include_router(docs.router, prefix="/docs", tags=["docs"])
 api_router.include_router(llm_eval.router, prefix="/llm-eval", tags=["llm-eval"])
-api_router.include_router(static.router, prefix="", tags=["static" ""])
+api_router.include_router(static.router, prefix="", tags=["static"])
