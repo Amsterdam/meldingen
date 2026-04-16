@@ -7,6 +7,7 @@ from meldingen.api.v1.endpoints import (
     classification,
     docs,
     form,
+    llm_eval,
     mail,
     melding,
     static_form,
@@ -23,4 +24,5 @@ api_router.include_router(form.router, prefix="/form", tags=["form"])
 api_router.include_router(static_form.router, prefix="/static-form", tags=["static-form"])
 api_router.include_router(asset_type.router, prefix="/asset-type", tags=["asset-type"])
 api_router.include_router(docs.router, prefix="/docs", tags=["docs"])
+api_router.include_router(llm_eval.router, prefix="/llm-eval", tags=["llm-eval"])
 api_router.include_router(static.router, prefix="", tags=["static" ""])
