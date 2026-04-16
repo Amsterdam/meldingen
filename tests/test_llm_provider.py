@@ -4,12 +4,7 @@ from pydantic_ai.providers.azure import AzureProvider
 from pydantic_ai.providers.openai import OpenAIProvider
 
 
-def _call_uncached(**setting_overrides: object) -> AzureProvider | OpenAIProvider | None:
-    """Call llm_provider_generator without hitting the @lru_cache.
-
-    Imports the underlying function and calls __wrapped__ (the un-decorated
-    version) so each test gets a fresh invocation regardless of cache state.
-    """
+def _make_settings(**overrides: object) -> MagicMock:
     defaults = {
         "llm_enabled": True,
         "llm_provider": "openai",
@@ -17,9 +12,20 @@ def _call_uncached(**setting_overrides: object) -> AzureProvider | OpenAIProvide
         "llm_api_key": "",
         "llm_model_identifier": "test-model",
     }
-    defaults.update(setting_overrides)
+    defaults.update(overrides)
+    mock = MagicMock()
+    for key, value in defaults.items():
+        setattr(mock, key, value)
+    return mock
 
-    with patch("meldingen.dependencies.settings", **defaults):
+
+def _call_uncached(**setting_overrides: object) -> AzureProvider | OpenAIProvider | None:
+    """Call llm_provider_generator without hitting the @lru_cache.
+
+    Imports the underlying function and calls __wrapped__ (the un-decorated
+    version) so each test gets a fresh invocation regardless of cache state.
+    """
+    with patch("meldingen.dependencies.settings", _make_settings(**setting_overrides)):
         from meldingen.dependencies import llm_provider_generator
 
         return llm_provider_generator.__wrapped__()
@@ -62,14 +68,13 @@ def test_returns_azure_provider_with_managed_identity(
     mock_client = MagicMock()
     mock_openai_cls.return_value = mock_client
 
-    with patch(
-        "meldingen.dependencies.settings",
-        llm_enabled=True,
+    mock_settings = _make_settings(
         llm_provider="azure",
         llm_base_url="https://my-endpoint.openai.azure.com",
         llm_api_key="",
         llm_model_identifier="gpt-4o",
-    ):
+    )
+    with patch("meldingen.dependencies.settings", mock_settings):
         from meldingen.dependencies import llm_provider_generator
 
         result = llm_provider_generator.__wrapped__()
