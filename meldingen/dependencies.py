@@ -332,7 +332,14 @@ def answer_factory() -> AnswerFactory:
     return AnswerFactory()
 
 
+@lru_cache(maxsize=1)
 def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
+    """Create the LLM provider singleton.
+
+    Cached so the credential, OpenAI client, and provider are created once per
+    process rather than per-request. The objects live for the process lifetime;
+    for a long-running web server this is fine and avoids connection/token churn.
+    """
     if settings.llm_enabled is False:
         return None
 
