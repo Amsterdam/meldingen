@@ -21,7 +21,7 @@ dependencies = [
     "azure-storage-blob>=12.25.1,<12.29.0",
     "fastapi[standard]>=0.115.7,<1.0.0",
     "geoalchemy2>=0.17.0,<1.0.0",
-    "geojson-pydantic>=1.2.0,<2.0.0",
+    "geojson-pydantic>=1.2.0,<3.0.0",
     "httpx[http2]>=0.28.1,<1.0.0",
     "meldingen-core",
     "mp-fsm @ git+https://github.com/Amsterdam/mp-fsm.git",
