@@ -122,10 +122,12 @@ Gemeente Amsterdam
         "Regels:\n"
         "1. Je krijgt een lijst classificaties, elk met een instructie die beschrijft wanneer deze classificatie van toepassing is.\n"
         "2. Je krijgt een meldtekst van een burger.\n"
-        "3. Vergelijk de meldtekst met ELKE classificatie-instructie en bepaal welke het beste past.\n"
-        "4. Als meerdere classificaties deels van toepassing lijken, kies dan de classificatie "
+        "3. Als de meldtekst (vrijwel) identiek is aan de naam van één van de classificaties, kies dan direct die classificatie. "
+        "De instructies mag je in dat geval negeren.\n"
+        "4. Anders: vergelijk de meldtekst met ELKE classificatie-instructie en bepaal welke het beste past.\n"
+        "5. Als meerdere classificaties deels van toepassing lijken, kies dan de classificatie "
         "waarvan de instructie het meest specifiek overeenkomt met het hoofdonderwerp van de melding.\n"
-        "5. Antwoord uitsluitend met het vereiste JSON-object dat de gekozen classificatie bevat. "
+        "6. Antwoord uitsluitend met het vereiste JSON-object dat de gekozen classificatie bevat. "
         "Geef geen uitleg, geen redenering, geen commentaar en geen extra tekst — alleen het JSON-object.\n"
     )
 
