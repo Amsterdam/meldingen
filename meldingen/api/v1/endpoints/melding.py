@@ -26,6 +26,7 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.filters import MeldingListFilters
+from meldingen_core.labels import InvalidLabelException
 from meldingen_core.managers import RelationshipExistsException
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
 from meldingen_core.token import TokenException
@@ -318,13 +319,15 @@ async def retrieve_melding_melder(
 async def update_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     melding_input: MeldingUpdateInput,
-    action: Annotated[MeldingUpdateAction[Melding], Depends(melding_update_action)],
+    action: Annotated[MeldingUpdateAction, Depends(melding_update_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(pk=melding_id, values=melding_input.model_dump(exclude_unset=True))
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except InvalidLabelException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
 
     return await produce_output(melding)
 
