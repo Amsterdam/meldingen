@@ -138,6 +138,7 @@ from meldingen.image import (
     ThumbnailGeneratorTask,
 )
 from meldingen.jsonlogic import JSONLogicValidator
+from meldingen.labels import LabelReplacer
 from meldingen.location import (
     GeoJsonFeatureFactory,
     LocationOutputTransformer,
@@ -167,6 +168,7 @@ from meldingen.repositories import (
     ClassificationRepository,
     FormIoQuestionComponentRepository,
     FormRepository,
+    LabelRepository,
     MeldingRepository,
     QuestionRepository,
     StaticFormRepository,
@@ -189,6 +191,7 @@ from meldingen.schemas.output_factories import (
     FormTextAreaComponentOutputFactory,
     FormTextFieldInputComponentOutputFactory,
     FormTimeComponentOutputFactory,
+    LabelOutputFactory,
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
@@ -513,10 +516,19 @@ def reclassifier(
     return Reclassifier(answer_purger, asset_purger)
 
 
+def label_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> LabelRepository:
+    return LabelRepository(session)
+
+
+def label_replacer(repository: Annotated[LabelRepository, Depends(label_repository)]) -> LabelReplacer:
+    return LabelReplacer(repository)
+
+
 def melding_update_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-) -> MeldingUpdateAction[Melding]:
-    return MeldingUpdateAction(repository)
+    label_replacer: Annotated[LabelReplacer, Depends(label_replacer)],
+) -> MeldingUpdateAction:
+    return MeldingUpdateAction(repository, label_replacer)
 
 
 def melding_update_action_melder(
@@ -1079,13 +1091,18 @@ def melding_add_location_action(
     )
 
 
+def label_output_factory() -> LabelOutputFactory:
+    return LabelOutputFactory()
+
+
 def melding_output_factory(
     location_output_transformer: Annotated[LocationOutputTransformer, Depends(location_output_transformer)],
     classification_output_factory: Annotated[
         SimpleClassificationOutputFactory, Depends(simple_classification_output_factory)
     ],
+    label_output_factory: Annotated[LabelOutputFactory, Depends(label_output_factory)],
 ) -> MeldingOutputFactory:
-    return MeldingOutputFactory(location_output_transformer, classification_output_factory)
+    return MeldingOutputFactory(location_output_transformer, classification_output_factory, label_output_factory)
 
 
 def melding_update_output_factory(
@@ -1093,8 +1110,9 @@ def melding_update_output_factory(
     classification_output_factory: Annotated[
         SimpleClassificationOutputFactory, Depends(simple_classification_output_factory)
     ],
+    label_output_factory: Annotated[LabelOutputFactory, Depends(label_output_factory)],
 ) -> MeldingUpdateOutputFactory:
-    return MeldingUpdateOutputFactory(location_output_transformer, classification_output_factory)
+    return MeldingUpdateOutputFactory(location_output_transformer, classification_output_factory, label_output_factory)
 
 
 def melding_contact_info_added_action(
@@ -1431,6 +1449,13 @@ def states_output_factory() -> StatesOutputFactory:
 
 def simple_form_output_factory() -> SimpleFormOutputFactory:
     return SimpleFormOutputFactory()
+
+
+def melding_primary_form_validator(
+    _static_form_repository: Annotated[StaticFormRepository, Depends(static_form_repository)],
+    _jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
+) -> MeldingPrimaryFormValidator:
+    return MeldingPrimaryFormValidator(_static_form_repository, _jsonlogic_validator)
 
 
 def melding_primary_form_validator(
