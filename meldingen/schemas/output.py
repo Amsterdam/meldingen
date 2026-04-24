@@ -50,6 +50,10 @@ class ClassificationOutput(BaseOutputModel):
     asset_type: int | None = None
 
 
+class LabelOutput(BaseOutputModel):
+    name: str
+
+
 class MeldingOutput(BaseOutputModel):
     public_id: str
     text: str
@@ -64,6 +68,7 @@ class MeldingOutput(BaseOutputModel):
     city: str | None = Field(default=None)
     email: EmailStr | None = Field(default=None)
     phone: PhoneNumber | None = Field(default=None)
+    labels: list[LabelOutput] = Field(default_factory=list)
 
 
 class MeldingWithTokenOutput(MeldingOutput):
