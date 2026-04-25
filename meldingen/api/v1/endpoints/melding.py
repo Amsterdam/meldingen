@@ -132,6 +132,7 @@ from meldingen.models import (
     Classification,
     FormIoComponentToAnswerTypeMap,
     FormIoComponentTypeEnum,
+    Label,
     Melding,
 )
 from meldingen.repositories import AnswerRepository, FormIoQuestionComponentRepository, MeldingRepository
@@ -319,7 +320,7 @@ async def retrieve_melding_melder(
 async def update_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     melding_input: MeldingUpdateInput,
-    action: Annotated[MeldingUpdateAction, Depends(melding_update_action)],
+    action: Annotated[MeldingUpdateAction[Melding, Label], Depends(melding_update_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
