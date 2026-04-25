@@ -158,7 +158,7 @@ from meldingen.mail import (
     SendCompletedMailTask,
     SendConfirmationMailTask,
 )
-from meldingen.models import Answer, Asset, Classification, Melding
+from meldingen.models import Answer, Asset, Classification, Label, Melding
 from meldingen.reclassification import Reclassifier
 from meldingen.repositories import (
     AnswerRepository,
@@ -527,7 +527,7 @@ def label_replacer(repository: Annotated[LabelRepository, Depends(label_reposito
 def melding_update_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     label_replacer: Annotated[LabelReplacer, Depends(label_replacer)],
-) -> MeldingUpdateAction:
+) -> MeldingUpdateAction[Melding, Label]:
     return MeldingUpdateAction(repository, label_replacer)
 
 
@@ -1449,13 +1449,6 @@ def states_output_factory() -> StatesOutputFactory:
 
 def simple_form_output_factory() -> SimpleFormOutputFactory:
     return SimpleFormOutputFactory()
-
-
-def melding_primary_form_validator(
-    _static_form_repository: Annotated[StaticFormRepository, Depends(static_form_repository)],
-    _jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
-) -> MeldingPrimaryFormValidator:
-    return MeldingPrimaryFormValidator(_static_form_repository, _jsonlogic_validator)
 
 
 def melding_primary_form_validator(

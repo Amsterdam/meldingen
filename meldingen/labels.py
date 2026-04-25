@@ -3,10 +3,10 @@ from meldingen_core.labels import BaseLabelReplacer, InvalidLabelException
 from meldingen.models import Label, Melding
 
 
-class LabelReplacer(BaseLabelReplacer[Label, Melding]):
+class LabelReplacer(BaseLabelReplacer[Melding, Label]):
 
     async def __call__(self, melding: Melding, label_ids: list[int]) -> Melding:
-        labels: list[Label] = await self._label_repository.list_by_ids(label_ids)
+        labels = await self._label_repository.list_by_ids(label_ids)
 
         if len(labels) != len(label_ids):
             retrieved_label_ids = [label.id for label in labels]
