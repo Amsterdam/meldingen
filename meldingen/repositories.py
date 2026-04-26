@@ -5,7 +5,6 @@ from typing import Any, List, TypeVar
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters, NameListFilters
-from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
@@ -13,6 +12,7 @@ from meldingen_core.repositories import (
     BaseAttachmentRepository,
     BaseClassificationRepository,
     BaseFormRepository,
+    BaseLabelRepository,
     BaseMeldingRepository,
     BaseQuestionRepository,
     BaseRepository,
@@ -34,6 +34,7 @@ from meldingen.models import (
     Form,
     FormIoQuestionComponent,
     Group,
+    Label,
     Melding,
     Question,
     StaticForm,
@@ -398,3 +399,15 @@ class AssetRepository(BaseSQLAlchemyRepository[Asset], BaseAssetRepository[Asset
         result = await self._session.execute(statement)
 
         return result.scalars().one_or_none()
+
+
+class LabelRepository(BaseSQLAlchemyRepository[Label], BaseLabelRepository[Label]):
+    def get_model_type(self) -> type[Label]:
+        return Label
+
+    async def list_by_ids(self, ids: list[int]) -> Sequence[Label]:
+        _type = self.get_model_type()
+        statement = select(_type).where(_type.id.in_(ids))
+        result = await self._session.execute(statement)
+
+        return result.scalars().all()
