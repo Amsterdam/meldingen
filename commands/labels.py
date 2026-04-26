@@ -5,7 +5,6 @@ from sqlalchemy.exc import IntegrityError
 
 from meldingen.dependencies import database_engine, database_session, database_session_manager
 from meldingen.models import Label
-from meldingen.repositories import LabelRepository
 
 app = typer.Typer()
 
