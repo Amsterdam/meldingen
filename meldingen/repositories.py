@@ -5,7 +5,6 @@ from typing import Any, List, TypeVar
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters, NameListFilters
-from meldingen_core.models import Label as BaseLabel
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
