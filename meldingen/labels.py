@@ -12,7 +12,7 @@ class LabelReplacer(BaseLabelReplacer[Melding, Label]):
             retrieved_label_ids = [label.id for label in labels]
             unknown_label_ids = list(set(label_ids) - set(retrieved_label_ids))
 
-            raise InvalidLabelException(f"Can't find labels with id's {unknown_label_ids}")
+            raise InvalidLabelException(f"Can't find labels with id's: {unknown_label_ids}")
 
         melding_labels = await melding.awaitable_attrs.labels
         melding_labels.clear()
