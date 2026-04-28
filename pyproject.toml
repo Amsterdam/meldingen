@@ -65,7 +65,7 @@ dev = [
     "pytest-bdd>=8.1.0,<9",
     "pytest-cov>=7.0.0,<8",
     "pytest-xdist[psutil]>=3.8.0,<4",
-    "typer>=0.20.0,<0.25",
+    "typer>=0.20.0,<0.26",
     "types-shapely>=2.1.0.20250917,<3",
 ]
 
