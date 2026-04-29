@@ -88,6 +88,7 @@ from meldingen.actions.form import (
     StaticFormRetrieveAction,
     StaticFormUpdateAction,
 )
+from meldingen.actions.label import LabelListAction
 from meldingen.actions.mail import PreviewMailAction
 from meldingen.actions.melding import (
     AddContactInfoToMeldingAction,
@@ -522,6 +523,12 @@ def label_repository(session: Annotated[AsyncSession, Depends(database_session)]
 
 def label_replacer(repository: Annotated[LabelRepository, Depends(label_repository)]) -> LabelReplacer:
     return LabelReplacer(repository)
+
+
+def label_list_action(
+    repository: Annotated[LabelRepository, Depends(label_repository)],
+) -> LabelListAction:
+    return LabelListAction(repository)
 
 
 def melding_update_action(
