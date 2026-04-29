@@ -29,10 +29,10 @@ def upgrade() -> None:
         sa.UniqueConstraint("name"),
     )
     op.add_column("melding", sa.Column("source_id", sa.Integer(), nullable=True))
-    op.create_foreign_key(None, "melding", "source", ["source_id"], ["id"])
+    op.create_foreign_key("melding_source_id_fkey", "melding", "source", ["source_id"], ["id"])
 
 
 def downgrade() -> None:
-    op.drop_constraint(None, "melding", type_="foreignkey")
+    op.drop_constraint("melding_source_id_fkey", "melding", type_="foreignkey")
     op.drop_column("melding", "source_id")
     op.drop_table("source")
