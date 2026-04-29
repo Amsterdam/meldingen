@@ -16,6 +16,7 @@ from meldingen_core.repositories import (
     BaseMeldingRepository,
     BaseQuestionRepository,
     BaseRepository,
+    BaseSourceRepository,
     BaseUserRepository,
 )
 from sqlalchemy import ColumnExpressionArgument, Select, delete, desc, select
@@ -37,6 +38,7 @@ from meldingen.models import (
     Label,
     Melding,
     Question,
+    Source,
     StaticForm,
     StaticFormTypeEnum,
     User,
@@ -411,3 +413,8 @@ class LabelRepository(BaseSQLAlchemyRepository[Label], BaseLabelRepository[Label
         result = await self._session.execute(statement)
 
         return result.scalars().all()
+
+
+class SourceRepository(BaseSQLAlchemyRepository[Source], BaseSourceRepository[Source]):
+    def get_model_type(self) -> type[Source]:
+        return Source

@@ -37,6 +37,7 @@ from meldingen.models import (
     Label,
     Melding,
     Question,
+    Source,
     StaticForm,
     StaticFormTypeEnum,
     TextAnswer,
@@ -271,6 +272,23 @@ async def initial_labels(db_session: AsyncSession) -> list[Label]:
     await db_session.commit()
 
     return initial_labels
+
+
+@pytest.fixture
+async def initial_sources(db_session: AsyncSession) -> list[Source]:
+    initial_sources = [
+        Source(name="Telefoon"),
+        Source(name="E-mail"),
+        Source(name="Balie"),
+        Source(name="Brief"),
+        Source(name="Sociale media"),
+        Source(name="Website"),
+    ]
+
+    db_session.add_all(initial_sources)
+    await db_session.commit()
+
+    return initial_sources
 
 
 @pytest.fixture

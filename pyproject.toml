@@ -125,7 +125,7 @@ module-root = "."
 module-name = "meldingen"
 
 [tool.uv.sources]
-meldingen-core = { git = "https://github.com/Amsterdam/meldingen-core.git", branch = "feat/7226-labels" }
+meldingen-core = { git = "https://github.com/Amsterdam/meldingen-core.git", branch = "feat/7225-sources" }
 pydantic-jsonlogic = { git = "https://github.com/Amsterdam/pydantic-jsonlogic.git" }
 pydantic-media-type = { git = "https://github.com/Amsterdam/pydantic-media-type.git" }
 pdok-api-client = { git = "https://github.com/Amsterdam/pdok-api-client.git" }

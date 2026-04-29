@@ -24,6 +24,7 @@ from meldingen.models import (
     FormIoTimeComponent,
     Label,
     Melding,
+    Source,
     StaticForm,
     TextAnswer,
     TimeAnswer,
@@ -57,6 +58,7 @@ from meldingen.schemas.output import (
     SimpleClassificationOutput,
     SimpleFormOutput,
     SimpleStaticFormOutput,
+    SourceOutput,
     StatesOutput,
     StaticFormCheckboxComponentOutput,
     StaticFormOutput,
@@ -681,20 +683,33 @@ class LabelOutputFactory:
         )
 
 
+class SourceOutputFactory:
+    def __call__(self, source: Source) -> SourceOutput:
+        return SourceOutput(
+            id=source.id,
+            name=source.name,
+            created_at=source.created_at,
+            updated_at=source.updated_at,
+        )
+
+
 class MeldingOutputFactory:
     _transform_location: LocationOutputTransformer
     _output_classification: SimpleClassificationOutputFactory
     _output_label: LabelOutputFactory
+    _output_source: SourceOutputFactory
 
     def __init__(
         self,
         location_transformer: LocationOutputTransformer,
         classification: SimpleClassificationOutputFactory,
         label: LabelOutputFactory,
+        source: SourceOutputFactory,
     ):
         self._transform_location = location_transformer
         self._output_classification = classification
         self._output_label = label
+        self._output_source = source
 
     async def __call__(self, melding: Melding) -> MeldingOutput:
         if melding.geo_location is None:
@@ -704,6 +719,7 @@ class MeldingOutputFactory:
 
         classification = await melding.awaitable_attrs.classification
         labels = await melding.awaitable_attrs.labels
+        source = await melding.awaitable_attrs.source
 
         return MeldingOutput(
             id=melding.id,
@@ -723,6 +739,7 @@ class MeldingOutputFactory:
             email=melding.email,
             phone=melding.phone,
             labels=[self._output_label(label) for label in labels],
+            source=self._output_source(source) if source is not None else None,
         )
 
 
@@ -752,16 +769,19 @@ class MeldingUpdateOutputFactory(MeldingOutputFactory):
     _transform_location: LocationOutputTransformer
     _output_classification: SimpleClassificationOutputFactory
     _output_label: LabelOutputFactory
+    _output_source: SourceOutputFactory
 
     def __init__(
         self,
         location_transformer: LocationOutputTransformer,
         classification: SimpleClassificationOutputFactory,
         label_output_factory: LabelOutputFactory,
+        source_output_factory: SourceOutputFactory,
     ):
         self._transform_location = location_transformer
         self._output_classification = classification
         self._output_label = label_output_factory
+        self._output_source = source_output_factory
 
     async def __call__(self, melding: Melding) -> MeldingUpdateOutput:
         if melding.geo_location is None:
@@ -771,6 +791,7 @@ class MeldingUpdateOutputFactory(MeldingOutputFactory):
 
         classification = await melding.awaitable_attrs.classification
         labels = await melding.awaitable_attrs.labels
+        source = await melding.awaitable_attrs.source
 
         return MeldingUpdateOutput(
             id=melding.id,
@@ -791,6 +812,7 @@ class MeldingUpdateOutputFactory(MeldingOutputFactory):
             phone=melding.phone,
             token=melding.token,
             labels=[self._output_label(label) for label in labels],
+            source=self._output_source(source) if source is not None else None,
         )
 
 

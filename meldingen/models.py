@@ -12,6 +12,7 @@ from meldingen_core.models import Form as BaseForm
 from meldingen_core.models import Label as BaseLabel
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import Question as BaseQuestion
+from meldingen_core.models import Source as BaseSource
 from meldingen_core.models import User as BaseUser
 from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
@@ -93,6 +94,10 @@ label_melding = Table(
 )
 
 
+class Source(BaseDBModel, BaseSource):
+    name: Mapped[str] = mapped_column(String, unique=True)
+
+
 class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     __table_args__ = (CheckConstraint("urgency in (-1, 0, 1)", name="ck_melding_urgency"),)
 
@@ -126,6 +131,8 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     labels: Mapped[list[Label]] = relationship(
         secondary=label_melding, back_populates="meldingen", default_factory=list
     )
+    source_id: Mapped[int | None] = mapped_column(ForeignKey("source.id"), default=None)
+    source: Mapped[Source | None] = relationship(default=None, lazy="joined")
 
 
 user_group = Table(

@@ -1671,7 +1671,7 @@ requires-dist = [
     { name = "geoalchemy2", specifier = ">=0.17.0,<1.0.0" },
     { name = "geojson-pydantic", specifier = ">=1.2.0,<2.0.0" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.28.1,<1.0.0" },
-    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git?branch=feat%2F7226-labels" },
+    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git?branch=feat%2F7225-sources" },
     { name = "mp-fsm", git = "https://github.com/Amsterdam/mp-fsm.git" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.29.0,<2.0.0" },
     { name = "opentelemetry-instrumentation-aiohttp-client", specifier = ">=0.55b1,<1.0" },
@@ -1720,7 +1720,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=feat%2F7226-labels#222beae5469fbc8148bef508413c62b4c3f7e776" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=feat%2F7225-sources#e300e048d31c992b4044fc20b10e0af41e7da798" }
 dependencies = [
     { name = "plugfs" },
 ]

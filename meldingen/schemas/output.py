@@ -54,6 +54,10 @@ class LabelOutput(BaseOutputModel):
     name: str
 
 
+class SourceOutput(BaseOutputModel):
+    name: str
+
+
 class MeldingOutput(BaseOutputModel):
     public_id: str
     text: str
@@ -69,6 +73,7 @@ class MeldingOutput(BaseOutputModel):
     email: EmailStr | None = Field(default=None)
     phone: PhoneNumber | None = Field(default=None)
     labels: list[LabelOutput] = Field(default_factory=list)
+    source: SourceOutput | None = Field(default=None)
 
 
 class MeldingWithTokenOutput(MeldingOutput):
