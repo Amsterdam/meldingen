@@ -43,6 +43,7 @@ class MeldingInput(BaseModel):
 class MeldingUpdateInput(BaseModel):
     urgency: Literal[-1, 0, 1] | None = Field(default=None)
     label_ids: list[int] | None = Field(default=None)
+    source_id: int | None = Field(default=None)
 
 
 class MeldingContactInput(BaseModel):

@@ -43,6 +43,7 @@ from meldingen.models import (
     Label,
     Melding,
     Question,
+    Source,
     StaticForm,
     TextAnswer,
     TimeAnswer,
@@ -1451,6 +1452,61 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         assert response.status_code == HTTP_404_NOT_FOUND
         body = response.json()
         assert body.get("detail") == "Can't find labels with id's: [999]"
+
+    @pytest.mark.anyio
+    async def test_update_melding_source(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding: Melding,
+        initial_sources: list[Source],
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"source_id": initial_sources[0].id},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("source", {}).get("id") == initial_sources[0].id
+        assert body.get("source", {}).get("name") == initial_sources[0].name
+
+    @pytest.mark.anyio
+    async def test_update_melding_with_label_and_source(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding: Melding,
+        initial_labels: list[Label],
+        initial_sources: list[Source],
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={
+                "label_ids": [initial_labels[0].id],
+                "source_id": initial_sources[0].id,
+            },
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert [label.get("id") for label in body.get("labels", [])] == [initial_labels[0].id]
+        assert body.get("source", {}).get("id") == initial_sources[0].id
+
+    @pytest.mark.anyio
+    async def test_update_melding_source_with_non_existing_source(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"source_id": 999},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+        body = response.json()
+        assert body.get("detail") == "Failed to find source with id 999"
 
 
 class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
