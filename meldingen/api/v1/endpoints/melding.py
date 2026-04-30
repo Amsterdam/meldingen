@@ -134,6 +134,7 @@ from meldingen.models import (
     FormIoComponentTypeEnum,
     Label,
     Melding,
+    Source,
 )
 from meldingen.repositories import AnswerRepository, FormIoQuestionComponentRepository, MeldingRepository
 from meldingen.schemas.input import (
@@ -320,13 +321,13 @@ async def retrieve_melding_melder(
 async def update_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     melding_input: MeldingUpdateInput,
-    action: Annotated[MeldingUpdateAction[Melding, Label], Depends(melding_update_action)],
+    action: Annotated[MeldingUpdateAction[Melding, Label, Source], Depends(melding_update_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
         melding = await action(pk=melding_id, values=melding_input.model_dump(exclude_unset=True))
-    except NotFoundException:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e) or None) from e
     except InvalidLabelException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
 
