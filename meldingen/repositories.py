@@ -348,6 +348,12 @@ class AnswerRepository(BaseSQLAlchemyRepository[Answer], BaseAnswerRepository[An
 
         return results.scalars().unique().all()
 
+    async def find_by_id_and_melding(self, answer_id: int, melding_id: int) -> Answer | None:
+        _type = self.get_model_type()
+        statement = select(_type).where(_type.id == answer_id, _type.melding_id == melding_id)
+        result = await self._session.execute(statement)
+        return result.scalars().unique().one_or_none()
+
 
 class AttachmentRepository(BaseSQLAlchemyRepository[Attachment], BaseAttachmentRepository[Attachment]):
     """Repository for Attachment model."""

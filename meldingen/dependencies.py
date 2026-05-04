@@ -94,6 +94,7 @@ from meldingen.actions.melding import (
     AddLocationToMeldingAction,
     MelderMeldingRetrieveAction,
     MeldingAddAssetAction,
+    MeldingAnswerDeleteAction,
     MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
@@ -752,6 +753,13 @@ def melder_melding_list_questions_and_answers_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
 ) -> MelderMeldingListQuestionsAnswersAction[Melding, Answer]:
     return MelderMeldingListQuestionsAnswersAction(token_verifier, answer_repository)
+
+
+def melding_answer_delete_action(
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
+) -> MeldingAnswerDeleteAction:
+    return MeldingAnswerDeleteAction(token_verifier, answer_repository)
 
 
 def melding_add_asset_action(

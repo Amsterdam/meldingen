@@ -3935,6 +3935,83 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         )
 
 
+class TestMeldingDeleteAnswer(BaseTokenAuthenticationTest):
+    ROUTE_NAME: Final[str] = "melding:answer-delete"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return "DELETE"
+
+    @override
+    def get_extra_path_params(self) -> dict[str, Any]:
+        return {"answer_id": 456}
+
+    @pytest.mark.anyio
+    async def test_delete_answer_melding_not_found(
+        self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding
+    ) -> None:
+        answers = await melding_with_text_answers.awaitable_attrs.answers
+
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=123, answer_id=answers[0].id),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.parametrize("melding_token", ["supersecrettoken"])
+    @pytest.mark.anyio
+    async def test_delete_answer_answer_not_found(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, answer_id=456),
+            params={"token": melding.token},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_delete_answer_does_not_belong_to_melding(
+        self, app: FastAPI, client: AsyncClient, melding_with_some_answers: Melding, db_session: AsyncSession
+    ) -> None:
+        melding = Melding("Text", token="supersecrettoken")
+        melding.public_id = "PUB123"
+        db_session.add(melding)
+        await db_session.commit()
+
+        result = await db_session.execute(select(Answer))
+        answers = result.scalars().all()
+        assert len(answers) > 0
+
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id, answer_id=answers[0].id),
+            params={"token": melding.token},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_delete_answer(
+        self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding, db_session: AsyncSession
+    ) -> None:
+        answers = await melding_with_text_answers.awaitable_attrs.answers
+        answer_id = answers[0].id
+        answer_count_before = len(answers)
+
+        response = await client.delete(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_text_answers.id, answer_id=answer_id),
+            params={"token": melding_with_text_answers.token},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        result = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_text_answers.id))
+        remaining = result.scalars().all()
+        assert len(remaining) == answer_count_before - 1
+        assert all(answer.id != answer_id for answer in remaining)
+
+
 class TestMeldingUploadAttachment:
     ROUTE_NAME_CREATE: Final[str] = "melding:attachment"
 

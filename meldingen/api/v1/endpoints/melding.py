@@ -57,6 +57,7 @@ from meldingen.actions.melding import (
     AddLocationToMeldingAction,
     MelderMeldingRetrieveAction,
     MeldingAddAssetAction,
+    MeldingAnswerDeleteAction,
     MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
@@ -89,6 +90,7 @@ from meldingen.dependencies import (
     melding_add_contact_action,
     melding_add_location_action,
     melding_answer_create_action,
+    melding_answer_delete_action,
     melding_answer_questions_action,
     melding_answer_update_action,
     melding_cancel_action,
@@ -798,6 +800,25 @@ async def update_answer(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(answer)
+
+
+@router.delete(
+    "/{melding_id}/answer/{answer_id}",
+    name="melding:answer-delete",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def delete_answer(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    answer_id: Annotated[int, Path(description="The id of the answer.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[MeldingAnswerDeleteAction, Depends(melding_answer_delete_action)],
+) -> None:
+    try:
+        await action(melding_id, answer_id, token)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
 
 def _hydrate_attachment_output(attachment: Attachment) -> AttachmentOutput:
