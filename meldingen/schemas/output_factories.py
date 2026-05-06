@@ -22,8 +22,8 @@ from meldingen.models import (
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
     FormIoTimeComponent,
+    Label,
     Melding,
-    Question,
     StaticForm,
     TextAnswer,
     TimeAnswer,
@@ -49,6 +49,7 @@ from meldingen.schemas.output import (
     FormTextAreaComponentOutput,
     FormTextFieldInputComponentOutput,
     FormTimeComponentOutput,
+    LabelOutput,
     MeldingCreateOutput,
     MeldingOutput,
     MeldingUpdateOutput,
@@ -670,15 +671,30 @@ class SimpleClassificationOutputFactory:
         )
 
 
+class LabelOutputFactory:
+    def __call__(self, label: Label) -> LabelOutput:
+        return LabelOutput(
+            id=label.id,
+            name=label.name,
+            created_at=label.created_at,
+            updated_at=label.updated_at,
+        )
+
+
 class MeldingOutputFactory:
     _transform_location: LocationOutputTransformer
-    _classification: SimpleClassificationOutputFactory
+    _output_classification: SimpleClassificationOutputFactory
+    _output_label: LabelOutputFactory
 
     def __init__(
-        self, location_transformer: LocationOutputTransformer, classification: SimpleClassificationOutputFactory
+        self,
+        location_transformer: LocationOutputTransformer,
+        classification: SimpleClassificationOutputFactory,
+        label: LabelOutputFactory,
     ):
         self._transform_location = location_transformer
         self._output_classification = classification
+        self._output_label = label
 
     async def __call__(self, melding: Melding) -> MeldingOutput:
         if melding.geo_location is None:
@@ -687,6 +703,7 @@ class MeldingOutputFactory:
             geojson = self._transform_location(melding.geo_location)
 
         classification = await melding.awaitable_attrs.classification
+        labels = await melding.awaitable_attrs.labels
 
         return MeldingOutput(
             id=melding.id,
@@ -705,6 +722,7 @@ class MeldingOutputFactory:
             city=melding.city,
             email=melding.email,
             phone=melding.phone,
+            labels=[self._output_label(label) for label in labels],
         )
 
 
@@ -733,12 +751,17 @@ class MeldingCreateOutputFactory:
 class MeldingUpdateOutputFactory(MeldingOutputFactory):
     _transform_location: LocationOutputTransformer
     _output_classification: SimpleClassificationOutputFactory
+    _output_label: LabelOutputFactory
 
     def __init__(
-        self, location_transformer: LocationOutputTransformer, classification: SimpleClassificationOutputFactory
+        self,
+        location_transformer: LocationOutputTransformer,
+        classification: SimpleClassificationOutputFactory,
+        label_output_factory: LabelOutputFactory,
     ):
         self._transform_location = location_transformer
         self._output_classification = classification
+        self._output_label = label_output_factory
 
     async def __call__(self, melding: Melding) -> MeldingUpdateOutput:
         if melding.geo_location is None:
@@ -747,6 +770,7 @@ class MeldingUpdateOutputFactory(MeldingOutputFactory):
             geojson = self._transform_location(melding.geo_location)
 
         classification = await melding.awaitable_attrs.classification
+        labels = await melding.awaitable_attrs.labels
 
         return MeldingUpdateOutput(
             id=melding.id,
@@ -766,6 +790,7 @@ class MeldingUpdateOutputFactory(MeldingOutputFactory):
             email=melding.email,
             phone=melding.phone,
             token=melding.token,
+            labels=[self._output_label(label) for label in labels],
         )
 
 
