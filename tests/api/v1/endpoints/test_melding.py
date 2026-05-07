@@ -40,8 +40,10 @@ from meldingen.models import (
     Classification,
     DateAnswer,
     Form,
+    Label,
     Melding,
     Question,
+    Source,
     StaticForm,
     TextAnswer,
     TimeAnswer,
@@ -1412,6 +1414,99 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_update_melding_labels(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_user: None,
+        melding: Melding,
+        initial_labels: list[Label],
+    ) -> None:
+
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"urgency": 1, "label_ids": [initial_labels[0].id, initial_labels[1].id]},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        response_labels = body.get("labels", [])
+
+        assert set([response_labels[0].get("id"), response_labels[1].get("id")]) == set(
+            [initial_labels[0].id, initial_labels[1].id]
+        )
+        assert body.get("urgency") == 1
+
+    @pytest.mark.anyio
+    async def test_update_melding_labels_with_non_existing_labels(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"label_ids": [999]},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+        body = response.json()
+        assert body.get("detail") == "Can't find labels with id's: [999]"
+
+    @pytest.mark.anyio
+    async def test_update_melding_source(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding: Melding,
+        initial_sources: list[Source],
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"source_id": initial_sources[0].id},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("source", {}).get("id") == initial_sources[0].id
+        assert body.get("source", {}).get("name") == initial_sources[0].name
+
+    @pytest.mark.anyio
+    async def test_update_melding_with_label_and_source(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding: Melding,
+        initial_labels: list[Label],
+        initial_sources: list[Source],
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={
+                "label_ids": [initial_labels[0].id],
+                "source_id": initial_sources[0].id,
+            },
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert [label.get("id") for label in body.get("labels", [])] == [initial_labels[0].id]
+        assert body.get("source", {}).get("id") == initial_sources[0].id
+
+    @pytest.mark.anyio
+    async def test_update_melding_source_with_non_existing_source(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"source_id": 999},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+        body = response.json()
+        assert body.get("detail") == "Failed to find source with id 999"
 
 
 class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
@@ -5145,7 +5240,9 @@ class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
         return "GET"
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("melding_token", ["supersecrettoken"])
+    @pytest.mark.parametrize(
+        ["melding_token", "melding_labels"], [("supersecrettoken", ["label1", "label2"])], indirect=True
+    )
     async def test_retrieve_melding(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.request(
             self.get_method(),
@@ -5166,6 +5263,8 @@ class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
         assert body.get("phone", "") is None
         assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        label_names = [label.get("name") for label in body.get("labels", [])]
+        assert label_names == ["label1", "label2"]
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("melding_token", ["supersecrettoken"])

@@ -34,8 +34,10 @@ from meldingen.models import (
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
     FormIoTimeComponent,
+    Label,
     Melding,
     Question,
+    Source,
     StaticForm,
     StaticFormTypeEnum,
     TextAnswer,
@@ -161,6 +163,14 @@ def melding_urgency(request: FixtureRequest) -> int:
 
 
 @pytest.fixture
+def melding_labels(request: FixtureRequest) -> list[str]:
+    if hasattr(request, "param") and request.param is not None:
+        return list(request.param)
+    else:
+        return []
+
+
+@pytest.fixture
 async def melding(
     db_session: AsyncSession,
     melding_text: str,
@@ -176,6 +186,7 @@ async def melding(
     melding_city: str | None,
     melding_email: str | None,
     melding_phone: str | None,
+    melding_labels: list[str],
     melding_urgency: int,
 ) -> Melding:
     melding = Melding(text=melding_text)
@@ -192,6 +203,10 @@ async def melding(
 
     if melding_geo_location is not None:
         melding.geo_location = melding_geo_location
+
+    if melding_labels and len(melding_labels) > 0:
+        labels = [Label(name=label_name) for label_name in melding_labels]
+        melding.labels = labels
 
     melding.email = melding_email
     melding.phone = melding_phone
@@ -240,6 +255,40 @@ async def melding_with_classification_with_asset_type(
     await db_session.commit()
 
     return melding
+
+
+@pytest.fixture
+async def initial_labels(db_session: AsyncSession) -> list[Label]:
+    initial_labels = [
+        Label(name="Melding"),
+        Label(name="Aanvraag"),
+        Label(name="Vraag"),
+        Label(name="Klacht"),
+        Label(name="Grootonderhoud"),
+        Label(name="Projectverzoek"),
+    ]
+
+    db_session.add_all(initial_labels)
+    await db_session.commit()
+
+    return initial_labels
+
+
+@pytest.fixture
+async def initial_sources(db_session: AsyncSession) -> list[Source]:
+    initial_sources = [
+        Source(name="Telefoon"),
+        Source(name="E-mail"),
+        Source(name="Balie"),
+        Source(name="Brief"),
+        Source(name="Sociale media"),
+        Source(name="Website"),
+    ]
+
+    db_session.add_all(initial_sources)
+    await db_session.commit()
+
+    return initial_sources
 
 
 @pytest.fixture

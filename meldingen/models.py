@@ -9,8 +9,10 @@ from meldingen_core.models import AssetType as BaseAssetType
 from meldingen_core.models import Attachment as BaseAttachment
 from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Form as BaseForm
+from meldingen_core.models import Label as BaseLabel
 from meldingen_core.models import Melding as BaseMelding
 from meldingen_core.models import Question as BaseQuestion
+from meldingen_core.models import Source as BaseSource
 from meldingen_core.models import User as BaseUser
 from meldingen_core.statemachine import MeldingStates
 from mp_fsm.statemachine import StateAware
@@ -77,6 +79,25 @@ asset_melding = Table(
 )
 
 
+class Label(BaseDBModel, BaseLabel):
+    name: Mapped[str] = mapped_column(String, unique=True)
+    meldingen: Mapped[list["Melding"]] = relationship(
+        "Melding", secondary="label_melding", back_populates="labels", init=False
+    )
+
+
+label_melding = Table(
+    "label_melding",
+    BaseDBModel.metadata,
+    Column("label_id", Integer, ForeignKey(Label.id), primary_key=True),
+    Column("melding_id", Integer, ForeignKey("melding.id"), primary_key=True),
+)
+
+
+class Source(BaseDBModel, BaseSource):
+    name: Mapped[str] = mapped_column(String, unique=True)
+
+
 class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     __table_args__ = (CheckConstraint("urgency in (-1, 0, 1)", name="ck_melding_urgency"),)
 
@@ -107,6 +128,11 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     answers: Mapped[list["Answer"]] = relationship(
         "Answer", back_populates="melding", cascade="save-update, merge, delete, delete-orphan", default_factory=list
     )
+    labels: Mapped[list[Label]] = relationship(
+        secondary=label_melding, back_populates="meldingen", default_factory=list
+    )
+    source_id: Mapped[int | None] = mapped_column(ForeignKey("source.id"), default=None)
+    source: Mapped[Source | None] = relationship(default=None, lazy="joined")
 
 
 user_group = Table(
