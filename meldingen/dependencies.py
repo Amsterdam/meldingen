@@ -88,6 +88,7 @@ from meldingen.actions.form import (
     StaticFormRetrieveAction,
     StaticFormUpdateAction,
 )
+from meldingen.actions.label import LabelListAction
 from meldingen.actions.mail import PreviewMailAction
 from meldingen.actions.melding import (
     AddContactInfoToMeldingAction,
@@ -102,6 +103,7 @@ from meldingen.actions.melding import (
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
 )
+from meldingen.actions.source import SourceListAction
 from meldingen.actions.user import (
     UserCreateAction,
     UserDeleteAction,
@@ -139,6 +141,7 @@ from meldingen.image import (
     ThumbnailGeneratorTask,
 )
 from meldingen.jsonlogic import JSONLogicValidator
+from meldingen.labels import LabelReplacer
 from meldingen.location import (
     GeoJsonFeatureFactory,
     LocationOutputTransformer,
@@ -158,7 +161,7 @@ from meldingen.mail import (
     SendCompletedMailTask,
     SendConfirmationMailTask,
 )
-from meldingen.models import Answer, Asset, Classification, Melding
+from meldingen.models import Answer, Asset, Classification, Label, Melding, Source
 from meldingen.reclassification import Reclassifier
 from meldingen.repositories import (
     AnswerRepository,
@@ -168,8 +171,10 @@ from meldingen.repositories import (
     ClassificationRepository,
     FormIoQuestionComponentRepository,
     FormRepository,
+    LabelRepository,
     MeldingRepository,
     QuestionRepository,
+    SourceRepository,
     StaticFormRepository,
     UserRepository,
 )
@@ -190,12 +195,14 @@ from meldingen.schemas.output_factories import (
     FormTextAreaComponentOutputFactory,
     FormTextFieldInputComponentOutputFactory,
     FormTimeComponentOutputFactory,
+    LabelOutputFactory,
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
     SimpleClassificationOutputFactory,
     SimpleFormOutputFactory,
     SimpleStaticFormOutputFactory,
+    SourceOutputFactory,
     StatesOutputFactory,
     StaticFormCheckboxComponentOutputFactory,
     StaticFormComponentOutputFactory,
@@ -514,10 +521,36 @@ def reclassifier(
     return Reclassifier(answer_purger, asset_purger)
 
 
+def label_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> LabelRepository:
+    return LabelRepository(session)
+
+
+def label_replacer(repository: Annotated[LabelRepository, Depends(label_repository)]) -> LabelReplacer:
+    return LabelReplacer(repository)
+
+
+def label_list_action(
+    repository: Annotated[LabelRepository, Depends(label_repository)],
+) -> LabelListAction:
+    return LabelListAction(repository)
+
+
+def source_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> SourceRepository:
+    return SourceRepository(session)
+
+
+def source_list_action(
+    repository: Annotated[SourceRepository, Depends(source_repository)],
+) -> SourceListAction:
+    return SourceListAction(repository)
+
+
 def melding_update_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-) -> MeldingUpdateAction[Melding]:
-    return MeldingUpdateAction(repository)
+    label_replacer: Annotated[LabelReplacer, Depends(label_replacer)],
+    source_repository: Annotated[SourceRepository, Depends(source_repository)],
+) -> MeldingUpdateAction[Melding, Label, Source]:
+    return MeldingUpdateAction(repository, label_replacer, source_repository)
 
 
 def melding_update_action_melder(
@@ -1087,13 +1120,25 @@ def melding_add_location_action(
     )
 
 
+def label_output_factory() -> LabelOutputFactory:
+    return LabelOutputFactory()
+
+
+def source_output_factory() -> SourceOutputFactory:
+    return SourceOutputFactory()
+
+
 def melding_output_factory(
     location_output_transformer: Annotated[LocationOutputTransformer, Depends(location_output_transformer)],
     classification_output_factory: Annotated[
         SimpleClassificationOutputFactory, Depends(simple_classification_output_factory)
     ],
+    label_output_factory: Annotated[LabelOutputFactory, Depends(label_output_factory)],
+    source_output_factory: Annotated[SourceOutputFactory, Depends(source_output_factory)],
 ) -> MeldingOutputFactory:
-    return MeldingOutputFactory(location_output_transformer, classification_output_factory)
+    return MeldingOutputFactory(
+        location_output_transformer, classification_output_factory, label_output_factory, source_output_factory
+    )
 
 
 def melding_update_output_factory(
@@ -1101,8 +1146,12 @@ def melding_update_output_factory(
     classification_output_factory: Annotated[
         SimpleClassificationOutputFactory, Depends(simple_classification_output_factory)
     ],
+    label_output_factory: Annotated[LabelOutputFactory, Depends(label_output_factory)],
+    source_output_factory: Annotated[SourceOutputFactory, Depends(source_output_factory)],
 ) -> MeldingUpdateOutputFactory:
-    return MeldingUpdateOutputFactory(location_output_transformer, classification_output_factory)
+    return MeldingUpdateOutputFactory(
+        location_output_transformer, classification_output_factory, label_output_factory, source_output_factory
+    )
 
 
 def melding_contact_info_added_action(

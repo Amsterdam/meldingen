@@ -5,6 +5,7 @@ __pycache__/
 .env*
 .coverage
 .devcontainer/
+.vscode/
 
 seed/*.json
 
