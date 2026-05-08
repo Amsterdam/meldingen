@@ -5,6 +5,7 @@ from fastapi import BackgroundTasks, HTTPException
 from meldingen_core import SortingDirection
 from meldingen_core.actions.melding import MeldingAddAssetAction as BaseMeldingAddAssetAction
 from meldingen_core.actions.melding import MeldingAddContactInfoAction as BaseMeldingAddContactInfoAction
+from meldingen_core.actions.melding import MeldingAnswerDeleteAction as BaseMeldingAnswerDeleteAction
 from meldingen_core.actions.melding import MeldingDeleteAssetAction as BaseMeldingDeleteAssetAction
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
@@ -19,7 +20,7 @@ from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
-from meldingen.models import Asset, AssetType, Melding
+from meldingen.models import Answer, Asset, AssetType, Melding
 from meldingen.repositories import AttributeNotFoundException
 from meldingen.schemas.types import Address, GeoJson
 from meldingen.statemachine import MeldingStateMachine
@@ -71,6 +72,9 @@ class MeldingAddAssetAction(BaseMeldingAddAssetAction[Melding, Asset, AssetType]
 
 
 class MeldingDeleteAssetAction(BaseMeldingDeleteAssetAction[Melding, Asset]): ...
+
+
+class MeldingAnswerDeleteAction(BaseMeldingAnswerDeleteAction[Melding, Answer]): ...
 
 
 class MeldingSubmitAction(BaseMeldingSubmitAction[Melding]): ...
