@@ -4086,6 +4086,7 @@ class TestMeldingDeleteAnswer(BaseTokenAuthenticationTest):
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
+    @pytest.mark.parametrize("melding_token", ["supersecrettoken"])
     @pytest.mark.anyio
     async def test_delete_answer(
         self, app: FastAPI, client: AsyncClient, melding_with_text_answers: Melding, db_session: AsyncSession
