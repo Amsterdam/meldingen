@@ -1,6 +1,8 @@
 import asyncio
+from typing import Any, cast
 
 import typer
+from sqlalchemy import CursorResult
 from sqlalchemy.dialects.postgresql import insert
 
 from meldingen.dependencies import database_engine, database_session, database_session_manager
@@ -41,7 +43,7 @@ async def create_initial_sources() -> None:
     async for session in database_session(database_session_manager(database_engine())):
         stmt = insert(Source).values([{"name": name} for name in initial_source_names])
         stmt = stmt.on_conflict_do_nothing(index_elements=["name"])
-        result = await session.execute(stmt)
+        result = cast(CursorResult[Any], await session.execute(stmt))
         await session.commit()
         typer.echo(f"✅ - Created {result.rowcount} new source(s), skipped existing")
 
