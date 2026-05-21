@@ -62,39 +62,56 @@ class UnsupportedAnswerTypeException(Exception):
 
 class AnswerFactory:
 
-    def __call__(self, answer_input: AnswerInputUnion, melding: Melding, question: Question) -> Answer:
+    def __call__(
+        self,
+        answer_input: AnswerInputUnion,
+        melding: Melding,
+        question: Question,
+        *,
+        component_key: str | None = None,
+        component_position: int | None = None,
+        panel_id: int | None = None,
+        panel_position: int | None = None,
+    ) -> Answer:
+        snapshot = {
+            "original_question_text": question.text,
+            "component_key": component_key,
+            "component_position": component_position,
+            "panel_id": panel_id,
+            "panel_position": panel_position,
+        }
         match answer_input.type:
             case AnswerTypeEnum.text:
                 return TextAnswer(
                     type=answer_input.type,
                     melding=melding,
                     question=question,
-                    original_question_text=question.text,
                     text=answer_input.text,
+                    **snapshot,
                 )
             case AnswerTypeEnum.time:
                 return TimeAnswer(
                     type=answer_input.type,
                     melding=melding,
                     question=question,
-                    original_question_text=question.text,
                     time=answer_input.time,
+                    **snapshot,
                 )
             case AnswerTypeEnum.date:
                 return DateAnswer(
                     type=answer_input.type,
                     melding=melding,
                     question=question,
-                    original_question_text=question.text,
                     date=answer_input.date.model_dump(),
+                    **snapshot,
                 )
             case AnswerTypeEnum.value_label:
                 return ValueLabelAnswer(
                     type=answer_input.type,
                     melding=melding,
                     question=question,
-                    original_question_text=question.text,
                     values_and_labels=[v.model_dump() for v in answer_input.values_and_labels],
+                    **snapshot,
                 )
             case _:
                 raise UnsupportedAnswerTypeException(f"Unsupported answer type: {answer_input.type}")
