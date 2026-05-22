@@ -2534,6 +2534,7 @@ class TestMeldingQuestionAnswer:
         melding_with_classification: Melding,
         form_with_time_component: Form,
         time_value: str | None,
+        db_session: AsyncSession,
     ) -> None:
         components = await form_with_time_component.awaitable_attrs.components
         assert len(components) == 1
@@ -2563,6 +2564,15 @@ class TestMeldingQuestionAnswer:
         assert body.get("time") == time_value
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
+
+        # Snapshot fields are persisted on the Answer row (response-body
+        # exposure is added in a later task once AnswerOutput is widened).
+        stored = (await db_session.execute(select(Answer).where(Answer.id == body["id"]))).scalar_one()
+        assert stored.original_question_text == question.text
+        assert stored.component_key == panel_components[0].key
+        assert stored.component_position == 1  # only component in the panel
+        assert stored.panel_id == panel.id
+        assert stored.panel_position == 1  # only panel on the form
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
