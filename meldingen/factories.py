@@ -73,13 +73,6 @@ class AnswerFactory:
         panel_id: int | None = None,
         panel_position: int | None = None,
     ) -> Answer:
-        snapshot = {
-            "original_question_text": question.text,
-            "component_key": component_key,
-            "component_position": component_position,
-            "panel_id": panel_id,
-            "panel_position": panel_position,
-        }
         match answer_input.type:
             case AnswerTypeEnum.text:
                 return TextAnswer(
@@ -87,7 +80,11 @@ class AnswerFactory:
                     melding=melding,
                     question=question,
                     text=answer_input.text,
-                    **snapshot,
+                    original_question_text=question.text,
+                    component_key=component_key,
+                    component_position=component_position,
+                    panel_id=panel_id,
+                    panel_position=panel_position,
                 )
             case AnswerTypeEnum.time:
                 return TimeAnswer(
@@ -95,7 +92,11 @@ class AnswerFactory:
                     melding=melding,
                     question=question,
                     time=answer_input.time,
-                    **snapshot,
+                    original_question_text=question.text,
+                    component_key=component_key,
+                    component_position=component_position,
+                    panel_id=panel_id,
+                    panel_position=panel_position,
                 )
             case AnswerTypeEnum.date:
                 return DateAnswer(
@@ -103,7 +104,11 @@ class AnswerFactory:
                     melding=melding,
                     question=question,
                     date=answer_input.date.model_dump(),
-                    **snapshot,
+                    original_question_text=question.text,
+                    component_key=component_key,
+                    component_position=component_position,
+                    panel_id=panel_id,
+                    panel_position=panel_position,
                 )
             case AnswerTypeEnum.value_label:
                 return ValueLabelAnswer(
@@ -111,7 +116,11 @@ class AnswerFactory:
                     melding=melding,
                     question=question,
                     values_and_labels=[v.model_dump() for v in answer_input.values_and_labels],
-                    **snapshot,
+                    original_question_text=question.text,
+                    component_key=component_key,
+                    component_position=component_position,
+                    panel_id=panel_id,
+                    panel_position=panel_position,
                 )
             case _:
                 raise UnsupportedAnswerTypeException(f"Unsupported answer type: {answer_input.type}")
