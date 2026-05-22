@@ -2565,8 +2565,14 @@ class TestMeldingQuestionAnswer:
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
-        # Snapshot fields are persisted on the Answer row (response-body
-        # exposure is added in a later task once AnswerOutput is widened).
+        # Snapshot fields
+        assert body.get("original_question_text") == question.text
+        assert body.get("component_key") == panel_components[0].key
+        assert body.get("component_position") == 1
+        assert body.get("panel_id") == panel.id
+        assert body.get("panel_position") == 1
+
+        # Snapshot fields are also persisted on the Answer row.
         stored = (await db_session.execute(select(Answer).where(Answer.id == body["id"]))).scalar_one()
         assert stored.original_question_text == question.text
         assert stored.component_key == panel_components[0].key
@@ -2708,6 +2714,13 @@ class TestMeldingQuestionAnswer:
         assert body.get("type") == AnswerTypeEnum.date
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
+
+        # Snapshot fields
+        assert body.get("original_question_text") == question.text
+        assert body.get("component_key") == panel_components[0].key
+        assert body.get("component_position") == 1
+        assert body.get("panel_id") == panel.id
+        assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
         ["melding_token"],
@@ -2875,6 +2888,13 @@ class TestMeldingQuestionAnswer:
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
 
+        # Snapshot fields
+        assert body.get("original_question_text") == question.text
+        assert body.get("component_key") == panel_components[0].key
+        assert body.get("component_position") == 1
+        assert body.get("panel_id") == panel.id
+        assert body.get("panel_position") == 1
+
     @pytest.mark.parametrize(
         ["melding_token"],
         [("supersecrettoken",)],
@@ -2948,6 +2968,13 @@ class TestMeldingQuestionAnswer:
         assert body.get("type") == AnswerTypeEnum.value_label
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
+
+        # Snapshot fields
+        assert body.get("original_question_text") == question.text
+        assert body.get("component_key") == panel_components[0].key
+        assert body.get("component_position") == 1
+        assert body.get("panel_id") == panel.id
+        assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
         ["melding_token"],
@@ -3101,6 +3128,13 @@ class TestMeldingQuestionAnswer:
         assert body.get("type") == AnswerTypeEnum.value_label
         assert body.get("created_at") is not None
         assert body.get("updated_at") is not None
+
+        # Snapshot fields
+        assert body.get("original_question_text") == question.text
+        assert body.get("component_key") == panel_components[0].key
+        assert body.get("component_position") == 1
+        assert body.get("panel_id") == panel.id
+        assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
         ["melding_token"],
@@ -5108,6 +5142,10 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         assert answer.get("created_at") is not None
         assert answer.get("updated_at") is not None
         assert answer.get("original_question_text") == "Question 0"
+        assert answer.get("component_key") is not None
+        assert answer.get("component_position") is not None
+        assert answer.get("panel_id") is not None
+        assert answer.get("panel_position") is not None
 
         question = answer.get("question")
         assert question is not None
@@ -5242,6 +5280,10 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         assert answer.get("created_at") is not None
         assert answer.get("updated_at") is not None
         assert answer.get("original_question_text") == "Question 0"
+        assert answer.get("component_key") is not None
+        assert answer.get("component_position") is not None
+        assert answer.get("panel_id") is not None
+        assert answer.get("panel_position") is not None
 
         question = answer.get("question")
         assert question is not None
