@@ -40,6 +40,7 @@ from meldingen.models import (
     Classification,
     DateAnswer,
     Form,
+    FormIoPanelComponent,
     Label,
     Melding,
     Question,
@@ -5190,20 +5191,44 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         db_session: AsyncSession,
         auth_user: None,
     ) -> None:
-        """When a component is removed we should be able to show the answers."""
+        """When the component AND its parent panel are removed, the snapshot fields
+        on the returned answer must still be populated -- proving the API doesn't
+        depend on a join to the live form structure.
+        """
 
+        melding_id = melding_with_some_answers.id
         answers = await melding_with_some_answers.awaitable_attrs.answers
         assert len(answers) == 5
 
-        component = answers[0].question.component
+        first_answer = answers[0]
+        expected_component_key = first_answer.component_key
+        expected_component_position = first_answer.component_position
+        expected_panel_id = first_answer.panel_id
+        expected_panel_position = first_answer.panel_position
+
+        assert expected_component_key is not None
+        assert expected_component_position is not None
+        assert expected_panel_id is not None
+        assert expected_panel_position is not None
+
+        component = first_answer.question.component
         panel = await component.awaitable_attrs.parent
-        panel.components.remove(component)
+        form = await panel.awaitable_attrs.form
+        form.components.remove(panel)  # cascades to the panel and its child components
 
         await db_session.commit()
+        # Drop the stale identity-mapped copies of the deleted panel/component so that
+        # the API call below re-reads from the DB (mirroring how a fresh request would
+        # see this state in production).
+        db_session.expire_all()
+
+        # Verify the panel was actually deleted from the DB so the test isn't a tautology.
+        remaining_panel = await db_session.get(FormIoPanelComponent, expected_panel_id)
+        assert remaining_panel is None
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_some_answers.id),
+            app.url_path_for(self.get_route_name(), melding_id=melding_id),
         )
 
         assert response.status_code == HTTP_200_OK
@@ -5213,8 +5238,14 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         assert isinstance(body, list)
         assert len(body) == 5
 
-        returned_question_ids = [answer_output.get("question").get("id") for answer_output in body]
-        assert sorted(returned_question_ids) == sorted(returned_question_ids)
+        matching = [a for a in body if a.get("component_key") == expected_component_key]
+        assert len(matching) == 1
+        deleted_answer = matching[0]
+
+        assert deleted_answer["component_key"] == expected_component_key
+        assert deleted_answer["component_position"] == expected_component_position
+        assert deleted_answer["panel_id"] == expected_panel_id
+        assert deleted_answer["panel_position"] == expected_panel_position
 
 
 class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
@@ -5331,24 +5362,48 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         client: AsyncClient,
         melding_with_some_answers: Melding,
         db_session: AsyncSession,
-        auth_user: None,
     ) -> None:
-        """When a component is deleted the answer should still be shown"""
+        """When the component AND its parent panel are removed, the snapshot fields
+        on the returned answer must still be populated -- proving the API doesn't
+        depend on a join to the live form structure.
+        """
 
+        melding_id = melding_with_some_answers.id
+        melding_token = melding_with_some_answers.token
         answers = await melding_with_some_answers.awaitable_attrs.answers
         assert len(answers) == 5
 
-        component = answers[0].question.component
+        first_answer = answers[0]
+        expected_component_key = first_answer.component_key
+        expected_component_position = first_answer.component_position
+        expected_panel_id = first_answer.panel_id
+        expected_panel_position = first_answer.panel_position
+
+        assert expected_component_key is not None
+        assert expected_component_position is not None
+        assert expected_panel_id is not None
+        assert expected_panel_position is not None
+
+        component = first_answer.question.component
         assert component is not None
         panel = await component.awaitable_attrs.parent
-        panel.components.remove(component)
+        form = await panel.awaitable_attrs.form
+        form.components.remove(panel)  # cascades to the panel and its child components
 
         await db_session.commit()
+        # Drop the stale identity-mapped copies of the deleted panel/component so that
+        # the API call below re-reads from the DB (mirroring how a fresh request would
+        # see this state in production).
+        db_session.expire_all()
+
+        # Verify the panel was actually deleted from the DB so the test isn't a tautology.
+        remaining_panel = await db_session.get(FormIoPanelComponent, expected_panel_id)
+        assert remaining_panel is None
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_some_answers.id),
-            params={"token": melding_with_some_answers.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding_id),
+            params={"token": melding_token},
         )
 
         assert response.status_code == HTTP_200_OK
@@ -5358,8 +5413,14 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         assert isinstance(body, list)
         assert len(body) == 5
 
-        returned_question_ids = [answer_output.get("question").get("id") for answer_output in body]
-        assert sorted(returned_question_ids) == sorted(returned_question_ids)
+        matching = [a for a in body if a.get("component_key") == expected_component_key]
+        assert len(matching) == 1
+        deleted_answer = matching[0]
+
+        assert deleted_answer["component_key"] == expected_component_key
+        assert deleted_answer["component_position"] == expected_component_position
+        assert deleted_answer["panel_id"] == expected_panel_id
+        assert deleted_answer["panel_position"] == expected_panel_position
 
 
 class TestMelderMeldingRetrieve(BaseTokenAuthenticationTest):
