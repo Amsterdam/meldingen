@@ -4074,6 +4074,96 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
             == "Input tag '' found using 'type' does not match any of the expected tags: <AnswerTypeEnum.text: 'text'>, <AnswerTypeEnum.time: 'time'>, <AnswerTypeEnum.date: 'date'>, <AnswerTypeEnum.value_label: 'value_label'>"
         )
 
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_token", "classification_name"],
+        [
+            ("supersecrettoken", "test_classification"),
+        ],
+        indirect=["classification_name"],
+    )
+    async def test_update_does_not_re_snapshot(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_classification: Melding,
+        form_with_classification: Form,
+        db_session: AsyncSession,
+    ) -> None:
+        """Editing an answer must preserve the original snapshot -- the snapshot
+        represents what the form looked like when the melder first answered.
+        """
+        components = await form_with_classification.awaitable_attrs.components
+        assert len(components) == 1
+        panel = components[0]
+        panel_components = await panel.awaitable_attrs.components
+        assert len(panel_components) == 1
+        component = panel_components[0]
+        question = await component.awaitable_attrs.question
+        assert isinstance(question, Question)
+
+        melding_id = melding_with_classification.id
+        melding_token = melding_with_classification.token
+
+        # Create the answer.
+        create_response = await client.post(
+            app.url_path_for(
+                "melding:answer-question",
+                melding_id=melding_id,
+                question_id=question.id,
+            ),
+            params={"token": melding_token},
+            json={"text": "original", "type": AnswerTypeEnum.text},
+        )
+        assert create_response.status_code == HTTP_201_CREATED
+        created = create_response.json()
+        original_snapshot = {
+            "original_question_text": created["original_question_text"],
+            "component_key": created["component_key"],
+            "component_position": created["component_position"],
+            "panel_id": created["panel_id"],
+            "panel_position": created["panel_position"],
+        }
+        # Sanity check: the snapshot fields were populated at create time.
+        assert original_snapshot["original_question_text"] is not None
+        assert original_snapshot["component_key"] is not None
+        assert original_snapshot["component_position"] is not None
+        assert original_snapshot["panel_id"] is not None
+        assert original_snapshot["panel_position"] is not None
+
+        # Mutate the live form: change the component key, the question text,
+        # and the component / panel positions. If the update path were re-
+        # snapshotting, these would leak into the response.
+        component.key = "renamed_after_answer"
+        question.text = "Changed question text"
+        component.position = 99
+        panel.position = 99
+        await db_session.commit()
+        # Drop identity-mapped copies so the API call below re-reads from DB.
+        db_session.expire_all()
+
+        # Update the answer.
+        update_response = await client.patch(
+            app.url_path_for(
+                self.get_route_name(),
+                melding_id=melding_id,
+                answer_id=created["id"],
+            ),
+            params={"token": melding_token},
+            json={"text": "updated", "type": AnswerTypeEnum.text},
+        )
+        assert update_response.status_code == HTTP_200_OK
+        updated = update_response.json()
+
+        # Body content was updated.
+        assert updated["text"] == "updated"
+        # Snapshot fields are unchanged.
+        assert updated["original_question_text"] == original_snapshot["original_question_text"]
+        assert updated["component_key"] == original_snapshot["component_key"]
+        assert updated["component_position"] == original_snapshot["component_position"]
+        assert updated["panel_id"] == original_snapshot["panel_id"]
+        assert updated["panel_position"] == original_snapshot["panel_position"]
+
 
 class TestMeldingDeleteAnswer(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:answer-delete"
