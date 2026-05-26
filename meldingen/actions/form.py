@@ -458,9 +458,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
             answer_input,
             melding,
             question,
-            component_key=form_component.key,
             component_position=form_component.position,
-            panel_id=parent_panel.id if parent_panel is not None else None,
             panel_position=parent_panel.position if parent_panel is not None else None,
         )
 

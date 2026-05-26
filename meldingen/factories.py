@@ -68,9 +68,7 @@ class AnswerFactory:
         melding: Melding,
         question: Question,
         *,
-        component_key: str | None = None,
         component_position: int | None = None,
-        panel_id: int | None = None,
         panel_position: int | None = None,
     ) -> Answer:
         match answer_input.type:
@@ -81,9 +79,7 @@ class AnswerFactory:
                     question=question,
                     text=answer_input.text,
                     original_question_text=question.text,
-                    component_key=component_key,
                     component_position=component_position,
-                    panel_id=panel_id,
                     panel_position=panel_position,
                 )
             case AnswerTypeEnum.time:
@@ -93,9 +89,7 @@ class AnswerFactory:
                     question=question,
                     time=answer_input.time,
                     original_question_text=question.text,
-                    component_key=component_key,
                     component_position=component_position,
-                    panel_id=panel_id,
                     panel_position=panel_position,
                 )
             case AnswerTypeEnum.date:
@@ -105,9 +99,7 @@ class AnswerFactory:
                     question=question,
                     date=answer_input.date.model_dump(),
                     original_question_text=question.text,
-                    component_key=component_key,
                     component_position=component_position,
-                    panel_id=panel_id,
                     panel_position=panel_position,
                 )
             case AnswerTypeEnum.value_label:
@@ -117,9 +109,7 @@ class AnswerFactory:
                     question=question,
                     values_and_labels=[v.model_dump() for v in answer_input.values_and_labels],
                     original_question_text=question.text,
-                    component_key=component_key,
                     component_position=component_position,
-                    panel_id=panel_id,
                     panel_position=panel_position,
                 )
             case _:

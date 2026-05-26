@@ -2568,17 +2568,13 @@ class TestMeldingQuestionAnswer:
 
         # Snapshot fields
         assert body.get("original_question_text") == question.text
-        assert body.get("component_key") == panel_components[0].key
         assert body.get("component_position") == 1
-        assert body.get("panel_id") == panel.id
         assert body.get("panel_position") == 1
 
         # Snapshot fields are also persisted on the Answer row.
         stored = (await db_session.execute(select(Answer).where(Answer.id == body["id"]))).scalar_one()
         assert stored.original_question_text == question.text
-        assert stored.component_key == panel_components[0].key
         assert stored.component_position == 1  # only component in the panel
-        assert stored.panel_id == panel.id
         assert stored.panel_position == 1  # only panel on the form
 
     @pytest.mark.anyio
@@ -2718,9 +2714,7 @@ class TestMeldingQuestionAnswer:
 
         # Snapshot fields
         assert body.get("original_question_text") == question.text
-        assert body.get("component_key") == panel_components[0].key
         assert body.get("component_position") == 1
-        assert body.get("panel_id") == panel.id
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
@@ -2891,9 +2885,7 @@ class TestMeldingQuestionAnswer:
 
         # Snapshot fields
         assert body.get("original_question_text") == question.text
-        assert body.get("component_key") == panel_components[0].key
         assert body.get("component_position") == 1
-        assert body.get("panel_id") == panel.id
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
@@ -2972,9 +2964,7 @@ class TestMeldingQuestionAnswer:
 
         # Snapshot fields
         assert body.get("original_question_text") == question.text
-        assert body.get("component_key") == panel_components[0].key
         assert body.get("component_position") == 1
-        assert body.get("panel_id") == panel.id
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
@@ -3132,9 +3122,7 @@ class TestMeldingQuestionAnswer:
 
         # Snapshot fields
         assert body.get("original_question_text") == question.text
-        assert body.get("component_key") == panel_components[0].key
         assert body.get("component_position") == 1
-        assert body.get("panel_id") == panel.id
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
@@ -4119,22 +4107,17 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         created = create_response.json()
         original_snapshot = {
             "original_question_text": created["original_question_text"],
-            "component_key": created["component_key"],
             "component_position": created["component_position"],
-            "panel_id": created["panel_id"],
             "panel_position": created["panel_position"],
         }
         # Sanity check: the snapshot fields were populated at create time.
         assert original_snapshot["original_question_text"] is not None
-        assert original_snapshot["component_key"] is not None
         assert original_snapshot["component_position"] is not None
-        assert original_snapshot["panel_id"] is not None
         assert original_snapshot["panel_position"] is not None
 
-        # Mutate the live form: change the component key, the question text,
-        # and the component / panel positions. If the update path were re-
-        # snapshotting, these would leak into the response.
-        component.key = "renamed_after_answer"
+        # Mutate the live form: change the question text and the component /
+        # panel positions. If the update path were re-snapshotting, these would
+        # leak into the response.
         question.text = "Changed question text"
         component.position = 99
         panel.position = 99
@@ -4159,9 +4142,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         assert updated["text"] == "updated"
         # Snapshot fields are unchanged.
         assert updated["original_question_text"] == original_snapshot["original_question_text"]
-        assert updated["component_key"] == original_snapshot["component_key"]
         assert updated["component_position"] == original_snapshot["component_position"]
-        assert updated["panel_id"] == original_snapshot["panel_id"]
         assert updated["panel_position"] == original_snapshot["panel_position"]
 
 
@@ -5233,9 +5214,7 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         assert answer.get("created_at") is not None
         assert answer.get("updated_at") is not None
         assert answer.get("original_question_text") == "Question 0"
-        assert answer.get("component_key") is not None
         assert answer.get("component_position") is not None
-        assert answer.get("panel_id") is not None
         assert answer.get("panel_position") is not None
 
         question = answer.get("question")
@@ -5291,18 +5270,16 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         assert len(answers) == 5
 
         first_answer = answers[0]
-        expected_component_key = first_answer.component_key
+        expected_answer_id = first_answer.id
         expected_component_position = first_answer.component_position
-        expected_panel_id = first_answer.panel_id
         expected_panel_position = first_answer.panel_position
 
-        assert expected_component_key is not None
         assert expected_component_position is not None
-        assert expected_panel_id is not None
         assert expected_panel_position is not None
 
         component = first_answer.question.component
         panel = await component.awaitable_attrs.parent
+        deleted_panel_id = panel.id
         form = await panel.awaitable_attrs.form
         form.components.remove(panel)  # cascades to the panel and its child components
 
@@ -5313,7 +5290,7 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         db_session.expire_all()
 
         # Verify the panel was actually deleted from the DB so the test isn't a tautology.
-        remaining_panel = await db_session.get(FormIoPanelComponent, expected_panel_id)
+        remaining_panel = await db_session.get(FormIoPanelComponent, deleted_panel_id)
         assert remaining_panel is None
 
         response = await client.request(
@@ -5328,13 +5305,11 @@ class TestMeldingListQuestionsAnswers(BaseUnauthorizedTest):
         assert isinstance(body, list)
         assert len(body) == 5
 
-        matching = [a for a in body if a.get("component_key") == expected_component_key]
+        matching = [a for a in body if a.get("id") == expected_answer_id]
         assert len(matching) == 1
         deleted_answer = matching[0]
 
-        assert deleted_answer["component_key"] == expected_component_key
         assert deleted_answer["component_position"] == expected_component_position
-        assert deleted_answer["panel_id"] == expected_panel_id
         assert deleted_answer["panel_position"] == expected_panel_position
 
 
@@ -5401,9 +5376,7 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         assert answer.get("created_at") is not None
         assert answer.get("updated_at") is not None
         assert answer.get("original_question_text") == "Question 0"
-        assert answer.get("component_key") is not None
         assert answer.get("component_position") is not None
-        assert answer.get("panel_id") is not None
         assert answer.get("panel_position") is not None
 
         question = answer.get("question")
@@ -5464,19 +5437,17 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         assert len(answers) == 5
 
         first_answer = answers[0]
-        expected_component_key = first_answer.component_key
+        expected_answer_id = first_answer.id
         expected_component_position = first_answer.component_position
-        expected_panel_id = first_answer.panel_id
         expected_panel_position = first_answer.panel_position
 
-        assert expected_component_key is not None
         assert expected_component_position is not None
-        assert expected_panel_id is not None
         assert expected_panel_position is not None
 
         component = first_answer.question.component
         assert component is not None
         panel = await component.awaitable_attrs.parent
+        deleted_panel_id = panel.id
         form = await panel.awaitable_attrs.form
         form.components.remove(panel)  # cascades to the panel and its child components
 
@@ -5487,7 +5458,7 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         db_session.expire_all()
 
         # Verify the panel was actually deleted from the DB so the test isn't a tautology.
-        remaining_panel = await db_session.get(FormIoPanelComponent, expected_panel_id)
+        remaining_panel = await db_session.get(FormIoPanelComponent, deleted_panel_id)
         assert remaining_panel is None
 
         response = await client.request(
@@ -5503,13 +5474,11 @@ class TestMelderMeldingListQuestionsAnswers(BaseTokenAuthenticationTest):
         assert isinstance(body, list)
         assert len(body) == 5
 
-        matching = [a for a in body if a.get("component_key") == expected_component_key]
+        matching = [a for a in body if a.get("id") == expected_answer_id]
         assert len(matching) == 1
         deleted_answer = matching[0]
 
-        assert deleted_answer["component_key"] == expected_component_key
         assert deleted_answer["component_position"] == expected_component_position
-        assert deleted_answer["panel_id"] == expected_panel_id
         assert deleted_answer["panel_position"] == expected_panel_position
 
 

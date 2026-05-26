@@ -335,9 +335,7 @@ async def melding_with_text_answers(
                 question=question,
                 type=AnswerTypeEnum.text,
                 original_question_text=question.text,
-                component_key=component.key if component is not None else None,
                 component_position=component.position if component is not None else None,
-                panel_id=panel.id if panel is not None else None,
                 panel_position=panel.position if panel is not None else None,
             )
         )
@@ -554,9 +552,7 @@ async def melding_with_some_answers(
                 question=question,
                 type=AnswerTypeEnum.text,
                 original_question_text=question.text,
-                component_key=component.key if component is not None else None,
                 component_position=component.position if component is not None else None,
-                panel_id=panel.id if panel is not None else None,
                 panel_position=panel.position if panel is not None else None,
             )
         )

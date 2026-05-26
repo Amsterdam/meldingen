@@ -825,9 +825,7 @@ class AnswerOutputFactory:
             "created_at": answer.created_at,
             "updated_at": answer.updated_at,
             "original_question_text": answer.original_question_text,
-            "component_key": answer.component_key,
             "component_position": answer.component_position,
-            "panel_id": answer.panel_id,
             "panel_position": answer.panel_position,
         }
 
@@ -867,9 +865,7 @@ class AnswerQuestionOutputFactory:
             "updated_at": answer.updated_at,
             "question": question,
             "original_question_text": answer.original_question_text,
-            "component_key": answer.component_key,
             "component_position": answer.component_position,
-            "panel_id": answer.panel_id,
             "panel_position": answer.panel_position,
         }
 

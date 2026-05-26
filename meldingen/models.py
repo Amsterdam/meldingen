@@ -509,9 +509,7 @@ class Answer(AsyncAttrs, BaseAnswer, BaseDBModel, kw_only=True):
     melding: Mapped[Melding] = relationship(back_populates="answers", default_factory=list)
     type: Mapped[str] = mapped_column(Enum(AnswerTypeEnum, name="answer_type"), default=AnswerTypeEnum.text)
     original_question_text: Mapped[str] = mapped_column(String(), nullable=True, default=None)
-    component_key: Mapped[str | None] = mapped_column(String(), nullable=True, default=None)
     component_position: Mapped[int | None] = mapped_column(Integer(), nullable=True, default=None)
-    panel_id: Mapped[int | None] = mapped_column(Integer(), nullable=True, default=None)
     panel_position: Mapped[int | None] = mapped_column(Integer(), nullable=True, default=None)
 
 
