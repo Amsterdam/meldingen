@@ -453,7 +453,14 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
                     detail=[{"msg": e.msg, "input": e.input, "type": "value_error"}],
                 ) from e
 
-        answer = self._create_answer(answer_input, melding, question)
+        parent_panel = await form_component.awaitable_attrs.parent
+        answer = self._create_answer(
+            answer_input,
+            melding,
+            question,
+            component_position=form_component.position,
+            panel_position=parent_panel.position if parent_panel is not None else None,
+        )
 
         await self._repository.save(answer)
 

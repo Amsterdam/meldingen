@@ -325,13 +325,18 @@ async def melding_with_text_answers(
 
     numbers = [6, 3, 2, 9, 7, 1, 8, 4, 5, 0]
     for i in numbers:
+        question = questions[i]
+        component = await question.awaitable_attrs.component
+        panel = await component.awaitable_attrs.parent if component is not None else None
         db_session.add(
             TextAnswer(
                 text=f"Answer {i}",
                 melding=melding_with_classification,
-                question=questions[i],
+                question=question,
                 type=AnswerTypeEnum.text,
-                original_question_text=questions[i].text,
+                original_question_text=question.text,
+                component_position=component.position if component is not None else None,
+                panel_position=panel.position if panel is not None else None,
             )
         )
 
@@ -537,13 +542,18 @@ async def melding_with_some_answers(
 
     numbers = [6, 3, 2, 9, 7]
     for i in numbers:
+        question = questions[i]
+        component = await question.awaitable_attrs.component
+        panel = await component.awaitable_attrs.parent if component is not None else None
         db_session.add(
             TextAnswer(
                 text=f"Answer {i}",
                 melding=melding_with_classification,
-                question=questions[i],
+                question=question,
                 type=AnswerTypeEnum.text,
-                original_question_text=questions[i].text,
+                original_question_text=question.text,
+                component_position=component.position if component is not None else None,
+                panel_position=panel.position if panel is not None else None,
             )
         )
 

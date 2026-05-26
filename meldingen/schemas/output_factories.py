@@ -825,6 +825,8 @@ class AnswerOutputFactory:
             "created_at": answer.created_at,
             "updated_at": answer.updated_at,
             "original_question_text": answer.original_question_text,
+            "component_position": answer.component_position,
+            "panel_position": answer.panel_position,
         }
 
         # Subclass attributes are not eagerly loaded by default
@@ -863,6 +865,8 @@ class AnswerQuestionOutputFactory:
             "updated_at": answer.updated_at,
             "question": question,
             "original_question_text": answer.original_question_text,
+            "component_position": answer.component_position,
+            "panel_position": answer.panel_position,
         }
 
         # Subclass attributes are not eagerly loaded by default

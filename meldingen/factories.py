@@ -62,39 +62,55 @@ class UnsupportedAnswerTypeException(Exception):
 
 class AnswerFactory:
 
-    def __call__(self, answer_input: AnswerInputUnion, melding: Melding, question: Question) -> Answer:
+    def __call__(
+        self,
+        answer_input: AnswerInputUnion,
+        melding: Melding,
+        question: Question,
+        *,
+        component_position: int | None = None,
+        panel_position: int | None = None,
+    ) -> Answer:
         match answer_input.type:
             case AnswerTypeEnum.text:
                 return TextAnswer(
                     type=answer_input.type,
                     melding=melding,
                     question=question,
-                    original_question_text=question.text,
                     text=answer_input.text,
+                    original_question_text=question.text,
+                    component_position=component_position,
+                    panel_position=panel_position,
                 )
             case AnswerTypeEnum.time:
                 return TimeAnswer(
                     type=answer_input.type,
                     melding=melding,
                     question=question,
-                    original_question_text=question.text,
                     time=answer_input.time,
+                    original_question_text=question.text,
+                    component_position=component_position,
+                    panel_position=panel_position,
                 )
             case AnswerTypeEnum.date:
                 return DateAnswer(
                     type=answer_input.type,
                     melding=melding,
                     question=question,
-                    original_question_text=question.text,
                     date=answer_input.date.model_dump(),
+                    original_question_text=question.text,
+                    component_position=component_position,
+                    panel_position=panel_position,
                 )
             case AnswerTypeEnum.value_label:
                 return ValueLabelAnswer(
                     type=answer_input.type,
                     melding=melding,
                     question=question,
-                    original_question_text=question.text,
                     values_and_labels=[v.model_dump() for v in answer_input.values_and_labels],
+                    original_question_text=question.text,
+                    component_position=component_position,
+                    panel_position=panel_position,
                 )
             case _:
                 raise UnsupportedAnswerTypeException(f"Unsupported answer type: {answer_input.type}")
