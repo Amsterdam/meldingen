@@ -14,7 +14,6 @@ from datetime import datetime
 from typing import Any
 
 from pydantic_ai import Agent
-from sqlalchemy import select
 
 from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
 from meldingen.database import DatabaseSessionManager
@@ -92,8 +91,11 @@ async def execute_llm_eval_run(
             )
 
         async with session_manager.session() as session:
-            stmt = select(LlmEvalRun).where(LlmEvalRun.id == run_id)
-            run = (await session.execute(stmt)).scalar_one()
+            run = await session.get(LlmEvalRun, run_id)
+            if run is None:
+                logger.warning("llm eval run %d: row missing mid-run, aborting", run_id)
+                return
+            # rebind: in-place .append() is not dirty-tracked on JSON columns
             run.results = [*run.results, result.model_dump(mode="json")]
             if result.error is not None:
                 run.errored += 1
