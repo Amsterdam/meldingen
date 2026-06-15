@@ -1,4 +1,9 @@
+from datetime import datetime
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+from meldingen.models import LlmEvalRunStatus
 
 
 class LlmEvalClassificationInput(BaseModel):
@@ -24,9 +29,34 @@ class LlmEvalTestCaseResult(BaseModel):
     error: str | None = None
 
 
-class LlmEvalRunOutput(BaseModel):
+class LlmEvalRunCreateOutput(BaseModel):
+    run_id: int
+    status: Literal[LlmEvalRunStatus.pending] = LlmEvalRunStatus.pending
+
+
+class LlmEvalRunDetailOutput(BaseModel):
+    run_id: int
+    status: LlmEvalRunStatus
+    request_payload: LlmEvalRunInput
     total: int
     passed: int
     failed: int
     errored: int
     results: list[LlmEvalTestCaseResult]
+    error: str | None
+    created_at: datetime
+    started_at: datetime | None
+    finished_at: datetime | None
+
+
+class LlmEvalRunSummaryOutput(BaseModel):
+    run_id: int
+    status: LlmEvalRunStatus
+    total: int
+    passed: int
+    failed: int
+    errored: int
+    error: str | None
+    created_at: datetime
+    started_at: datetime | None
+    finished_at: datetime | None
