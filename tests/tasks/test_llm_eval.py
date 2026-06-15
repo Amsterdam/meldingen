@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+from datetime import datetime
 from typing import Any, AsyncIterator
 from unittest.mock import AsyncMock, MagicMock
 
@@ -12,7 +13,7 @@ from meldingen.schemas.llm_eval import (
     LlmEvalRunInput,
     LlmEvalTestCaseInput,
 )
-from meldingen.tasks.llm_eval import execute_llm_eval_run
+from meldingen.tasks.llm_eval import execute_llm_eval_run, sweep_orphaned_runs
 from tests.conftest import DatabaseSessionManager
 
 
@@ -218,3 +219,67 @@ async def test_unexpected_exception_marks_run_failed(
     assert seeded_run.finished_at is not None
     # Must not leak internal detail
     assert "adapter init failed" not in (seeded_run.error or "")
+
+
+@pytest.mark.anyio
+async def test_sweep_marks_running_runs_as_failed(db_manager: DatabaseSessionManager, db_session: AsyncSession) -> None:
+    run = LlmEvalRun()
+    run.status = LlmEvalRunStatus.running
+    run.started_at = datetime.now()
+    run.total = 5
+    db_session.add(run)
+    await db_session.commit()
+    run_id = run.id
+
+    await sweep_orphaned_runs(db_manager)
+
+    async with db_manager.session() as read_session:
+        swept = await read_session.get(LlmEvalRun, run_id)
+        assert swept is not None
+        assert swept.status == LlmEvalRunStatus.failed
+        assert swept.error == "Server restarted during run"
+        assert swept.finished_at is not None
+
+
+@pytest.mark.anyio
+async def test_sweep_marks_pending_runs_as_failed(db_manager: DatabaseSessionManager, db_session: AsyncSession) -> None:
+    run = LlmEvalRun()
+    run.status = LlmEvalRunStatus.pending
+    run.total = 5
+    db_session.add(run)
+    await db_session.commit()
+    run_id = run.id
+
+    await sweep_orphaned_runs(db_manager)
+
+    async with db_manager.session() as read_session:
+        swept = await read_session.get(LlmEvalRun, run_id)
+        assert swept is not None
+        assert swept.status == LlmEvalRunStatus.failed
+
+
+@pytest.mark.anyio
+async def test_sweep_leaves_completed_runs_alone(db_manager: DatabaseSessionManager, db_session: AsyncSession) -> None:
+    completed = LlmEvalRun()
+    completed.status = LlmEvalRunStatus.completed
+    completed.total = 5
+    completed.finished_at = datetime.now()
+
+    failed = LlmEvalRun()
+    failed.status = LlmEvalRunStatus.failed
+    failed.total = 5
+    failed.error = "Some previous error"
+    failed.finished_at = datetime.now()
+
+    db_session.add_all([completed, failed])
+    await db_session.commit()
+    completed_id, failed_id = completed.id, failed.id
+
+    await sweep_orphaned_runs(db_manager)
+
+    async with db_manager.session() as read_session:
+        c = await read_session.get(LlmEvalRun, completed_id)
+        f = await read_session.get(LlmEvalRun, failed_id)
+        assert c is not None and c.status == LlmEvalRunStatus.completed
+        assert f is not None and f.status == LlmEvalRunStatus.failed
+        assert f.error == "Some previous error"

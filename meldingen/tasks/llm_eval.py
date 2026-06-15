@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Any
 
 from pydantic_ai import Agent
+from sqlalchemy import update
 
 from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
 from meldingen.database import DatabaseSessionManager
@@ -129,3 +130,23 @@ async def execute_llm_eval_run(
             run.error = "Run failed unexpectedly"
             run.finished_at = datetime.now()
             await session.commit()
+
+
+async def sweep_orphaned_runs(session_manager: DatabaseSessionManager) -> None:
+    """Mark any in-flight run as failed; called once on FastAPI startup.
+
+    Runs that were `running` or `pending` when the previous process exited are
+    stranded — their owning asyncio task died with the process. We surface this
+    to callers by transitioning them to `failed` with a generic error message.
+    """
+    async with session_manager.session() as session:
+        await session.execute(
+            update(LlmEvalRun)
+            .where(LlmEvalRun.status.in_([LlmEvalRunStatus.pending, LlmEvalRunStatus.running]))
+            .values(
+                status=LlmEvalRunStatus.failed,
+                error="Server restarted during run",
+                finished_at=datetime.now(),
+            )
+        )
+        await session.commit()
