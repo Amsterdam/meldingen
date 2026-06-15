@@ -5,6 +5,8 @@ from typing import Any, AsyncIterator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from asgi_lifespan import LifespanManager
+from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from meldingen.models import LlmEvalRun, LlmEvalRunStatus
@@ -283,3 +285,24 @@ async def test_sweep_leaves_completed_runs_alone(db_manager: DatabaseSessionMana
         assert c is not None and c.status == LlmEvalRunStatus.completed
         assert f is not None and f.status == LlmEvalRunStatus.failed
         assert f.error == "Some previous error"
+
+
+@pytest.mark.anyio
+async def test_lifespan_runs_sweep(
+    app: FastAPI, db_session: AsyncSession, db_manager: DatabaseSessionManager, override_dependencies: None
+) -> None:
+    """The FastAPI lifespan calls sweep_orphaned_runs on startup."""
+    run = LlmEvalRun()
+    run.status = LlmEvalRunStatus.running
+    run.total = 5
+    db_session.add(run)
+    await db_session.commit()
+    run_id = run.id
+
+    async with LifespanManager(app):
+        pass  # lifespan startup runs here
+
+    async with db_manager.session() as read_session:
+        swept = await read_session.get(LlmEvalRun, run_id)
+        assert swept is not None
+        assert swept.status == LlmEvalRunStatus.failed
