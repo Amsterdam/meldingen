@@ -11,15 +11,22 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from pydantic_ai import Agent
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_202_ACCEPTED, HTTP_404_NOT_FOUND, HTTP_503_SERVICE_UNAVAILABLE
 
+from meldingen.api.utils import PaginationParams, pagination_params
 from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.database import DatabaseSessionManager
 from meldingen.dependencies import classifier_agent, database_session, database_session_manager
 from meldingen.models import LlmEvalRun, User
-from meldingen.schemas.llm_eval import LlmEvalRunCreateOutput, LlmEvalRunDetailOutput, LlmEvalRunInput
+from meldingen.schemas.llm_eval import (
+    LlmEvalRunCreateOutput,
+    LlmEvalRunDetailOutput,
+    LlmEvalRunInput,
+    LlmEvalRunSummaryOutput,
+)
 from meldingen.tasks.llm_eval import execute_llm_eval_run
 
 logger = logging.getLogger(__name__)
@@ -102,3 +109,41 @@ async def get_llm_eval_run(
         started_at=run.started_at,
         finished_at=run.finished_at,
     )
+
+
+@router.get(
+    "/runs",
+    name="llm_eval:list_runs",
+    responses={**unauthorized_response},
+    dependencies=[Depends(authenticate_user)],
+)
+async def list_llm_eval_runs(
+    pagination: Annotated[PaginationParams, Depends(pagination_params)],
+    session: Annotated[AsyncSession, Depends(database_session)],
+) -> list[LlmEvalRunSummaryOutput]:
+    limit = pagination["limit"] or 0
+    offset = pagination["offset"] or 0
+
+    stmt = select(LlmEvalRun).order_by(LlmEvalRun.id.desc())
+    if limit:
+        stmt = stmt.limit(limit)
+    if offset:
+        stmt = stmt.offset(offset)
+
+    result = await session.execute(stmt)
+    runs = result.scalars().all()
+    return [
+        LlmEvalRunSummaryOutput(
+            run_id=run.id,
+            status=run.status,
+            total=run.total,
+            passed=run.passed,
+            failed=run.failed,
+            errored=run.errored,
+            error=run.error,
+            created_at=run.created_at,
+            started_at=run.started_at,
+            finished_at=run.finished_at,
+        )
+        for run in runs
+    ]

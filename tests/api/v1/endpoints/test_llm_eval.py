@@ -151,3 +151,53 @@ class TestLlmEvalGetRun:
         assert body["failed"] == 1
         assert len(body["results"]) == 2
         assert body["request_payload"]["classifications"][0]["name"] == "Zwerfvuil"
+
+
+class TestLlmEvalListRunsUnauthorized(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "llm_eval:list_runs"
+
+    def get_method(self) -> str:
+        return "GET"
+
+
+class TestLlmEvalListRuns:
+    @pytest.mark.anyio
+    async def test_returns_runs_newest_first_without_results(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, db_session: AsyncSession
+    ) -> None:
+        for i in range(3):
+            run = LlmEvalRun()
+            run.status = LlmEvalRunStatus.completed
+            run.request_payload = _VALID_BODY
+            run.total = 2
+            run.results = [{"text": f"r{i}", "expected": "x", "actual": "x", "passed": True, "error": None}]
+            db_session.add(run)
+        await db_session.commit()
+
+        response = await client.get(app.url_path_for("llm_eval:list_runs"))
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert len(body) == 3
+        # Newest first → ids descending
+        assert body[0]["run_id"] > body[1]["run_id"] > body[2]["run_id"]
+        # Summary must NOT include results or request_payload
+        for row in body:
+            assert "results" not in row
+            assert "request_payload" not in row
+
+    @pytest.mark.anyio
+    async def test_respects_limit_and_offset(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, db_session: AsyncSession
+    ) -> None:
+        for _ in range(5):
+            run = LlmEvalRun()
+            run.status = LlmEvalRunStatus.completed
+            run.request_payload = _VALID_BODY
+            run.total = 2
+            db_session.add(run)
+        await db_session.commit()
+
+        response = await client.get(app.url_path_for("llm_eval:list_runs"), params={"limit": 2, "offset": 1})
+        assert response.status_code == HTTP_200_OK
+        assert len(response.json()) == 2
