@@ -67,51 +67,65 @@ async def execute_llm_eval_run(
         run.started_at = datetime.now()
         await session.commit()
 
-    classifications = [_FakeClassification(name=c.name, instructions=c.instructions) for c in payload.classifications]
-    repository = _InMemoryClassificationRepository(classifications)
-    adapter = AgentClassifierAdapter(agent, repository)  # type: ignore[arg-type]
+    try:
+        classifications = [
+            _FakeClassification(name=c.name, instructions=c.instructions) for c in payload.classifications
+        ]
+        repository = _InMemoryClassificationRepository(classifications)
+        adapter = AgentClassifierAdapter(agent, repository)  # type: ignore[arg-type]
 
-    for i, test_case in enumerate(payload.test_cases):
-        try:
-            actual: str | None = await adapter.classify(test_case.text)
-            result = LlmEvalTestCaseResult(
-                text=test_case.text,
-                expected=test_case.expected,
-                actual=actual,
-                passed=actual == test_case.expected,
-            )
-        except Exception:
-            logger.exception("llm eval run %d: test case %d raised", run_id, i)
-            result = LlmEvalTestCaseResult(
-                text=test_case.text,
-                expected=test_case.expected,
-                actual=None,
-                passed=False,
-                error=_PER_CASE_ERROR_MESSAGE,
-            )
+        for i, test_case in enumerate(payload.test_cases):
+            try:
+                actual: str | None = await adapter.classify(test_case.text)
+                result = LlmEvalTestCaseResult(
+                    text=test_case.text,
+                    expected=test_case.expected,
+                    actual=actual,
+                    passed=actual == test_case.expected,
+                )
+            except Exception:
+                logger.exception("llm eval run %d: test case %d raised", run_id, i)
+                result = LlmEvalTestCaseResult(
+                    text=test_case.text,
+                    expected=test_case.expected,
+                    actual=None,
+                    passed=False,
+                    error=_PER_CASE_ERROR_MESSAGE,
+                )
+
+            async with session_manager.session() as session:
+                run = await session.get(LlmEvalRun, run_id)
+                if run is None:
+                    logger.warning("llm eval run %d: row missing mid-run, aborting", run_id)
+                    return
+                # rebind: in-place .append() is not dirty-tracked on JSON columns
+                run.results = [*run.results, result.model_dump(mode="json")]
+                if result.error is not None:
+                    run.errored += 1
+                elif result.passed:
+                    run.passed += 1
+                else:
+                    run.failed += 1
+                await session.commit()
 
         async with session_manager.session() as session:
             run = await session.get(LlmEvalRun, run_id)
             if run is None:
-                logger.warning("llm eval run %d: row missing mid-run, aborting", run_id)
+                logger.warning("llm eval run %d: row missing at finalize, aborting", run_id)
                 return
-            # rebind: in-place .append() is not dirty-tracked on JSON columns
-            run.results = [*run.results, result.model_dump(mode="json")]
-            if result.error is not None:
-                run.errored += 1
-            elif result.passed:
-                run.passed += 1
-            else:
-                run.failed += 1
+            run.status = LlmEvalRunStatus.completed
+            run.finished_at = datetime.now()
             await session.commit()
 
-    async with session_manager.session() as session:
-        run = await session.get(LlmEvalRun, run_id)
-        if run is None:
-            logger.warning("llm eval run %d: row missing at finalize, aborting", run_id)
-            return
-        run.status = LlmEvalRunStatus.completed
-        run.finished_at = datetime.now()
-        await session.commit()
-
-    logger.info("llm eval run %d: completed", run_id)
+        logger.info("llm eval run %d: completed", run_id)
+    except Exception:
+        logger.exception("llm eval run %d: failed unexpectedly", run_id)
+        async with session_manager.session() as session:
+            run = await session.get(LlmEvalRun, run_id)
+            if run is None:
+                logger.warning("llm eval run %d: row missing at failure, aborting", run_id)
+                return
+            run.status = LlmEvalRunStatus.failed
+            run.error = "Run failed unexpectedly"
+            run.finished_at = datetime.now()
+            await session.commit()

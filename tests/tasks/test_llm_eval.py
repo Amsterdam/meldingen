@@ -194,3 +194,27 @@ async def test_results_written_incrementally(
     await db_session.refresh(seeded_run)
     assert seeded_run.status == LlmEvalRunStatus.completed
     assert len(seeded_run.results) == 2
+
+
+@pytest.mark.anyio
+async def test_unexpected_exception_marks_run_failed(
+    db_manager: DatabaseSessionManager,
+    db_session: AsyncSession,
+    seeded_run: LlmEvalRun,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """If something outside the per-case try raises, the run is marked failed."""
+
+    def boom(*args: Any, **kwargs: Any) -> None:
+        raise RuntimeError("adapter init failed")
+
+    monkeypatch.setattr("meldingen.tasks.llm_eval.AgentClassifierAdapter", boom)
+
+    await execute_llm_eval_run(seeded_run.id, _make_payload(), MagicMock(), db_manager)
+
+    await db_session.refresh(seeded_run)
+    assert seeded_run.status == LlmEvalRunStatus.failed
+    assert seeded_run.error == "Run failed unexpectedly"
+    assert seeded_run.finished_at is not None
+    # Must not leak internal detail
+    assert "adapter init failed" not in (seeded_run.error or "")
