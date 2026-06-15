@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -8,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_200_OK, HTTP_202_ACCEPTED, HTTP_404_NOT_FOUND, HTTP_503_SERVICE_UNAVAILABLE
 
+from meldingen.api.v1.endpoints.llm_eval import _background_tasks
 from meldingen.dependencies import classifier_agent
 from meldingen.models import LlmEvalRun, LlmEvalRunStatus, User
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
@@ -81,8 +83,11 @@ class TestLlmEvalCreateRun:
         assert isinstance(body["run_id"], int)
         assert body["status"] == LlmEvalRunStatus.pending.value
 
-        # Drain any pending tasks so they don't leak across tests.
-        await asyncio.sleep(0)
+        # Cancel any background tasks the endpoint spawned so they don't race teardown
+        for task in list(_background_tasks):
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await task
 
     @pytest.mark.anyio
     async def test_creates_row_in_db(
@@ -104,6 +109,12 @@ class TestLlmEvalCreateRun:
         assert run is not None
         assert run.total == 2
         assert run.request_payload["classifications"][0]["name"] == "Zwerfvuil"
+
+        # Cancel any background tasks the endpoint spawned so they don't race teardown
+        for task in list(_background_tasks):
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await task
 
 
 class TestLlmEvalGetRunUnauthorized(BaseUnauthorizedTest):

@@ -138,6 +138,10 @@ async def sweep_orphaned_runs(session_manager: DatabaseSessionManager) -> None:
     Runs that were `running` or `pending` when the previous process exited are
     stranded — their owning asyncio task died with the process. We surface this
     to callers by transitioning them to `failed` with a generic error message.
+
+    This MUST run before the FastAPI app accepts requests. A scheduled task from
+    the current process is indistinguishable from an orphan by status alone — the
+    safety of the sweep depends on no `POST /runs` handler having completed yet.
     """
     async with session_manager.session() as session:
         await session.execute(

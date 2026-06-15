@@ -31,7 +31,7 @@ class LlmEvalTestCaseResult(BaseModel):
 
 class LlmEvalRunCreateOutput(BaseModel):
     run_id: int
-    status: Literal[LlmEvalRunStatus.pending] = LlmEvalRunStatus.pending
+    status: Literal["pending"] = "pending"
 
 
 class LlmEvalRunDetailOutput(BaseModel):
