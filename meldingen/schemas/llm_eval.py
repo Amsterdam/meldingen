@@ -29,6 +29,13 @@ class LlmEvalTestCaseResult(BaseModel):
     error: str | None = None
 
 
+# TODO(Task 7): The sync endpoint at meldingen/api/v1/endpoints/llm_eval.py still
+# imports this name; it is deleted in Task 7 along with the endpoint rewrite.
+# Stubbed here so the import chain works while Tasks 3-6 land.
+class LlmEvalRunOutput(BaseModel):
+    pass
+
+
 class LlmEvalRunCreateOutput(BaseModel):
     run_id: int
     status: Literal[LlmEvalRunStatus.pending] = LlmEvalRunStatus.pending
