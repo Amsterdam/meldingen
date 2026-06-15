@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+_background_tasks: set[asyncio.Task[None]] = set()
+
 _service_unavailable_response: dict[str | int, dict[str, Any]] = {
     HTTP_503_SERVICE_UNAVAILABLE: {
         "description": "LLM is not enabled or not configured.",
@@ -63,9 +65,10 @@ async def create_llm_eval_run(
     run.created_by_user_id = user.id
     session.add(run)
     await session.commit()
-    await session.refresh(run)
 
-    asyncio.create_task(execute_llm_eval_run(run.id, body, agent, session_manager))
+    task = asyncio.create_task(execute_llm_eval_run(run.id, body, agent, session_manager))
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
     logger.info("llm eval run %d: scheduled by user %s", run.id, user.id)
 
     return LlmEvalRunCreateOutput(run_id=run.id)
