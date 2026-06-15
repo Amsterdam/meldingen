@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.status import HTTP_202_ACCEPTED, HTTP_503_SERVICE_UNAVAILABLE
+from starlette.status import HTTP_200_OK, HTTP_202_ACCEPTED, HTTP_404_NOT_FOUND, HTTP_503_SERVICE_UNAVAILABLE
 
 from meldingen.dependencies import classifier_agent
 from meldingen.models import LlmEvalRun, LlmEvalRunStatus, User
@@ -104,3 +104,50 @@ class TestLlmEvalCreateRun:
         assert run is not None
         assert run.total == 2
         assert run.request_payload["classifications"][0]["name"] == "Zwerfvuil"
+
+
+class TestLlmEvalGetRunUnauthorized(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "llm_eval:get_run"
+
+    def get_method(self) -> str:
+        return "GET"
+
+    def get_path_params(self) -> dict[str, int]:
+        return {"run_id": 1}
+
+
+class TestLlmEvalGetRun:
+    @pytest.mark.anyio
+    async def test_returns_404_for_unknown_run(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.get(app.url_path_for("llm_eval:get_run", run_id=9999999))
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_returns_full_run_state(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, db_session: AsyncSession
+    ) -> None:
+        run = LlmEvalRun()
+        run.status = LlmEvalRunStatus.completed
+        run.request_payload = _VALID_BODY
+        run.total = 2
+        run.passed = 1
+        run.failed = 1
+        run.results = [
+            {"text": "a", "expected": "x", "actual": "x", "passed": True, "error": None},
+            {"text": "b", "expected": "y", "actual": "x", "passed": False, "error": None},
+        ]
+        db_session.add(run)
+        await db_session.commit()
+        await db_session.refresh(run)
+
+        response = await client.get(app.url_path_for("llm_eval:get_run", run_id=run.id))
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body["run_id"] == run.id
+        assert body["status"] == "completed"
+        assert body["total"] == 2
+        assert body["passed"] == 1
+        assert body["failed"] == 1
+        assert len(body["results"]) == 2
+        assert body["request_payload"]["classifications"][0]["name"] == "Zwerfvuil"

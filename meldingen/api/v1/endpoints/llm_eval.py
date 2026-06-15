@@ -9,17 +9,17 @@ import asyncio
 import logging
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from pydantic_ai import Agent
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.status import HTTP_202_ACCEPTED, HTTP_503_SERVICE_UNAVAILABLE
+from starlette.status import HTTP_202_ACCEPTED, HTTP_404_NOT_FOUND, HTTP_503_SERVICE_UNAVAILABLE
 
-from meldingen.api.v1 import unauthorized_response
+from meldingen.api.v1 import not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.database import DatabaseSessionManager
 from meldingen.dependencies import classifier_agent, database_session, database_session_manager
 from meldingen.models import LlmEvalRun, User
-from meldingen.schemas.llm_eval import LlmEvalRunCreateOutput, LlmEvalRunInput
+from meldingen.schemas.llm_eval import LlmEvalRunCreateOutput, LlmEvalRunDetailOutput, LlmEvalRunInput
 from meldingen.tasks.llm_eval import execute_llm_eval_run
 
 logger = logging.getLogger(__name__)
@@ -72,3 +72,33 @@ async def create_llm_eval_run(
     logger.info("llm eval run %d: scheduled by user %s", run.id, user.id)
 
     return LlmEvalRunCreateOutput(run_id=run.id)
+
+
+@router.get(
+    "/runs/{run_id}",
+    name="llm_eval:get_run",
+    responses={**unauthorized_response, **not_found_response},
+    dependencies=[Depends(authenticate_user)],
+)
+async def get_llm_eval_run(
+    run_id: Annotated[int, Path(description="The run id.", ge=1)],
+    session: Annotated[AsyncSession, Depends(database_session)],
+) -> LlmEvalRunDetailOutput:
+    run = await session.get(LlmEvalRun, run_id)
+    if run is None:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Not Found")
+
+    return LlmEvalRunDetailOutput(
+        run_id=run.id,
+        status=run.status,
+        request_payload=LlmEvalRunInput.model_validate(run.request_payload),
+        total=run.total,
+        passed=run.passed,
+        failed=run.failed,
+        errored=run.errored,
+        results=run.results,
+        error=run.error,
+        created_at=run.created_at,
+        started_at=run.started_at,
+        finished_at=run.finished_at,
+    )
