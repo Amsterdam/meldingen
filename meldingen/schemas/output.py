@@ -249,9 +249,9 @@ class FormTimeComponentOutput(BaseFormComponentOutput):
 
 class AnswerOutput(BaseOutputModel):
     type: str
-    original_question_text: str | None = None
-    component_position: int | None = None
-    panel_position: int | None = None
+    original_question_text: str
+    component_position: int
+    panel_position: int
 
 
 class TextAnswerOutput(AnswerOutput):
