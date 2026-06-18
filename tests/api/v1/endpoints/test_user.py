@@ -34,7 +34,7 @@ class TestUserMe(BaseUnauthorizedTest):
         [("username #1", "user1@example.com"), ("username #2", "user2@example.com")],
     )
     async def test_get_current_user(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, user_username: str, user_email: str
+        self, app: FastAPI, client: AsyncClient, user_username: str, user_email: str, auth_user: None
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
         assert response.status_code == HTTP_200_OK

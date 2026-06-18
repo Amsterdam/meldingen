@@ -665,14 +665,32 @@ async def meldingen_with_different_states_and_locations(
     return meldingen
 
 
-async def authenticate_user_override(token: str | None = None) -> User:
-    user = User(username="user@example.com", email="user@example.com")
-    user.id = 400
-    return user
+@pytest.fixture
+def user_username(request: FixtureRequest) -> str:
+    if hasattr(request, "param") and request.param is not None:
+        return str(request.param)
+    else:
+        return "user"
 
 
 @pytest.fixture
-def auth_user(app: FastAPI) -> None:
+def user_email(request: FixtureRequest) -> str:
+    if hasattr(request, "param") and request.param is not None:
+        return str(request.param)
+    else:
+        return "user@example.com"
+
+
+@pytest.fixture
+def auth_user(app: FastAPI, user_username: str, user_email: str) -> None:
+    async def authenticate_user_override() -> User:
+        now = datetime.utcnow()
+        user = User(username=user_username, email=user_email)
+        user.id = 400
+        user.created_at = now
+        user.updated_at = now
+        return user
+
     app.dependency_overrides[authenticate_user] = authenticate_user_override
 
 
