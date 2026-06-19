@@ -94,7 +94,7 @@ async def execute_llm_eval_run(
                     expected=test_case.expected,
                     actual=None,
                     passed=False,
-                    error=_format_exception(exc),,
+                    error=_format_exception(exc),
                 )
 
             async with session_manager.session() as session:
