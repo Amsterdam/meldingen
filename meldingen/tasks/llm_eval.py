@@ -23,7 +23,10 @@ from meldingen.schemas.llm_eval import LlmEvalRunInput, LlmEvalTestCaseResult
 
 logger = logging.getLogger(__name__)
 
-_PER_CASE_ERROR_MESSAGE = "Classification failed for this test case."
+def _format_exception(exc: BaseException) -> str:
+    """Render an exception as a single-line ``Type: message`` string for storage."""
+    message = str(exc).strip()
+    return f"{type(exc).__name__}: {message}" if message else type(exc).__name__
 
 
 @dataclass
@@ -84,14 +87,14 @@ async def execute_llm_eval_run(
                     actual=actual,
                     passed=actual == test_case.expected,
                 )
-            except Exception:
+            except Exception as exc:
                 logger.exception("llm eval run %d: test case %d raised", run_id, i)
                 result = LlmEvalTestCaseResult(
                     text=test_case.text,
                     expected=test_case.expected,
                     actual=None,
                     passed=False,
-                    error=_PER_CASE_ERROR_MESSAGE,
+                    error=_format_exception(exc),,
                 )
 
             async with session_manager.session() as session:
@@ -119,7 +122,7 @@ async def execute_llm_eval_run(
             await session.commit()
 
         logger.info("llm eval run %d: completed", run_id)
-    except Exception:
+    except Exception as exc:
         logger.exception("llm eval run %d: failed unexpectedly", run_id)
         async with session_manager.session() as session:
             run = await session.get(LlmEvalRun, run_id)
@@ -127,7 +130,7 @@ async def execute_llm_eval_run(
                 logger.warning("llm eval run %d: row missing at failure, aborting", run_id)
                 return
             run.status = LlmEvalRunStatus.failed
-            run.error = "Run failed unexpectedly"
+            run.error = f"Run failed unexpectedly: {_format_exception(exc)}"
             run.finished_at = datetime.now()
             await session.commit()
 
