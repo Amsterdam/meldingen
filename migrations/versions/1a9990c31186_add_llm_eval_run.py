@@ -1,7 +1,7 @@
 """add llm eval run
 
 Revision ID: 1a9990c31186
-Revises: 5d12506587d5
+Revises: 8a68db304e9e
 Create Date: 2026-06-15 15:39:39.340770
 
 """
@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "1a9990c31186"
-down_revision: str | None = "5d12506587d5"
+down_revision: str | None = "8a68db304e9e"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
