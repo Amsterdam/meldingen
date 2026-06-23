@@ -582,3 +582,30 @@ class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     optimized_media_type: Mapped[str | None] = mapped_column(String(), default=None)
     thumbnail_path: Mapped[str | None] = mapped_column(String(), default=None)
     thumbnail_media_type: Mapped[str | None] = mapped_column(String(), default=None)
+
+
+class LlmEvalRunStatus(enum.StrEnum):
+    pending = "pending"
+    running = "running"
+    completed = "completed"
+    failed = "failed"
+
+
+class LlmEvalRun(BaseDBModel):
+    status: Mapped[LlmEvalRunStatus] = mapped_column(
+        Enum(LlmEvalRunStatus, name="llm_eval_run_status"),
+        index=True,
+        default=LlmEvalRunStatus.pending,
+    )
+    request_payload: Mapped[dict[str, Any]] = mapped_column(JSON, default_factory=dict)
+    results: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default_factory=list)
+    total: Mapped[int] = mapped_column(Integer, default=0)
+    passed: Mapped[int] = mapped_column(Integer, default=0)
+    failed: Mapped[int] = mapped_column(Integer, default=0)
+    errored: Mapped[int] = mapped_column(Integer, default=0)
+    error: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True, default=None
+    )
