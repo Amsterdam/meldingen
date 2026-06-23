@@ -365,6 +365,7 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
             azure_endpoint=settings.llm_base_url,
             azure_ad_token_provider=token_provider,
             api_version="2025-01-01-preview",
+            max_retries=0,  # disable retries, because doing a melding is more important than a correct classification
         )
         return AzureProvider(openai_client=client)
 
