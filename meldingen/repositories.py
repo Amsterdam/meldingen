@@ -14,6 +14,7 @@ from meldingen_core.repositories import (
     BaseFormRepository,
     BaseLabelRepository,
     BaseMeldingRepository,
+    BaseNoteRepository,
     BaseQuestionRepository,
     BaseRepository,
     BaseSourceRepository,
@@ -37,6 +38,7 @@ from meldingen.models import (
     Group,
     Label,
     Melding,
+    Note,
     Question,
     Source,
     StaticForm,
@@ -424,3 +426,8 @@ class LabelRepository(BaseSQLAlchemyRepository[Label], BaseLabelRepository[Label
 class SourceRepository(BaseSQLAlchemyRepository[Source], BaseSourceRepository[Source]):
     def get_model_type(self) -> type[Source]:
         return Source
+
+
+class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
+    def get_model_type(self) -> type[Note]:
+        return Note
