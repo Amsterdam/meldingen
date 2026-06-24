@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import AsyncIterator
 from typing import Any
 
-from meldingen_core.factories import BaseAssetFactory, BaseAttachmentFactory, BaseNoteFactory
+from meldingen_core.factories import BaseAssetFactory, BaseAttachmentFactory
 from plugfs.filesystem import Filesystem
 
 from meldingen.models import (
@@ -22,11 +22,9 @@ from meldingen.models import (
     FormIoTextFieldComponent,
     FormIoTimeComponent,
     Melding,
-    Note,
     Question,
     TextAnswer,
     TimeAnswer,
-    User,
     ValueLabelAnswer,
 )
 from meldingen.schemas.input import AnswerInputUnion
@@ -54,11 +52,6 @@ class AzureFilesystemFactory(BaseFilesystemFactory):
 class AssetFactory(BaseAssetFactory[Asset, AssetType, Melding]):
     def __call__(self, external_id: str, asset_type: AssetType, melding: Melding) -> Asset:
         return Asset(external_id, asset_type, melding)
-
-
-class NoteFactory(BaseNoteFactory[Note, Melding, User]):
-    def __call__(self, text: str, melding: Melding, user: User) -> Note:
-        return Note(text=text, melding=melding, user=user)
 
 
 class UnsupportedAnswerTypeException(Exception):

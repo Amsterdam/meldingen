@@ -2,30 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from meldingen.models import AnswerTypeEnum
-from meldingen.schemas.input import NoteInput, TimeAnswerInput
-
-
-def test_note_input_strips_whitespace() -> None:
-    assert NoteInput(text="  hello  ").text == "hello"
-
-
-@pytest.mark.parametrize("text", ["", "   ", "\n\t "])
-def test_note_input_rejects_empty_text(text: str) -> None:
-    with pytest.raises(ValidationError):
-        NoteInput(text=text)
-
-
-def test_note_input_rejects_plain_text_over_limit() -> None:
-    with pytest.raises(ValidationError):
-        NoteInput(text="a" * 3001)
-
-
-def test_note_input_accepts_markdown_over_limit_with_plain_text_under_limit() -> None:
-    # The raw markdown exceeds 3000 characters, but the rendered plain text does not.
-    text = "**" + ("a" * 2999) + "**"
-    assert len(text) > 3000
-
-    assert NoteInput(text=text).text == text
+from meldingen.schemas.input import TimeAnswerInput
 
 
 @pytest.mark.parametrize(

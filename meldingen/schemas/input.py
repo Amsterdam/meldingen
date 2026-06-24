@@ -14,30 +14,9 @@ from pydantic import (
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
-from meldingen.markdown import MarkdownToPlainTextConverter
 from meldingen.models import AnswerTypeEnum, FormIoComponentTypeEnum, FormIoFormDisplayEnum
 from meldingen.schemas.types import DateAnswerObject, FormIOConditional, PhoneNumber, ValueLabelObject
 from meldingen.validators import create_non_match_validator
-
-NOTE_MAX_PLAIN_TEXT_LENGTH = 3000
-
-_markdown_to_plain_text = MarkdownToPlainTextConverter()
-
-
-def validate_note_plain_text_length(value: str) -> str:
-    """Reject notes whose rendered plain text exceeds the limit. The raw markdown source
-    may be longer, as long as the visible text fits within the limit."""
-    if len(_markdown_to_plain_text(value)) > NOTE_MAX_PLAIN_TEXT_LENGTH:
-        raise ValueError(f"Note may not exceed {NOTE_MAX_PLAIN_TEXT_LENGTH} characters of plain text")
-    return value
-
-
-class NoteInput(BaseModel):
-    text: Annotated[
-        str,
-        StringConstraints(min_length=1, strip_whitespace=True),
-        AfterValidator(validate_note_plain_text_length),
-    ]
 
 
 class ClassificationInput(BaseModel):

@@ -58,12 +58,6 @@ class SourceOutput(BaseOutputModel):
     name: str
 
 
-class NoteOutput(BaseOutputModel):
-    text: str
-    melding_id: int
-    user_id: int
-
-
 class MeldingOutput(BaseOutputModel):
     public_id: str
     text: str

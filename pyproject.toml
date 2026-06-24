@@ -23,7 +23,6 @@ dependencies = [
     "geoalchemy2>=0.17.0,<1.0.0",
     "geojson-pydantic>=1.2.0,<3.0.0",
     "httpx[http2]>=0.28.1,<1.0.0",
-    "markdown-it-py>=4.0.0,<5.0.0",
     "meldingen-core",
     "mp-fsm",
     "opentelemetry-exporter-otlp-proto-grpc>=1.29.0,<2.0.0",

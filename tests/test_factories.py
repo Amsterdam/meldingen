@@ -1,7 +1,7 @@
 from meldingen_core.statemachine import MeldingStates
 
-from meldingen.factories import AnswerFactory, AttachmentFactory, NoteFactory
-from meldingen.models import Attachment, Melding, Note, Question, TextAnswer, User
+from meldingen.factories import AnswerFactory, AttachmentFactory
+from meldingen.models import Attachment, Melding, Question, TextAnswer
 from meldingen.schemas.input import TextAnswerInput
 
 
@@ -10,19 +10,6 @@ def test_attachment_factory() -> None:
     attachment = factory("original_filename.txt", Melding("melding text"), "image/png")
 
     assert isinstance(attachment, Attachment)
-
-
-def test_note_factory() -> None:
-    factory = NoteFactory()
-    melding = Melding("melding text")
-    user = User(username="behandelaar", email="behandelaar@example.com")
-
-    note = factory("a note", melding, user)
-
-    assert isinstance(note, Note)
-    assert note.text == "a note"
-    assert note.melding is melding
-    assert note.user is user
 
 
 def test_answer_factory_populates_snapshot_fields() -> None:

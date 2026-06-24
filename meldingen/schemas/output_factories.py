@@ -24,7 +24,6 @@ from meldingen.models import (
     FormIoTimeComponent,
     Label,
     Melding,
-    Note,
     Source,
     StaticForm,
     TextAnswer,
@@ -55,7 +54,6 @@ from meldingen.schemas.output import (
     MeldingCreateOutput,
     MeldingOutput,
     MeldingUpdateOutput,
-    NoteOutput,
     QuestionOutput,
     SimpleClassificationOutput,
     SimpleFormOutput,
@@ -692,18 +690,6 @@ class SourceOutputFactory:
             name=source.name,
             created_at=source.created_at,
             updated_at=source.updated_at,
-        )
-
-
-class NoteOutputFactory:
-    def __call__(self, note: Note) -> NoteOutput:
-        return NoteOutput(
-            id=note.id,
-            text=note.text,
-            melding_id=note.melding_id,
-            user_id=note.user_id,
-            created_at=note.created_at,
-            updated_at=note.updated_at,
         )
 
 
