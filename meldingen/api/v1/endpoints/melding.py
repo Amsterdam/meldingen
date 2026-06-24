@@ -24,7 +24,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
     MeldingUpdateActionMelder,
 )
-from meldingen_core.actions.note import NoteCreateAction
+from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import InvalidLabelException
@@ -126,6 +126,8 @@ from meldingen.dependencies import (
     melding_upload_attachment_action,
     note_create_action,
     note_output_factory,
+    note_retrieve_action,
+    note_retrieve_output_factory,
     public_id_generator,
     states_output_factory,
 )
@@ -162,6 +164,7 @@ from meldingen.schemas.output import (
     MeldingOutput,
     MeldingUpdateOutput,
     NoteOutput,
+    NoteRetrieveOutput,
     StatesOutput,
 )
 from meldingen.schemas.output_factories import (
@@ -172,6 +175,7 @@ from meldingen.schemas.output_factories import (
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
     NoteOutputFactory,
+    NoteRetrieveOutputFactory,
     StatesOutputFactory,
 )
 from meldingen.schemas.types import GeoJson
@@ -1240,6 +1244,26 @@ async def add_note(
 ) -> NoteOutput:
     try:
         note = await action(melding_id, note_input.text, user)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    return produce_output(note)
+
+
+@router.get(
+    "/{melding_id}/note/{note_id}",
+    name="melding:retrieve-note",
+    responses={**unauthorized_response, **not_found_response},
+    dependencies=[Depends(authenticate_user)],
+)
+async def retrieve_note(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    note_id: Annotated[int, Path(description="The id of the note.", ge=1)],
+    action: Annotated[NoteRetrieveAction[Note], Depends(note_retrieve_action)],
+    produce_output: Annotated[NoteRetrieveOutputFactory, Depends(note_retrieve_output_factory)],
+) -> NoteRetrieveOutput:
+    try:
+        note = await action(melding_id, note_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 

@@ -131,5 +131,5 @@ pydantic-media-type = { git = "https://github.com/Amsterdam/pydantic-media-type.
 pdok-api-client = { git = "https://github.com/Amsterdam/pdok-api-client.git" }
 amsterdam-mail-service-client = { git = "https://github.com/Amsterdam/amsterdam-mail-service-client.git" }
 mp-fsm = { git = "https://github.com/Amsterdam/mp-fsm.git" }
-meldingen-core = { git = "https://github.com/Amsterdam/meldingen-core.git", branch = "feature/7348_note_model_and_action" }
+meldingen-core = { git = "https://github.com/Amsterdam/meldingen-core.git", branch = "feature/7348_retrieve_note" }
 
