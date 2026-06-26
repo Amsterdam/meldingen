@@ -5,7 +5,12 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_CONTENT,
+)
 
 from meldingen.authentication import authenticate_user
 from meldingen.models import Melding, Note, User
@@ -157,3 +162,73 @@ class TestAddNote:
 
         assert response.status_code == HTTP_201_CREATED
         assert response.json()["text"] == text
+
+
+@pytest.fixture
+async def note(db_session: AsyncSession, melding: Melding, user: User) -> Note:
+    note = Note(text="An existing note", melding=melding, user=user)
+    db_session.add(note)
+    await db_session.commit()
+    return note
+
+
+class TestRetrieveNoteUnauthorized(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "melding:retrieve-note"
+
+    def get_method(self) -> str:
+        return "GET"
+
+    def get_path_params(self) -> dict[str, Any]:
+        return {"melding_id": 1, "note_id": 1}
+
+
+class TestRetrieveNote:
+    @pytest.mark.anyio
+    async def test_retrieve_note_returns_note_with_user(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_behandelaar: User,
+        melding: Melding,
+        user: User,
+        note: Note,
+    ) -> None:
+        response = await client.get(
+            app.url_path_for("melding:retrieve-note", melding_id=melding.id, note_id=note.id),
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert data["id"] == note.id
+        assert data["text"] == "An existing note"
+        assert data["melding_id"] == melding.id
+        assert "created_at" in data
+        assert "updated_at" in data
+
+        assert data["user"]["id"] == user.id
+        assert data["user"]["email"] == user.email
+        assert data["user"]["username"] == user.username
+        assert "created_at" in data["user"]
+        assert "updated_at" in data["user"]
+
+    @pytest.mark.anyio
+    async def test_retrieve_note_from_nonexistent_melding_returns_404(
+        self, app: FastAPI, client: AsyncClient, auth_behandelaar: User, note: Note
+    ) -> None:
+        response = await client.get(
+            app.url_path_for("melding:retrieve-note", melding_id=999999, note_id=note.id),
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_retrieve_nonexistent_note_returns_404(
+        self, app: FastAPI, client: AsyncClient, auth_behandelaar: User, melding: Melding
+    ) -> None:
+        response = await client.get(
+            app.url_path_for("melding:retrieve-note", melding_id=melding.id, note_id=999999),
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND

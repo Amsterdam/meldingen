@@ -321,6 +321,12 @@ class UserOutput(BaseOutputModel):
     username: str
 
 
+class NoteRetrieveOutput(BaseOutputModel):
+    text: str
+    melding_id: int
+    user: UserOutput
+
+
 class AssetOutput(BaseOutputModel):
     external_id: str
 

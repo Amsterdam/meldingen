@@ -433,7 +433,8 @@ class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
         return Note
 
     async def find_by_id_and_melding(self, note_id: int, melding_id: int) -> Note | None:
-        _type = self.get_model_type()
-        statement = select(_type).where(_type.id == note_id, _type.melding_id == melding_id)
+        statement = (
+            select(Note).where(Note.id == note_id, Note.melding_id == melding_id).options(selectinload(Note.user))
+        )
         result = await self._session.execute(statement)
         return result.scalars().unique().one_or_none()

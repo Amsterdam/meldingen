@@ -56,6 +56,7 @@ from meldingen.schemas.output import (
     MeldingOutput,
     MeldingUpdateOutput,
     NoteOutput,
+    NoteRetrieveOutput,
     QuestionOutput,
     SimpleClassificationOutput,
     SimpleFormOutput,
@@ -73,6 +74,7 @@ from meldingen.schemas.output import (
     TextAnswerQuestionOutput,
     TimeAnswerOutput,
     TimeAnswerQuestionOutput,
+    UserOutput,
     ValueLabelAnswerOutput,
     ValueLabelAnswerQuestionOutput,
 )
@@ -702,6 +704,25 @@ class NoteOutputFactory:
             text=note.text,
             melding_id=note.melding_id,
             user_id=note.user_id,
+            created_at=note.created_at,
+            updated_at=note.updated_at,
+        )
+
+
+class NoteRetrieveOutputFactory:
+    def __call__(self, note: Note) -> NoteRetrieveOutput:
+        user = note.user
+        return NoteRetrieveOutput(
+            id=note.id,
+            text=note.text,
+            melding_id=note.melding_id,
+            user=UserOutput(
+                id=user.id,
+                email=user.email,
+                username=user.username,
+                created_at=user.created_at,
+                updated_at=user.updated_at,
+            ),
             created_at=note.created_at,
             updated_at=note.updated_at,
         )
