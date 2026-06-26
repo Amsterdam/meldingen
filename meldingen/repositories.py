@@ -431,3 +431,9 @@ class SourceRepository(BaseSQLAlchemyRepository[Source], BaseSourceRepository[So
 class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
     def get_model_type(self) -> type[Note]:
         return Note
+
+    async def find_by_id_and_melding(self, note_id: int, melding_id: int) -> Note | None:
+        _type = self.get_model_type()
+        statement = select(_type).where(_type.id == note_id, _type.melding_id == melding_id)
+        result = await self._session.execute(statement)
+        return result.scalars().unique().one_or_none()
