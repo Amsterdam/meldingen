@@ -1724,7 +1724,7 @@ requires-dist = [
     { name = "geojson-pydantic", specifier = ">=1.2.0,<3.0.0" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.28.1,<1.0.0" },
     { name = "markdown-it-py", specifier = ">=4.0.0,<5.0.0" },
-    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git?branch=feature%2F7348_note_model_and_action" },
+    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git?branch=main" },
     { name = "mp-fsm", git = "https://github.com/Amsterdam/mp-fsm.git" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.29.0,<2.0.0" },
     { name = "opentelemetry-instrumentation-aiohttp-client", specifier = ">=0.55b1,<1.0" },
@@ -1773,7 +1773,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=feature%2F7348_note_model_and_action#080d9fbecc0e1eb73ffa7dd798996c36aa31b542" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=main#33154bb95cc5eb99a4625a86b7deef89083e91a8" }
 dependencies = [
     { name = "plugfs" },
 ]
