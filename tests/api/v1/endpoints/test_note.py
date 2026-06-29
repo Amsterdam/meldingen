@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 import pytest
@@ -219,3 +220,70 @@ class TestRetrieveNote:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+
+class TestListNotesUnauthorized(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "melding:notes"
+
+    def get_method(self) -> str:
+        return "GET"
+
+    def get_path_params(self) -> dict[str, Any]:
+        return {"melding_id": 1}
+
+
+class TestListNotes:
+    @pytest.mark.anyio
+    async def test_list_notes_from_nonexistent_melding_returns_404(
+        self, app: FastAPI, client: AsyncClient, auth_behandelaar: User
+    ) -> None:
+        response = await client.get(app.url_path_for("melding:notes", melding_id=999999))
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_list_notes_returns_empty_list_when_melding_has_no_notes(
+        self, app: FastAPI, client: AsyncClient, auth_behandelaar: User, melding: Melding
+    ) -> None:
+        response = await client.get(app.url_path_for("melding:notes", melding_id=melding.id))
+
+        assert response.status_code == HTTP_200_OK
+        assert response.json() == []
+
+    @pytest.mark.anyio
+    async def test_list_notes_returns_notes_sorted_by_created_at(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_behandelaar: User,
+        melding: Melding,
+        user: User,
+    ) -> None:
+        # Insert so that created_at order differs from insertion/id order, proving the
+        # list is sorted on created_at and not on id.
+        newer = Note(text="newer", melding=melding, user=user)
+        newer.created_at = datetime(2025, 1, 2, 12, 0, 0)
+        older = Note(text="older", melding=melding, user=user)
+        older.created_at = datetime(2025, 1, 1, 12, 0, 0)
+        db_session.add(newer)
+        db_session.add(older)
+        await db_session.commit()
+
+        response = await client.get(app.url_path_for("melding:notes", melding_id=melding.id))
+
+        assert response.status_code == HTTP_200_OK
+        data = response.json()
+        assert [note["text"] for note in data] == ["older", "newer"]
+
+        first = data[0]
+        assert first["melding_id"] == melding.id
+        assert "id" in first
+        assert "created_at" in first
+        assert "updated_at" in first
+        assert first["user"]["id"] == user.id
+        assert first["user"]["email"] == user.email
+        assert first["user"]["username"] == user.username
+        assert "created_at" in first["user"]
+        assert "updated_at" in first["user"]

@@ -24,7 +24,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
     MeldingUpdateActionMelder,
 )
-from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction
+from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import InvalidLabelException
@@ -125,6 +125,8 @@ from meldingen.dependencies import (
     melding_update_output_factory,
     melding_upload_attachment_action,
     note_create_action,
+    note_list_action,
+    note_list_output_factory,
     note_output_factory,
     note_retrieve_action,
     note_retrieve_output_factory,
@@ -175,6 +177,7 @@ from meldingen.schemas.output_factories import (
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
     NoteOutputFactory,
+    NoteListOutputFactory,
     NoteRetrieveOutputFactory,
     StatesOutputFactory,
 )
@@ -1248,6 +1251,25 @@ async def add_note(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return produce_output(note)
+
+
+@router.get(
+    "/{melding_id}/note",
+    name="melding:notes",
+    responses={**unauthorized_response, **not_found_response},
+    dependencies=[Depends(authenticate_user)],
+)
+async def list_notes(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    action: Annotated[NoteListAction[Note, Melding], Depends(note_list_action)],
+    produce_output: Annotated[NoteListOutputFactory, Depends(note_list_output_factory)],
+) -> list[NoteRetrieveOutput]:
+    try:
+        notes = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    return await produce_output(notes)
 
 
 @router.get(
