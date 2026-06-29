@@ -176,8 +176,8 @@ from meldingen.schemas.output_factories import (
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
-    NoteOutputFactory,
     NoteListOutputFactory,
+    NoteOutputFactory,
     NoteRetrieveOutputFactory,
     StatesOutputFactory,
 )

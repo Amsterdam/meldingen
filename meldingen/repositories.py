@@ -434,10 +434,7 @@ class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
 
     async def find_by_melding(self, melding_id: int) -> Sequence[Note]:
         statement = (
-            select(Note)
-            .where(Note.melding_id == melding_id)
-            .order_by(Note.created_at)
-            .options(selectinload(Note.user))
+            select(Note).where(Note.melding_id == melding_id).order_by(Note.created_at).options(selectinload(Note.user))
         )
         result = await self._session.execute(statement)
         return result.scalars().unique().all()
