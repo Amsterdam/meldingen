@@ -1267,7 +1267,7 @@ async def retrieve_note(
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return produce_output(note)
+    return await produce_output(note)
 
 
 @router.get(

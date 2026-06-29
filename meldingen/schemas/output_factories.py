@@ -710,8 +710,8 @@ class NoteOutputFactory:
 
 
 class NoteRetrieveOutputFactory:
-    def __call__(self, note: Note) -> NoteRetrieveOutput:
-        user = note.user
+    async def __call__(self, note: Note) -> NoteRetrieveOutput:
+        user = await note.awaitable_attrs.user
         return NoteRetrieveOutput(
             id=note.id,
             text=note.text,

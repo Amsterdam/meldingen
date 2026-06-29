@@ -12,21 +12,8 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
-from meldingen.authentication import authenticate_user
 from meldingen.models import Melding, Note, User
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
-
-
-@pytest.fixture
-def auth_behandelaar(app: FastAPI, user: User) -> User:
-    """Authenticate every request as the given (persisted) Behandelaar user."""
-
-    async def authenticate_user_override() -> User:
-        return user
-
-    app.dependency_overrides[authenticate_user] = authenticate_user_override
-
-    return user
 
 
 class TestAddNoteUnauthorized(BaseUnauthorizedTest):

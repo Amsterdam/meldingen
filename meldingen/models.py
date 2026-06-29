@@ -585,7 +585,7 @@ class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     thumbnail_media_type: Mapped[str | None] = mapped_column(String(), default=None)
 
 
-class Note(BaseDBModel, BaseNote):
+class Note(AsyncAttrs, BaseDBModel, BaseNote):
     """A free-form note that a Behandelaar can add to a melding. The text is stored as
     markdown (rendered plain text is limited to 3000 characters, see schemas.input.NoteInput)."""
 
