@@ -695,6 +695,18 @@ def auth_user(app: FastAPI, user_username: str, user_email: str) -> None:
 
 
 @pytest.fixture
+def auth_behandelaar(app: FastAPI, user: User) -> User:
+    """Authenticate every request as the given (persisted) Behandelaar user."""
+
+    async def authenticate_user_override() -> User:
+        return user
+
+    app.dependency_overrides[authenticate_user] = authenticate_user_override
+
+    return user
+
+
+@pytest.fixture
 def classification_name(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
         return str(request.param)

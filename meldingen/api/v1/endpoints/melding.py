@@ -24,6 +24,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
     MeldingUpdateActionMelder,
 )
+from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import InvalidLabelException
@@ -123,6 +124,10 @@ from meldingen.dependencies import (
     melding_update_action_melder,
     melding_update_output_factory,
     melding_upload_attachment_action,
+    note_create_action,
+    note_output_factory,
+    note_retrieve_action,
+    note_retrieve_output_factory,
     public_id_generator,
     states_output_factory,
 )
@@ -136,7 +141,9 @@ from meldingen.models import (
     FormIoComponentTypeEnum,
     Label,
     Melding,
+    Note,
     Source,
+    User,
 )
 from meldingen.repositories import AnswerRepository, FormIoQuestionComponentRepository, MeldingRepository
 from meldingen.schemas.input import (
@@ -146,6 +153,7 @@ from meldingen.schemas.input import (
     MeldingContactInput,
     MeldingInput,
     MeldingUpdateInput,
+    NoteInput,
 )
 from meldingen.schemas.output import (
     AnswerOutputUnion,
@@ -155,6 +163,8 @@ from meldingen.schemas.output import (
     MeldingCreateOutput,
     MeldingOutput,
     MeldingUpdateOutput,
+    NoteOutput,
+    NoteRetrieveOutput,
     StatesOutput,
 )
 from meldingen.schemas.output_factories import (
@@ -164,6 +174,8 @@ from meldingen.schemas.output_factories import (
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
+    NoteOutputFactory,
+    NoteRetrieveOutputFactory,
     StatesOutputFactory,
 )
 from meldingen.schemas.types import GeoJson
@@ -1215,6 +1227,47 @@ async def delete_asset(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
     except TokenException as e:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
+
+
+@router.post(
+    "/{melding_id}/note",
+    name="melding:add-note",
+    status_code=HTTP_201_CREATED,
+    responses={**unauthorized_response, **not_found_response},
+)
+async def add_note(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    note_input: NoteInput,
+    user: Annotated[User, Depends(authenticate_user)],
+    action: Annotated[NoteCreateAction[Note, Melding, User], Depends(note_create_action)],
+    produce_output: Annotated[NoteOutputFactory, Depends(note_output_factory)],
+) -> NoteOutput:
+    try:
+        note = await action(melding_id, note_input.text, user)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    return produce_output(note)
+
+
+@router.get(
+    "/{melding_id}/note/{note_id}",
+    name="melding:retrieve-note",
+    responses={**unauthorized_response, **not_found_response},
+    dependencies=[Depends(authenticate_user)],
+)
+async def retrieve_note(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    note_id: Annotated[int, Path(description="The id of the note.", ge=1)],
+    action: Annotated[NoteRetrieveAction[Note], Depends(note_retrieve_action)],
+    produce_output: Annotated[NoteRetrieveOutputFactory, Depends(note_retrieve_output_factory)],
+) -> NoteRetrieveOutput:
+    try:
+        note = await action(melding_id, note_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    return await produce_output(note)
 
 
 @router.get(

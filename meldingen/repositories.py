@@ -14,6 +14,7 @@ from meldingen_core.repositories import (
     BaseFormRepository,
     BaseLabelRepository,
     BaseMeldingRepository,
+    BaseNoteRepository,
     BaseQuestionRepository,
     BaseRepository,
     BaseSourceRepository,
@@ -37,6 +38,7 @@ from meldingen.models import (
     Group,
     Label,
     Melding,
+    Note,
     Question,
     Source,
     StaticForm,
@@ -424,3 +426,15 @@ class LabelRepository(BaseSQLAlchemyRepository[Label], BaseLabelRepository[Label
 class SourceRepository(BaseSQLAlchemyRepository[Source], BaseSourceRepository[Source]):
     def get_model_type(self) -> type[Source]:
         return Source
+
+
+class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
+    def get_model_type(self) -> type[Note]:
+        return Note
+
+    async def find_by_id_and_melding(self, note_id: int, melding_id: int) -> Note | None:
+        statement = (
+            select(Note).where(Note.id == note_id, Note.melding_id == melding_id).options(selectinload(Note.user))
+        )
+        result = await self._session.execute(statement)
+        return result.scalars().unique().one_or_none()

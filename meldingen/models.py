@@ -11,6 +11,7 @@ from meldingen_core.models import Classification as BaseClassification
 from meldingen_core.models import Form as BaseForm
 from meldingen_core.models import Label as BaseLabel
 from meldingen_core.models import Melding as BaseMelding
+from meldingen_core.models import Note as BaseNote
 from meldingen_core.models import Question as BaseQuestion
 from meldingen_core.models import Source as BaseSource
 from meldingen_core.models import User as BaseUser
@@ -582,6 +583,19 @@ class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     optimized_media_type: Mapped[str | None] = mapped_column(String(), default=None)
     thumbnail_path: Mapped[str | None] = mapped_column(String(), default=None)
     thumbnail_media_type: Mapped[str | None] = mapped_column(String(), default=None)
+
+
+class Note(AsyncAttrs, BaseDBModel, BaseNote):
+    """A free-form note that a Behandelaar can add to a melding. The text is stored as
+    markdown (rendered plain text is limited to 3000 characters, see schemas.input.NoteInput)."""
+
+    text: Mapped[str] = mapped_column(String())
+
+    melding_id: Mapped[int] = mapped_column(ForeignKey("melding.id"), init=False)
+    melding: Mapped[Melding] = relationship()
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), init=False)
+    user: Mapped[User] = relationship()
 
 
 class LlmEvalRunStatus(enum.StrEnum):

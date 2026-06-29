@@ -58,6 +58,12 @@ class SourceOutput(BaseOutputModel):
     name: str
 
 
+class NoteOutput(BaseOutputModel):
+    text: str
+    melding_id: int
+    user_id: int
+
+
 class MeldingOutput(BaseOutputModel):
     public_id: str
     text: str
@@ -313,6 +319,12 @@ class AttachmentOutput(BaseOutputModel):
 class UserOutput(BaseOutputModel):
     email: str
     username: str
+
+
+class NoteRetrieveOutput(BaseOutputModel):
+    text: str
+    melding_id: int
+    user: UserOutput
 
 
 class AssetOutput(BaseOutputModel):
