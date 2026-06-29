@@ -588,8 +588,10 @@ def note_list_action(
     return NoteListAction(repository, melding_repository)
 
 
-def note_list_output_factory() -> NoteListOutputFactory:
-    return NoteListOutputFactory(NoteRetrieveOutputFactory())
+def note_list_output_factory(
+    note_retrieve_output_factory: Annotated[NoteRetrieveOutputFactory, Depends(note_retrieve_output_factory)],
+) -> NoteListOutputFactory:
+    return NoteListOutputFactory(note_retrieve_output_factory)
 
 
 def melding_update_action(
