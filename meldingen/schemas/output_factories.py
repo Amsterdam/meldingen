@@ -728,6 +728,16 @@ class NoteRetrieveOutputFactory:
         )
 
 
+class NoteListOutputFactory:
+    _output_note: NoteRetrieveOutputFactory
+
+    def __init__(self, note_retrieve_output_factory: NoteRetrieveOutputFactory):
+        self._output_note = note_retrieve_output_factory
+
+    async def __call__(self, notes: Sequence[Note]) -> list[NoteRetrieveOutput]:
+        return [await self._output_note(note) for note in notes]
+
+
 class MeldingOutputFactory:
     _transform_location: LocationOutputTransformer
     _output_classification: SimpleClassificationOutputFactory
