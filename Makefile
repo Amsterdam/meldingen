@@ -21,7 +21,7 @@ up: ## Start Docker Compose stack (detached)
 rebuild: ## Rebuild and start Docker Compose stack (detached)
 	$(dc) up -d --build
 
-lint: ## Auto-fix formatting (black + isort)
+format: ## Auto-fix formatting (black + isort)
 	$(api) uv run black .
 	$(api) uv run isort .
 
