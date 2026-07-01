@@ -1,5 +1,7 @@
 import logging
 import os
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Any
 
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -28,7 +30,25 @@ from starlette.status import HTTP_409_CONFLICT
 
 from meldingen.api.v1.api import api_router
 from meldingen.config import settings
+from meldingen.database import DatabaseSessionManager
+from meldingen.dependencies import database_engine, database_session_manager
 from meldingen.middleware import ContentSizeLimitMiddleware
+from meldingen.tasks.llm_eval import sweep_orphaned_runs
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # Respect dependency overrides so test fixtures can point startup at the
+    # test engine/session-manager (lifespan runs outside the request cycle,
+    # so we resolve overrides manually).
+    manager_override = app.dependency_overrides.get(database_session_manager)
+    if manager_override is not None:
+        session_manager = manager_override()
+    else:
+        engine_factory = app.dependency_overrides.get(database_engine, database_engine)
+        session_manager = DatabaseSessionManager(engine_factory())
+    await sweep_orphaned_runs(session_manager)
+    yield
 
 
 def get_application() -> FastAPI:
@@ -36,6 +56,7 @@ def get_application() -> FastAPI:
         debug=settings.debug,
         title=settings.project_name,
         prefix=settings.url_prefix,
+        lifespan=lifespan,
         swagger_ui_init_oauth={
             "clientId": settings.auth_client_id,
             "scopes": settings.auth_scopes,
