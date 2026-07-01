@@ -24,6 +24,7 @@ from meldingen.models import (
     FormIoTimeComponent,
     Label,
     Melding,
+    Note,
     Source,
     StaticForm,
     TextAnswer,
@@ -54,6 +55,8 @@ from meldingen.schemas.output import (
     MeldingCreateOutput,
     MeldingOutput,
     MeldingUpdateOutput,
+    NoteOutput,
+    NoteRetrieveOutput,
     QuestionOutput,
     SimpleClassificationOutput,
     SimpleFormOutput,
@@ -71,6 +74,7 @@ from meldingen.schemas.output import (
     TextAnswerQuestionOutput,
     TimeAnswerOutput,
     TimeAnswerQuestionOutput,
+    UserOutput,
     ValueLabelAnswerOutput,
     ValueLabelAnswerQuestionOutput,
 )
@@ -691,6 +695,47 @@ class SourceOutputFactory:
             created_at=source.created_at,
             updated_at=source.updated_at,
         )
+
+
+class NoteOutputFactory:
+    def __call__(self, note: Note) -> NoteOutput:
+        return NoteOutput(
+            id=note.id,
+            text=note.text,
+            melding_id=note.melding_id,
+            user_id=note.user_id,
+            created_at=note.created_at,
+            updated_at=note.updated_at,
+        )
+
+
+class NoteRetrieveOutputFactory:
+    async def __call__(self, note: Note) -> NoteRetrieveOutput:
+        user = await note.awaitable_attrs.user
+        return NoteRetrieveOutput(
+            id=note.id,
+            text=note.text,
+            melding_id=note.melding_id,
+            user=UserOutput(
+                id=user.id,
+                email=user.email,
+                username=user.username,
+                created_at=user.created_at,
+                updated_at=user.updated_at,
+            ),
+            created_at=note.created_at,
+            updated_at=note.updated_at,
+        )
+
+
+class NoteListOutputFactory:
+    _output_note: NoteRetrieveOutputFactory
+
+    def __init__(self, note_retrieve_output_factory: NoteRetrieveOutputFactory):
+        self._output_note = note_retrieve_output_factory
+
+    async def __call__(self, notes: Sequence[Note]) -> list[NoteRetrieveOutput]:
+        return [await self._output_note(note) for note in notes]
 
 
 class MeldingOutputFactory:

@@ -36,6 +36,17 @@ def _hydrate_output(user: User) -> UserOutput:
     )
 
 
+@router.get(
+    "/me",
+    name="user:me",
+    responses={**unauthorized_response, **not_found_response},
+)
+async def get_current_user(
+    user: Annotated[User, Depends(authenticate_user)],
+) -> UserOutput:
+    return _hydrate_output(user)
+
+
 @router.post(
     "/",
     name="user:create",

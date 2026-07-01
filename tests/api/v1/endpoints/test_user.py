@@ -18,6 +18,31 @@ from meldingen.models import User
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
+class TestUserMe(BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "user:me"
+    METHOD: Final[str] = "GET"
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return self.METHOD
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "user_username, user_email",
+        [("username #1", "user1@example.com"), ("username #2", "user2@example.com")],
+    )
+    async def test_get_current_user(
+        self, app: FastAPI, client: AsyncClient, user_username: str, user_email: str, auth_user: None
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+        assert response.status_code == HTTP_200_OK
+        data = response.json()
+        assert data.get("username") == user_username
+        assert data.get("email") == user_email
+
+
 class TestUserCreate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "user:create"
     METHOD: Final[str] = "POST"

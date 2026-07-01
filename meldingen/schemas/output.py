@@ -58,6 +58,12 @@ class SourceOutput(BaseOutputModel):
     name: str
 
 
+class NoteOutput(BaseOutputModel):
+    text: str
+    melding_id: int
+    user_id: int
+
+
 class MeldingOutput(BaseOutputModel):
     public_id: str
     text: str
@@ -249,7 +255,7 @@ class FormTimeComponentOutput(BaseFormComponentOutput):
 
 class AnswerOutput(BaseOutputModel):
     type: str
-    original_question_text: str | None = None
+    original_question_text: str
     component_position: int | None = None
     panel_position: int | None = None
 
@@ -313,6 +319,12 @@ class AttachmentOutput(BaseOutputModel):
 class UserOutput(BaseOutputModel):
     email: str
     username: str
+
+
+class NoteRetrieveOutput(BaseOutputModel):
+    text: str
+    melding_id: int
+    user: UserOutput
 
 
 class AssetOutput(BaseOutputModel):

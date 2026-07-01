@@ -29,6 +29,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
     MeldingUpdateActionMelder,
 )
+from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction
 from meldingen_core.classification import BaseClassifierAdapter, Classifier
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
@@ -127,6 +128,7 @@ from meldingen.factories import (
     AzureFilesystemFactory,
     BaseFilesystemFactory,
     FormIoQuestionComponentFactory,
+    NoteFactory,
 )
 from meldingen.generators import PublicIdGenerator
 from meldingen.image import (
@@ -161,7 +163,7 @@ from meldingen.mail import (
     SendCompletedMailTask,
     SendConfirmationMailTask,
 )
-from meldingen.models import Answer, Asset, Classification, Label, Melding, Source
+from meldingen.models import Answer, Asset, Classification, Label, Melding, Note, Source, User
 from meldingen.reclassification import Reclassifier
 from meldingen.repositories import (
     AnswerRepository,
@@ -173,6 +175,7 @@ from meldingen.repositories import (
     FormRepository,
     LabelRepository,
     MeldingRepository,
+    NoteRepository,
     QuestionRepository,
     SourceRepository,
     StaticFormRepository,
@@ -199,6 +202,9 @@ from meldingen.schemas.output_factories import (
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
+    NoteListOutputFactory,
+    NoteOutputFactory,
+    NoteRetrieveOutputFactory,
     SimpleClassificationOutputFactory,
     SimpleFormOutputFactory,
     SimpleStaticFormOutputFactory,
@@ -543,6 +549,49 @@ def source_list_action(
     repository: Annotated[SourceRepository, Depends(source_repository)],
 ) -> SourceListAction:
     return SourceListAction(repository)
+
+
+def note_repository(session: Annotated[AsyncSession, Depends(database_session)]) -> NoteRepository:
+    return NoteRepository(session)
+
+
+def note_factory() -> NoteFactory:
+    return NoteFactory()
+
+
+def note_create_action(
+    repository: Annotated[NoteRepository, Depends(note_repository)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    note_factory: Annotated[NoteFactory, Depends(note_factory)],
+) -> NoteCreateAction[Note, Melding, User]:
+    return NoteCreateAction(repository, melding_repository, note_factory)
+
+
+def note_output_factory() -> NoteOutputFactory:
+    return NoteOutputFactory()
+
+
+def note_retrieve_action(
+    repository: Annotated[NoteRepository, Depends(note_repository)],
+) -> NoteRetrieveAction[Note]:
+    return NoteRetrieveAction(repository)
+
+
+def note_retrieve_output_factory() -> NoteRetrieveOutputFactory:
+    return NoteRetrieveOutputFactory()
+
+
+def note_list_action(
+    repository: Annotated[NoteRepository, Depends(note_repository)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> NoteListAction[Note, Melding]:
+    return NoteListAction(repository, melding_repository)
+
+
+def note_list_output_factory(
+    note_retrieve_output_factory: Annotated[NoteRetrieveOutputFactory, Depends(note_retrieve_output_factory)],
+) -> NoteListOutputFactory:
+    return NoteListOutputFactory(note_retrieve_output_factory)
 
 
 def melding_update_action(
