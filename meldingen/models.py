@@ -62,6 +62,8 @@ class Asset(BaseDBModel, BaseAsset):
     external_id: Mapped[str] = mapped_column(String)
     type_id: Mapped[int] = mapped_column(ForeignKey(AssetType.id), init=False)
     type: Mapped[AssetType] = relationship()
+    label: Mapped[str] = mapped_column(String)
+    subtype: Mapped[str] = mapped_column(String)
 
 
 class Classification(AsyncAttrs, BaseDBModel, BaseClassification):

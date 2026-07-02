@@ -329,6 +329,8 @@ class NoteRetrieveOutput(BaseOutputModel):
 
 class AssetOutput(BaseOutputModel):
     external_id: str
+    label: str
+    subtype: str
 
 
 class StatesOutput(BaseModel):

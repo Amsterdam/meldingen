@@ -246,7 +246,7 @@ async def melding_with_classification_with_asset_type(
 ) -> Melding:
     asset_type: AssetType = await classification_with_asset_type.awaitable_attrs.asset_type
     assert asset_type is not None
-    asset = Asset(external_id="test_external_id", type=asset_type, melding=melding)
+    asset = Asset(external_id="test_external_id", type=asset_type, melding=melding, label="label", subtype="subtype")
 
     melding.assets.append(asset)
     melding.classification = classification_with_asset_type
@@ -501,7 +501,11 @@ async def melding_with_assets(
 ) -> Melding:
     for i in range(5):
         asset = Asset(
-            external_id=f"external_id_{i}", type=asset_type, melding=melding_with_classification_with_asset_type
+            external_id=f"external_id_{i}",
+            type=asset_type,
+            melding=melding_with_classification_with_asset_type,
+            label="label",
+            subtype="subtype",
         )
         db_session.add(asset)
         melding_with_classification_with_asset_type.assets.append(asset)
@@ -524,7 +528,7 @@ async def melding_with_assets_with_classification_and_asset_type(
     melding.classification = classification_with_asset_type
 
     for i in range(5):
-        asset = Asset(external_id=f"external_id_{i}", type=asset_type, melding=melding)
+        asset = Asset(external_id=f"external_id_{i}", type=asset_type, melding=melding, label="label", subtype="subtype")
         db_session.add(asset)
         melding.assets.append(asset)
         db_session.add(melding)
@@ -1568,7 +1572,7 @@ async def asset_types(db_session: AsyncSession) -> list[AssetType]:
 
 @pytest.fixture
 async def asset(db_session: AsyncSession, asset_type: AssetType, melding: Melding) -> Asset:
-    asset = Asset("some_external_id", asset_type, melding=melding)
+    asset = Asset("some_external_id", asset_type, melding=melding, label="label", subtype="subtype")
 
     db_session.add(asset)
     await db_session.commit()

@@ -1008,6 +1008,8 @@ class AssetOutputFactory:
         return AssetOutput(
             id=asset.id,
             external_id=asset.external_id,
+            label=asset.label,
+            subtype=asset.subtype,
             created_at=asset.created_at,
             updated_at=asset.updated_at,
         )

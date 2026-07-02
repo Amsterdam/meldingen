@@ -52,8 +52,8 @@ class AzureFilesystemFactory(BaseFilesystemFactory):
 
 
 class AssetFactory(BaseAssetFactory[Asset, AssetType, Melding]):
-    def __call__(self, external_id: str, asset_type: AssetType, melding: Melding) -> Asset:
-        return Asset(external_id, asset_type, melding)
+    def __call__(self, external_id: str, asset_type: AssetType, melding: Melding, label: str, subtype: str) -> Asset:
+        return Asset(external_id, asset_type, melding, label=label, subtype=subtype)
 
 
 class NoteFactory(BaseNoteFactory[Note, Melding, User]):
