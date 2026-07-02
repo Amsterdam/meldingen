@@ -528,7 +528,9 @@ async def melding_with_assets_with_classification_and_asset_type(
     melding.classification = classification_with_asset_type
 
     for i in range(5):
-        asset = Asset(external_id=f"external_id_{i}", type=asset_type, melding=melding, label="label", subtype="subtype")
+        asset = Asset(
+            external_id=f"external_id_{i}", type=asset_type, melding=melding, label="label", subtype="subtype"
+        )
         db_session.add(asset)
         melding.assets.append(asset)
         db_session.add(melding)

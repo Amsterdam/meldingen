@@ -5712,7 +5712,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id", "asset_type_id": asset_type.id, "label": "Container", "subtype": "gft"},
+            json={
+                "external_id": "my_external_id",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "gft",
+            },
         )
 
         assert response.status_code == HTTP_200_OK
@@ -5748,7 +5753,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
                 self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
             ),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id", "asset_type_id": asset_type.id, "label": "Container", "subtype": "gft"},
+            json={
+                "external_id": "my_external_id",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "gft",
+            },
         )
         assert response1.status_code == HTTP_200_OK
 
@@ -5757,7 +5767,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
                 self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
             ),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id_2", "asset_type_id": asset_type.id, "label": "Container", "subtype": "glas"},
+            json={
+                "external_id": "my_external_id_2",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "glas",
+            },
         )
         assert response2.status_code == HTTP_200_OK
 
@@ -5767,7 +5782,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
                 self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
             ),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id_3", "asset_type_id": asset_type.id, "label": "Container", "subtype": "papier"},
+            json={
+                "external_id": "my_external_id_3",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "papier",
+            },
         )
 
         assert response3.status_code == HTTP_400_BAD_REQUEST
@@ -5788,7 +5808,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
                 self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
             ),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id_3", "asset_type_id": asset_type.id, "label": "Container", "subtype": "papier"},
+            json={
+                "external_id": "my_external_id_3",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "papier",
+            },
         )
         assert response.status_code == HTTP_200_OK
 
@@ -5800,7 +5825,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id", "asset_type_id": asset_type.id, "label": "Container", "subtype": "gft"},
+            json={
+                "external_id": "my_external_id",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "gft",
+            },
         )
 
         assert response.status_code == HTTP_400_BAD_REQUEST
@@ -5822,7 +5852,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification_with_asset_type.id),
             params={"token": "supersecrettoken"},
-            json={"external_id": asset.external_id, "asset_type_id": asset.type_id, "label": "Container", "subtype": "gft"},
+            json={
+                "external_id": asset.external_id,
+                "asset_type_id": asset.type_id,
+                "label": "Container",
+                "subtype": "gft",
+            },
         )
 
         assert response.status_code == HTTP_200_OK
@@ -5857,7 +5892,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=melding_with_asset.id),
             params={"token": "supersecrettoken"},
-            json={"external_id": asset.external_id, "asset_type_id": asset.type_id, "label": "Container", "subtype": "gft"},
+            json={
+                "external_id": asset.external_id,
+                "asset_type_id": asset.type_id,
+                "label": "Container",
+                "subtype": "gft",
+            },
         )
 
         assert response.status_code == HTTP_400_BAD_REQUEST
