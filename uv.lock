@@ -1751,7 +1751,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=main#43629943933cc8133582756786254ff9f7700e19" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=main#bf3ac358c70dabcac9b394eeb559985a5587aa55" }
 dependencies = [
     { name = "plugfs" },
 ]
