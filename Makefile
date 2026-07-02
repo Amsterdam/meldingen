@@ -21,7 +21,7 @@ up: ## Start Docker Compose stack (detached)
 rebuild: ## Rebuild and start Docker Compose stack (detached)
 	$(dc) up -d --build
 
-lint: ## Auto-fix formatting (black + isort)
+format: ## Auto-fix formatting (black + isort)
 	$(api) uv run black .
 	$(api) uv run isort .
 
@@ -40,6 +40,13 @@ test-pdb: ## Run pytest with python debugger on failure (optional: make test-pdb
 test-coverage: ## Run pytest with coverage and enforce minimum threshold
 	$(api) pytest --test-alembic --cov --cov-fail-under=95 -n auto --cov-report=html -v $(TEST)
 
+update: ## Update dependencies (uv)
+	$(api) uv lock --upgrade
+
+check-all: ## Run all checks (format, typecheck, test)
+	$(MAKE) format
+	$(MAKE) typecheck
+	$(MAKE) test
 
 ### CI ###
 

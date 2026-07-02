@@ -93,7 +93,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert violation.get("msg") == "String should have at least 1 character"
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_create_classification_duplicate_name(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
@@ -403,7 +403,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         return self.PATH_PARAMS
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_retrieve_classification(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
@@ -493,7 +493,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         return self.PATH_PARAMS
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_update_classification(
         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
     ) -> None:
@@ -623,7 +623,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         return self.PATH_PARAMS
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_name,", ["bla"], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_delete_classification(
         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
     ) -> None:
