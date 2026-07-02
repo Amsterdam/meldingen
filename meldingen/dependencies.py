@@ -29,7 +29,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
     MeldingUpdateActionMelder,
 )
-from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction
+from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction, NoteUpdateAction
 from meldingen_core.classification import BaseClassifierAdapter, Classifier
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
@@ -579,6 +579,12 @@ def note_retrieve_action(
 
 def note_retrieve_output_factory() -> NoteRetrieveOutputFactory:
     return NoteRetrieveOutputFactory()
+
+
+def note_update_action(
+    repository: Annotated[NoteRepository, Depends(note_repository)],
+) -> NoteUpdateAction[Note]:
+    return NoteUpdateAction(repository)
 
 
 def note_list_action(
