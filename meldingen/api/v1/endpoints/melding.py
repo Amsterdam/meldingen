@@ -1320,7 +1320,10 @@ async def update_note(
     if note.user_id != user.id:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN)
 
-    updated = await update(melding_id, note_id, note_input.text)
+    try:
+        updated = await update(melding_id, note_id, note_input.text)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return await produce_output(updated)
 
