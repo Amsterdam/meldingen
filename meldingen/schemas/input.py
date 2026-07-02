@@ -289,3 +289,5 @@ class AssetTypeUpdateInput(BaseModel):
 class MeldingAssetInput(BaseModel):
     external_id: str
     asset_type_id: int
+    label: str
+    subtype: str

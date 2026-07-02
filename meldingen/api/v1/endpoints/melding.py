@@ -7,6 +7,7 @@ from geojson_pydantic import Feature
 from geojson_pydantic.geometries import Geometry
 from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.actions.melding import (
+    AssetData,
     MelderMeldingListQuestionsAnswersAction,
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
@@ -1154,7 +1155,16 @@ async def add_asset(
     produce_output: Annotated[MeldingUpdateOutputFactory, Depends(melding_update_output_factory)],
 ) -> MeldingUpdateOutput:
     try:
-        melding = await action(melding_id, input.external_id, input.asset_type_id, token)
+        melding = await action(
+            melding_id,
+            AssetData(
+                external_id=input.external_id,
+                asset_type_id=input.asset_type_id,
+                label=input.label,
+                subtype=input.subtype,
+            ),
+            token,
+        )
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
     except TokenException as e:

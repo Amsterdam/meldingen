@@ -5669,7 +5669,7 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
 
     @override
     def get_json(self) -> dict[str, Any] | None:
-        return {"external_id": "some_external_id", "asset_type_id": 123}
+        return {"external_id": "some_external_id", "asset_type_id": 123, "label": "Container 123", "subtype": "gft"}
 
     @pytest.mark.anyio
     async def test_add_asset_to_melding_that_does_not_exist(self, app: FastAPI, client: AsyncClient) -> None:
@@ -5712,7 +5712,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id", "asset_type_id": asset_type.id},
+            json={
+                "external_id": "my_external_id",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "gft",
+            },
         )
 
         assert response.status_code == HTTP_200_OK
@@ -5748,7 +5753,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
                 self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
             ),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id", "asset_type_id": asset_type.id},
+            json={
+                "external_id": "my_external_id",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "gft",
+            },
         )
         assert response1.status_code == HTTP_200_OK
 
@@ -5757,7 +5767,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
                 self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
             ),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id_2", "asset_type_id": asset_type.id},
+            json={
+                "external_id": "my_external_id_2",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "glas",
+            },
         )
         assert response2.status_code == HTTP_200_OK
 
@@ -5767,7 +5782,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
                 self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
             ),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id_3", "asset_type_id": asset_type.id},
+            json={
+                "external_id": "my_external_id_3",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "papier",
+            },
         )
 
         assert response3.status_code == HTTP_400_BAD_REQUEST
@@ -5788,7 +5808,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
                 self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
             ),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id_3", "asset_type_id": asset_type.id},
+            json={
+                "external_id": "my_external_id_3",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "papier",
+            },
         )
         assert response.status_code == HTTP_200_OK
 
@@ -5800,7 +5825,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
             params={"token": "supersecrettoken"},
-            json={"external_id": "my_external_id", "asset_type_id": asset_type.id},
+            json={
+                "external_id": "my_external_id",
+                "asset_type_id": asset_type.id,
+                "label": "Container",
+                "subtype": "gft",
+            },
         )
 
         assert response.status_code == HTTP_400_BAD_REQUEST
@@ -5822,7 +5852,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=melding_with_classification_with_asset_type.id),
             params={"token": "supersecrettoken"},
-            json={"external_id": asset.external_id, "asset_type_id": asset.type_id},
+            json={
+                "external_id": asset.external_id,
+                "asset_type_id": asset.type_id,
+                "label": "Container",
+                "subtype": "gft",
+            },
         )
 
         assert response.status_code == HTTP_200_OK
@@ -5857,7 +5892,12 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=melding_with_asset.id),
             params={"token": "supersecrettoken"},
-            json={"external_id": asset.external_id, "asset_type_id": asset.type_id},
+            json={
+                "external_id": asset.external_id,
+                "asset_type_id": asset.type_id,
+                "label": "Container",
+                "subtype": "gft",
+            },
         )
 
         assert response.status_code == HTTP_400_BAD_REQUEST
@@ -5894,6 +5934,9 @@ class TestMeldingMelderListAssets(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert len(assets) == len(body)
+        for asset in body:
+            assert asset.get("label") == "label"
+            assert asset.get("subtype") == "subtype"
 
     @pytest.mark.anyio
     async def test_list_assets_with_non_existing_melding(
@@ -5934,6 +5977,9 @@ class TestMeldingListAssets(BaseUnauthorizedTest):
         body = response.json()
 
         assert len(assets) == len(body)
+        for asset in body:
+            assert asset.get("label") == "label"
+            assert asset.get("subtype") == "subtype"
 
     @pytest.mark.anyio
     async def test_list_assets_with_non_existing_melding(
