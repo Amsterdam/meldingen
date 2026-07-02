@@ -24,7 +24,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
     MeldingUpdateActionMelder,
 )
-from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction
+from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction, NoteUpdateAction
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import InvalidLabelException
@@ -40,6 +40,7 @@ from starlette.status import (
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_413_CONTENT_TOO_LARGE,
     HTTP_422_UNPROCESSABLE_CONTENT,
@@ -70,6 +71,7 @@ from meldingen.actions.melding import (
 from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
 from meldingen.api.v1 import (
     default_response,
+    forbidden_response,
     image_data_response,
     list_response,
     not_found_response,
@@ -130,6 +132,7 @@ from meldingen.dependencies import (
     note_output_factory,
     note_retrieve_action,
     note_retrieve_output_factory,
+    note_update_action,
     public_id_generator,
     states_output_factory,
 )
@@ -156,6 +159,7 @@ from meldingen.schemas.input import (
     MeldingInput,
     MeldingUpdateInput,
     NoteInput,
+    NoteUpdateInput,
 )
 from meldingen.schemas.output import (
     AnswerOutputUnion,
@@ -1290,6 +1294,35 @@ async def retrieve_note(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return await produce_output(note)
+
+
+@router.patch(
+    "/{melding_id}/note/{note_id}",
+    name="melding:update-note",
+    responses={**unauthorized_response, **forbidden_response, **not_found_response},
+)
+async def update_note(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    note_id: Annotated[int, Path(description="The id of the note.", ge=1)],
+    note_input: NoteUpdateInput,
+    user: Annotated[User, Depends(authenticate_user)],
+    retrieve: Annotated[NoteRetrieveAction[Note], Depends(note_retrieve_action)],
+    update: Annotated[NoteUpdateAction[Note], Depends(note_update_action)],
+    produce_output: Annotated[NoteRetrieveOutputFactory, Depends(note_retrieve_output_factory)],
+) -> NoteRetrieveOutput:
+    # Fetch the note first so ownership can be verified before it is mutated. A note may only
+    # be edited by the user that created it.
+    try:
+        note = await retrieve(melding_id, note_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+
+    if note.user_id != user.id:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN)
+
+    updated = await update(melding_id, note_id, note_input.text)
+
+    return await produce_output(updated)
 
 
 @router.get(

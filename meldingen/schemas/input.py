@@ -40,6 +40,15 @@ class NoteInput(BaseModel):
     ]
 
 
+class NoteUpdateInput(BaseModel):
+    # Unlike NoteInput, an empty string is allowed: an empty text signals that the note is deleted.
+    text: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True),
+        AfterValidator(validate_note_plain_text_length),
+    ]
+
+
 class ClassificationInput(BaseModel):
     name: str = Field(min_length=1)
     instructions: str | None = Field(default=None)

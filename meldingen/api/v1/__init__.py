@@ -5,6 +5,7 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
 )
@@ -42,6 +43,17 @@ unauthorized_response: Final[dict[str | int, dict[str, Any]]] = {
         "content": {
             "application/json": {
                 "example": {"detail": "Token expired"},
+                "schema": ResponseWithDetail.model_json_schema(),
+            }
+        },
+    }
+}
+forbidden_response: Final[dict[str | int, dict[str, Any]]] = {
+    HTTP_403_FORBIDDEN: {
+        "description": "Forbidden, the authenticated user is not allowed to perform this action.",
+        "content": {
+            "application/json": {
+                "example": {"detail": "Forbidden"},
                 "schema": ResponseWithDetail.model_json_schema(),
             }
         },
