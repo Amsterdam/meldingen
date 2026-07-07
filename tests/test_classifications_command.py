@@ -24,7 +24,7 @@ async def test_ensure_fallback_classification_uses_idempotent_upsert() -> None:
     session.commit.assert_awaited_once()
 
     statement = session.execute.await_args.args[0]
-    compiled = statement.compile(dialect=postgresql.dialect())
+    compiled = statement.compile(dialect=postgresql.dialect())  # type: ignore[no-untyped-call]
     sql = str(compiled)
 
     assert "ON CONFLICT" in sql
