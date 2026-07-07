@@ -2,7 +2,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pydantic import ValidationError
-
 from pydantic_ai.models.openai import OpenAIChatModelSettings
 
 from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
@@ -60,7 +59,10 @@ def _mock_settings(**overrides: object) -> MagicMock:
 
 
 def test_effort_sent_for_reasoning_model() -> None:
-    with patch("meldingen.dependencies.settings", _mock_settings(llm_model_identifier="gpt-5-mini", llm_reasoning_effort="medium")):
+    with patch(
+        "meldingen.dependencies.settings",
+        _mock_settings(llm_model_identifier="gpt-5-mini", llm_reasoning_effort="medium"),
+    ):
         from meldingen.dependencies import classification_model_settings
 
         result = classification_model_settings()
@@ -70,14 +72,18 @@ def test_effort_sent_for_reasoning_model() -> None:
 
 
 def test_effort_omitted_for_non_reasoning_model() -> None:
-    with patch("meldingen.dependencies.settings", _mock_settings(llm_model_identifier="gpt-4o", llm_reasoning_effort="low")):
+    with patch(
+        "meldingen.dependencies.settings", _mock_settings(llm_model_identifier="gpt-4o", llm_reasoning_effort="low")
+    ):
         from meldingen.dependencies import classification_model_settings
 
         assert classification_model_settings() is None
 
 
 def test_effort_omitted_when_none() -> None:
-    with patch("meldingen.dependencies.settings", _mock_settings(llm_model_identifier="gpt-5-mini", llm_reasoning_effort=None)):
+    with patch(
+        "meldingen.dependencies.settings", _mock_settings(llm_model_identifier="gpt-5-mini", llm_reasoning_effort=None)
+    ):
         from meldingen.dependencies import classification_model_settings
 
         assert classification_model_settings() is None
