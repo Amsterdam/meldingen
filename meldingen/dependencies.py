@@ -1,4 +1,5 @@
 import logging
+import os
 from functools import lru_cache
 from typing import Annotated, Any, AsyncIterator, Literal
 
@@ -38,7 +39,7 @@ from meldingen_core.managers import RelationshipManager
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from meldingen_core.wfs import AssetTypeToWfsProviderConverter, BaseWfsProviderValidator
-from openai import AsyncAzureOpenAI
+from openai import AsyncAzureOpenAI, AsyncOpenAI
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from pdok_api_client.api.locatieserver_api import LocatieserverApi as PDOKApiInstance
@@ -353,17 +354,25 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
     Cached so the credential, OpenAI client, and provider are created once per
     process rather than per-request. The objects live for the process lifetime;
     for a long-running web server this is fine and avoids connection/token churn.
+
+    All clients are created with ``max_retries=0``. The OpenAI SDK retries
+    connection errors (and 408/409/429/5xx) twice by default; we disable that so
+    a classification never blocks melding creation on a slow/unreachable LLM. The
+    single attempt either succeeds or raises, and ``AgentClassifierAdapter.__call__``
+    turns any raised error into ``None`` (no classification) immediately.
     """
     if settings.llm_enabled is False:
         return None
 
     if settings.llm_provider == "azure":
         if settings.llm_api_key:
-            return AzureProvider(
+            client = AsyncAzureOpenAI(
                 azure_endpoint=settings.llm_base_url,
                 api_key=settings.llm_api_key,
                 api_version="2025-01-01-preview",
+                max_retries=0,
             )
+            return AzureProvider(openai_client=client)
 
         credential = DefaultAzureCredential()
         token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
@@ -371,12 +380,17 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
             azure_endpoint=settings.llm_base_url,
             azure_ad_token_provider=token_provider,
             api_version="2025-01-01-preview",
+            max_retries=0,
         )
         return AzureProvider(openai_client=client)
 
     if settings.llm_provider == "openai":
         """We can use the open ai provider for many models besides the ones from Open AI"""
-        return OpenAIProvider(base_url=settings.llm_base_url)
+        # Locally served OpenAI-compatible models (e.g. llama.cpp) do not always
+        # need an API key, but the client requires a non-empty placeholder.
+        api_key = settings.llm_api_key or os.getenv("OPENAI_API_KEY") or "api-key-not-set"
+        openai_client = AsyncOpenAI(base_url=settings.llm_base_url, api_key=api_key, max_retries=0)
+        return OpenAIProvider(openai_client=openai_client)
 
     return None
 
