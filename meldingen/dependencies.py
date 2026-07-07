@@ -48,7 +48,7 @@ from pdok_api_client.configuration import Configuration as PDOKApiConfiguration
 from plugfs.azure import AzureStorageBlobsAdapter
 from plugfs.filesystem import Adapter, Filesystem
 from pydantic_ai import Agent
-from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.models.openai import OpenAIChatModel, OpenAIChatModelSettings
 from pydantic_ai.providers.azure import AzureProvider
 from pydantic_ai.providers.openai import OpenAIProvider
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
@@ -406,12 +406,26 @@ def classifier_agent(
     return None
 
 
+def classification_model_settings() -> OpenAIChatModelSettings | None:
+    """Resolve the reasoning effort for the configured model into model settings.
+
+    The effort is sent natively only to reasoning-capable models
+    (`settings.llm_reasoning_models`). Non-reasoning models have no single-call
+    equivalent, so nothing is sent and they answer as fast as possible. Returns
+    `None` when no reasoning parameter should be sent.
+    """
+    effort = settings.llm_reasoning_effort
+    if effort is None or settings.llm_model_identifier not in settings.llm_reasoning_models:
+        return None
+    return OpenAIChatModelSettings(openai_reasoning_effort=effort)
+
+
 def classifier_adapter(
     agent: Annotated[Agent, Depends(classifier_agent)],
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> AgentClassifierAdapter | DummyClassifierAdapter:
     if settings.llm_enabled:
-        return AgentClassifierAdapter(agent, repository)
+        return AgentClassifierAdapter(agent, repository, classification_model_settings())
     return DummyClassifierAdapter()
 
 
