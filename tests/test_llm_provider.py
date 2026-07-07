@@ -87,9 +87,31 @@ def test_returns_azure_provider_with_managed_identity(
         azure_endpoint="https://my-endpoint.openai.azure.com",
         azure_ad_token_provider=mock_token_provider,
         api_version="2025-01-01-preview",
+        max_retries=0,
     )
 
 
 def test_returns_none_for_unknown_provider() -> None:
     result = _call_uncached(llm_provider="anthropic")
     assert result is None
+
+
+def test_openai_client_disables_connection_retries() -> None:
+    """Connection errors must not be retried by the OpenAI SDK (default is 2);
+    a failed classification returns None immediately instead of blocking on
+    backoff retries."""
+    result = _call_uncached(llm_provider="openai", llm_base_url="http://localhost:1234")
+
+    assert isinstance(result, OpenAIProvider)
+    assert result.client.max_retries == 0
+
+
+def test_azure_client_with_api_key_disables_connection_retries() -> None:
+    result = _call_uncached(
+        llm_provider="azure",
+        llm_base_url="https://my-endpoint.openai.azure.com",
+        llm_api_key="test-key-123",
+    )
+
+    assert isinstance(result, AzureProvider)
+    assert result.client.max_retries == 0

@@ -130,6 +130,16 @@ Gemeente Amsterdam
         "6. Antwoord uitsluitend met het vereiste JSON-object dat de gekozen classificatie bevat. "
         "Geef geen uitleg, geen redenering, geen commentaar en geen extra tekst — alleen het JSON-object.\n"
     )
+    # Fallback classification. This category must always exist so the LLM always
+    # has an applicable option to fall back on when no other classification fits
+    # the melding text (see AgentClassifierAdapter). It is seeded idempotently on
+    # every startup by the `classifications ensure-fallback` command, independent
+    # of the deployment-specific seed file, so it is guaranteed present in every
+    # environment regardless of which other classifications exist.
+    llm_fallback_classification_name: str = "Overige"
+    llm_fallback_classification_instructions: str = (
+        "Gebruik deze classificatie als geen van de andere classificaties past bij de meldtekst."
+    )
 
 
 # Create an instance of the Settings model

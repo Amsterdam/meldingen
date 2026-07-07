@@ -12,6 +12,7 @@ if [ "$1" = "fastapi" ] || [ "$1" = "uvicorn" ]; then
   python main.py labels create || true
   python main.py sources create || true
   python main.py seed || true
+  python main.py classifications ensure-fallback || true
 fi
 
 exec "$@"
