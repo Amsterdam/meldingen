@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
     HTTP_202_ACCEPTED,
     HTTP_404_NOT_FOUND,
-    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_422_UNPROCESSABLE_CONTENT,
     HTTP_503_SERVICE_UNAVAILABLE,
 )
 
@@ -83,14 +83,14 @@ async def create_llm_eval_run(
     # omitted field via `model_fields_set` before applying the default.
     if body.model is not None and body.model not in settings.llm_model_options:
         raise HTTPException(
-            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"model {body.model!r} must be one of {settings.llm_model_options}",
         )
 
     effort = body.reasoning_effort if "reasoning_effort" in body.model_fields_set else settings.llm_reasoning_effort
     if effort is not None and effort not in settings.llm_reasoning_effort_options:
         raise HTTPException(
-            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"reasoning_effort {effort!r} must be one of {settings.llm_reasoning_effort_options}",
         )
 

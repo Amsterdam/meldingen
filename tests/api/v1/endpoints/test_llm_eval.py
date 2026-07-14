@@ -11,7 +11,7 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_202_ACCEPTED,
     HTTP_404_NOT_FOUND,
-    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_422_UNPROCESSABLE_CONTENT,
     HTTP_503_SERVICE_UNAVAILABLE,
 )
 
@@ -158,7 +158,7 @@ class TestLlmEvalCreateRun:
 
         response = await client.post(app.url_path_for("llm_eval:create_run"), json=body)
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
         await _cancel_background_tasks()
 
 
