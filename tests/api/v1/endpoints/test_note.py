@@ -409,3 +409,41 @@ class TestListNotes:
         assert first["user"]["username"] == user.username
         assert "created_at" in first["user"]
         assert "updated_at" in first["user"]
+
+    @pytest.mark.anyio
+    async def test_list_notes_sorted_by_created_at_descending(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_behandelaar: User,
+        melding: Melding,
+        user: User,
+    ) -> None:
+        newer = Note(text="newer", melding=melding, user=user)
+        newer.created_at = datetime(2025, 1, 2, 12, 0, 0)
+        older = Note(text="older", melding=melding, user=user)
+        older.created_at = datetime(2025, 1, 1, 12, 0, 0)
+        db_session.add(newer)
+        db_session.add(older)
+        await db_session.commit()
+
+        response = await client.get(
+            app.url_path_for("melding:notes", melding_id=melding.id),
+            params={"sort": '["created_at","DESC"]'},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        assert [note["text"] for note in response.json()] == ["newer", "older"]
+
+    @pytest.mark.anyio
+    async def test_list_notes_with_unknown_sort_attribute_returns_422(
+        self, app: FastAPI, client: AsyncClient, auth_behandelaar: User, melding: Melding
+    ) -> None:
+        response = await client.get(
+            app.url_path_for("melding:notes", melding_id=melding.id),
+            params={"sort": '["does_not_exist","ASC"]'},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.json()["detail"][0]["loc"] == ["query", "sort"]
