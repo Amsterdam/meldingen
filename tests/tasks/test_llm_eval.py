@@ -7,8 +7,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
+from pydantic_ai.models.openai import OpenAIChatModelSettings
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
 from meldingen.models import LlmEvalRun, LlmEvalRunStatus
 from meldingen.schemas.llm_eval import (
     LlmEvalClassificationInput,
@@ -134,6 +136,29 @@ async def test_completes_run_writes_results_and_counts(
     assert len(seeded_run.results) == 2
     assert seeded_run.started_at is not None
     assert seeded_run.finished_at is not None
+
+
+@pytest.mark.anyio
+async def test_forwards_model_settings_to_adapter(
+    db_manager: DatabaseSessionManager,
+    db_session: AsyncSession,
+    seeded_run: LlmEvalRun,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The resolved model settings (reasoning effort) reach the classifier adapter."""
+    captured: dict[str, Any] = {}
+    real_adapter = AgentClassifierAdapter
+
+    def spy(agent: Any, repository: Any, model_settings: Any = None) -> Any:
+        captured["model_settings"] = model_settings
+        return real_adapter(agent, repository, model_settings)
+
+    monkeypatch.setattr("meldingen.tasks.llm_eval.AgentClassifierAdapter", spy)
+
+    model_settings = OpenAIChatModelSettings(openai_reasoning_effort="high")
+    await execute_llm_eval_run(seeded_run.id, _make_payload(), _make_agent("Zwerfvuil"), db_manager, model_settings)
+
+    assert captured["model_settings"] == model_settings
 
 
 @pytest.mark.anyio

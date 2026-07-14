@@ -7,10 +7,16 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.status import HTTP_200_OK, HTTP_202_ACCEPTED, HTTP_404_NOT_FOUND, HTTP_503_SERVICE_UNAVAILABLE
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_202_ACCEPTED,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_503_SERVICE_UNAVAILABLE,
+)
 
 from meldingen.api.v1.endpoints.llm_eval import _background_tasks
-from meldingen.dependencies import classifier_agent
+from meldingen.dependencies import classifier_agent_factory
 from meldingen.models import LlmEvalRun, LlmEvalRunStatus, User
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 
@@ -31,8 +37,18 @@ def _agent_returning(value: str, app: FastAPI) -> MagicMock:
     out = MagicMock()
     out.classification = value
     agent.run = AsyncMock(return_value=MagicMock(output=out))
-    app.dependency_overrides[classifier_agent] = lambda: agent
+    # The endpoint depends on a factory that builds an agent for the chosen model;
+    # ignore the model and always hand back the mock.
+    app.dependency_overrides[classifier_agent_factory] = lambda: (lambda model_identifier: agent)
     return agent
+
+
+async def _cancel_background_tasks() -> None:
+    """Cancel any background tasks the endpoint spawned so they don't race teardown."""
+    for task in list(_background_tasks):
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await task
 
 
 @pytest.fixture
@@ -56,7 +72,7 @@ class TestLlmEvalCreateRunUnauthorized(BaseUnauthorizedTest):
 class TestLlmEvalCreateRunAgentDisabled:
     @pytest.mark.anyio
     async def test_returns_503_when_agent_is_none(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
-        app.dependency_overrides[classifier_agent] = lambda: None
+        app.dependency_overrides[classifier_agent_factory] = lambda: None
 
         response = await client.post(app.url_path_for("llm_eval:create_run"), json=_VALID_BODY)
 
@@ -83,11 +99,7 @@ class TestLlmEvalCreateRun:
         assert isinstance(body["run_id"], int)
         assert body["status"] == LlmEvalRunStatus.pending.value
 
-        # Cancel any background tasks the endpoint spawned so they don't race teardown
-        for task in list(_background_tasks):
-            task.cancel()
-            with contextlib.suppress(asyncio.CancelledError, Exception):
-                await task
+        await _cancel_background_tasks()
 
     @pytest.mark.anyio
     async def test_creates_row_in_db(
@@ -110,11 +122,44 @@ class TestLlmEvalCreateRun:
         assert run.total == 2
         assert run.request_payload["classifications"][0]["name"] == "Zwerfvuil"
 
-        # Cancel any background tasks the endpoint spawned so they don't race teardown
-        for task in list(_background_tasks):
-            task.cancel()
-            with contextlib.suppress(asyncio.CancelledError, Exception):
-                await task
+        await _cancel_background_tasks()
+
+    @pytest.mark.anyio
+    async def test_persists_selected_model_and_effort(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        persisted_auth_user: None,
+        db_session: AsyncSession,
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+        body = {**_VALID_BODY, "model": "gpt-5-mini", "reasoning_effort": "high"}
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=body)
+        assert response.status_code == HTTP_202_ACCEPTED
+        run_id = response.json()["run_id"]
+
+        result = await db_session.execute(select(LlmEvalRun).where(LlmEvalRun.id == run_id))
+        run = result.scalar_one_or_none()
+        assert run is not None
+        # The resolved selection is recorded on the stored payload.
+        assert run.request_payload["model"] == "gpt-5-mini"
+        assert run.request_payload["reasoning_effort"] == "high"
+
+        await _cancel_background_tasks()
+
+    @pytest.mark.anyio
+    async def test_rejects_model_not_in_options(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, persisted_auth_user: None
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+        body = {**_VALID_BODY, "model": "not-a-real-model"}
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=body)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+        await _cancel_background_tasks()
 
 
 class TestLlmEvalGetRunUnauthorized(BaseUnauthorizedTest):
@@ -140,7 +185,7 @@ class TestLlmEvalGetRun:
     ) -> None:
         run = LlmEvalRun()
         run.status = LlmEvalRunStatus.completed
-        run.request_payload = _VALID_BODY
+        run.request_payload = {**_VALID_BODY, "model": "gpt-5-mini", "reasoning_effort": "high"}
         run.total = 2
         run.passed = 1
         run.failed = 1
@@ -157,6 +202,8 @@ class TestLlmEvalGetRun:
         body = response.json()
         assert body["run_id"] == run.id
         assert body["status"] == "completed"
+        assert body["model"] == "gpt-5-mini"
+        assert body["reasoning_effort"] == "high"
         assert body["total"] == 2
         assert body["passed"] == 1
         assert body["failed"] == 1
@@ -180,7 +227,7 @@ class TestLlmEvalListRuns:
         for i in range(3):
             run = LlmEvalRun()
             run.status = LlmEvalRunStatus.completed
-            run.request_payload = _VALID_BODY
+            run.request_payload = {**_VALID_BODY, "model": "gpt-5-mini", "reasoning_effort": "high"}
             run.total = 2
             run.results = [{"text": f"r{i}", "expected": "x", "actual": "x", "passed": True, "error": None}]
             db_session.add(run)
@@ -192,8 +239,11 @@ class TestLlmEvalListRuns:
         assert len(body) == 3
         # Newest first → ids descending
         assert body[0]["run_id"] > body[1]["run_id"] > body[2]["run_id"]
-        # Summary must NOT include results or request_payload
         for row in body:
+            # Model and effort are surfaced even though the full payload is not.
+            assert row["model"] == "gpt-5-mini"
+            assert row["reasoning_effort"] == "high"
+            # Summary must NOT include results or request_payload
             assert "results" not in row
             assert "request_payload" not in row
 

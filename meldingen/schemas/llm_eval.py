@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from meldingen.config import ReasoningEffort
 from meldingen.models import LlmEvalRunStatus
 
 
@@ -19,6 +20,14 @@ class LlmEvalTestCaseInput(BaseModel):
 class LlmEvalRunInput(BaseModel):
     classifications: list[LlmEvalClassificationInput] = Field(min_length=1)
     test_cases: list[LlmEvalTestCaseInput] = Field(min_length=1)
+    # The model to evaluate. Omit to use the deployment default
+    # (`API_LLM_MODEL_IDENTIFIER`); when set, must be one of `API_LLM_MODEL_OPTIONS`.
+    # The endpoint resolves the omitted value and stores the model that actually ran.
+    model: str | None = Field(default=None)
+    # Reasoning effort for the run. Omit to use the deployment default
+    # (`API_LLM_REASONING_EFFORT`); send `null` to send no reasoning parameter at
+    # all. Only forwarded to reasoning-capable models (`API_LLM_REASONING_MODELS`).
+    reasoning_effort: ReasoningEffort | None = Field(default=None)
 
 
 class LlmEvalTestCaseResult(BaseModel):
@@ -37,6 +46,8 @@ class LlmEvalRunCreateOutput(BaseModel):
 class LlmEvalRunDetailOutput(BaseModel):
     run_id: int
     status: LlmEvalRunStatus
+    model: str | None
+    reasoning_effort: ReasoningEffort | None
     request_payload: LlmEvalRunInput
     total: int
     passed: int
@@ -52,6 +63,8 @@ class LlmEvalRunDetailOutput(BaseModel):
 class LlmEvalRunSummaryOutput(BaseModel):
     run_id: int
     status: LlmEvalRunStatus
+    model: str | None
+    reasoning_effort: ReasoningEffort | None
     total: int
     passed: int
     failed: int

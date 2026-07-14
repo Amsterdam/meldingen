@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Any
 
 from pydantic_ai import Agent
+from pydantic_ai.settings import ModelSettings
 from sqlalchemy import update
 
 from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
@@ -58,8 +59,13 @@ async def execute_llm_eval_run(
     payload: LlmEvalRunInput,
     agent: Agent,
     session_manager: DatabaseSessionManager,
+    model_settings: ModelSettings | None = None,
 ) -> None:
-    """Run the LLM eval suite for `run_id`, persisting per-case results as we go."""
+    """Run the LLM eval suite for `run_id`, persisting per-case results as we go.
+
+    `model_settings` carries the resolved reasoning effort for the run's model
+    (see `build_model_settings`); it is forwarded to every classification call.
+    """
     logger.info("llm eval run %d: starting", run_id)
 
     async with session_manager.session() as session:
@@ -76,7 +82,7 @@ async def execute_llm_eval_run(
             _FakeClassification(name=c.name, instructions=c.instructions) for c in payload.classifications
         ]
         repository = _InMemoryClassificationRepository(classifications)
-        adapter = AgentClassifierAdapter(agent, repository)  # type: ignore[arg-type]
+        adapter = AgentClassifierAdapter(agent, repository, model_settings)  # type: ignore[arg-type]
 
         for i, test_case in enumerate(payload.test_cases):
             try:
