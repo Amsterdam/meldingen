@@ -48,6 +48,7 @@ def optional_sort_param(sort: Annotated[str | None, Query()] = None) -> SortPara
     """Like ``sort_param`` but optional, so the caller can fall back to its own default ordering."""
     return None if sort is None else sort_param(sort)
 
+
 class FilterParams(BaseModel, extra="ignore"):
     q: str | None = None
 
