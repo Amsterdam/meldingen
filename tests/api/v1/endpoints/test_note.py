@@ -125,7 +125,7 @@ class TestAddNote:
     ) -> None:
         response = await client.post(
             app.url_path_for("melding:add-note", melding_id=melding.id),
-            json={"text": "a" * 3001},
+            json={"text": "a" * 1001},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -139,10 +139,10 @@ class TestAddNote:
         auth_behandelaar: User,
         melding: Melding,
     ) -> None:
-        # Bold markup makes the raw text exceed 3000 characters, while the rendered
+        # Bold markup makes the raw text exceed 1000 characters, while the rendered
         # plain text stays under the limit, so the note should be accepted.
-        text = "**" + ("a" * 2999) + "**"
-        assert len(text) > 3000
+        text = "**" + ("a" * 999) + "**"
+        assert len(text) > 1000
 
         response = await client.post(
             app.url_path_for("melding:add-note", melding_id=melding.id),
