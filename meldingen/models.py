@@ -62,6 +62,8 @@ class Asset(BaseDBModel, BaseAsset):
     external_id: Mapped[str] = mapped_column(String)
     type_id: Mapped[int] = mapped_column(ForeignKey(AssetType.id), init=False)
     type: Mapped[AssetType] = relationship()
+    label: Mapped[str] = mapped_column(String)
+    subtype: Mapped[str] = mapped_column(String)
 
 
 class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
@@ -587,7 +589,7 @@ class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
 
 class Note(AsyncAttrs, BaseDBModel, BaseNote):
     """A free-form note that a Behandelaar can add to a melding. The text is stored as
-    markdown (rendered plain text is limited to 3000 characters, see schemas.input.NoteInput)."""
+    markdown (rendered plain text is limited to 1000 characters, see schemas.input.NoteInput)."""
 
     text: Mapped[str] = mapped_column(String())
 

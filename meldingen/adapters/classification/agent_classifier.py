@@ -3,6 +3,7 @@ import logging
 from meldingen_core.classification import BaseClassifierAdapter
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
+from pydantic_ai.settings import ModelSettings
 
 from meldingen.classification import build_classification_prompt, build_dynamic_classification_response_model
 from meldingen.repositories import ClassificationRepository
@@ -13,10 +14,17 @@ logger = logging.getLogger(__name__)
 class AgentClassifierAdapter(BaseClassifierAdapter):
     _agent: Agent
     _repository: ClassificationRepository
+    _model_settings: ModelSettings | None
 
-    def __init__(self, agent: Agent, repository: ClassificationRepository):
+    def __init__(
+        self,
+        agent: Agent,
+        repository: ClassificationRepository,
+        model_settings: ModelSettings | None = None,
+    ):
         self._agent = agent
         self._repository = repository
+        self._model_settings = model_settings
 
     async def classify(self, text: str) -> str | None:
         """Run the LLM and return the chosen classification name.
@@ -46,7 +54,9 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
         user_prompt = f"{classification_prompt}{text}"
         ClassificationModel = await build_dynamic_classification_response_model(self._repository)
 
-        result = await self._agent.run(user_prompt, output_type=NativeOutput(ClassificationModel))
+        result = await self._agent.run(
+            user_prompt, output_type=NativeOutput(ClassificationModel), model_settings=self._model_settings
+        )
         classification = getattr(result.output, "classification", None)
 
         logger.info("LLM classified melding as %r", classification)

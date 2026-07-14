@@ -54,7 +54,7 @@ async def add_asset_to_melding(
     response = await client.post(
         app.url_path_for("melding:add-asset", melding_id=my_melding["id"]),
         params={"token": my_melding["token"]},
-        json={"external_id": external_id, "asset_type_id": asset_type.id},
+        json={"external_id": external_id, "asset_type_id": asset_type.id, "label": "Container", "subtype": "gft"},
     )
 
     return response

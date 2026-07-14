@@ -19,7 +19,7 @@ from meldingen.models import AnswerTypeEnum, FormIoComponentTypeEnum, FormIoForm
 from meldingen.schemas.types import DateAnswerObject, FormIOConditional, PhoneNumber, ValueLabelObject
 from meldingen.validators import create_non_match_validator
 
-NOTE_MAX_PLAIN_TEXT_LENGTH = 3000
+NOTE_MAX_PLAIN_TEXT_LENGTH = 1000
 
 _markdown_to_plain_text = MarkdownToPlainTextConverter()
 
@@ -36,6 +36,15 @@ class NoteInput(BaseModel):
     text: Annotated[
         str,
         StringConstraints(min_length=1, strip_whitespace=True),
+        AfterValidator(validate_note_plain_text_length),
+    ]
+
+
+class NoteUpdateInput(BaseModel):
+    # Unlike NoteInput, an empty string is allowed: an empty text signals that the note is deleted.
+    text: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True),
         AfterValidator(validate_note_plain_text_length),
     ]
 
@@ -280,3 +289,5 @@ class AssetTypeUpdateInput(BaseModel):
 class MeldingAssetInput(BaseModel):
     external_id: str
     asset_type_id: int
+    label: str
+    subtype: str

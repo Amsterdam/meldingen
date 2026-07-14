@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
@@ -124,7 +125,7 @@ class TestAddNote:
     ) -> None:
         response = await client.post(
             app.url_path_for("melding:add-note", melding_id=melding.id),
-            json={"text": "a" * 3001},
+            json={"text": "a" * 1001},
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -138,10 +139,10 @@ class TestAddNote:
         auth_behandelaar: User,
         melding: Melding,
     ) -> None:
-        # Bold markup makes the raw text exceed 3000 characters, while the rendered
+        # Bold markup makes the raw text exceed 1000 characters, while the rendered
         # plain text stays under the limit, so the note should be accepted.
-        text = "**" + ("a" * 2999) + "**"
-        assert len(text) > 3000
+        text = "**" + ("a" * 999) + "**"
+        assert len(text) > 1000
 
         response = await client.post(
             app.url_path_for("melding:add-note", melding_id=melding.id),
@@ -220,6 +221,127 @@ class TestRetrieveNote:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+
+class TestUpdateNoteUnauthorized(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "melding:update-note"
+
+    def get_method(self) -> str:
+        return "PATCH"
+
+    def get_path_params(self) -> dict[str, Any]:
+        return {"melding_id": 1, "note_id": 1}
+
+
+class TestUpdateNote:
+    @pytest.mark.anyio
+    async def test_update_note_updates_text(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_behandelaar: User,
+        melding: Melding,
+        note: Note,
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for("melding:update-note", melding_id=melding.id, note_id=note.id),
+            json={"text": "updated **text**"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert data["id"] == note.id
+        assert data["text"] == "updated **text**"
+        assert data["melding_id"] == melding.id
+
+        persisted = (await db_session.execute(select(Note).where(Note.id == note.id))).scalar_one()
+        assert persisted.text == "updated **text**"
+
+    @pytest.mark.anyio
+    async def test_update_note_allows_empty_text(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_behandelaar: User,
+        melding: Melding,
+        note: Note,
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for("melding:update-note", melding_id=melding.id, note_id=note.id),
+            json={"text": ""},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        assert response.json()["text"] == ""
+
+    @pytest.mark.anyio
+    async def test_update_note_from_nonexistent_melding_returns_404(
+        self, app: FastAPI, client: AsyncClient, auth_behandelaar: User, note: Note
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for("melding:update-note", melding_id=999999, note_id=note.id),
+            json={"text": "whatever"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_update_nonexistent_note_returns_404(
+        self, app: FastAPI, client: AsyncClient, auth_behandelaar: User, melding: Melding
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for("melding:update-note", melding_id=melding.id, note_id=999999),
+            json={"text": "whatever"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_update_note_by_non_owner_returns_403(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_behandelaar: User,
+        melding: Melding,
+    ) -> None:
+        other_user = User(username="other", email="other@example.com")
+        db_session.add(other_user)
+        await db_session.commit()
+
+        note = Note(text="not mine", melding=melding, user=other_user)
+        db_session.add(note)
+        await db_session.commit()
+
+        response = await client.patch(
+            app.url_path_for("melding:update-note", melding_id=melding.id, note_id=note.id),
+            json={"text": "hacked"},
+        )
+
+        assert response.status_code == HTTP_403_FORBIDDEN
+
+        persisted = (await db_session.execute(select(Note).where(Note.id == note.id))).scalar_one()
+        assert persisted.text == "not mine"
+
+    @pytest.mark.anyio
+    async def test_update_note_with_plain_text_over_limit_returns_422(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_behandelaar: User,
+        melding: Melding,
+        note: Note,
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for("melding:update-note", melding_id=melding.id, note_id=note.id),
+            json={"text": "a" * 3001},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.json()["detail"][0]["loc"] == ["body", "text"]
 
 
 class TestListNotesUnauthorized(BaseUnauthorizedTest):

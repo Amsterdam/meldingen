@@ -2,10 +2,17 @@ import logging
 import os
 from datetime import timedelta
 from pathlib import Path
+from typing import Literal
 
-from pydantic import PostgresDsn
+from pydantic import PostgresDsn, model_validator
 from pydantic_media_type import MediaType
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# OpenAI-style reasoning effort levels. This is the abstract "think more / be
+# faster" knob. It is sent natively to reasoning-capable models (see
+# `llm_reasoning_models`); for all other models it has no single-call equivalent
+# and is omitted.
+ReasoningEffort = Literal["low", "medium", "high"]
 
 
 class Settings(BaseSettings):
@@ -110,9 +117,36 @@ Gemeente Amsterdam
     llm_base_url: str = os.getenv(
         "LLM_URL", ""
     )  # LLM_URL is injected by docker compose and specifies the OpenAI compatible API endpoint base URL
+    # The models a deployment offers for classification. Other municipalities
+    # override this via API_LLM_MODEL_OPTIONS. The frontend will later expose this
+    # list so an operator can pick a model per melding; for now the app always
+    # uses `llm_model_identifier`.
+    llm_model_options: list[str] = [
+        "gpt-4.1-mini",
+        "gpt-4o",
+        "gpt-4o-mini",
+        "gpt-5-mini",
+        "gpt-5-nano",
+        "gpt-5.1",
+        "Mistral-Medium-3.5",
+    ]
     llm_model_identifier: str = os.getenv(
         "LLM_MODEL", ""
-    )  # LLM is injected by docker compose and specifies the model identifier
+    )  # The default (currently used) model. Must be one of llm_model_options when the LLM is enabled.
+    # Models that support OpenAI-style reasoning effort. For these the configured
+    # `llm_reasoning_effort` is sent natively; for every other model it is omitted
+    # (they have no equivalent single-call reasoning knob). Override as new
+    # reasoning models appear.
+    llm_reasoning_models: list[str] = ["gpt-5-mini", "gpt-5-nano", "gpt-5.1"]
+    # Reasoning efforts a deployment offers (for the future frontend dropdown).
+    llm_reasoning_effort_options: list[ReasoningEffort] = ["low", "medium", "high"]
+    # Default reasoning effort. The goal is minimal reasoning / fastest response
+    # for every model, so this defaults to the lowest broadly-supported level.
+    # - Reasoning models: the value is sent explicitly (otherwise gpt-5* default to
+    #   `medium`, which is slower).
+    # - Non-reasoning models: it is omitted entirely (no single-call equivalent).
+    # Set to None to send nothing at all. Must be one of llm_reasoning_effort_options.
+    llm_reasoning_effort: ReasoningEffort | None = "low"
     llm_api_key: str = ""
     # System prompt used by the LLM classifier. Defaults to the Amsterdam-specific
     # prompt; other deployments can override via the API_LLM_CLASSIFICATION_SYSTEM_PROMPT
@@ -130,6 +164,31 @@ Gemeente Amsterdam
         "6. Antwoord uitsluitend met het vereiste JSON-object dat de gekozen classificatie bevat. "
         "Geef geen uitleg, geen redenering, geen commentaar en geen extra tekst — alleen het JSON-object.\n"
     )
+    # Fallback classification. This category must always exist so the LLM always
+    # has an applicable option to fall back on when no other classification fits
+    # the melding text (see AgentClassifierAdapter). It is seeded idempotently on
+    # every startup by the `classifications ensure-fallback` command, independent
+    # of the deployment-specific seed file, so it is guaranteed present in every
+    # environment regardless of which other classifications exist.
+    llm_fallback_classification_name: str = "Overige"
+    llm_fallback_classification_instructions: str = (
+        "Gebruik deze classificatie als geen van de andere classificaties past bij de meldtekst."
+    )
+
+    @model_validator(mode="after")
+    def _validate_llm_selection(self) -> "Settings":
+        """The chosen default model and effort must come from their option lists."""
+        if self.llm_enabled and self.llm_model_identifier not in self.llm_model_options:
+            raise ValueError(
+                f"llm_model_identifier {self.llm_model_identifier!r} must be one of "
+                f"llm_model_options {self.llm_model_options}"
+            )
+        if self.llm_reasoning_effort is not None and self.llm_reasoning_effort not in self.llm_reasoning_effort_options:
+            raise ValueError(
+                f"llm_reasoning_effort {self.llm_reasoning_effort!r} must be one of "
+                f"llm_reasoning_effort_options {self.llm_reasoning_effort_options}"
+            )
+        return self
 
 
 # Create an instance of the Settings model

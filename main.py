@@ -1,6 +1,6 @@
 import typer
 
-from commands import asset_types, azure, groups, labels, meldingen, seed, sources, static_forms, users
+from commands import asset_types, azure, classifications, groups, labels, meldingen, seed, sources, static_forms, users
 
 app = typer.Typer()
 app.add_typer(users.app, name="users")
@@ -12,6 +12,7 @@ app.add_typer(asset_types.app, name="asset_types")
 app.add_typer(seed.app)
 app.add_typer(labels.app, name="labels")
 app.add_typer(sources.app, name="sources")
+app.add_typer(classifications.app, name="classifications")
 
 if __name__ == "__main__":
     app()
