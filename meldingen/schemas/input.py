@@ -19,7 +19,7 @@ from meldingen.models import AnswerTypeEnum, FormIoComponentTypeEnum, FormIoForm
 from meldingen.schemas.types import DateAnswerObject, FormIOConditional, PhoneNumber, ValueLabelObject
 from meldingen.validators import create_non_match_validator
 
-NOTE_MAX_PLAIN_TEXT_LENGTH = 3000
+NOTE_MAX_PLAIN_TEXT_LENGTH = 1000
 
 _markdown_to_plain_text = MarkdownToPlainTextConverter()
 

@@ -17,13 +17,13 @@ def test_note_input_rejects_empty_text(text: str) -> None:
 
 def test_note_input_rejects_plain_text_over_limit() -> None:
     with pytest.raises(ValidationError):
-        NoteInput(text="a" * 3001)
+        NoteInput(text="a" * 1001)
 
 
 def test_note_input_accepts_markdown_over_limit_with_plain_text_under_limit() -> None:
-    # The raw markdown exceeds 3000 characters, but the rendered plain text does not.
-    text = "**" + ("a" * 2999) + "**"
-    assert len(text) > 3000
+    # The raw markdown exceeds 1000 characters, but the rendered plain text does not.
+    text = "**" + ("a" * 999) + "**"
+    assert len(text) > 1000
 
     assert NoteInput(text=text).text == text
 
