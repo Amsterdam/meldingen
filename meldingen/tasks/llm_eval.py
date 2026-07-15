@@ -7,6 +7,7 @@ written to the row immediately so callers polling `GET /runs/{id}` see
 progress as it happens.
 """
 
+import asyncio
 import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ from datetime import datetime
 from typing import Any
 
 from pydantic_ai import Agent
+from pydantic_ai.exceptions import ModelHTTPError
 from pydantic_ai.settings import ModelSettings
 from sqlalchemy import update
 
@@ -23,6 +25,12 @@ from meldingen.models import LlmEvalRun, LlmEvalRunStatus
 from meldingen.schemas.llm_eval import LlmEvalRunInput, LlmEvalTestCaseResult
 
 logger = logging.getLogger(__name__)
+
+_RETRIABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+_MAX_ATTEMPTS = 6
+_INITIAL_BACKOFF_SECONDS = 5.0
+_MAX_BACKOFF_SECONDS = 120.0
+
 
 def _format_exception(exc: BaseException) -> str:
     """Render an exception as a single-line ``Type: message`` string for storage."""
@@ -52,6 +60,35 @@ class _InMemoryClassificationRepository:
         filters: Any | None = None,
     ) -> list[_FakeClassification]:
         return self._classifications
+
+
+async def _classify_with_retry(adapter: AgentClassifierAdapter, text: str, run_id: int, case_index: int) -> str | None:
+    """Classify one case, waiting out transient LLM-gateway errors (429/5xx).
+
+    The shared OpenAI client is built with `max_retries=0` so the production
+    classification path stays fail-fast; an eval run instead prefers waiting
+    out a rate limit over recording a spurious per-case error. Non-transient
+    errors and retry exhaustion still raise, so the case is recorded as errored.
+    """
+    backoff = _INITIAL_BACKOFF_SECONDS
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        try:
+            return await adapter.classify(text)
+        except ModelHTTPError as exc:
+            if exc.status_code not in _RETRIABLE_STATUS_CODES or attempt == _MAX_ATTEMPTS:
+                raise
+            logger.warning(
+                "llm eval run %d: test case %d got HTTP %d (attempt %d/%d), retrying in %.0fs",
+                run_id,
+                case_index,
+                exc.status_code,
+                attempt,
+                _MAX_ATTEMPTS,
+                backoff,
+            )
+            await asyncio.sleep(backoff)
+            backoff = min(backoff * 2, _MAX_BACKOFF_SECONDS)
+    raise AssertionError("unreachable: retry loop either returns or raises")
 
 
 async def execute_llm_eval_run(
@@ -86,7 +123,7 @@ async def execute_llm_eval_run(
 
         for i, test_case in enumerate(payload.test_cases):
             try:
-                actual: str | None = await adapter.classify(test_case.text)
+                actual: str | None = await _classify_with_retry(adapter, test_case.text, run_id, i)
                 result = LlmEvalTestCaseResult(
                     text=test_case.text,
                     expected=test_case.expected,

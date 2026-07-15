@@ -2,7 +2,8 @@ import logging
 
 from meldingen_core.classification import BaseClassifierAdapter
 from pydantic_ai import Agent
-from pydantic_ai.output import NativeOutput
+from pydantic_ai.models import Model
+from pydantic_ai.output import NativeOutput, PromptedOutput
 from pydantic_ai.settings import ModelSettings
 
 from meldingen.classification import build_classification_prompt, build_dynamic_classification_response_model
@@ -35,7 +36,7 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
         wraps this in a try/except so a misbehaving LLM never blocks melding
         creation.
 
-        Output mode: we use `NativeOutput`, which sends the JSON schema via
+        Output mode: we prefer `NativeOutput`, which sends the JSON schema via
         the OpenAI `response_format: {type: "json_schema"}` request parameter
         instead of the default `ToolOutput` (tool/function calling) or
         `PromptedOutput` (extra prompt-injected instructions).
@@ -49,14 +50,21 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
         - `NativeOutput` leaves the [system, user] message shape untouched and
           relies on the server-side response_format parameter, which llama.cpp
           and OpenAI both honor.
+
+        Not every model supports native structured output (e.g. the Azure
+        provider's profile for Mistral models); pydantic-ai refuses to even
+        attempt `NativeOutput` for those, so we fall back to `PromptedOutput`
+        based on the model's profile.
         """
         classification_prompt = await build_classification_prompt(self._repository)
         user_prompt = f"{classification_prompt}{text}"
         ClassificationModel = await build_dynamic_classification_response_model(self._repository)
 
-        result = await self._agent.run(
-            user_prompt, output_type=NativeOutput(ClassificationModel), model_settings=self._model_settings
-        )
+        model = self._agent.model
+        use_native = isinstance(model, Model) and model.profile.supports_json_schema_output
+        output_type = NativeOutput(ClassificationModel) if use_native else PromptedOutput(ClassificationModel)
+
+        result = await self._agent.run(user_prompt, output_type=output_type, model_settings=self._model_settings)
         classification = getattr(result.output, "classification", None)
 
         logger.info("LLM classified melding as %r", classification)
