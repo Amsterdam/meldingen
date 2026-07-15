@@ -30,7 +30,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
     MeldingUpdateActionMelder,
 )
-from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction, NoteUpdateAction
+from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction, NoteUpdateAction
 from meldingen_core.classification import BaseClassifierAdapter, Classifier
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
@@ -105,6 +105,7 @@ from meldingen.actions.melding import (
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
 )
+from meldingen.actions.note import NoteListAction
 from meldingen.actions.source import SourceListAction
 from meldingen.actions.user import (
     UserCreateAction,
@@ -643,7 +644,7 @@ def note_update_action(
 def note_list_action(
     repository: Annotated[NoteRepository, Depends(note_repository)],
     melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
-) -> NoteListAction[Note, Melding]:
+) -> NoteListAction:
     return NoteListAction(repository, melding_repository)
 
 

@@ -432,10 +432,20 @@ class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
     def get_model_type(self) -> type[Note]:
         return Note
 
-    async def find_by_melding(self, melding_id: int) -> Sequence[Note]:
-        statement = (
-            select(Note).where(Note.melding_id == melding_id).order_by(Note.created_at).options(selectinload(Note.user))
-        )
+    async def find_by_melding(
+        self,
+        melding_id: int,
+        *,
+        sort_attribute_name: str | None = None,
+        sort_direction: SortingDirection | None = None,
+    ) -> Sequence[Note]:
+        statement = select(Note).where(Note.melding_id == melding_id).options(selectinload(Note.user))
+
+        if sort_attribute_name is None:
+            statement = statement.order_by(Note.created_at)
+        else:
+            statement = self._handle_sorting(Note, statement, sort_attribute_name, sort_direction)
+
         result = await self._session.execute(statement)
         return result.scalars().unique().all()
 
