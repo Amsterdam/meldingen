@@ -66,7 +66,7 @@ _service_unavailable_response: dict[str | int, dict[str, Any]] = {
 )
 async def create_llm_eval_run(
     body: LlmEvalRunInput,
-    build_agent: Annotated[Callable[[str], Agent] | None, Depends(classifier_agent_factory)],
+    build_agent: Annotated[Callable[[str, str | None], Agent] | None, Depends(classifier_agent_factory)],
     session: Annotated[AsyncSession, Depends(database_session)],
     session_manager: Annotated[DatabaseSessionManager, Depends(database_session_manager)],
     user: Annotated[User, Depends(authenticate_user)],
@@ -95,11 +95,13 @@ async def create_llm_eval_run(
         )
 
     model_identifier = body.model or settings.llm_model_identifier
+    system_prompt = body.system_prompt or settings.llm_classification_system_prompt
     # Persist the resolved selection so the stored run records exactly what ran.
     body.model = model_identifier
     body.reasoning_effort = effort
+    body.system_prompt = system_prompt
 
-    agent = build_agent(model_identifier)
+    agent = build_agent(model_identifier, system_prompt)
     model_settings = build_model_settings(model_identifier, effort)
 
     run = LlmEvalRun()

@@ -396,10 +396,19 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
     return None
 
 
-def _build_classifier_agent(provider: AzureProvider | OpenAIProvider, model_identifier: str) -> Agent:
-    """Construct a classifier Agent for `model_identifier` backed by `provider`."""
+def _build_classifier_agent(
+    provider: AzureProvider | OpenAIProvider,
+    model_identifier: str,
+    system_prompt: str | None = None,
+) -> Agent:
+    """Construct a classifier Agent for `model_identifier` backed by `provider`.
+
+    `system_prompt` overrides the deployment default
+    (`settings.llm_classification_system_prompt`) when supplied; the LLM eval
+    endpoint uses this to evaluate a caller-chosen prompt per run.
+    """
     model = OpenAIChatModel(model_identifier, provider=provider)
-    return Agent(model, system_prompt=settings.llm_classification_system_prompt)
+    return Agent(model, system_prompt=system_prompt or settings.llm_classification_system_prompt)
 
 
 def classifier_agent(
@@ -414,16 +423,19 @@ def classifier_agent(
 
 def classifier_agent_factory(
     provider: Annotated[AzureProvider | OpenAIProvider | None, Depends(llm_provider_generator)],
-) -> Callable[[str], Agent] | None:
+) -> Callable[[str, str | None], Agent] | None:
     """Return a builder that creates a classifier Agent for a caller-chosen model.
 
-    Used by the LLM eval endpoint, which lets the request select the model per
-    run instead of always using `settings.llm_model_identifier`. Returns `None`
-    when the LLM is disabled or unconfigured (mirroring `classifier_agent`), so
-    the endpoint can answer 503.
+    Used by the LLM eval endpoint, which lets the request select the model and
+    system prompt per run instead of always using `settings.llm_model_identifier`
+    and `settings.llm_classification_system_prompt`. Returns `None` when the LLM
+    is disabled or unconfigured (mirroring `classifier_agent`), so the endpoint
+    can answer 503.
     """
     if settings.llm_enabled and provider is not None:
-        return lambda model_identifier: _build_classifier_agent(provider, model_identifier)
+        return lambda model_identifier, system_prompt=None: _build_classifier_agent(
+            provider, model_identifier, system_prompt
+        )
 
     return None
 

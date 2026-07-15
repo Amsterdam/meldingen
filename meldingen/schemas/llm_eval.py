@@ -28,6 +28,10 @@ class LlmEvalRunInput(BaseModel):
     # (`API_LLM_REASONING_EFFORT`); send `null` to send no reasoning parameter at
     # all. Only forwarded to reasoning-capable models (`API_LLM_REASONING_MODELS`).
     reasoning_effort: ReasoningEffort | None = Field(default=None)
+    # System prompt for the classifier. Omit to use the deployment default
+    # (`API_LLM_CLASSIFICATION_SYSTEM_PROMPT`). The endpoint resolves the omitted
+    # value and stores the prompt that actually ran.
+    system_prompt: str | None = Field(default=None, min_length=1)
 
 
 class LlmEvalTestCaseResult(BaseModel):

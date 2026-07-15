@@ -16,6 +16,7 @@ from starlette.status import (
 )
 
 from meldingen.api.v1.endpoints.llm_eval import _background_tasks
+from meldingen.config import settings
 from meldingen.dependencies import classifier_agent_factory
 from meldingen.models import LlmEvalRun, LlmEvalRunStatus, User
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
@@ -37,9 +38,11 @@ def _agent_returning(value: str, app: FastAPI) -> MagicMock:
     out = MagicMock()
     out.classification = value
     agent.run = AsyncMock(return_value=MagicMock(output=out))
-    # The endpoint depends on a factory that builds an agent for the chosen model;
-    # ignore the model and always hand back the mock.
-    app.dependency_overrides[classifier_agent_factory] = lambda: (lambda model_identifier: agent)
+    # The endpoint depends on a factory that builds an agent for the chosen model
+    # and system prompt; ignore both and always hand back the mock.
+    app.dependency_overrides[classifier_agent_factory] = lambda: (
+        lambda model_identifier, system_prompt=None: agent
+    )
     return agent
 
 
@@ -147,6 +150,64 @@ class TestLlmEvalCreateRun:
         assert run.request_payload["model"] == "gpt-5-mini"
         assert run.request_payload["reasoning_effort"] == "high"
 
+        await _cancel_background_tasks()
+
+    @pytest.mark.anyio
+    async def test_persists_custom_system_prompt(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        persisted_auth_user: None,
+        db_session: AsyncSession,
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+        body = {**_VALID_BODY, "system_prompt": "Classify strictly by keyword."}
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=body)
+        assert response.status_code == HTTP_202_ACCEPTED
+        run_id = response.json()["run_id"]
+
+        result = await db_session.execute(select(LlmEvalRun).where(LlmEvalRun.id == run_id))
+        run = result.scalar_one_or_none()
+        assert run is not None
+        assert run.request_payload["system_prompt"] == "Classify strictly by keyword."
+
+        await _cancel_background_tasks()
+
+    @pytest.mark.anyio
+    async def test_defaults_system_prompt_when_omitted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        persisted_auth_user: None,
+        db_session: AsyncSession,
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=_VALID_BODY)
+        assert response.status_code == HTTP_202_ACCEPTED
+        run_id = response.json()["run_id"]
+
+        result = await db_session.execute(select(LlmEvalRun).where(LlmEvalRun.id == run_id))
+        run = result.scalar_one_or_none()
+        assert run is not None
+        # Omitted → the resolved deployment default is stored on the run.
+        assert run.request_payload["system_prompt"] == settings.llm_classification_system_prompt
+
+        await _cancel_background_tasks()
+
+    @pytest.mark.anyio
+    async def test_rejects_empty_system_prompt(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, persisted_auth_user: None
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+        body = {**_VALID_BODY, "system_prompt": ""}
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=body)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
         await _cancel_background_tasks()
 
     @pytest.mark.anyio
