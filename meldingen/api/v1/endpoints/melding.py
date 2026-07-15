@@ -25,7 +25,7 @@ from meldingen_core.actions.melding import (
     MeldingUpdateAction,
     MeldingUpdateActionMelder,
 )
-from meldingen_core.actions.note import NoteCreateAction, NoteListAction, NoteRetrieveAction, NoteUpdateAction
+from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction, NoteUpdateAction
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import InvalidLabelException
@@ -69,7 +69,15 @@ from meldingen.actions.melding import (
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
 )
-from meldingen.api.utils import ContentRangeHeaderAdder, PaginationParams, SortParams, pagination_params, sort_param
+from meldingen.actions.note import NoteListAction
+from meldingen.api.utils import (
+    ContentRangeHeaderAdder,
+    PaginationParams,
+    SortParams,
+    optional_sort_param,
+    pagination_params,
+    sort_param,
+)
 from meldingen.api.v1 import (
     default_response,
     forbidden_response,
@@ -1275,11 +1283,16 @@ async def add_note(
 )
 async def list_notes(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    action: Annotated[NoteListAction[Note, Melding], Depends(note_list_action)],
+    action: Annotated[NoteListAction, Depends(note_list_action)],
     produce_output: Annotated[NoteListOutputFactory, Depends(note_list_output_factory)],
+    sort: Annotated[SortParams | None, Depends(optional_sort_param)] = None,
 ) -> list[NoteRetrieveOutput]:
     try:
-        notes = await action(melding_id)
+        notes = await action(
+            melding_id,
+            sort_attribute_name=sort.get_attribute_name() if sort is not None else None,
+            sort_direction=sort.get_direction() if sort is not None else None,
+        )
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
