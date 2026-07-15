@@ -1,7 +1,7 @@
 import logging
 import os
 from functools import lru_cache
-from typing import Annotated, Any, AsyncIterator, Literal
+from typing import Annotated, Any, AsyncIterator, Callable, Literal
 
 from amsterdam_mail_service_client.api.default_api import DefaultApi
 from amsterdam_mail_service_client.api_client import ApiClient
@@ -121,7 +121,7 @@ from meldingen.adapters.malware.dummy_scanner import DummyMalwareScanner
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
 from meldingen.asset import AssetPurger
-from meldingen.config import settings
+from meldingen.config import ReasoningEffort, settings
 from meldingen.database import DatabaseSessionManager
 from meldingen.factories import (
     AnswerFactory,
@@ -396,29 +396,66 @@ def llm_provider_generator() -> AzureProvider | OpenAIProvider | None:
     return None
 
 
+def _build_classifier_agent(
+    provider: AzureProvider | OpenAIProvider,
+    model_identifier: str,
+    system_prompt: str | None = None,
+) -> Agent:
+    """Construct a classifier Agent for `model_identifier` backed by `provider`.
+
+    `system_prompt` overrides the deployment default
+    (`settings.llm_classification_system_prompt`) when supplied; the LLM eval
+    endpoint uses this to evaluate a caller-chosen prompt per run.
+    """
+    model = OpenAIChatModel(model_identifier, provider=provider)
+    return Agent(model, system_prompt=system_prompt or settings.llm_classification_system_prompt)
+
+
 def classifier_agent(
     provider: Annotated[AzureProvider | OpenAIProvider | None, Depends(llm_provider_generator)],
 ) -> Agent | None:
 
     if settings.llm_enabled and provider is not None:
-        model = OpenAIChatModel(settings.llm_model_identifier, provider=provider)
-        return Agent(model, system_prompt=settings.llm_classification_system_prompt)
+        return _build_classifier_agent(provider, settings.llm_model_identifier)
 
     return None
 
 
-def classification_model_settings() -> OpenAIChatModelSettings | None:
-    """Resolve the reasoning effort for the configured model into model settings.
+def classifier_agent_factory(
+    provider: Annotated[AzureProvider | OpenAIProvider | None, Depends(llm_provider_generator)],
+) -> Callable[[str, str | None], Agent] | None:
+    """Return a builder that creates a classifier Agent for a caller-chosen model.
+
+    Used by the LLM eval endpoint, which lets the request select the model and
+    system prompt per run instead of always using `settings.llm_model_identifier`
+    and `settings.llm_classification_system_prompt`. Returns `None` when the LLM
+    is disabled or unconfigured (mirroring `classifier_agent`), so the endpoint
+    can answer 503.
+    """
+    if settings.llm_enabled and provider is not None:
+        return lambda model_identifier, system_prompt=None: _build_classifier_agent(
+            provider, model_identifier, system_prompt
+        )
+
+    return None
+
+
+def build_model_settings(model_identifier: str, effort: ReasoningEffort | None) -> OpenAIChatModelSettings | None:
+    """Resolve a reasoning effort for `model_identifier` into model settings.
 
     The effort is sent natively only to reasoning-capable models
     (`settings.llm_reasoning_models`). Non-reasoning models have no single-call
     equivalent, so nothing is sent and they answer as fast as possible. Returns
     `None` when no reasoning parameter should be sent.
     """
-    effort = settings.llm_reasoning_effort
-    if effort is None or settings.llm_model_identifier not in settings.llm_reasoning_models:
+    if effort is None or model_identifier not in settings.llm_reasoning_models:
         return None
     return OpenAIChatModelSettings(openai_reasoning_effort=effort)
+
+
+def classification_model_settings() -> OpenAIChatModelSettings | None:
+    """Model settings for the production classifier, from the configured defaults."""
+    return build_model_settings(settings.llm_model_identifier, settings.llm_reasoning_effort)
 
 
 def classifier_adapter(

@@ -1,0 +1,202 @@
+"""Background task for running the LLM classifier evaluation suite.
+
+This module owns the long-running work that backs `POST /api/v1/llm-eval/runs`.
+The task is scheduled with `asyncio.create_task` from the endpoint and runs
+detached for the lifetime of the FastAPI process. Each per-case result is
+written to the row immediately so callers polling `GET /runs/{id}` see
+progress as it happens.
+"""
+
+import asyncio
+import logging
+from collections.abc import Sequence
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+from pydantic_ai import Agent
+from pydantic_ai.exceptions import ModelHTTPError
+from pydantic_ai.settings import ModelSettings
+from sqlalchemy import update
+
+from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
+from meldingen.database import DatabaseSessionManager
+from meldingen.models import LlmEvalRun, LlmEvalRunStatus
+from meldingen.schemas.llm_eval import LlmEvalRunInput, LlmEvalTestCaseResult
+
+logger = logging.getLogger(__name__)
+
+_RETRIABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+_MAX_ATTEMPTS = 6
+_INITIAL_BACKOFF_SECONDS = 5.0
+_MAX_BACKOFF_SECONDS = 120.0
+
+
+def _format_exception(exc: BaseException) -> str:
+    """Render an exception as a single-line ``Type: message`` string for storage."""
+    message = str(exc).strip()
+    return f"{type(exc).__name__}: {message}" if message else type(exc).__name__
+
+
+@dataclass
+class _FakeClassification:
+    name: str
+    instructions: str | None
+
+
+class _InMemoryClassificationRepository:
+    """Minimal repository backed by the request payload instead of the database."""
+
+    def __init__(self, classifications: Sequence[_FakeClassification]) -> None:
+        self._classifications = list(classifications)
+
+    async def list(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        sort_attribute_name: str | None = None,
+        sort_direction: Any | None = None,
+        filters: Any | None = None,
+    ) -> list[_FakeClassification]:
+        return self._classifications
+
+
+async def _classify_with_retry(adapter: AgentClassifierAdapter, text: str, run_id: int, case_index: int) -> str | None:
+    """Classify one case, waiting out transient LLM-gateway errors (429/5xx).
+
+    The shared OpenAI client is built with `max_retries=0` so the production
+    classification path stays fail-fast; an eval run instead prefers waiting
+    out a rate limit over recording a spurious per-case error. Non-transient
+    errors and retry exhaustion still raise, so the case is recorded as errored.
+    """
+    backoff = _INITIAL_BACKOFF_SECONDS
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        try:
+            return await adapter.classify(text)
+        except ModelHTTPError as exc:
+            if exc.status_code not in _RETRIABLE_STATUS_CODES or attempt == _MAX_ATTEMPTS:
+                raise
+            logger.warning(
+                "llm eval run %d: test case %d got HTTP %d (attempt %d/%d), retrying in %.0fs",
+                run_id,
+                case_index,
+                exc.status_code,
+                attempt,
+                _MAX_ATTEMPTS,
+                backoff,
+            )
+            await asyncio.sleep(backoff)
+            backoff = min(backoff * 2, _MAX_BACKOFF_SECONDS)
+    raise AssertionError("unreachable: retry loop either returns or raises")
+
+
+async def execute_llm_eval_run(
+    run_id: int,
+    payload: LlmEvalRunInput,
+    agent: Agent,
+    session_manager: DatabaseSessionManager,
+    model_settings: ModelSettings | None = None,
+) -> None:
+    """Run the LLM eval suite for `run_id`, persisting per-case results as we go.
+
+    `model_settings` carries the resolved reasoning effort for the run's model
+    (see `build_model_settings`); it is forwarded to every classification call.
+    """
+    logger.info("llm eval run %d: starting", run_id)
+
+    async with session_manager.session() as session:
+        run = await session.get(LlmEvalRun, run_id)
+        if run is None:
+            logger.warning("llm eval run %d: row missing on start, aborting", run_id)
+            return
+        run.status = LlmEvalRunStatus.running
+        run.started_at = datetime.now()
+        await session.commit()
+
+    try:
+        classifications = [
+            _FakeClassification(name=c.name, instructions=c.instructions) for c in payload.classifications
+        ]
+        repository = _InMemoryClassificationRepository(classifications)
+        adapter = AgentClassifierAdapter(agent, repository, model_settings)  # type: ignore[arg-type]
+
+        for i, test_case in enumerate(payload.test_cases):
+            try:
+                actual: str | None = await _classify_with_retry(adapter, test_case.text, run_id, i)
+                result = LlmEvalTestCaseResult(
+                    text=test_case.text,
+                    expected=test_case.expected,
+                    actual=actual,
+                    passed=actual == test_case.expected,
+                )
+            except Exception as exc:
+                logger.exception("llm eval run %d: test case %d raised", run_id, i)
+                result = LlmEvalTestCaseResult(
+                    text=test_case.text,
+                    expected=test_case.expected,
+                    actual=None,
+                    passed=False,
+                    error=_format_exception(exc),
+                )
+
+            async with session_manager.session() as session:
+                run = await session.get(LlmEvalRun, run_id)
+                if run is None:
+                    logger.warning("llm eval run %d: row missing mid-run, aborting", run_id)
+                    return
+                # rebind: in-place .append() is not dirty-tracked on JSON columns
+                run.results = [*run.results, result.model_dump(mode="json")]
+                if result.error is not None:
+                    run.errored += 1
+                elif result.passed:
+                    run.passed += 1
+                else:
+                    run.failed += 1
+                await session.commit()
+
+        async with session_manager.session() as session:
+            run = await session.get(LlmEvalRun, run_id)
+            if run is None:
+                logger.warning("llm eval run %d: row missing at finalize, aborting", run_id)
+                return
+            run.status = LlmEvalRunStatus.completed
+            run.finished_at = datetime.now()
+            await session.commit()
+
+        logger.info("llm eval run %d: completed", run_id)
+    except Exception as exc:
+        logger.exception("llm eval run %d: failed unexpectedly", run_id)
+        async with session_manager.session() as session:
+            run = await session.get(LlmEvalRun, run_id)
+            if run is None:
+                logger.warning("llm eval run %d: row missing at failure, aborting", run_id)
+                return
+            run.status = LlmEvalRunStatus.failed
+            run.error = f"Run failed unexpectedly: {_format_exception(exc)}"
+            run.finished_at = datetime.now()
+            await session.commit()
+
+
+async def sweep_orphaned_runs(session_manager: DatabaseSessionManager) -> None:
+    """Mark any in-flight run as failed; called once on FastAPI startup.
+
+    Runs that were `running` or `pending` when the previous process exited are
+    stranded — their owning asyncio task died with the process. We surface this
+    to callers by transitioning them to `failed` with a generic error message.
+
+    This MUST run before the FastAPI app accepts requests. A scheduled task from
+    the current process is indistinguishable from an orphan by status alone — the
+    safety of the sweep depends on no `POST /runs` handler having completed yet.
+    """
+    async with session_manager.session() as session:
+        await session.execute(
+            update(LlmEvalRun)
+            .where(LlmEvalRun.status.in_([LlmEvalRunStatus.pending, LlmEvalRunStatus.running]))
+            .values(
+                status=LlmEvalRunStatus.failed,
+                error="Server restarted during run",
+                finished_at=datetime.now(),
+            )
+        )
+        await session.commit()

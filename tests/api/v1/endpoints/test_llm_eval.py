@@ -1,11 +1,24 @@
+import asyncio
+import contextlib
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_503_SERVICE_UNAVAILABLE
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_202_ACCEPTED,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_CONTENT,
+    HTTP_503_SERVICE_UNAVAILABLE,
+)
 
-from meldingen.dependencies import classifier_agent
+from meldingen.api.v1.endpoints.llm_eval import _background_tasks
+from meldingen.config import settings
+from meldingen.dependencies import classifier_agent_factory
+from meldingen.models import LlmEvalRun, LlmEvalRunStatus, User
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
 
 _VALID_BODY = {
@@ -20,86 +33,293 @@ _VALID_BODY = {
 }
 
 
-class TestLlmEvalRunUnauthorized(BaseUnauthorizedTest):
+def _agent_returning(value: str, app: FastAPI) -> MagicMock:
+    agent = MagicMock()
+    out = MagicMock()
+    out.classification = value
+    agent.run = AsyncMock(return_value=MagicMock(output=out))
+    # The endpoint depends on a factory that builds an agent for the chosen model
+    # and system prompt; ignore both and always hand back the mock.
+    app.dependency_overrides[classifier_agent_factory] = lambda: (
+        lambda model_identifier, system_prompt=None: agent
+    )
+    return agent
+
+
+async def _cancel_background_tasks() -> None:
+    """Cancel any background tasks the endpoint spawned so they don't race teardown."""
+    for task in list(_background_tasks):
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await task
+
+
+@pytest.fixture
+async def persisted_auth_user(db_session: AsyncSession) -> None:
+    """Persist a user matching ``authenticate_user_override`` (id=400) so the
+    `created_by_user_id` foreign key on `llm_eval_run` resolves."""
+    user = User(username="user@example.com", email="user@example.com")
+    user.id = 400
+    db_session.add(user)
+    await db_session.commit()
+
+
+class TestLlmEvalCreateRunUnauthorized(BaseUnauthorizedTest):
     def get_route_name(self) -> str:
-        return "llm_eval:run"
+        return "llm_eval:create_run"
 
     def get_method(self) -> str:
         return "POST"
 
 
-class TestLlmEvalRunAgentDisabled:
+class TestLlmEvalCreateRunAgentDisabled:
     @pytest.mark.anyio
     async def test_returns_503_when_agent_is_none(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
-        app.dependency_overrides[classifier_agent] = lambda: None
+        app.dependency_overrides[classifier_agent_factory] = lambda: None
 
-        response = await client.post(app.url_path_for("llm_eval:run"), json=_VALID_BODY)
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=_VALID_BODY)
 
         assert response.status_code == HTTP_503_SERVICE_UNAVAILABLE
         assert "LLM is not enabled" in response.json()["detail"]
 
 
-class TestLlmEvalRunSuccess:
-    @pytest.fixture
-    def mock_agent(self, app: FastAPI) -> MagicMock:
-        agent = MagicMock()
-        # agent.run() returns a result whose .output has a .classification attr
-        mock_output = MagicMock()
-        mock_output.classification = "Zwerfvuil"
-        mock_result = AsyncMock()
-        mock_result.return_value = MagicMock(output=mock_output)
-        agent.run = mock_result
-        app.dependency_overrides[classifier_agent] = lambda: agent
-        return agent
+class TestLlmEvalCreateRun:
+    @pytest.mark.anyio
+    async def test_returns_run_id_and_pending(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        persisted_auth_user: None,
+        db_session: AsyncSession,
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=_VALID_BODY)
+
+        assert response.status_code == HTTP_202_ACCEPTED
+        body = response.json()
+        assert isinstance(body["run_id"], int)
+        assert body["status"] == LlmEvalRunStatus.pending.value
+
+        await _cancel_background_tasks()
 
     @pytest.mark.anyio
-    async def test_successful_evaluation(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, mock_agent: MagicMock
+    async def test_creates_row_in_db(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        persisted_auth_user: None,
+        db_session: AsyncSession,
     ) -> None:
-        response = await client.post(app.url_path_for("llm_eval:run"), json=_VALID_BODY)
+        _agent_returning("Zwerfvuil", app)
 
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=_VALID_BODY)
+        run_id = response.json()["run_id"]
+
+        # We do NOT assume the background task has finished — just that the row exists.
+        result = await db_session.execute(select(LlmEvalRun).where(LlmEvalRun.id == run_id))
+        run = result.scalar_one_or_none()
+        assert run is not None
+        assert run.total == 2
+        assert run.request_payload["classifications"][0]["name"] == "Zwerfvuil"
+
+        await _cancel_background_tasks()
+
+    @pytest.mark.anyio
+    async def test_persists_selected_model_and_effort(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        persisted_auth_user: None,
+        db_session: AsyncSession,
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+        body = {**_VALID_BODY, "model": "gpt-5-mini", "reasoning_effort": "high"}
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=body)
+        assert response.status_code == HTTP_202_ACCEPTED
+        run_id = response.json()["run_id"]
+
+        result = await db_session.execute(select(LlmEvalRun).where(LlmEvalRun.id == run_id))
+        run = result.scalar_one_or_none()
+        assert run is not None
+        # The resolved selection is recorded on the stored payload.
+        assert run.request_payload["model"] == "gpt-5-mini"
+        assert run.request_payload["reasoning_effort"] == "high"
+
+        await _cancel_background_tasks()
+
+    @pytest.mark.anyio
+    async def test_persists_custom_system_prompt(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        persisted_auth_user: None,
+        db_session: AsyncSession,
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+        body = {**_VALID_BODY, "system_prompt": "Classify strictly by keyword."}
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=body)
+        assert response.status_code == HTTP_202_ACCEPTED
+        run_id = response.json()["run_id"]
+
+        result = await db_session.execute(select(LlmEvalRun).where(LlmEvalRun.id == run_id))
+        run = result.scalar_one_or_none()
+        assert run is not None
+        assert run.request_payload["system_prompt"] == "Classify strictly by keyword."
+
+        await _cancel_background_tasks()
+
+    @pytest.mark.anyio
+    async def test_defaults_system_prompt_when_omitted(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        persisted_auth_user: None,
+        db_session: AsyncSession,
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=_VALID_BODY)
+        assert response.status_code == HTTP_202_ACCEPTED
+        run_id = response.json()["run_id"]
+
+        result = await db_session.execute(select(LlmEvalRun).where(LlmEvalRun.id == run_id))
+        run = result.scalar_one_or_none()
+        assert run is not None
+        # Omitted → the resolved deployment default is stored on the run.
+        assert run.request_payload["system_prompt"] == settings.llm_classification_system_prompt
+
+        await _cancel_background_tasks()
+
+    @pytest.mark.anyio
+    async def test_rejects_empty_system_prompt(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, persisted_auth_user: None
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+        body = {**_VALID_BODY, "system_prompt": ""}
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=body)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+        await _cancel_background_tasks()
+
+    @pytest.mark.anyio
+    async def test_rejects_model_not_in_options(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, persisted_auth_user: None
+    ) -> None:
+        _agent_returning("Zwerfvuil", app)
+        body = {**_VALID_BODY, "model": "not-a-real-model"}
+
+        response = await client.post(app.url_path_for("llm_eval:create_run"), json=body)
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+        await _cancel_background_tasks()
+
+
+class TestLlmEvalGetRunUnauthorized(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "llm_eval:get_run"
+
+    def get_method(self) -> str:
+        return "GET"
+
+    def get_path_params(self) -> dict[str, int]:
+        return {"run_id": 1}
+
+
+class TestLlmEvalGetRun:
+    @pytest.mark.anyio
+    async def test_returns_404_for_unknown_run(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
+        response = await client.get(app.url_path_for("llm_eval:get_run", run_id=9999999))
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_returns_full_run_state(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, db_session: AsyncSession
+    ) -> None:
+        run = LlmEvalRun()
+        run.status = LlmEvalRunStatus.completed
+        run.request_payload = {**_VALID_BODY, "model": "gpt-5-mini", "reasoning_effort": "high"}
+        run.total = 2
+        run.passed = 1
+        run.failed = 1
+        run.results = [
+            {"text": "a", "expected": "x", "actual": "x", "passed": True, "error": None},
+            {"text": "b", "expected": "y", "actual": "x", "passed": False, "error": None},
+        ]
+        db_session.add(run)
+        await db_session.commit()
+        await db_session.refresh(run)
+
+        response = await client.get(app.url_path_for("llm_eval:get_run", run_id=run.id))
         assert response.status_code == HTTP_200_OK
-        data = response.json()
-        assert data["total"] == 2
-        assert data["passed"] + data["failed"] + data["errored"] == data["total"]
-        assert len(data["results"]) == 2
+        body = response.json()
+        assert body["run_id"] == run.id
+        assert body["status"] == "completed"
+        assert body["model"] == "gpt-5-mini"
+        assert body["reasoning_effort"] == "high"
+        assert body["total"] == 2
+        assert body["passed"] == 1
+        assert body["failed"] == 1
+        assert len(body["results"]) == 2
+        assert body["request_payload"]["classifications"][0]["name"] == "Zwerfvuil"
 
-        for result in data["results"]:
-            assert result["actual"] == "Zwerfvuil"
-            assert result["error"] is None
 
+class TestLlmEvalListRunsUnauthorized(BaseUnauthorizedTest):
+    def get_route_name(self) -> str:
+        return "llm_eval:list_runs"
+
+    def get_method(self) -> str:
+        return "GET"
+
+
+class TestLlmEvalListRuns:
     @pytest.mark.anyio
-    async def test_counts_are_consistent(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, mock_agent: MagicMock
+    async def test_returns_runs_newest_first_without_results(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, db_session: AsyncSession
     ) -> None:
-        """Agent always returns 'Zwerfvuil', so first test passes, second fails."""
-        response = await client.post(app.url_path_for("llm_eval:run"), json=_VALID_BODY)
+        for i in range(3):
+            run = LlmEvalRun()
+            run.status = LlmEvalRunStatus.completed
+            run.request_payload = {**_VALID_BODY, "model": "gpt-5-mini", "reasoning_effort": "high"}
+            run.total = 2
+            run.results = [{"text": f"r{i}", "expected": "x", "actual": "x", "passed": True, "error": None}]
+            db_session.add(run)
+        await db_session.commit()
 
-        data = response.json()
-        assert data["passed"] == 1  # "Zwerfvuil" matches
-        assert data["failed"] == 1  # "Straatverlichting" does not match
-        assert data["errored"] == 0
-
-
-class TestLlmEvalRunError:
-    @pytest.mark.anyio
-    async def test_exception_populates_error_and_increments_errored(
-        self, app: FastAPI, client: AsyncClient, auth_user: None
-    ) -> None:
-        agent = MagicMock()
-        agent.run = AsyncMock(side_effect=RuntimeError("LLM exploded"))
-        app.dependency_overrides[classifier_agent] = lambda: agent
-
-        response = await client.post(app.url_path_for("llm_eval:run"), json=_VALID_BODY)
-
+        response = await client.get(app.url_path_for("llm_eval:list_runs"))
         assert response.status_code == HTTP_200_OK
-        data = response.json()
-        assert data["errored"] == 2
-        assert data["failed"] == 0
-        assert data["passed"] == 0
+        body = response.json()
+        assert len(body) == 3
+        # Newest first → ids descending
+        assert body[0]["run_id"] > body[1]["run_id"] > body[2]["run_id"]
+        for row in body:
+            # Model and effort are surfaced even though the full payload is not.
+            assert row["model"] == "gpt-5-mini"
+            assert row["reasoning_effort"] == "high"
+            # Summary must NOT include results or request_payload
+            assert "results" not in row
+            assert "request_payload" not in row
 
-        for result in data["results"]:
-            assert result["passed"] is False
-            assert result["actual"] is None
-            # Error message should NOT leak internal exception details
-            assert result["error"] == "Classification failed for this test case."
+    @pytest.mark.anyio
+    async def test_respects_limit_and_offset(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, db_session: AsyncSession
+    ) -> None:
+        for _ in range(5):
+            run = LlmEvalRun()
+            run.status = LlmEvalRunStatus.completed
+            run.request_payload = _VALID_BODY
+            run.total = 2
+            db_session.add(run)
+        await db_session.commit()
+
+        response = await client.get(app.url_path_for("llm_eval:list_runs"), params={"limit": 2, "offset": 1})
+        assert response.status_code == HTTP_200_OK
+        assert len(response.json()) == 2
