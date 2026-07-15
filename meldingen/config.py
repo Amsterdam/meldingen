@@ -128,8 +128,7 @@ Gemeente Amsterdam
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-5.1",
-        "Mistral-Medium-3.5",
-        "Mistral-Medium-3",
+        "mistral-medium-3-5",
     ]
     llm_model_identifier: str = os.getenv(
         "LLM_MODEL", ""
