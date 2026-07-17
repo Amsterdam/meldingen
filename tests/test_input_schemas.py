@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from meldingen.models import AnswerTypeEnum
-from meldingen.schemas.input import NoteInput, TimeAnswerInput
+from meldingen.schemas.input import NoteInput, TimeAnswerInput, _markdown_to_plain_text
 
 
 def test_note_input_strips_whitespace() -> None:
@@ -26,6 +26,45 @@ def test_note_input_accepts_markdown_over_limit_with_plain_text_under_limit() ->
     assert len(text) > 1000
 
     assert NoteInput(text=text).text == text
+
+
+def test_note_input_does_not_count_paragraph_breaks_towards_the_limit() -> None:
+    # A real note pasted by a user: 12 paragraphs whose combined visible content is 995 characters.
+    # Rendered to plain text it becomes 1006 characters (995 + 11 single newlines between the
+    # paragraphs), but those paragraph breaks must not count towards the limit, so the note is valid.
+    paragraphs = [
+        "Nieuwe test",
+        "Bug: Als je wordt uitgelogd kom je niet automatisch terug op de pagina waar je was",
+        "Bug: Wanneer was het? in back office werkt nog niet",
+        "Bug: /locatie laat maar 4 assets zien als je er 5 kiest. Reproduceren, klokken?",
+        "Bug: leeggooien aanvullende tekstvraag werkt niet",
+        "Bug: als je in back office melding aanmaakt met aanvullende vragen, dan in summary naar "
+        "primary form gaan, dan aanpast naar cat zonder aanvullende vragen, dan krijg je state "
+        "transition error?",
+        "Bug: vanuit back office begin je wat makkelijker een nieuwe melding dan in MF. Gebeurt dan "
+        "iets sneller dat je een nieuwe melding hebt, maar address cookie nog gevuld is van een "
+        "niet-afgemaakte melding",
+        "Bug: Als je wordt uitgelogd kom je niet automatisch terug op de pagina waar je was",
+        "Bug: Wanneer was het? in back office werkt nog niet",
+        "Bug: /locatie laat maar 4 assets zien als je er 5 kiest. Reproduceren, klokken?",
+        "Bug: leeggooien aanvullende tekstvraag werkt niet",
+        "Bug: als je in back office melding aanmaakt met aanvullende vragalalal",
+    ]
+    text = "\n\n".join(paragraphs)
+    # The user's visible content is under the limit...
+    assert len("".join(paragraphs)) == 995
+    # ...even though counting the paragraph breaks would push the rendered plain text over it.
+    assert len(_markdown_to_plain_text(text)) > 1000
+
+    assert NoteInput(text=text).text == text
+
+
+def test_note_input_rejects_visible_text_over_limit_even_with_line_breaks() -> None:
+    # 1001 visible characters split across two paragraphs is genuinely too long, regardless of the
+    # line break between them.
+    text = ("a" * 500) + "\n\n" + ("a" * 501)
+    with pytest.raises(ValidationError):
+        NoteInput(text=text)
 
 
 @pytest.mark.parametrize(

@@ -26,8 +26,16 @@ _markdown_to_plain_text = MarkdownToPlainTextConverter()
 
 def validate_note_plain_text_length(value: str) -> str:
     """Reject notes whose rendered plain text exceeds the limit. The raw markdown source
-    may be longer, as long as the visible text fits within the limit."""
-    if len(_markdown_to_plain_text(value)) > NOTE_MAX_PLAIN_TEXT_LENGTH:
+    may be longer, as long as the visible text fits within the limit.
+
+    Line breaks between paragraphs are not counted: only the characters the user actually typed
+    count towards the limit. This keeps the count in step with the editor's character counter, which
+    counts the text content of the document and not the structural breaks between blocks. Without
+    this, a note the user sees as e.g. 995 characters spread over a dozen paragraphs would be counted
+    as 1006 (995 + 11 paragraph breaks) and wrongly rejected."""
+    plain_text = _markdown_to_plain_text(value)
+    visible_length = len(plain_text.replace("\r", "").replace("\n", ""))
+    if visible_length > NOTE_MAX_PLAIN_TEXT_LENGTH:
         raise ValueError(f"Note may not exceed {NOTE_MAX_PLAIN_TEXT_LENGTH} characters of plain text")
     return value
 
