@@ -1,14 +1,442 @@
 [
    {
-        "name": "Container glas kapot",
-        "instructions": "Classify as 'Container glas kapot' if the melding text describes a broken glass container."
-    },
-    {
-        "name": "Container glas vol",
-        "instructions": "Classify as 'Container glas vol' if the melding text describes a full glass container."
-    },
-    {
-        "name": "Container is kapot",
-        "instructions": "Classify as 'Container is kapot' if the melding text describes a broken container (not limited to glass)."
-    }
+      "name":"Dumping",
+      "instructions":"Deze subcategorie is bedoeld voor meldingen over verkeerd aangeboden of achtergelaten afval. Hieronder vallen meldingen over grofvuil, meubels, grote dozen, elektrische apparaten, huisvuil, bedrijfsafval, bouw- en sloopmaterialen, snoeiafval en ander afval. En het afval wat op de verkeerde plaats of op het verkeerde moment is neergezet. Ook meldingen over afval dat niet is opgehaald en verzoeken om handhaving horen bij deze subcategorie."
+   },
+   {
+      "name":"Container",
+      "instructions":"Deze subcategorie is bedoeld voor meldingen over afvalcontainers en rolcontainers. Hieronder vallen volle, niet geleegde of kapotte containers, containers die schoongemaakt moeten worden en afval dat naast een container is geplaatst. Dit geldt voor glas-, rest-, papier-, textiel- en rolcontainers."
+   },
+   {
+      "name":"Gedumpt gevaarlijk afval",
+      "instructions":"Verzoek om te handhaven op afval dat gevaarlijk is voor de volksgezondheid en milieu. Hieronder valt asbest, accu, chemisch afval, autobanden, verf, lege lachgasflessen groter dan 1 meter etc. Volle en ongebruikte lachgasflessen doorverwijzen naar de politie."
+   },
+   {
+      "name":"Kerstbomen",
+      "instructions":"Kerstbomen die niet op de juiste plek of tijd zijn neergezet."
+   },
+   {
+      "name":"Overig Afval",
+      "instructions":"Alle meldingen over afval die niet in 1 van de andere subcategorieën van afval te plaatsen zijn."
+   },
+   {
+      "name":"Vaste Brug",
+      "instructions":"Deze subcategorie is bedoeld voor meldingen over vaste bruggen. Hieronder vallen meldingen over schade, onderhoud en water dat slecht wegloopt op een brug. Ook meldingen over verzakkingen, een beschadigde leuning, schade aan het wegdek of scheuren in het metselwerk horen bij deze subcategorie. Is de oorzaak een verstopte put of riolering? Gebruik dan de subcategorie 'Put / riolering verstopt'."
+   },
+   {
+      "name":"Beweegbare brug",
+      "instructions":"Schade, onderhoud en vragen over beweegbare bruggen: de constructie, afsluitbomen, hekwerk, wegdek, openen en sluiten, seinlichten en afmeervoorzieningen zoals ringen, borden van de brug."
+   },
+   {
+      "name":"Kademuren",
+      "instructions":"•\tEen kademuur of damwand is beschadigd of er zit een scheur in. Of een onderdeel zit los of ontbreekt, bijvoorbeeld: drenkelingenvoorzieningen zoals een trap of grijplijn. \n•\tHekwerk langs of op de kade is beschadigd. Of reling op een kademuur.\n•\tVerzakkingen binnen 3 meter van de kade."
+   },
+   {
+      "name":"Oevers",
+      "instructions":"Schade aan oeverconstructies, anders dan kademuren, zoals afgekalfde oevers, verzakkingen, kapot of rot hout."
+   },
+   {
+      "name":"Sluis",
+      "instructions":"Schade, onderhoud en vragen over sluizen: de constructie, hekwerk, openen en sluiten, seinlichten en afmeervoorzieningen zoals ringen, borden van de sluis."
+   },
+   {
+      "name":"Steiger",
+      "instructions":"Openbare steiger is vies, steiger is kapot of er zitten planken los."
+   },
+   {
+      "name":"Watergangen",
+      "instructions":"•\tBaggerwerkzaamheden \n•\tBeschadigde brandkraan\n•\tIngezakte oever \n•\tVerstopte buis voor water doorstroming (duiker)\n•\tBeschadigde waterkering in het water (stuwen)"
+   },
+   {
+      "name":"Vermoeden",
+      "instructions":"Vermoeden van: \n•\tvermenging van de onderwereld met bovenwereld (criminelen gebruiken diensten van de bovenwereld)\n•\tverborgen criminaliteit (van zichtbaar naar verborgen)\n•\tdrugshandel, mensenhandel, arbeidsuitbuiting, witwassen, fraude\n•\tgeorganiseerde criminaliteit, geen incident\n•\tgebeurtenissen met grote impact op de leefbaarheid of de maatschappij, denk aan vergismoorden of liquidaties\n•\t(onverklaarbaar) veel geld\nEn meldingen die te maken hebben met de situatie in het Midden-Oosten."
+   },
+   {
+      "name":"Beplanting",
+      "instructions":"Vervanging en onderhoud van planten, struiken en grasvelden in de openbare ruimte. Plantenbakken horen bij Straatmeubilair."
+   },
+   {
+      "name":"Boom - dood/ontbreekt/inspectie",
+      "instructions":"Deze subcategorie is bedoeld voor meldingen over dode en ontbrekende bomen en verzoeken om een boom te laten inspecteren. Het gaat zowel om het verwijderen van dode bomen, het melden van verdwenen bomen als het controleren van de gezondheid of veiligheid van een boom."
+   },
+   {
+      "name":"Boom - gevaarlijke situatie",
+      "instructions":"Situaties waarbij bomen voor gevaar voor mens, dier of objecten zorgen, zoals bijvoorbeeld een bijna omvallende of omgevallen boom."
+   },
+   {
+      "name":"Boom - illegale kap",
+      "instructions":"Vermoeden dat iemand zonder vergunning een boom kapt."
+   },
+   {
+      "name":"Boom - overig",
+      "instructions":"Deze subcategorie is bedoeld voor overige meldingen over bomen. Hieronder vallen meldingen die niet binnen een andere subcategorie voor bomen passen. Ook meldingen over afval in een boom horen bij deze subcategorie."
+   },
+   {
+      "name":"Boom - stormschade",
+      "instructions":"Omgevallen boom in de openbare ruimte of losse takken."
+   },
+   {
+      "name":"Boom - ziekten en plagen",
+      "instructions":""
+   },
+   {
+      "name":"Eikenprocessierups",
+      "instructions":"Nesten van eikenprocessierups die verwijderd moeten worden."
+   },
+   {
+      "name":"Japanse duizendknoop",
+      "instructions":"Meldingen over groeiplaatsen van Japanse duizendknoop."
+   },
+   {
+      "name":"Maaien",
+      "instructions":"Verzoek om te maaien."
+   },
+   {
+      "name":"Onkruid in het groen",
+      "instructions":"Onkruid in park, plantsoen of groenstrook."
+   },
+   {
+      "name":"Overig groen en water",
+      "instructions":"Onbeheerd groenstuk, planten zijn verdwenen, dode planten, groen voor lantaarnpaal, blad in plantvakken. Geen aanvragen voor zelfbeheer."
+   },
+   {
+      "name":"Snoeien",
+      "instructions":"Bomen, heggen en struiken moeten gesnoeid worden. Er is snoeiafval achtergebleven. En andere meldingen over snoeien."
+   },
+   {
+      "name":"Overig",
+      "instructions":"Dit is een restcategorie voor als niet gelijk duidelijk is waar deze melding thuishoort. Een melding mag NOOIT afgehandeld worden zolang hij in deze categorie staat en moet altijd eerst gehercategoriseerd worden naar de best passende categorie."
+   },
+   {
+      "name":"Overige dienstverlening",
+      "instructions":"Meldingen niet over of in de openbare ruimte en die daarom geen MORA-melding zijn. Alleen het ASC werkt in deze categorie door:\n•\tde melding te hercategoriseren\n•\teen andere afdeling binnen de gemeente in te schakelen\n•\tdoor te verwijzen naar de juiste partij buiten de gemeente"
+   },
+   {
+      "name":"Geluidsoverlast installaties",
+      "instructions":"Geluidsoverlast van installaties van bedrijven en horeca: afzuiginstallaties, afvoerpijpen, airco’s etc."
+   },
+   {
+      "name":"Geluidsoverlast muziek",
+      "instructions":"Geluidsoverlast van muziek van bedrijven, horeca en evenementen. Maar niet van een terras."
+   },
+   {
+      "name":"Overig bedrijven / horeca",
+      "instructions":"Overlast van bedrijven en horeca die niet in 1 van de andere subcategorieën te plaatsen is."
+   },
+   {
+      "name":"Overlast door bezoekers (niet op terras)",
+      "instructions":"Overlast van personen en/of bezoekers die zich niet in de horecazaak of op het terras zelf, maar in de openbare ruimte (straat, steeg, voetgangersgebied) bevinden. Denk aan rijen, groepen, drukte, illegale gidsen en proppers (iemand die probeert mensen over te halen  bij een horecazaak naar binnen te gaan)."
+   },
+   {
+      "name":"Overlast evenementen",
+      "instructions":"Overlast van evenementen met een vergunning of evenementmelding. Denk bijvoorbeeld aan overlast van bezoekers, bereikbaarheid, geluid of stank of andere overlast door het evenement."
+   },
+   {
+      "name":"Overlast terrassen",
+      "instructions":"Overlast van een terras: uitgewaaierd terras, geluidsoverlast van terras, terras zonder vergunning."
+   },
+   {
+      "name":"Stankoverlast",
+      "instructions":"Stankoverlast van bedrijven en horeca door afzuiginstallaties, afvoerpijpen, ontbreken afvoerinstallatie of door het bereiden van eten."
+   },
+   {
+      "name":"Auto- / scooter- / bromfiets(wrak)",
+      "instructions":"Overlast van een achtergelaten voertuig (geen fiets!) in de openbare ruimte, omdat het is vernield of niet meer berijdbaar is. Het voertuig is al lange tijd niet meer in gebruik of verplaatst door de eigenaar."
+   },
+   {
+      "name":"Bouw- / sloopoverlast",
+      "instructions":"Overlast van bouw- en sloopwerkzaamheden. Hieronder valt geluidsoverlast, stofoverlast, werktijden, trillingen, scheurvorming, geplaatste object binnen de gevel, bouwlampen (te fel), etc."
+   },
+   {
+      "name":"Deelscooters en -(bak)fietsen",
+      "instructions":"Overlast van verkeerd of hinderlijk geparkeerde deelscooter, deelfiets of deelbakfiets van een commerciële aanbieder. Aanbieder pakt de melding zelf op: bel aanbieder of verwijs door buiten de openingstijden."
+   },
+   {
+      "name":"Fietswrak",
+      "instructions":"Overlast van een achtergelaten fiets in de openbare ruimte, omdat fiets is vernield of niet meer berijdbaar is. De fiets is al lange tijd niet meer in gebruik of niet meer verplaatst door de eigenaar. Hieronder vallen ook verkeerde geparkeerde fietsen (buiten fietsparkeerplekken) en/of fietsen die vastgemaakt zijn aan gemeentelijke objecten zoals een lantaarnpaal, brugleuning of bomen."
+   },
+   {
+      "name":"Hinderlijk geplaatst object",
+      "instructions":"Overlast van een object dat een vergunning heeft of waarvoor een melding is gedaan. Hieronder valt een mobiel toilet, puincontainer, reclamebord, steiger of bouwmateriaal in de openbare ruimte. Dit kan op een openbare parkeerplek, stoep of inrit zijn."
+   },
+   {
+      "name":"Lozing / dumping / bodemverontreiniging",
+      "instructions":"Verzoek om te handhaven op het lozen van vloeistoffen en dumpen van restmaterialen in de openbare ruimte zonder vergunning. Het gaat om een grote hoeveelheid stoffen die een gevaar zijn voor de volksgezondheid en/of milieubelastend kunnen zijn."
+   },
+   {
+      "name":"Markten",
+      "instructions":"Overlast van markten en marktondernemers, met en zonder vaste plek."
+   },
+   {
+      "name":"Overig openbare ruimte",
+      "instructions":"Verzoek om te handhaven op overlast in de openbare ruimte, die niet in één van de andere  subcategorieën thuis hoort."
+   },
+   {
+      "name":"Parkeeroverlast",
+      "instructions":"Overlast van onjuist geparkeerde voertuigen (auto, motor, brommer of scooter, maar niet fietsen). En ook parkeren op plekken waar dat niet mag."
+   },
+   {
+      "name":"Stank- / geluidsoverlast",
+      "instructions":"Alle meldingen die gaan over stank- en geluidsoverlast niet van bedrijven of horeca, deze hebben eigen categorieën. Deze overlast kan komen van afzuiginstallaties, afvoerpijpen, vuilcontainers, barbecueën etc."
+   },
+   {
+      "name":"Wegsleep",
+      "instructions":"Verzoek om voertuig in openbare ruimte weg te slepen omdat het:\n•\tde doorgang van het verkeer belemmert\n•\tde verkeersveiligheid in gevaar brengt\n•\tde doorgang blokkeert\n•\tdubbel geparkeerd staat of geparkeerd staat op een niet toegestane parkeerplek\nLet op: alleen de Meldkamer besluit of deze melding in deze categorie hoort. Graag intern overleggen. Anders is het Parkeeroverlast."
+   },
+   {
+      "name":"Blokkade van de vaarweg",
+      "instructions":"Onveilige situaties door een losgeslagen boot of een andere object in het water dat de doorgang beperkt."
+   },
+   {
+      "name":"Boten – overige overlast",
+      "instructions":"Overige overlast van boten. Hieronder valt afmeren waar het niet is toegestaan, boot zonder geldig vignet, vermoeden illegale bewoning en motorgeluid."
+   },
+   {
+      "name":"Geluid op het water",
+      "instructions":"Overlast door versterkt geluid vanaf het water (bijv. radio, versterkers, muziekinstallaties) van zowel varende als afgemeerde boten."
+   },
+   {
+      "name":"Oppervlaktewaterverontreiniging",
+      "instructions":"Verontreiniging van bevaarbaar water door lekkage of lozing van olie, benzine of andere chemische stoffen en/of een lekkende boot."
+   },
+   {
+      "name":"Vaargedrag - overig",
+      "instructions":"Onveilige situaties als gevolg van vaarhandelingen: varen in verkeerde richting, roekeloos varen. Let op: THOR nautisch heeft niet de bevoegdheid om te controleren op alcohol. Dit is een taak van de politie."
+   },
+   {
+      "name":"Vaargedrag - snel varen",
+      "instructions":"Overlast van boten die harder varen dan de toegestane snelheid."
+   },
+   {
+      "name":"Wrak in het water",
+      "instructions":"Overlast van boten die niet meer kunnen drijven (ongeacht of deze vast zit aan een kade of steiger)."
+   },
+   {
+      "name":"Dode dieren",
+      "instructions":"Alleen meldingen van dode ratten!\nMeldingen van gewonde, zieke of dode dieren horen niet bij de gemeente. \n\n•\tDode of gewonde dieren op straat? Neem direct contact op met de Dierenambulance: 020-626 2121. \n•\tIn het water? Melden bij Waternet, telefoon: 0900-9394. \n•\tHuis- of zwerfdieren: Dierenambulance 020-6262121 \n•\tMishandelde dieren of twijfel over dierenwelzijn? Bel Red een dier: 144."
+   },
+   {
+      "name":"Duiven",
+      "instructions":"Overlast van duiven in de openbare ruimte."
+   },
+   {
+      "name":"Ganzen",
+      "instructions":"Overlast van ganzen in de openbare ruimte."
+   },
+   {
+      "name":"Meeuwen",
+      "instructions":"Overlast van meeuwen in de openbare ruimte."
+   },
+   {
+      "name":"Overlast door overige dieren",
+      "instructions":"Overlast van dieren die niet in 1 van de andere subcategorieën te plaatsen is."
+   },
+   {
+      "name":"Ratten in woning of tuin",
+      "instructions":"Ratten in een woning of tuin."
+   },
+   {
+      "name":"Ratten – in de openbare ruimte",
+      "instructions":"Overlast van ratten in de openbare ruimte."
+   },
+   {
+      "name":"Wespen",
+      "instructions":"Overlast van wespen in de openbare ruimte."
+   },
+   {
+      "name":"Persoon",
+      "instructions":"Deze subcategorie is bedoeld voor meldingen over overlast door personen in de openbare ruimte. Hieronder vallen daklozen, bedelaars en personen die illegaal kamperen. Ook overlast door alcohol- of drugsgebruik (zoals lachgas) hoort hierbij. Let op: handel in drugs op straat en handel in combinatie met overlast valt onder de politie. Daarnaast ook om geluidsoverlast door personen, zoals schreeuwen, feesten, straatmuziek, demonstraties, protesten en bierfietsen. En jongerenoverlast van 15 tot 25 jaar valt hieronder, zoals achtergelaten rommel, harde muziek, scooters in voetgangersgebied, schreeuwen, schelden, hinder of onveilige situaties door (hang)jeugd."
+   },
+   {
+      "name":"Hond",
+      "instructions":"Overlast van honden."
+   },
+   {
+      "name":"Overige overlast door personen",
+      "instructions":"Overlast van personen in de openbare ruime die niet onder de andere subcategorieën vallen. Bijvoorbeeld overlast van flitskoeriers, darkstores en bierfietsen."
+   },
+   {
+      "name":"Overlast door afsteken vuurwerk",
+      "instructions":"Overlast door afsteken vuurwerk."
+   },
+   {
+      "name":"Overlast van taxi's, bussen en fietstaxi's",
+      "instructions":"Overlast van taxi’s, die in strijd met de Taxiverordening handelen, denk aan:\n•\toverlast op of bij een taxistandplaats\n•\tonduidelijkheid over prijzen\n•\ttarievenkaart niet zichtbaar\n•\tmeter niet aanzetten\n•\tritweigering\nEn alle overlast van bussen en fietstaxi’s."
+   },
+   {
+      "name":"Wildplassen / poepen / overgeven",
+      "instructions":"Overlast van personen die in de openbare ruimte plassen, poepen of overgeven."
+   },
+   {
+      "name":"Drijfvuil bevaarbaar water",
+      "instructions":"Verzoek om afval op te ruimen in water waar je kunt varen. Dus geen sloten en afgesloten kanalen. Onder afval valt zwerfvuil, plastic, (vuilnis)zakken, piepschuim, isolatiemateriaal, takken, stammen, maar ook wit- en bruingoed."
+   },
+   {
+      "name":"Drijfvuil niet-bevaarbaar water",
+      "instructions":"Verzoek om afval in op te ruimen in water waar je niet kan varen. Onder afval valt zwerfvuil, plastic, (vuilnis)zakken, piepschuim, isolatiemateriaal, takken, stammen, maar ook wit- en bruingoed."
+   },
+   {
+      "name":"Gladheid door blad",
+      "instructions":"Gladheid door bladeren."
+   },
+   {
+      "name":"Gladheid door olie op de weg",
+      "instructions":"Gladheid door een ongeluk of lekkage (olie of frituurvet op de weg). Let op: gevaarlijke situaties op de weg moeten ook direct telefonisch gemeld worden bij Stadswerken! Buiten kantooruren doorverwijzen naar politie (calamiteitendienst)."
+   },
+   {
+      "name":"Gladheid winterdienst",
+      "instructions":"Gladheid door vorst, sneeuw of ijzel."
+   },
+   {
+      "name":"Graffiti / wildplak",
+      "instructions":"•\tGraffiti op gemeentelijke eigendommen zoals bankjes, plakzuilen, verkeersborden, palen, lichtmasten, urinoirs. \n•\tHaatdragende of aanstootgevende graffiti verwijderen we overal. \n•\tWildplak: illegale posters en stickers.\n•\tVerf op asfalt en omgevallen verfblikken."
+   },
+   {
+      "name":"Onkruid op verharding",
+      "instructions":"Onkruid op een stoep, rijweg, fietspad of parkeerplaats."
+   },
+   {
+      "name":"Prullenbak is vol",
+      "instructions":"Volle prullenbak of afvalbak. Of een gele kliko die we in de zomer bijplaatsen.\nLet op: geen ondergrondse of bovengrondse afvalcontainer of bedrijfsafvalcontainer."
+   },
+   {
+      "name":"Wateroverlast",
+      "instructions":"Put, kolk, of riolering is verstopt en moet schoongemaakt of gerepareerd worden."
+   },
+   {
+      "name":"Uitwerpselen",
+      "instructions":"•\tPoep (van honden, katten, mensen) moet opgeruimd worden.\n•\tVerzoek om het plaatsen van hondenpoep-verbodsbord. \n•\tReinigen wildplassen en overgeven"
+   },
+   {
+      "name":"Veeg- / zwerfvuil",
+      "instructions":"Zwerfvuil (dus niet grofvuil!) dat rondslingert, bijvoorbeeld op straat, in de berm, op het strand of in (natuur) parken. Ook lachgasflessen kleiner dan 1 meter. Volle en ongebruikte lachgasflessen doorverwijzen naar de politie.\nLet op: gevaarlijke situaties door glas of spijkers op de weg moeten ook direct telefonisch gemeld worden bij Stadswerken! Buiten kantooruren doorverwijzen naar politie (calamiteitendienst)."
+   },
+   {
+      "name":"Autom. verzinkbare palen en slagbomen",
+      "instructions":"Kapotte pollers, oftewel automatisch verzinkbare palen (vezip, daalpaal) en slagbomen. Beiden hebben een regellicht, een soort stoplichtje. Dus geen handmatig uitneembare of handbediende verzinkbare palen zonder regellicht. Ook geen vaste palen, zoals Amsterdammertjes: deze horen in rubriek ‘Straatmeubilair’"
+   },
+   {
+      "name":"Belijning",
+      "instructions":"Lijnen en verkeerstekens op de weg zijn niet meer duidelijk te zien."
+   },
+   {
+      "name":"Bewegwijzering",
+      "instructions":"Kapotte of niet leesbare wegwijzers voor auto’s, fietsers en voetgangers (ANWB-borden in de spreektaal). De kleuren van deze borden zijn \n•\twit op blauw of zwart op wit voor auto’s\n•\trood op wit voor fietsers\n•\tgoud op zwart voor voetgangers.\nDus géén: verkeersborden (gebods- en verbodsborden), witte of rode afzethekken, tijdelijke bewegwijzering (gele borden met zwarte tekst), straatnamenborden en reclameborden."
+   },
+   {
+      "name":"Camerasystemen",
+      "instructions":"ANPR (Automatic NumberPlate Recognition) camera’s en TV camera’s: ze zijn aangereden of (opzettelijk) beschadigd. En vragen over waarom ze daar staan en waar ze voor dienen.\nDeze camera’s zijn geplaatst boven of naast de weg en gericht naar het verkeer. Dit zijn dus niet de camera’s die op het trottoir gericht zijn."
+   },
+   {
+      "name":"Fietsrek / nietje",
+      "instructions":"Fietsenrek of fietsnietje is beschadigd."
+   },
+   {
+      "name":"Klok",
+      "instructions":"Klok is kapot, beschadigd of geeft verkeerde tijd aan.\nDe gemeente repareert alleen klokken met het logo van de gemeente Amsterdam: de 3 Andreaskruizen. Wij repareren geen kapotte klokken van bedrijven, winkels en het GVB."
+   },
+   {
+      "name":"Onderhoud stoep, rijweg en parkeerplaats",
+      "instructions":"Deze subcategorie is bedoeld voor meldingen over schade of gebreken aan de openbare verharding. Hieronder vallen fietspaden, stoepen, rijwegen en parkeerplaatsen met verzakkingen, missende tegels, scheuren of hobbels door boomwortels."
+   },
+   {
+      "name":"Oplaadpunt",
+      "instructions":"Meldingen over openbare oplaadpunten voor elektrische auto’s en motoren."
+   },
+   {
+      "name":"Overig Wegen, verkeer, straatmeubilair",
+      "instructions":"Meldingen die niet onder 1 van de andere subcategorieën van Wegen, Verkeer, Straatmeubilair vallen. Denk aan vragen over de inrichting van de openbare ruimte zoals een verzoek voor een extra bankje, prullenbak."
+   },
+   {
+      "name":"Parkeer verwijssysteem",
+      "instructions":"Meldingen over displays van een parkeergarage waarop staat 'Vol/Vrij' of het aantal nog beschikbare parkeerplekken. Deze displays zijn geplaatst in ANWB borden."
+   },
+   {
+      "name":"Parkeerautomaten",
+      "instructions":"Meldingen over parkeerautomaten of vragen hierover."
+   },
+   {
+      "name":"Prullenbak is kapot",
+      "instructions":"Prullenbak is kapot. Het gaat om een prullenbak bedoeld voor klein afval, niet om een ondergrondse of bovengrondse afvalcontainer of bedrijfsafvalcontainer."
+   },
+   {
+      "name":"Put / Riool kapot",
+      "instructions":"Put, kolk, of riolering is kapot."
+   },
+   {
+      "name":"Speelplaats",
+      "instructions":"Kapotte speeltoestellen, speelondergrond, waterpompen in speeltuinen, kinderbadjes en zandbakken."
+   },
+   {
+      "name":"Sportvoorziening",
+      "instructions":"Verharde sportvelden, voetbaldoelen, baskets, fitnessapparaten."
+   },
+   {
+      "name":"Stadsplattegronden",
+      "instructions":"Bij schade, vragen of wijzigingen aan onze plattegronden: \n-\tWayfinding-zuilen: zwarte glazen zuilen met plattegronden getoond op digitale schermen (alleen rondom Centraal Station);\n-\tStationskaarten bij de uitgangen van metrohaltes (kaarten binnen de metrohaltes zijn van GVB);\n-\tPlattegronden in reclamezuilen van JCDecaux (schades aan de reclamezuilen zelf moeten bij JCDecaux gemeld worden);"
+   },
+   {
+      "name":"Straatmeubilair",
+      "instructions":"Bankjes of Amsterdammertjes zijn kapot of onderhoud is nodig."
+   },
+   {
+      "name":"Straatverlichting",
+      "instructions":"Kapotte openbare verlichting op straat, zoals lantaarnpalen, verlichting die boven de straat hangt en belichting van gebouwen. Let op: kerstverlichting moet bij de winkeliersvereniging gemeld worden."
+   },
+   {
+      "name":"Tijdelijke Verkeersmaatregelen",
+      "instructions":"TVM: Tijdelijke  parkeerverboden, rood/wit hekken, omleidingsborden, grondpotten. Geen aanvraag."
+   },
+   {
+      "name":"Verkeersbord",
+      "instructions":"Alle permanente (dus niet tijdelijke) verkeersborden en palen, gele en zwart-witte verkeerszuilen, straatnaamborden."
+   },
+   {
+      "name":"Verkeerslicht",
+      "instructions":"Verkeerslicht is stuk of aangereden. Of vragen over de regeling van de lichten: te kort op groen, te lang op rood etc."
+   },
+   {
+      "name":"Verkeersoverlast",
+      "instructions":"Verzoek om te handhaven op terugkerende situaties waarbij personen zich misdragen in het verkeer (stoep, fietspad, plein). Bijvoorbeeld fietsen op een winkelplein en scooters die rijden op fietspad of stoep. Let op: verkeersoverlast op de rijweg is voor de politie."
+   },
+   {
+      "name":"Verkeerssituaties",
+      "instructions":"Onveilige verkeersituatie door onvoldoende zicht, gebrek aan ruimte of onduidelijke bewegwijzering.\nOok een onveilige verkeersituatie op een 30 km-weg en te hard rijden op een 30 km-weg."
+   },
+   {
+      "name":"Wegwerkzaamheden",
+      "instructions":"Overlast van wegwerkzaamheden."
+   },
+   {
+      "name":"Leegstand",
+      "instructions":"Een woning of woonboot staat opvallend lang leeg."
+   },
+   {
+      "name":"Onderhuur",
+      "instructions":"Vermoeden van illegale doorverhuur van een corporatiewoning."
+   },
+   {
+      "name":"Overige Wonen",
+      "instructions":"Melding over woonfraude, die niet in één van de andere  subcategorieën thuis hoort._x000D_\nLet op: meldingen alleen over overlast van buren of zorgen over buren horen bij Meldpunt Zorg en Woonoverlast."
+   },
+   {
+      "name":"Problemen met verhuurders",
+      "instructions":"De inhoud van de melding heeft betrekking op signalen en klachten over ongewenst verhuurgedrag. Bijvoorbeeld een burger die aangeeft te worden gediscrimineerd en/of geïntimideerd."
+   },
+   {
+      "name":"Vakantieverhuur",
+      "instructions":"Vermoeden van illegale verhuur van een woning of woonboot aan toeristen, of van short stay verhuur (korter dan 6 maanden)."
+   },
+   {
+      "name":"Wonen ondermijning",
+      "instructions":"Vermoeden van illegale activiteiten in een woning of woonboot, zoals het houden van een wietplantage, drugshandel of -productie, illegaal gokken of prostitutie."
+   },
+   {
+      "name":"Woningdelen",
+      "instructions":"Vermoeden van woningdelen dat niet voldoet aan huisvestigingsvergunning.  Het gaat om zowel particuliere als corporatiewoning. Voorbeelden zijn verkameren zonder vergunning, niet voldoen aan de voorwaarden van de vergunning. En meer mensen dan dat de vergunning toestaat."
+   },
+   {
+      "name":"Woningkwaliteit",
+      "instructions":"Onveilige situatie in een woning. De woning kan niet optimaal gebruikt worden en er is minder woongenot. Soms ook na een aantal meldingen bij verhuurder. Voorbeelden zijn: achterstallig onderhoud, ontbreken van veilige doorgang, ontbreken van noodzakelijke voorzieningen (leiding, isolatie, afwatering, elektriciteit, gootsteen, etc.)"
+   }
 ]
