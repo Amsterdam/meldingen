@@ -4,7 +4,7 @@ from typing import Final
 
 import typer
 from rich import print
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import Insert, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,43 +22,36 @@ def seed(dry_run: bool = False) -> None:
     asyncio.run(async_seed_classification_from_file(CLASSIFICATION_SEED_FILE_PATH, dry_run))
 
 
-def build_classification_upsert(values: list[dict[str, str | None]]) -> Insert:
-    """Build the idempotent upsert statement for the given classification values.
+def build_classification_insert(values: list[dict[str, str | None]]) -> Insert:
+    """Build the insert-if-missing statement for the given classification values.
 
-    Inserts missing classifications and, on a conflicting ``name``, updates the
-    ``instructions`` (leaving any existing ``asset_type``/``form`` untouched).
+    On a conflicting ``name`` nothing happens: the existing classification (including its
+    ``instructions``, ``asset_type`` and ``form``) is left untouched.
     """
     stmt = insert(Classification).values(values)
-    return stmt.on_conflict_do_update(
-        index_elements=["name"],
-        set_={"instructions": stmt.excluded.instructions, "updated_at": func.now()},
-        where=Classification.instructions.is_distinct_from(stmt.excluded.instructions),
-    )
+    return stmt.on_conflict_do_nothing(index_elements=["name"])
 
 
-async def upsert_classifications(
+async def insert_missing_classifications(
     session: AsyncSession, values: list[dict[str, str | None]], dry_run: bool
-) -> tuple[int, int, int]:
-    """Upsert classifications by name and return the (created, updated, unchanged) counts.
+) -> tuple[int, int]:
+    """Insert classifications whose ``name`` is not yet present, and return (created, skipped).
 
-    Existing classifications are matched on their unique ``name``. Nothing is ever deleted:
-    classifications not present in ``values`` are left as-is. When ``dry_run`` is True the
-    counts are computed but no changes are written.
+    Existing classifications are never modified or deleted — if a ``name`` already exists it is
+    left exactly as-is. When ``dry_run`` is True the counts are computed but nothing is written.
     """
-    result = await session.execute(select(Classification.name, Classification.instructions))
-    existing = {name: instructions for name, instructions in result.all()}
+    result = await session.execute(select(Classification.name))
+    existing = {name for (name,) in result.all()}
 
-    created = sum(1 for value in values if value["name"] not in existing)
-    updated = sum(
-        1 for value in values if value["name"] in existing and existing[value["name"]] != value["instructions"]
-    )
-    unchanged = len(values) - created - updated
+    to_create = [value for value in values if value["name"] not in existing]
+    created = len(to_create)
+    skipped = len(values) - created
 
-    if not dry_run and values:
-        await session.execute(build_classification_upsert(values))
+    if not dry_run and to_create:
+        await session.execute(build_classification_insert(to_create))
         await session.commit()
 
-    return created, updated, unchanged
+    return created, skipped
 
 
 def load_classification_values(file_path: str) -> list[dict[str, str | None]]:
@@ -82,23 +75,23 @@ def load_classification_values(file_path: str) -> list[dict[str, str | None]]:
 
 
 async def async_seed_classification_from_file(file_path: str, dry_run: bool) -> None:
-    """Idempotently reconcile the classifications in the database with the seed file.
+    """Idempotently seed classifications from the seed file.
 
-    Each entry is upserted by its unique ``name``: missing classifications are inserted and
-    existing ones have their ``instructions`` updated. Classifications that are no longer in
-    the file are left untouched (never deleted), so the command is safe to run on every
-    startup regardless of which classifications are already present.
+    Classifications are matched by their unique ``name``: entries whose name is not yet in the
+    database are inserted, and entries that already exist are left untouched (never updated,
+    never deleted). This makes the command safe to run on every startup regardless of which
+    classifications are already present.
     """
     values = load_classification_values(file_path)
 
     async for session in database_session(database_session_manager(database_engine())):
-        created, updated, unchanged = await upsert_classifications(session, values, dry_run)
+        created, skipped = await insert_missing_classifications(session, values, dry_run)
 
         verb = "would have seeded" if dry_run else "seeded"
         prefix = "Dry run - " if dry_run else "Success - "
         print(
             f"🟢 - {prefix}{verb} {len(values)} classifications from {file_path} "
-            f"(created {created}, updated {updated}, unchanged {unchanged})."
+            f"(created {created}, skipped {skipped} already present)."
         )
 
 
