@@ -32,6 +32,7 @@ def build_classification_upsert(values: list[dict[str, str | None]]) -> Insert:
     return stmt.on_conflict_do_update(
         index_elements=["name"],
         set_={"instructions": stmt.excluded.instructions, "updated_at": func.now()},
+        where=Classification.instructions.is_distinct_from(stmt.excluded.instructions),
     )
 
 
