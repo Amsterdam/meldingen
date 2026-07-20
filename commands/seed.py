@@ -60,14 +60,8 @@ async def upsert_classifications(
     return created, updated, unchanged
 
 
-async def async_seed_classification_from_file(file_path: str, dry_run: bool) -> None:
-    """Idempotently reconcile the classifications in the database with the seed file.
-
-    Each entry is upserted by its unique ``name``: missing classifications are inserted and
-    existing ones have their ``instructions`` updated. Classifications that are no longer in
-    the file are left untouched (never deleted), so the command is safe to run on every
-    startup regardless of which classifications are already present.
-    """
+def load_classification_values(file_path: str) -> list[dict[str, str | None]]:
+    """Read and validate the seed file into a list of ``{"name", "instructions"}`` values."""
     try:
         with open(file_path) as f:
             data = json.load(f)
@@ -83,6 +77,18 @@ async def async_seed_classification_from_file(file_path: str, dry_run: bool) -> 
     for item in data:
         input = ClassificationCreateInput(**item)
         values.append({"name": input.name, "instructions": input.instructions})
+    return values
+
+
+async def async_seed_classification_from_file(file_path: str, dry_run: bool) -> None:
+    """Idempotently reconcile the classifications in the database with the seed file.
+
+    Each entry is upserted by its unique ``name``: missing classifications are inserted and
+    existing ones have their ``instructions`` updated. Classifications that are no longer in
+    the file are left untouched (never deleted), so the command is safe to run on every
+    startup regardless of which classifications are already present.
+    """
+    values = load_classification_values(file_path)
 
     async for session in database_session(database_session_manager(database_engine())):
         created, updated, unchanged = await upsert_classifications(session, values, dry_run)

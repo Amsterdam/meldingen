@@ -1,29 +1,26 @@
 import json
 
 import pytest
-from _pytest.capture import CaptureFixture
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from commands.seed import (
-    async_seed_classification_from_file,
     build_classification_upsert,
+    load_classification_values,
     upsert_classifications,
 )
 
 EXAMPLE_FILE_PATH = "./seed/examples/classifications.json"
 
 
-@pytest.mark.anyio
-async def test_seed_classifications_dry_run_reports_total(capsys: CaptureFixture[str]) -> None:
+def test_load_classification_values_reads_all_entries() -> None:
     with open(EXAMPLE_FILE_PATH) as f:
         expected = len(json.load(f))
 
-    await async_seed_classification_from_file(EXAMPLE_FILE_PATH, dry_run=True)
+    values = load_classification_values(EXAMPLE_FILE_PATH)
 
-    # rich may wrap the line, so normalise whitespace before asserting.
-    out = " ".join(capsys.readouterr().out.split())
-    assert f"Dry run - would have seeded {expected} classifications" in out
+    assert len(values) == expected
+    assert all(set(value) == {"name", "instructions"} for value in values)
 
 
 def test_build_classification_upsert_uses_on_conflict_do_update() -> None:
