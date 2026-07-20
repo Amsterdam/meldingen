@@ -31,6 +31,11 @@ RUN if [ "$INSTALL_DEV" = "true" ]; then \
 
 COPY . /opt/meldingen
 
+# Provide a default classification seed file from the version-controlled examples when the
+# deploy pipeline hasn't supplied one (seed/classifications.json is gitignored). The -n flag
+# ensures an injected seed file is never overwritten.
+RUN cp -n seed/examples/classifications.json seed/classifications.json
+
 ENV PYTHONPATH=/opt/meldingen
 
 USER meldingen
