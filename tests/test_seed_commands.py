@@ -60,9 +60,7 @@ async def test_insert_missing_leaves_existing_instructions_untouched(
     values[0]["instructions"] = "changed"
     assert await insert_missing_classifications(db_session, values, dry_run=False) == (0, 1)
 
-    result = await db_session.execute(
-        select(Classification.instructions).where(Classification.name == "Seedtest C")
-    )
+    result = await db_session.execute(select(Classification.instructions).where(Classification.name == "Seedtest C"))
     assert result.scalar_one() == "original"
 
 
