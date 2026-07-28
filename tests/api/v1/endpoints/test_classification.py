@@ -657,9 +657,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         assert response.status_code == HTTP_204_NO_CONTENT
 
         # No longer directly retrievable...
-        retrieve = await client.get(
-            app.url_path_for("classification:retrieve", classification_id=classification.id)
-        )
+        retrieve = await client.get(app.url_path_for("classification:retrieve", classification_id=classification.id))
         assert retrieve.status_code == HTTP_404_NOT_FOUND
 
         # ...nor listed.

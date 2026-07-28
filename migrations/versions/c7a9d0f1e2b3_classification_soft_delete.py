@@ -1,6 +1,6 @@
 """classification soft delete
 
-Revision ID: a1b2c3d4e5f6
+Revision ID: c7a9d0f1e2b3
 Revises: b7e2c9a1f4d3
 Create Date: 2026-07-28 00:00:00.000000
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "a1b2c3d4e5f6"
+revision: str = "c7a9d0f1e2b3"
 down_revision: str | None = "b7e2c9a1f4d3"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
