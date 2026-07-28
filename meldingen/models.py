@@ -26,11 +26,13 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Table,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
@@ -67,11 +69,26 @@ class Asset(BaseDBModel, BaseAsset):
 
 
 class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
-    name: Mapped[str] = mapped_column(String, unique=True)
+    # Names are unique among non-deleted classifications only, so a name can be reused
+    # once its classification has been (soft-)deleted.
+    __table_args__ = (
+        Index(
+            "uq_classification_name_active",
+            "name",
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL"),
+        ),
+    )
+
+    name: Mapped[str] = mapped_column(String)
     instructions: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     form: Mapped[Optional["Form"]] = relationship(default=None, back_populates="classification")
     asset_type_id: Mapped[int | None] = mapped_column(ForeignKey(AssetType.id), default=None)
     asset_type: Mapped[AssetType | None] = relationship(default=None)
+    # Soft-delete marker. A deleted classification is kept in the database so it stays
+    # visible on the meldingen it was assigned to, but is no longer offered for new
+    # classifications (see ClassificationRepository).
+    deleted_at: Mapped[datetime | None] = mapped_column(init=False, default=None)
 
 
 asset_melding = Table(

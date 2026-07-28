@@ -4,6 +4,8 @@ import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
 from meldingen_core import SortingDirection
+from meldingen_core.exceptions import NotFoundException
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -13,7 +15,8 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
-from meldingen.models import AssetType, Classification, Form
+from meldingen.models import AssetType, Classification, Form, Melding
+from meldingen.repositories import ClassificationRepository
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -630,6 +633,79 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
+    async def test_delete_classification_with_attached_melding_soft_deletes(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        classification: Classification,
+        auth_user: None,
+    ) -> None:
+        # A melding classified on this classification used to make the delete fail with a
+        # 409. With soft-delete it must succeed and the classification must stay visible
+        # on the melding while disappearing from the regular read paths.
+        melding = Melding(text="test")
+        melding.public_id = "SOFT-DELETE-1"
+        melding.classification = classification
+        db_session.add(melding)
+        await db_session.commit()
+
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
+        assert response.status_code == HTTP_204_NO_CONTENT
+
+        # No longer directly retrievable...
+        retrieve = await client.get(
+            app.url_path_for("classification:retrieve", classification_id=classification.id)
+        )
+        assert retrieve.status_code == HTTP_404_NOT_FOUND
+
+        # ...nor listed.
+        listed = await client.get(app.url_path_for("classification:list"))
+        assert all(item["name"] != "bla" for item in listed.json())
+
+        # But still visible on the related melding.
+        melding_response = await client.get(app.url_path_for("melding:retrieve", melding_id=melding.id))
+        assert melding_response.status_code == HTTP_200_OK
+        assert melding_response.json()["classification"]["name"] == "bla"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
+    async def test_deleted_classification_cannot_be_used_to_classify(
+        self, db_session: AsyncSession, classification: Classification
+    ) -> None:
+        repository = ClassificationRepository(db_session)
+        await repository.delete(classification.id)
+
+        # The classifier resolves a classification by name; a deleted one must not resolve.
+        with pytest.raises(NotFoundException):
+            await repository.find_by_name("bla")
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
+    async def test_name_can_be_reused_after_deletion(
+        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
+    ) -> None:
+        delete = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
+        assert delete.status_code == HTTP_204_NO_CONTENT
+
+        recreated = await client.post(app.url_path_for("classification:create"), json={"name": "bla"})
+        assert recreated.status_code == HTTP_201_CREATED
+        assert recreated.json()["name"] == "bla"
+        assert recreated.json()["id"] != classification.id
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
+    async def test_delete_already_deleted_classification_returns_404(
+        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
+    ) -> None:
+        first = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
+        assert first.status_code == HTTP_204_NO_CONTENT
+
+        second = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
+        assert second.status_code == HTTP_404_NOT_FOUND
 
     @pytest.mark.anyio
     async def test_delete_classification_that_does_not_exist(
