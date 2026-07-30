@@ -68,6 +68,14 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
     @abstractmethod
     def get_model_type(self) -> type[Any]: ...
 
+    def _visibility_filters(self) -> Sequence[ColumnExpressionArgument[bool]]:
+        """Row-level filters applied to every read query (list/retrieve/count).
+
+        Empty by default. Repositories override this to hide rows (e.g. soft-deleted
+        records) from the regular read paths while keeping them in the database.
+        """
+        return ()
+
     async def save(self, model: T, *, commit: bool = True) -> None:
         self._session.add(model)
 
@@ -95,6 +103,9 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
         _type = self.get_model_type()
         statement = select(_type)
 
+        for visibility_filter in self._visibility_filters():
+            statement = statement.where(visibility_filter)
+
         if filters is not None and filters.name_contains is not None:
             statement = statement.where(_type.name.ilike(f"%{filters.name_contains}%"))
 
@@ -113,6 +124,10 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
     async def retrieve(self, pk: int) -> T | None:
         _type = self.get_model_type()
         statement = select(_type).where(_type.id == pk)
+
+        for visibility_filter in self._visibility_filters():
+            statement = statement.where(visibility_filter)
+
         results = await self._session.execute(statement)
         return results.scalars().unique().one_or_none()
 
@@ -127,6 +142,9 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
     async def count(self, filters: List[ColumnExpressionArgument[bool]] | None = None) -> int:
         _type = self.get_model_type()
         statement = select(func.count(_type.id))
+
+        for visibility_filter in self._visibility_filters():
+            statement = statement.where(visibility_filter)
 
         if filters is not None:
             for filter_condition in filters:
@@ -272,8 +290,14 @@ class ClassificationRepository(BaseSQLAlchemyRepository[Classification], BaseCla
     def get_model_type(self) -> type[Classification]:
         return Classification
 
+    def _visibility_filters(self) -> Sequence[ColumnExpressionArgument[bool]]:
+        return (Classification.deleted_at.is_(None),)
+
     async def find_by_name(self, name: str) -> Classification:
         statement = select(Classification).where(Classification.name == name)
+        for visibility_filter in self._visibility_filters():
+            statement = statement.where(visibility_filter)
+
         result = await self._session.execute(statement)
         classification = result.scalars().one_or_none()
 
@@ -281,6 +305,20 @@ class ClassificationRepository(BaseSQLAlchemyRepository[Classification], BaseCla
             raise NotFoundException()
 
         return classification
+
+    async def delete(self, pk: int) -> None:
+        """Soft-delete: mark the classification as deleted instead of removing the row.
+
+        This keeps the classification visible on the meldingen it was assigned to while
+        preventing it from being used for new classifications. It never fails on attached
+        meldingen (unlike a hard delete, which the FK constraint would reject).
+        """
+        classification = await self.retrieve(pk=pk)
+        if classification is None:
+            raise NotFoundException()
+
+        classification.deleted_at = func.now()
+        await self.save(classification)
 
 
 class FormRepository(BaseSQLAlchemyRepository[Form], BaseFormRepository):
