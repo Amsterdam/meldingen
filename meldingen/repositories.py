@@ -294,7 +294,10 @@ class ClassificationRepository(BaseSQLAlchemyRepository[Classification], BaseCla
         return (Classification.deleted_at.is_(None),)
 
     async def find_by_name(self, name: str) -> Classification:
-        statement = select(Classification).where(Classification.name == name, Classification.deleted_at.is_(None))
+        statement = select(Classification).where(Classification.name == name)
+        for visibility_filter in self._visibility_filters():
+            statement = statement.where(visibility_filter)
+
         result = await self._session.execute(statement)
         classification = result.scalars().one_or_none()
 

@@ -34,5 +34,17 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index("uq_classification_name_active", table_name="classification")
+    # The partial index allowed a name to be reused after a soft-delete, so several rows may
+    # share a name (all but at most one soft-deleted). A global unique constraint on name cannot
+    # represent that, so the soft-deleted rows have to go first. Detach any meldingen still
+    # pointing at them (the classification FK would otherwise block the delete); reverting
+    # soft-delete inherently drops the "deleted but still shown on a melding" data.
+    op.execute(
+        sa.text(
+            "UPDATE melding SET classification_id = NULL "
+            "WHERE classification_id IN (SELECT id FROM classification WHERE deleted_at IS NOT NULL)"
+        )
+    )
+    op.execute(sa.text("DELETE FROM classification WHERE deleted_at IS NOT NULL"))
     op.create_unique_constraint("classification_name", "classification", ["name"])
     op.drop_column("classification", "deleted_at")
