@@ -26,10 +26,11 @@ def build_classification_insert(values: list[dict[str, str | None]]) -> Insert:
     """Build the insert-if-missing statement for the given classification values.
 
     On a conflicting ``name`` nothing happens: the existing classification (including its
-    ``instructions``, ``asset_type`` and ``form``) is left untouched.
+    ``instructions``, ``asset_type`` and ``form``) is left untouched. The conflict target
+    matches the partial unique index on active (non-deleted) classifications.
     """
     stmt = insert(Classification).values(values)
-    return stmt.on_conflict_do_nothing(index_elements=["name"])
+    return stmt.on_conflict_do_nothing(index_elements=["name"], index_where=Classification.deleted_at.is_(None))
 
 
 async def insert_missing_classifications(

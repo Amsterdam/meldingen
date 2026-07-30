@@ -25,7 +25,7 @@ async def ensure_fallback_classification(session: AsyncSession) -> int:
         name=settings.llm_fallback_classification_name,
         instructions=settings.llm_fallback_classification_instructions,
     )
-    stmt = stmt.on_conflict_do_nothing(index_elements=["name"])
+    stmt = stmt.on_conflict_do_nothing(index_elements=["name"], index_where=Classification.deleted_at.is_(None))
     result = cast(CursorResult[Any], await session.execute(stmt))
     await session.commit()
     return result.rowcount
