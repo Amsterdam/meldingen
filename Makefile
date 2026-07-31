@@ -1,5 +1,4 @@
-.PHONY: help build push up rebuild lint typecheck typecheck-sync test test-pdb test-coverage update check-all migration migrate upgrade-core switch-core switch-core-main
-
+.PHONY: help build push up rebuild lint typecheck typecheck-sync test test-pdb test-coverage update check-all migration migrate upgrade-core switch-core
 REGISTRY ?= localhost:5000
 VERSION ?= latest
 INSTALL_DEV ?= false
