@@ -1693,7 +1693,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.14.1,<2.0.0" },
     { name = "alembic-postgresql-enum", specifier = ">=1.5.0,<2.0.0" },
     { name = "amsterdam-mail-service-client", git = "https://github.com/Amsterdam/amsterdam-mail-service-client.git" },
-    { name = "asgi-correlation-id", specifier = ">=4.3.4,<5.0.0" },
+    { name = "asgi-correlation-id", specifier = ">=4.3.4,<6.0.0" },
     { name = "asyncpg", specifier = ">=0.30.0,<1.0.0" },
     { name = "azure-identity", specifier = ">=1.21.0,<2.0.0" },
     { name = "azure-storage-blob", specifier = ">=12.29.1,<12.31.0" },
@@ -1702,7 +1702,7 @@ requires-dist = [
     { name = "geojson-pydantic", specifier = ">=1.2.0,<3.0.0" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.28.1,<1.0.0" },
     { name = "markdown-it-py", specifier = ">=4.0.0,<5.0.0" },
-    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git?branch=feature%2F7441-auth-upload-action" },
+    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git?branch=main" },
     { name = "mp-fsm", git = "https://github.com/Amsterdam/mp-fsm.git" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.29.0,<2.0.0" },
     { name = "opentelemetry-instrumentation-aiohttp-client", specifier = ">=0.55b1,<1.0" },
@@ -1736,7 +1736,7 @@ dev = [
     { name = "mkdocs-literate-nav", specifier = ">=0.6.1,<0.7" },
     { name = "mkdocs-material", specifier = ">=9.6.20,<10" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.0,<2" },
-    { name = "mypy", specifier = ">=1.18.2,<2" },
+    { name = "mypy", specifier = ">=1.18.2,<3" },
     { name = "mypy-baseline", specifier = ">=0.7.1,<1" },
     { name = "pre-commit", specifier = ">=4.5.0,<5" },
     { name = "pytest", specifier = ">=9.0.1,<10" },
@@ -1751,7 +1751,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=feature%2F7441-auth-upload-action#f78aede45ae9f4f58e74a257fe296a79033521bd" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=main#9edec77fae68bf95825e337f636f43a3c6891ac1" }
 dependencies = [
     { name = "plugfs" },
 ]
