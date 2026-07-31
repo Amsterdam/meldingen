@@ -99,6 +99,7 @@ from meldingen.dependencies import (
     melder_melding_list_attachments_action,
     melder_melding_list_questions_and_answers_action,
     melder_melding_retrieve_action,
+    melder_melding_upload_attachment_action,
     melding_add_asset_action,
     melding_add_attachments_action,
     melding_add_contact_action,
@@ -878,7 +879,7 @@ async def upload_attachment_melder(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     file: UploadFile,
-    action: Annotated[MelderUploadAttachmentAction, Depends(melding_upload_attachment_action)],
+    action: Annotated[MelderUploadAttachmentAction, Depends(melder_melding_upload_attachment_action)],
 ) -> AttachmentOutput:
     # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
     # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
