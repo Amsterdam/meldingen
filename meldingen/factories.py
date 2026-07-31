@@ -32,9 +32,11 @@ from meldingen.models import (
 from meldingen.schemas.input import AnswerInputUnion
 
 
-class AttachmentFactory(BaseAttachmentFactory[Attachment, Melding]):
-    def __call__(self, original_filename: str, melding: Melding, media_type: str) -> Attachment:
-        return Attachment(original_filename=original_filename, original_media_type=media_type, melding=melding)
+class AttachmentFactory(BaseAttachmentFactory[Attachment, Melding, User]):
+    def __call__(self, original_filename: str, melding: Melding, media_type: str, user: User | None) -> Attachment:
+        return Attachment(
+            original_filename=original_filename, original_media_type=media_type, melding=melding, user=user
+        )
 
 
 class BaseFilesystemFactory(metaclass=ABCMeta):

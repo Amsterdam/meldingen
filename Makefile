@@ -1,4 +1,4 @@
-.PHONY: help build push up rebuild lint typecheck typecheck-sync test test-coverage
+.PHONY: help build push up rebuild lint typecheck typecheck-sync test test-pdb test-coverage update check-all migration migrate upgrade-core switch-core switch-core-main
 
 REGISTRY ?= localhost:5000
 VERSION ?= latest
@@ -6,6 +6,7 @@ INSTALL_DEV ?= false
 UID:=$(shell id --user)
 GID:=$(shell id --group)
 TEST ?= # used to add testpath as argument to pytest, e.g. TEST=tests/api/v1/endpoints/test_melding.py
+CORE_BRANCH ?= main
 
 dc = docker compose
 api = $(dc) run --rm --user=root meldingen
@@ -43,10 +44,25 @@ test-coverage: ## Run pytest with coverage and enforce minimum threshold
 update: ## Update dependencies (uv)
 	$(api) uv lock --upgrade
 
+upgrade-core: ## Upgrade only meldingen-core
+	$(api) uv lock --upgrade-package meldingen-core
+
+switch-core: ## Switch meldingen-core to a specific branch or otherwise main, e.g. make switch-core CORE_BRANCH=feature/my-branch
+	$(api) uv add meldingen-core --branch "$(CORE_BRANCH)"
+
 check-all: ## Run all checks (format, typecheck, test)
 	$(MAKE) format
 	$(MAKE) typecheck
 	$(MAKE) test
+
+migration: ## Create a new Alembic migration (optional: make make-migrate NAME=add_new_column)
+	$(api) alembic revision --autogenerate -m "$(NAME)"
+
+migrate: ## Run Alembic migrations
+	$(api) alembic upgrade head
+
+lock: ## Create a new Poetry lock file
+	$(api) uv lock
 
 ### CI ###
 

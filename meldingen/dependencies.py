@@ -1,7 +1,7 @@
 import logging
 import os
 from functools import lru_cache
-from typing import Annotated, Any, AsyncIterator, Literal
+from typing import Annotated, Any, AsyncIterator
 
 from amsterdam_mail_service_client.api.default_api import DefaultApi
 from amsterdam_mail_service_client.api_client import ApiClient
@@ -68,6 +68,7 @@ from meldingen.actions.attachment import (
     ListAttachmentsAction,
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
+    MelderUploadAttachmentAction,
     UploadAttachmentAction,
 )
 from meldingen.actions.classification import (
@@ -241,7 +242,13 @@ from meldingen.statemachine import (
     SubmitLocation,
 )
 from meldingen.token import TokenInvalidator, UrlSafeTokenGenerator
-from meldingen.validators import MediaTypeIntegrityValidator, MediaTypeValidator, MeldingPrimaryFormValidator
+from meldingen.validators import (
+    BackofficeAttachmentLimitValidator,
+    MediaTypeIntegrityValidator,
+    MediaTypeValidator,
+    MeldingFormAttachmentLimitValidator,
+    MeldingPrimaryFormValidator,
+)
 from meldingen.wfs import ProxyWfsProviderValidator
 
 
@@ -950,12 +957,24 @@ def filesystem_factory() -> BaseFilesystemFactory:
     return AzureFilesystemFactory()
 
 
-def media_type_validator() -> MediaTypeValidator:
-    return MediaTypeValidator(settings.attachment_allow_media_types)
+def form_media_type_validator() -> MediaTypeValidator:
+    return MediaTypeValidator(settings.form_attachment_allow_media_types)
+
+
+def backoffice_media_type_validator() -> MediaTypeValidator:
+    return MediaTypeValidator(settings.backoffice_attachment_allow_media_types)
 
 
 def media_type_integrity_validator() -> MediaTypeIntegrityValidator:
     return MediaTypeIntegrityValidator()
+
+
+def melding_form_attachment_limit_validator() -> MeldingFormAttachmentLimitValidator:
+    return MeldingFormAttachmentLimitValidator(settings.form_attachment_limit)
+
+
+def backoffice_attachment_limit_validator() -> BackofficeAttachmentLimitValidator:
+    return BackofficeAttachmentLimitValidator(settings.backoffice_attachment_limit)
 
 
 def img_proxy_signature_generator() -> IMGProxySignatureGenerator:
@@ -1057,17 +1076,43 @@ def attachment_ingestor(
 def melding_upload_attachment_action(
     factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
     repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
-    media_type_validator: Annotated[MediaTypeValidator, Depends(media_type_validator)],
+    backoffice_media_type_validator: Annotated[MediaTypeValidator, Depends(backoffice_media_type_validator)],
     media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
+    backoffice_attachment_limit_validator: Annotated[
+        BackofficeAttachmentLimitValidator, Depends(backoffice_attachment_limit_validator)
+    ],
     ingestor: Annotated[Ingestor, Depends(attachment_ingestor)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> UploadAttachmentAction:
     return UploadAttachmentAction(
         factory,
         repository,
-        token_verifier,
-        media_type_validator,
+        backoffice_media_type_validator,
         media_type_integrity_validator,
+        backoffice_attachment_limit_validator,
+        ingestor,
+        melding_repository,
+    )
+
+
+def melder_melding_upload_attachment_action(
+    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
+    repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+    form_media_type_validator: Annotated[MediaTypeValidator, Depends(form_media_type_validator)],
+    media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
+    melding_form_attachment_limit_validator: Annotated[
+        MeldingFormAttachmentLimitValidator, Depends(melding_form_attachment_limit_validator)
+    ],
+    ingestor: Annotated[Ingestor, Depends(attachment_ingestor)],
+) -> MelderUploadAttachmentAction:
+    return MelderUploadAttachmentAction(
+        token_verifier,
+        factory,
+        repository,
+        form_media_type_validator,
+        media_type_integrity_validator,
+        melding_form_attachment_limit_validator,
         ingestor,
     )
 

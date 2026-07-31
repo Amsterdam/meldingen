@@ -1702,7 +1702,7 @@ requires-dist = [
     { name = "geojson-pydantic", specifier = ">=1.2.0,<3.0.0" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.28.1,<1.0.0" },
     { name = "markdown-it-py", specifier = ">=4.0.0,<5.0.0" },
-    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git?branch=main" },
+    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git?branch=feature%2F7441-auth-upload-action" },
     { name = "mp-fsm", git = "https://github.com/Amsterdam/mp-fsm.git" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.29.0,<2.0.0" },
     { name = "opentelemetry-instrumentation-aiohttp-client", specifier = ">=0.55b1,<1.0" },
@@ -1751,7 +1751,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=main#bb73e67e71a41c3a320d8b8445997266c1dd1dab" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=feature%2F7441-auth-upload-action#f78aede45ae9f4f58e74a257fe296a79033521bd" }
 dependencies = [
     { name = "plugfs" },
 ]

@@ -8,6 +8,7 @@ from starlette.status import (
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
+    HTTP_413_CONTENT_TOO_LARGE,
 )
 
 
@@ -79,6 +80,33 @@ transition_not_allowed: Final[dict[str | int, dict[str, Any]]] = {
             }
         },
     }
+}
+attachment_upload_bad_request_response: Final[dict[str | int, dict[str, Any]]] = {
+    HTTP_400_BAD_REQUEST: {
+        "description": "",
+        "content": {
+            "application/json": {
+                "examples": {
+                    "Uploading attachment with media type that is not allowed.": {
+                        "value": {"detail": "Attachment not allowed"}
+                    },
+                    "Media type of data does not match the media type in the Content-Type header": {
+                        "value": {"detail": "Media type of data does not match provided media type"}
+                    },
+                },
+            },
+        },
+    }
+}
+attachment_upload_too_large_response: Final[dict[str | int, dict[str, Any]]] = {
+    HTTP_413_CONTENT_TOO_LARGE: {
+        "description": "Uploading attachment that is too large.",
+        "content": {
+            "application/json": {
+                "examples": {"Allowed content size exceeded": {"value": {"detail": "Allowed content size exceeded"}}}
+            }
+        },
+    },
 }
 image_data_response: Final[dict[str | int, dict[str, Any]]] = {
     HTTP_200_OK: {

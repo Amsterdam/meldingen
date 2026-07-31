@@ -7,7 +7,8 @@ from meldingen.schemas.input import TextAnswerInput
 
 def test_attachment_factory() -> None:
     factory = AttachmentFactory()
-    attachment = factory("original_filename.txt", Melding("melding text"), "image/png")
+    user = User(username="behandelaar", email="user@example.com")
+    attachment = factory("original_filename.txt", Melding("melding text"), "image/png", user)
 
     assert isinstance(attachment, Attachment)
 

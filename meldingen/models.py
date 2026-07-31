@@ -603,6 +603,13 @@ class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     thumbnail_path: Mapped[str | None] = mapped_column(String(), default=None)
     thumbnail_media_type: Mapped[str | None] = mapped_column(String(), default=None)
 
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("user.id"), init=False, default=None)
+    user: Mapped[User | None] = relationship(default=None)
+
+    @property
+    def is_image(self) -> bool:
+        return self.original_media_type.startswith("image/")
+
 
 class Note(AsyncAttrs, BaseDBModel, BaseNote):
     """A free-form note that a Behandelaar can add to a melding. The text is stored as
