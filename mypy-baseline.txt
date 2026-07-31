@@ -1,4 +1,5 @@
 tests/scenarios/context/mail.py:0: error: Skipping analyzing "mailpit.client.api": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+migrations/versions/75ab04c1868a_add_user_to_attachment_column.py:0: error: Argument 1 to "drop_constraint" has incompatible type "None"; expected "str"  [arg-type]
 migrations/versions/fa34d0f248d8_date_answer.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/fa34d0f248d8_date_answer.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]
 migrations/versions/f88c971186dc_remove_location_form_type_from_enum.py:0: error: Module has no attribute "sync_enum_values"  [attr-defined]

@@ -54,7 +54,7 @@ check-all: ## Run all checks (format, typecheck, test)
 	$(MAKE) typecheck
 	$(MAKE) test
 
-migration: ## Create a new Alembic migration (optional: make migration NAME=add_new_column)
+migration: ## Create a new Alembic migration (usage: make migration NAME="add new column")
 	$(api) alembic revision --autogenerate -m "$(NAME)"
 
 migrate: ## Run Alembic migrations
