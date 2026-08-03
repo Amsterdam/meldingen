@@ -1,6 +1,7 @@
-from typing import Annotated, Generic, List, TypedDict, TypeVar
+from dataclasses import dataclass
+from typing import Annotated, AsyncIterator, Generic, List, TypedDict, TypeVar
 
-from fastapi import Depends, HTTPException, Query, Response
+from fastapi import Depends, HTTPException, Query, Response, UploadFile
 from meldingen_core import SortingDirection
 from pydantic import BaseModel, RootModel, ValidationError
 from sqlalchemy import ColumnExpressionArgument
@@ -68,6 +69,41 @@ def filter_param(filter: Annotated[str | None, Query()] = None) -> FilterParams:
 
 
 T = TypeVar("T", bound=BaseDBModel)
+
+
+@dataclass(frozen=True)
+class PreparedAttachmentUpload:
+    filename: str
+    content_type: str
+    data_header: bytes
+    iterator: AsyncIterator[bytes]
+
+    @classmethod
+    async def from_upload_file(
+        cls,
+        file: UploadFile,
+        data_header_size: int = 2048,
+        chunk_size: int = 1024 * 1024,
+    ) -> "PreparedAttachmentUpload":
+        # When uploading a file without filename, Starlette gives us a string instead of an instance
+        # of UploadFile, so actually the filename will always be available. To satisfy the type
+        # checker we assert that is the case.
+        assert file.filename is not None
+        assert file.content_type is not None
+
+        data_header = await file.read(data_header_size)
+        await file.seek(0)
+
+        async def iterate() -> AsyncIterator[bytes]:
+            while chunk := await file.read(chunk_size):
+                yield chunk
+
+        return cls(
+            filename=file.filename,
+            content_type=file.content_type,
+            data_header=data_header,
+            iterator=iterate(),
+        )
 
 
 class ContentRangeHeaderAdder(Generic[T]):

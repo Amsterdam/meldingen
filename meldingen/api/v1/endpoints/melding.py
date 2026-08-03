@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated, Any, AsyncIterator, Sequence
+from typing import Annotated, Any, Sequence
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
@@ -73,6 +73,7 @@ from meldingen.actions.note import NoteListAction
 from meldingen.api.utils import (
     ContentRangeHeaderAdder,
     PaginationParams,
+    PreparedAttachmentUpload,
     SortParams,
     optional_sort_param,
     pagination_params,
@@ -881,20 +882,17 @@ async def upload_attachment_melder(
     file: UploadFile,
     action: Annotated[MelderUploadAttachmentAction, Depends(melder_melding_upload_attachment_action)],
 ) -> AttachmentOutput:
-    # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
-    # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
-    assert file.filename is not None
-    assert file.content_type is not None
-
-    data_header = await file.read(2048)
-    await file.seek(0)
-
-    async def iterate() -> AsyncIterator[bytes]:
-        while chunk := await file.read(1024 * 1024):
-            yield chunk
+    prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
 
     try:
-        attachment = await action(melding_id, token, file.filename, file.content_type, data_header, iterate())
+        attachment = await action(
+            melding_id,
+            token,
+            prepared_upload.filename,
+            prepared_upload.content_type,
+            prepared_upload.data_header,
+            prepared_upload.iterator,
+        )
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
@@ -1022,20 +1020,17 @@ async def upload_attachment(
     file: UploadFile,
     action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action)],
 ) -> AttachmentOutput:
-    # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
-    # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
-    assert file.filename is not None
-    assert file.content_type is not None
-
-    data_header = await file.read(2048)
-    await file.seek(0)
-
-    async def iterate() -> AsyncIterator[bytes]:
-        while chunk := await file.read(1024 * 1024):
-            yield chunk
+    prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
 
     try:
-        attachment = await action(melding_id, file.filename, file.content_type, data_header, iterate(), user)
+        attachment = await action(
+            melding_id,
+            prepared_upload.filename,
+            prepared_upload.content_type,
+            prepared_upload.data_header,
+            prepared_upload.iterator,
+            user,
+        )
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except MediaTypeNotAllowed:
