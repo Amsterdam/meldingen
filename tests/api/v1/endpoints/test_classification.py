@@ -135,6 +135,35 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         assert response.headers.get("content-range") == "classification 0-49/10"
 
     @pytest.mark.anyio
+    async def test_list_classifications_include_deleted_query_param(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+    ) -> None:
+        classification_to_delete = classifications[0]
+
+        delete_response = await client.delete(
+            app.url_path_for("classification:delete", classification_id=classification_to_delete.id)
+        )
+        assert delete_response.status_code == HTTP_204_NO_CONTENT
+
+        default_response = await client.get(app.url_path_for(self.ROUTE_NAME))
+        assert default_response.status_code == HTTP_200_OK
+        assert len(default_response.json()) == len(classifications) - 1
+        assert all(item["id"] != classification_to_delete.id for item in default_response.json())
+        assert default_response.headers.get("content-range") == "classification 0-49/9"
+
+        explicit_false_response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"include_deleted": "false"})
+        assert explicit_false_response.status_code == HTTP_200_OK
+        assert len(explicit_false_response.json()) == len(classifications) - 1
+        assert all(item["id"] != classification_to_delete.id for item in explicit_false_response.json())
+        assert explicit_false_response.headers.get("content-range") == "classification 0-49/9"
+
+        include_deleted_response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"include_deleted": "true"})
+        assert include_deleted_response.status_code == HTTP_200_OK
+        assert len(include_deleted_response.json()) == len(classifications)
+        assert any(item["id"] == classification_to_delete.id for item in include_deleted_response.json())
+        assert include_deleted_response.headers.get("content-range") == "classification 0-49/10"
+
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "limit, offset, expected",
         [(10, 0, 10), (5, 0, 5), (10, 10, 0), (1, 10, 0)],
