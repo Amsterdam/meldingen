@@ -199,5 +199,6 @@ class Ingestor(BaseIngestor[Attachment]):
 
         await self._scan_for_malware(attachment.file_path)
 
-        self._background_task_manager.add_task(self._image_optimizer_task, attachment=attachment)
-        self._background_task_manager.add_task(self._thumbnail_generator_task, attachment=attachment)
+        if attachment.is_image:
+            self._background_task_manager.add_task(self._image_optimizer_task, attachment=attachment)
+            self._background_task_manager.add_task(self._thumbnail_generator_task, attachment=attachment)

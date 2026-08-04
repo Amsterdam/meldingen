@@ -31,6 +31,7 @@ from starlette.status import (
 )
 
 from meldingen.actions.melding import MeldingGetPossibleNextStatesAction
+from meldingen.config import settings
 from meldingen.models import (
     Answer,
     AnswerTypeEnum,
@@ -48,6 +49,7 @@ from meldingen.models import (
     StaticForm,
     TextAnswer,
     TimeAnswer,
+    User,
     ValueLabelAnswer,
 )
 from meldingen.repositories import MeldingRepository
@@ -4224,8 +4226,8 @@ class TestMeldingDeleteAnswer(BaseTokenAuthenticationTest):
         assert all(answer.id != answer_id for answer in remaining)
 
 
-class TestMeldingUploadAttachment:
-    ROUTE_NAME_CREATE: Final[str] = "melding:attachment"
+class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
+    ROUTE_NAME_CREATE: Final[str] = "melding:attachment_melder"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -4527,6 +4529,313 @@ class TestMeldingUploadAttachment:
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken")],
+    )
+    async def test_upload_attachment_limit_reached(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        melding_with_attachments: Melding,
+    ) -> None:
+        detail = f"Too many attachments. Maximum allowed is {settings.form_attachment_limit}."
+
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding_with_attachments.id),
+            params={"token": melding_with_attachments.token},
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        "amsterdam-logo.png",
+                    ),
+                    "rb",
+                ),
+            },
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response.json().get("detail") == detail
+
+        await db_session.refresh(melding_with_attachments)
+        attachments = await melding_with_attachments.awaitable_attrs.attachments
+        assert len(attachments) == 9
+        assert all(attachment.user_id is None for attachment in attachments)
+
+
+class TestMeldingUploadAttachment(BaseUnauthorizedTest):
+    ROUTE_NAME: Final[str] = "melding:attachment"
+    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME
+
+    def get_method(self) -> str:
+        return "POST"
+
+    def get_path_params(self) -> dict[str, Any]:
+        return self.PATH_PARAMS
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "filename"],
+        [
+            ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam-logo.jpg"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam-logo.png"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam-logo.webp"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam logo.webp"),
+        ],
+    )
+    async def test_upload_attachment(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding: Melding,
+        db_session: AsyncSession,
+        container_client: ContainerClient,
+        azure_container_client_override: None,
+        malware_scanner_override: BaseMalwareScanner,
+        filename: str,
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        filename,
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        await db_session.refresh(melding)
+        attachments = await melding.awaitable_attrs.attachments
+        assert len(attachments) == 1
+
+        await db_session.refresh(attachments[0])
+
+        assert attachments[0].original_filename == filename
+
+        split_path, _ = attachments[0].file_path.rsplit(".", 1)
+        optimized_path = f"{split_path}-optimized.webp"
+        assert attachments[0].optimized_path == optimized_path
+
+        thumbnail_path = f"{split_path}-thumbnail.webp"
+        assert attachments[0].thumbnail_path == thumbnail_path
+
+        blob_client = container_client.get_blob_client(attachments[0].file_path)
+        async with blob_client:
+            assert await blob_client.exists() is True
+            properties = await blob_client.get_blob_properties()
+
+        assert properties.size == path.getsize(
+            path.join(
+                path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                "resources",
+                filename,
+            )
+        )
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [("klacht over iets", MeldingStates.CLASSIFIED)],
+    )
+    async def test_upload_attachment_too_large(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding: Melding,
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        "too-large.jpg",
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_413_CONTENT_TOO_LARGE
+        assert response.json().get("detail") == "Allowed content size exceeded"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "filename"],
+        [("klacht over iets", MeldingStates.CLASSIFIED, "test_file.txt")],
+    )
+    async def test_upload_attachment_media_type_not_allowed(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding: Melding,
+        filename: str,
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        filename,
+                    ),
+                    "rb",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        body = response.json()
+        assert body.get("detail") == "Attachment not allowed"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [("klacht over iets", MeldingStates.CLASSIFIED)],
+    )
+    async def test_upload_attachment_media_type_integrity_validation_fails(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding: Melding,
+        db_session: AsyncSession,
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            files={
+                "file": (
+                    "amsterdam-logo.png",
+                    open(
+                        path.join(
+                            path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                            "resources",
+                            "amsterdam-logo.png",
+                        ),
+                        "rb",
+                    ),
+                    "image/jpeg",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        body = response.json()
+        assert body.get("detail") == "Media type of data does not match provided media type"
+
+        await db_session.refresh(melding)
+        attachments = await melding.awaitable_attrs.attachments
+        assert len(attachments) == 0
+
+    @pytest.mark.anyio
+    async def test_upload_attachment_melding_not_found(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=123),
+            files={
+                "file": (
+                    "amsterdam-logo.png",
+                    open(
+                        path.join(
+                            path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                            "resources",
+                            "amsterdam-logo.png",
+                        ),
+                        "rb",
+                    ),
+                    "image/jpeg",
+                ),
+            },
+            # We have to provide the header and boundary manually, otherwise httpx will set the content-type
+            # to application/json and the request will fail.
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [("klacht over iets", MeldingStates.CLASSIFIED)],
+    )
+    async def test_upload_attachment_limit_reached(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_behandelaar: User,
+        db_session: AsyncSession,
+        melding: Melding,
+    ) -> None:
+        for index in range(settings.backoffice_attachment_limit):
+            filename = f"backoffice-{index}.jpg"
+            attachment = Attachment(original_filename=filename, original_media_type="image/jpeg", melding=melding)
+            attachment.file_path = f"/tmp/{uuid4()}/{filename}"
+            attachment.user = auth_behandelaar
+            db_session.add(attachment)
+
+        await db_session.commit()
+        await db_session.refresh(melding)
+
+        attachments = await melding.awaitable_attrs.attachments
+        assert len(attachments) == settings.backoffice_attachment_limit
+        assert all(attachment.user_id == auth_behandelaar.id for attachment in attachments)
+
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            files={
+                "file": open(
+                    path.join(
+                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                        "resources",
+                        "amsterdam-logo.png",
+                    ),
+                    "rb",
+                ),
+            },
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert (
+            response.json().get("detail")
+            == f"Too many attachments. Maximum allowed is {settings.backoffice_attachment_limit}."
+        )
 
 
 class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):

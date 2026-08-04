@@ -53,7 +53,12 @@ class Settings(BaseSettings):
 
     # Storage
     attachment_storage_base_directory: Path
-    attachment_allow_media_types: list[MediaType]
+
+    # Attachments
+    form_attachment_allow_media_types: list[MediaType]
+    backoffice_attachment_allow_media_types: list[MediaType]
+    form_attachment_limit: int = 3  # Maximum number of attachments allowed for forms
+    backoffice_attachment_limit: int = 5  # Maximum number of attachments allowed for backoffice
 
     # imgproxy
     imgproxy_key: str
