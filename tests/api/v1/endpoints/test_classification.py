@@ -151,13 +151,17 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         assert all(item["id"] != classification_to_delete.id for item in default_response.json())
         assert default_response.headers.get("content-range") == "classification 0-49/9"
 
-        explicit_false_response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"include_deleted": "false"})
+        explicit_false_response = await client.get(
+            app.url_path_for(self.ROUTE_NAME), params={"include_deleted": "false"}
+        )
         assert explicit_false_response.status_code == HTTP_200_OK
         assert len(explicit_false_response.json()) == len(classifications) - 1
         assert all(item["id"] != classification_to_delete.id for item in explicit_false_response.json())
         assert explicit_false_response.headers.get("content-range") == "classification 0-49/9"
 
-        include_deleted_response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"include_deleted": "true"})
+        include_deleted_response = await client.get(
+            app.url_path_for(self.ROUTE_NAME), params={"include_deleted": "true"}
+        )
         assert include_deleted_response.status_code == HTTP_200_OK
         assert len(include_deleted_response.json()) == len(classifications)
         assert any(item["id"] == classification_to_delete.id for item in include_deleted_response.json())
