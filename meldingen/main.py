@@ -68,33 +68,48 @@ def get_application() -> FastAPI:
     return application
 
 
-def add_custom_open_api_scheme(app: FastAPI) -> dict[str, Any]:
+def add_custom_open_api_scheme(app: FastAPI) -> None:
+    """Declare the OAuth2 scheme (and its scopes) on the generated OpenAPI schema.
 
-    # Cache
-    if app.openapi_schema:
+    This must be installed as an `app.openapi` override rather than by assigning
+    `app.openapi_schema` directly. FastAPI 0.138 started invalidating that cache on
+    a routes-version check (`_openapi_routes_version`), so a pre-built schema is
+    thrown away and regenerated on the first request, silently dropping the scopes
+    and the `security` entry below. Overriding the method keeps the customisation
+    on the only path that serves /openapi.json.
+
+    Without this, Scalar has no scopes to bind to and the `selectedScopes` in
+    `api/v1/endpoints/docs.py` never get pre-selected.
+    """
+
+    def custom_openapi() -> dict[str, Any]:
+        # Cache
+        if app.openapi_schema:
+            return app.openapi_schema
+
+        openapi_schema = get_openapi(
+            title=app.title,
+            version="1.0.0",
+            routes=app.routes,
+        )
+        openapi_schema["components"]["securitySchemes"] = {
+            "OAuth2AuthorizationCodeBearer": {
+                "type": "oauth2",
+                "flows": {
+                    "authorizationCode": {
+                        "authorizationUrl": settings.auth_url,
+                        "tokenUrl": settings.token_url,
+                        "scopes": {scope: "" for scope in settings.auth_scopes},
+                    }
+                },
+            }
+        }
+        openapi_schema["security"] = [{"OAuth2AuthorizationCodeBearer": []}]
+        app.openapi_schema = openapi_schema
+
         return app.openapi_schema
 
-    openapi_schema = get_openapi(
-        title=app.title,
-        version="1.0.0",
-        routes=app.routes,
-    )
-    openapi_schema["components"]["securitySchemes"] = {
-        "OAuth2AuthorizationCodeBearer": {
-            "type": "oauth2",
-            "flows": {
-                "authorizationCode": {
-                    "authorizationUrl": settings.auth_url,
-                    "tokenUrl": settings.token_url,
-                    "scopes": {scope: "" for scope in settings.auth_scopes},
-                }
-            },
-        }
-    }
-    openapi_schema["security"] = [{"OAuth2AuthorizationCodeBearer": []}]
-    app.openapi_schema = openapi_schema
-
-    return app.openapi_schema
+    app.openapi = custom_openapi  # type: ignore[method-assign]
 
 
 app = get_application()
