@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import hmac
+import logging
 from abc import ABCMeta, abstractmethod
 from typing import AsyncIterator
 from urllib.parse import quote
@@ -17,8 +18,21 @@ from meldingen.factories import BaseFilesystemFactory
 from meldingen.models import Attachment
 from meldingen.repositories import AttachmentRepository
 
+logger = logging.getLogger(__name__)
+
+# imgproxy processing options that make it drop all metadata: `sm:1` strips EXIF, IPTC and XMP
+# (GPS coordinates, date and time, camera serial number, etc.) and `kcr:0` makes sure the copyright
+# fields are stripped along with the rest, as those can hold personal data too. Both are passed
+# explicitly so we don't depend on the IMGPROXY_STRIP_METADATA and IMGPROXY_KEEP_COPYRIGHT settings
+# of the imgproxy instance we happen to talk to.
+# See also: https://docs.imgproxy.net/usage/processing
+STRIP_METADATA_OPTIONS = "sm:1/kcr:0"
+
 
 class ImageOptimizerException(Exception): ...
+
+
+class MetadataStripperException(Exception): ...
 
 
 class IMGProxySignatureGenerator:
@@ -54,7 +68,7 @@ class IMGProxyImageOptimizerUrlGenerator(BaseIMGProxyUrlGenerator):
         self._imgproxy_base_url = imgproxy_base_url
 
     def __call__(self, image_path: str) -> str:
-        url_path = f"/f:webp/plain/{quote(image_path)}"
+        url_path = f"/{STRIP_METADATA_OPTIONS}/f:webp/plain/{quote(image_path)}"
         signature = self._generate_signature(url_path)
 
         return f"{self._imgproxy_base_url}/{signature}{url_path}"
@@ -75,10 +89,69 @@ class IMGProxyThumbnailUrlGenerator(BaseIMGProxyUrlGenerator):
         self._height = height
 
     def __call__(self, image_path: str) -> str:
-        url_path = f"/rs:fit:{self._width}:{self._height}/f:webp/plain/{quote(image_path)}"
+        url_path = f"/{STRIP_METADATA_OPTIONS}/rs:fit:{self._width}:{self._height}/f:webp/plain/{quote(image_path)}"
         signature = self._generate_signature(url_path)
 
         return f"{self._imgproxy_base_url}/{signature}{url_path}"
+
+
+class IMGProxyMetadataStripUrlGenerator(BaseIMGProxyUrlGenerator):
+    """Generates the url of a metadata free copy of an image.
+
+    Deliberately passes no format option, which makes imgproxy return the image in its source
+    format. The image is re-encoded, so the quality is configurable to limit the loss of detail."""
+
+    _generate_signature: IMGProxySignatureGenerator
+    _imgproxy_base_url: str
+    _quality: int
+
+    def __init__(self, signature_generator: IMGProxySignatureGenerator, imgproxy_base_url: str, quality: int):
+        self._generate_signature = signature_generator
+        self._imgproxy_base_url = imgproxy_base_url
+        self._quality = quality
+
+    def __call__(self, image_path: str) -> str:
+        url_path = f"/{STRIP_METADATA_OPTIONS}/q:{self._quality}/plain/{quote(image_path)}"
+        signature = self._generate_signature(url_path)
+
+        return f"{self._imgproxy_base_url}/{signature}{url_path}"
+
+
+class BaseMetadataStripper(metaclass=ABCMeta):
+    @abstractmethod
+    async def __call__(self, image_path: str) -> None: ...
+
+
+class IMGProxyMetadataStripper(BaseMetadataStripper):
+    """Replaces an image with a metadata free version of itself."""
+
+    _generate_url: BaseIMGProxyUrlGenerator
+    _http_client: AsyncClient
+    _filesystem_factory: BaseFilesystemFactory
+
+    def __init__(
+        self,
+        url_generator: BaseIMGProxyUrlGenerator,
+        http_client: AsyncClient,
+        filesystem_factory: BaseFilesystemFactory,
+    ):
+        self._generate_url = url_generator
+        self._http_client = http_client
+        self._filesystem_factory = filesystem_factory
+
+    async def __call__(self, image_path: str) -> None:
+        async for _filesystem in self._filesystem_factory():
+            # The stripped image is read into memory in one go instead of streamed, so we never
+            # start overwriting the image while imgproxy could still be reading it.
+            response = await self._http_client.get(self._generate_url(image_path))
+            if response.status_code != HTTP_200_OK:
+                raise MetadataStripperException()
+
+            await _filesystem.write(image_path, response.content)
+
+            return
+
+        raise Exception("Failed to get container client!")
 
 
 class IMGProxyImageProcessor:
@@ -171,6 +244,7 @@ class Ingestor(BaseIngestor[Attachment]):
     _background_task_manager: BackgroundTasks
     _image_optimizer_task: ImageOptimizerTask
     _thumbnail_generator_task: ThumbnailGeneratorTask
+    _strip_metadata: BaseMetadataStripper
     _base_directory: str
 
     def __init__(
@@ -180,6 +254,7 @@ class Ingestor(BaseIngestor[Attachment]):
         background_task_manager: BackgroundTasks,
         image_optimizer_task: ImageOptimizerTask,
         thumbnail_generator_task: ThumbnailGeneratorTask,
+        metadata_stripper: BaseMetadataStripper,
         base_directory: str,
     ):
         super().__init__(scanner)
@@ -188,7 +263,21 @@ class Ingestor(BaseIngestor[Attachment]):
         self._background_task_manager = background_task_manager
         self._image_optimizer_task = image_optimizer_task
         self._thumbnail_generator_task = thumbnail_generator_task
+        self._strip_metadata = metadata_stripper
         self._base_directory = base_directory
+
+    async def _strip_metadata_from_image(self, image_path: str) -> None:
+        """Strips the metadata from the uploaded image. This happens before the response is sent, so
+        the image can never be downloaded with its metadata still attached. When stripping fails we
+        remove the image altogether, as we don't want to hold on to an image we can't clean up."""
+        try:
+            await self._strip_metadata(image_path)
+        except Exception:
+            logger.exception("Failed to strip metadata from '%s', deleting it!", image_path)
+
+            await self._filesystem.delete(image_path)
+
+            raise
 
     async def __call__(self, attachment: Attachment, data: AsyncIterator[bytes]) -> None:
         path = f"{self._base_directory}/{str(uuid4()).replace("-", "/")}/"
@@ -200,5 +289,7 @@ class Ingestor(BaseIngestor[Attachment]):
         await self._scan_for_malware(attachment.file_path)
 
         if attachment.is_image:
+            await self._strip_metadata_from_image(attachment.file_path)
+
             self._background_task_manager.add_task(self._image_optimizer_task, attachment=attachment)
             self._background_task_manager.add_task(self._thumbnail_generator_task, attachment=attachment)

@@ -135,10 +135,13 @@ from meldingen.factories import (
 )
 from meldingen.generators import PublicIdGenerator
 from meldingen.image import (
+    BaseMetadataStripper,
     ImageOptimizerTask,
     IMGProxyImageOptimizer,
     IMGProxyImageOptimizerUrlGenerator,
     IMGProxyImageProcessor,
+    IMGProxyMetadataStripper,
+    IMGProxyMetadataStripUrlGenerator,
     IMGProxySignatureGenerator,
     IMGProxyThumbnailGenerator,
     IMGProxyThumbnailUrlGenerator,
@@ -1045,6 +1048,22 @@ def thumbnail_generator_task(
     return ThumbnailGeneratorTask(thumbnail_generator, attachment_repository)
 
 
+def img_proxy_metadata_strip_url_generator(
+    signature_generator: Annotated[IMGProxySignatureGenerator, Depends(img_proxy_signature_generator)],
+) -> IMGProxyMetadataStripUrlGenerator:
+    return IMGProxyMetadataStripUrlGenerator(
+        signature_generator, settings.imgproxy_base_url, settings.imgproxy_metadata_strip_quality
+    )
+
+
+def metadata_stripper(
+    url_generator: Annotated[IMGProxyMetadataStripUrlGenerator, Depends(img_proxy_metadata_strip_url_generator)],
+    http_client: Annotated[AsyncClient, Depends(http_client)],
+    filesystem_factory: Annotated[BaseFilesystemFactory, Depends(filesystem_factory)],
+) -> BaseMetadataStripper:
+    return IMGProxyMetadataStripper(url_generator, http_client, filesystem_factory)
+
+
 def malware_scanner(
     container_client: Annotated[ContainerClient, Depends(azure_container_client)],
 ) -> BaseMalwareScanner:
@@ -1062,6 +1081,7 @@ def attachment_ingestor(
     background_task_manager: BackgroundTasks,
     optimizer_task: Annotated[ImageOptimizerTask, Depends(image_optimizer_task)],
     thumbnail_task: Annotated[ThumbnailGeneratorTask, Depends(thumbnail_generator_task)],
+    metadata_stripper: Annotated[BaseMetadataStripper, Depends(metadata_stripper)],
 ) -> Ingestor:
     return Ingestor(
         scanner,
@@ -1069,6 +1089,7 @@ def attachment_ingestor(
         background_task_manager,
         optimizer_task,
         thumbnail_task,
+        metadata_stripper,
         str(settings.attachment_storage_base_directory),
     )
 

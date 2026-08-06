@@ -56,6 +56,29 @@ from meldingen.repositories import MeldingRepository
 from meldingen.statemachine import Process
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
+# The metadata that "amsterdam-logo-with-metadata.jpg" carries: GPS coordinates, a date and time, a
+# camera make and a camera serial number. None of it may survive an upload. Note that imgproxy does
+# leave an Exif block of its own behind, holding technical data such as the orientation and the
+# resolution of the image it produced, which is why we look for the values we uploaded.
+METADATA_MARKERS: Final[list[bytes]] = [
+    b"TESTGPSDATUM",  # GPSMapDatum, part of the GPS data
+    b"2020:01:02 03:04:05",  # DateTime and DateTimeOriginal
+    b"TestCam",  # Make
+    b"SN-123456789",  # BodySerialNumber
+]
+
+
+async def assert_stored_file_has_no_metadata(container_client: ContainerClient, file_path: str) -> None:
+    blob_client = container_client.get_blob_client(file_path)
+    async with blob_client:
+        assert await blob_client.exists() is True
+        downloader = await blob_client.download_blob()
+        data = await downloader.readall()
+
+    assert len(data) > 0
+    for marker in METADATA_MARKERS:
+        assert marker not in data, f"'{file_path}' still contains metadata"
+
 
 class TestMeldingCreate:
     ROUTE_NAME_CREATE: Final[str] = "melding:create"
@@ -851,6 +874,16 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
     def get_json(self) -> dict[str, Any] | None:
         return None
 
+    def get_files(self) -> dict[str, Any] | None:
+        """Endpoints that expect a file upload return one here, so these requests only fail on the
+        token and not on a missing body."""
+        return None
+
+    def get_headers(self) -> dict[str, str] | None:
+        """Needed together with `get_files()`, as the test client sends a json content type by
+        default."""
+        return None
+
     def get_extra_path_params(self) -> dict[str, Any]:
         return {}
 
@@ -860,6 +893,8 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=1, **self.get_extra_path_params()),
             json=self.get_json(),
+            files=self.get_files(),
+            headers=self.get_headers(),
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -879,6 +914,8 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
             app.url_path_for(self.get_route_name(), melding_id=melding.id, **self.get_extra_path_params()),
             params={"token": ""},
             json=self.get_json(),
+            files=self.get_files(),
+            headers=self.get_headers(),
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -895,6 +932,8 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
             app.url_path_for(self.get_route_name(), melding_id=melding.id, **self.get_extra_path_params()),
             params={"token": "supersecuretoken"},
             json=self.get_json(),
+            files=self.get_files(),
+            headers=self.get_headers(),
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -4229,6 +4268,30 @@ class TestMeldingDeleteAnswer(BaseTokenAuthenticationTest):
 class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
     ROUTE_NAME_CREATE: Final[str] = "melding:attachment_melder"
 
+    # Without these the class stays abstract, which makes pytest skip it without saying so
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME_CREATE
+
+    def get_method(self) -> str:
+        return "POST"
+
+    @override
+    def get_files(self) -> dict[str, Any] | None:
+        return {
+            "file": open(
+                path.join(
+                    path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                    "resources",
+                    "amsterdam-logo.jpg",
+                ),
+                "rb",
+            )
+        }
+
+    @override
+    def get_headers(self) -> dict[str, str] | None:
+        return {"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"}
+
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "filename"],
@@ -4237,6 +4300,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam-logo.png"),
             ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam-logo.webp"),
             ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam logo.webp"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam-logo-with-metadata.jpg"),
         ],
     )
     async def test_upload_attachment(
@@ -4285,18 +4349,11 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
         thumbnail_path = f"{split_path}-thumbnail.webp"
         assert attachments[0].thumbnail_path == thumbnail_path
 
-        blob_client = container_client.get_blob_client(attachments[0].file_path)
-        async with blob_client:
-            assert await blob_client.exists() is True
-            properties = await blob_client.get_blob_properties()
-
-        assert properties.size == path.getsize(
-            path.join(
-                path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                "resources",
-                filename,
-            )
-        )
+        # Neither the stored original nor the images derived from it may hold on to the metadata of
+        # the uploaded file
+        await assert_stored_file_has_no_metadata(container_client, attachments[0].file_path)
+        await assert_stored_file_has_no_metadata(container_client, optimized_path)
+        await assert_stored_file_has_no_metadata(container_client, thumbnail_path)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -4590,6 +4647,7 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
             ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam-logo.png"),
             ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam-logo.webp"),
             ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam logo.webp"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam-logo-with-metadata.jpg"),
         ],
     )
     async def test_upload_attachment(
@@ -4638,18 +4696,11 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         thumbnail_path = f"{split_path}-thumbnail.webp"
         assert attachments[0].thumbnail_path == thumbnail_path
 
-        blob_client = container_client.get_blob_client(attachments[0].file_path)
-        async with blob_client:
-            assert await blob_client.exists() is True
-            properties = await blob_client.get_blob_properties()
-
-        assert properties.size == path.getsize(
-            path.join(
-                path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                "resources",
-                filename,
-            )
-        )
+        # Neither the stored original nor the images derived from it may hold on to the metadata of
+        # the uploaded file
+        await assert_stored_file_has_no_metadata(container_client, attachments[0].file_path)
+        await assert_stored_file_has_no_metadata(container_client, optimized_path)
+        await assert_stored_file_has_no_metadata(container_client, thumbnail_path)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(

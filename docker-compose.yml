@@ -98,6 +98,10 @@ services:
       IMGPROXY_ABS_NAME: devstoreaccount1
       IMGPROXY_ABS_KEY: Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
       IMGPROXY_ABS_ENDPOINT: http://azurite:10000/devstoreaccount1
+      # Defense in depth: the backend already asks for metadata free images per request (sm:1/kcr:0),
+      # these make sure imgproxy never returns metadata even if it doesn't.
+      IMGPROXY_STRIP_METADATA: "true"
+      IMGPROXY_KEEP_COPYRIGHT: "false"
       IMGPROXY_LOG_LEVEL: debug
       IMGPROXY_BASE_URL: abs://meldingencontainer/
       IMGPROXY_OPEN_TELEMETRY_ENABLE: "true"
