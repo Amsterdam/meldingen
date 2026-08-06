@@ -93,7 +93,6 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
 
     async def list(
         self,
-        *,
         limit: int | None = None,
         offset: int | None = None,
         sort_attribute_name: str | None = None,
