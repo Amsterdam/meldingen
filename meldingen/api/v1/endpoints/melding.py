@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated, Any, AsyncIterator, Sequence
+from typing import Annotated, Any, Sequence
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
@@ -32,7 +32,7 @@ from meldingen_core.labels import InvalidLabelException
 from meldingen_core.managers import RelationshipExistsException
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
 from meldingen_core.token import TokenException
-from meldingen_core.validators import MediaTypeIntegrityError, MediaTypeNotAllowed
+from meldingen_core.validators import AttachmentLimitReachedException, MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
 from pydantic import BaseModel, TypeAdapter, ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -43,7 +43,6 @@ from starlette.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
-    HTTP_413_CONTENT_TOO_LARGE,
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
@@ -53,6 +52,7 @@ from meldingen.actions.attachment import (
     ListAttachmentsAction,
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
+    MelderUploadAttachmentAction,
     UploadAttachmentAction,
 )
 from meldingen.actions.form import AnswerCreateAction, AnswerUpdateAction
@@ -73,12 +73,15 @@ from meldingen.actions.note import NoteListAction
 from meldingen.api.utils import (
     ContentRangeHeaderAdder,
     PaginationParams,
+    PreparedAttachmentUpload,
     SortParams,
     optional_sort_param,
     pagination_params,
     sort_param,
 )
 from meldingen.api.v1 import (
+    attachment_upload_bad_request_response,
+    attachment_upload_too_large_response,
     default_response,
     forbidden_response,
     image_data_response,
@@ -90,7 +93,6 @@ from meldingen.api.v1 import (
 from meldingen.authentication import authenticate_user, verify_melding_token
 from meldingen.dependencies import (
     answer_output_factory,
-    answer_repository,
     asset_output_factory,
     form_io_question_component_repository,
     melder_melding_download_attachment_action,
@@ -98,6 +100,7 @@ from meldingen.dependencies import (
     melder_melding_list_attachments_action,
     melder_melding_list_questions_and_answers_action,
     melder_melding_retrieve_action,
+    melder_melding_upload_attachment_action,
     melding_add_asset_action,
     melding_add_attachments_action,
     melding_add_contact_action,
@@ -159,7 +162,7 @@ from meldingen.models import (
     Source,
     User,
 )
-from meldingen.repositories import AnswerRepository, FormIoQuestionComponentRepository, MeldingRepository
+from meldingen.repositories import FormIoQuestionComponentRepository, MeldingRepository
 from meldingen.schemas.input import (
     AnswerInputUnion,
     CompleteMeldingInput,
@@ -864,60 +867,32 @@ def _hydrate_attachment_output(attachment: Attachment) -> AttachmentOutput:
 
 
 @router.post(
-    "/{melding_id}/attachment",
-    name="melding:attachment",
+    "/{melding_id}/attachment/melder",
+    name="melding:attachment_melder",
     responses={
         **not_found_response,
         **unauthorized_response,
-        **{
-            HTTP_400_BAD_REQUEST: {
-                "description": "",
-                "content": {
-                    "application/json": {
-                        "examples": {
-                            "Uploading attachment with media type that is not allowed.": {
-                                "value": {"detail": "Attachment not allowed"}
-                            },
-                            "Media type of data does not match the media type in the Content-Type header": {
-                                "value": {"detail": "Media type of data does not match provided media type"}
-                            },
-                        },
-                    },
-                },
-            },
-            HTTP_413_CONTENT_TOO_LARGE: {
-                "description": "Uploading attachment that is too large.",
-                "content": {
-                    "application/json": {
-                        "examples": {
-                            "Allowed content size exceeded": {"value": {"detail": "Allowed content size exceeded"}}
-                        }
-                    }
-                },
-            },
-        },
+        **attachment_upload_bad_request_response,
+        **attachment_upload_too_large_response,
     },
 )
-async def upload_attachment(
+async def upload_attachment_melder(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     file: UploadFile,
-    action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action)],
+    action: Annotated[MelderUploadAttachmentAction, Depends(melder_melding_upload_attachment_action)],
 ) -> AttachmentOutput:
-    # When uploading a file without filename, Starlette gives us a string instead of an instance of UploadFile,
-    # so actually the filename will always be available. To satisfy the type checker we assert that is the case.
-    assert file.filename is not None
-    assert file.content_type is not None
-
-    data_header = await file.read(2048)
-    await file.seek(0)
-
-    async def iterate() -> AsyncIterator[bytes]:
-        while chunk := await file.read(1024 * 1024):
-            yield chunk
+    prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
 
     try:
-        attachment = await action(melding_id, token, file.filename, file.content_type, data_header, iterate())
+        attachment = await action(
+            melding_id,
+            token,
+            prepared_upload.filename,
+            prepared_upload.content_type,
+            prepared_upload.data_header,
+            prepared_upload.iterator,
+        )
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
@@ -928,6 +903,8 @@ async def upload_attachment(
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST, detail="Media type of data does not match provided media type"
         )
+    except AttachmentLimitReachedException as e:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     return _hydrate_attachment_output(attachment)
 
@@ -1025,6 +1002,47 @@ async def delete_attachment(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+
+@router.post(
+    "/{melding_id}/attachment/",
+    name="melding:attachment",
+    responses={
+        **not_found_response,
+        **unauthorized_response,
+        **attachment_upload_bad_request_response,
+        **attachment_upload_too_large_response,
+    },
+)
+async def upload_attachment(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    user: Annotated[User, Depends(authenticate_user)],
+    file: UploadFile,
+    action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action)],
+) -> AttachmentOutput:
+    prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
+
+    try:
+        attachment = await action(
+            melding_id,
+            prepared_upload.filename,
+            prepared_upload.content_type,
+            prepared_upload.data_header,
+            prepared_upload.iterator,
+            user,
+        )
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+    except MediaTypeNotAllowed:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Attachment not allowed")
+    except MediaTypeIntegrityError:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST, detail="Media type of data does not match provided media type"
+        )
+    except AttachmentLimitReachedException as e:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
+
+    return _hydrate_attachment_output(attachment)
 
 
 @router.patch(

@@ -225,3 +225,27 @@ async def test_ingestor() -> None:
     filesystem.write_iterator.assert_awaited_once_with(attachment.file_path, iterator)
     task_manager.add_task.assert_any_call(optimizer_task, attachment=attachment)
     task_manager.add_task.assert_any_call(thumbnail_task, attachment=attachment)
+
+
+@pytest.mark.anyio
+async def test_ingestor_skips_background_tasks_for_non_image() -> None:
+    filesystem = Mock(Filesystem)
+    task_manager = Mock(BackgroundTasks)
+    optimizer_task = Mock(ImageOptimizerTask)
+    thumbnail_task = Mock(ThumbnailGeneratorTask)
+    attachment = Attachment(
+        original_filename="document.pdf", original_media_type="application/pdf", melding=Mock(Melding)
+    )
+    ingest = Ingestor(AsyncMock(BaseMalwareScanner), filesystem, task_manager, optimizer_task, thumbnail_task, "/tmp")
+
+    async def iterate() -> AsyncIterator[bytes]:
+        for chunk in [b"Hello", b"World"]:
+            yield chunk
+
+    iterator = iterate()
+
+    await ingest(attachment, iterator)
+
+    filesystem.makedirs.assert_awaited_once()
+    filesystem.write_iterator.assert_awaited_once_with(attachment.file_path, iterator)
+    task_manager.add_task.assert_not_called()

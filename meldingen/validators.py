@@ -5,6 +5,8 @@ import magic
 from fastapi import HTTPException
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.validators import (
+    AttachmentLimitReachedException,
+    BaseAttachmentLimitValidator,
     BaseMediaTypeIntegrityValidator,
     BaseMediaTypeValidator,
     MediaTypeIntegrityError,
@@ -14,7 +16,7 @@ from pydantic_media_type import MediaType
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator
-from meldingen.models import StaticFormTypeEnum
+from meldingen.models import Melding, StaticFormTypeEnum
 from meldingen.repositories import StaticFormRepository
 
 logger = logging.getLogger(__name__)
@@ -75,6 +77,38 @@ class MediaTypeIntegrityValidator(BaseMediaTypeIntegrityValidator):
 
         if media_type != magic_media_type:
             raise MediaTypeIntegrityError()
+
+
+class MeldingFormAttachmentLimitValidator(BaseAttachmentLimitValidator[Melding]):
+    _max_attachments: int
+
+    def __init__(self, max_attachments: int) -> None:
+        self._max_attachments = max_attachments
+
+    async def __call__(self, melding: Melding) -> None:
+        # This check is typically done before saving the new attachment to ensure we don't exceed the limit.
+        # Form uploads don't register a user_id, so we  only count those without one.
+        attachments = await melding.awaitable_attrs.attachments
+        form_uploads = [att for att in attachments if att.user_id is None]
+
+        if len(form_uploads) >= self._max_attachments:
+            raise AttachmentLimitReachedException(f"Too many attachments. Maximum allowed is {self._max_attachments}.")
+
+
+class BackofficeAttachmentLimitValidator(BaseAttachmentLimitValidator[Melding]):
+    _max_attachments: int
+
+    def __init__(self, max_attachments: int) -> None:
+        self._max_attachments = max_attachments
+
+    async def __call__(self, melding: Melding) -> None:
+        # This check is typically done before saving the new attachment to ensure we don't exceed the limit.
+        # Backoffice uploads register a user_id, so we only count those with one.
+        attachments = await melding.awaitable_attrs.attachments
+        backoffice_uploads = [att for att in attachments if att.user_id is not None]
+
+        if len(backoffice_uploads) >= self._max_attachments:
+            raise AttachmentLimitReachedException(f"Too many attachments. Maximum allowed is {self._max_attachments}.")
 
 
 class MeldingPrimaryFormValidator:
