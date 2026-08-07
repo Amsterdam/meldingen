@@ -15,12 +15,12 @@ T = TypeVar("T")
 class BaseListAction(BaseCoreListAction[T]):
     async def __call__(
         self,
-        *,
         limit: int | None = None,
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
         filters: NameListFilters | None = None,
+        apply_visibility_filters: bool = True,
     ) -> Sequence[T]:
         try:
             return await self._repository.list(
@@ -29,6 +29,7 @@ class BaseListAction(BaseCoreListAction[T]):
                 sort_attribute_name=sort_attribute_name,
                 sort_direction=sort_direction,
                 filters=filters,
+                apply_visibility_filters=apply_visibility_filters,
             )
         except AttributeNotFoundException as e:
             raise HTTPException(
