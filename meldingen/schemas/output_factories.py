@@ -7,6 +7,7 @@ from meldingen.models import (
     Answer,
     Asset,
     AssetType,
+    Attachment,
     BaseFormIoValuesComponent,
     Classification,
     DateAnswer,
@@ -36,6 +37,7 @@ from meldingen.schemas.output import (
     AnswerQuestionOutputUnion,
     AssetOutput,
     AssetTypeOutput,
+    AttachmentOutput,
     BaseFormComponentOutput,
     DateAnswerOutput,
     DateAnswerQuestionOutput,
@@ -1012,4 +1014,27 @@ class AssetOutputFactory:
             subtype=asset.subtype,
             created_at=asset.created_at,
             updated_at=asset.updated_at,
+        )
+
+
+class AttachmentOutputFactory:
+
+    def __call__(self, attachment: Attachment) -> AttachmentOutput:
+
+        return AttachmentOutput(
+            id=attachment.id,
+            original_filename=attachment.original_filename,
+            created_at=attachment.created_at,
+            updated_at=attachment.updated_at,
+            user=(
+                UserOutput(
+                    id=attachment.user.id,
+                    email=attachment.user.email,
+                    username=attachment.user.username,
+                    created_at=attachment.user.created_at,
+                    updated_at=attachment.user.updated_at,
+                )
+                if attachment.user is not None
+                else None
+            ),
         )

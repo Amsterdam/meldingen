@@ -314,6 +314,7 @@ AnswerQuestionOutputUnion = Annotated[
 
 class AttachmentOutput(BaseOutputModel):
     original_filename: str
+    user: UserOutput
 
 
 class UserOutput(BaseOutputModel):

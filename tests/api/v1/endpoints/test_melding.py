@@ -4656,6 +4656,52 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         ["melding_text", "melding_state"],
         [("klacht over iets", MeldingStates.CLASSIFIED)],
     )
+    async def test_upload_attachment_over_one_megabyte(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding: Melding,
+        db_session: AsyncSession,
+        container_client: ContainerClient,
+        azure_container_client_override: None,
+        malware_scanner_override: BaseMalwareScanner,
+    ) -> None:
+        with open(
+            path.join(
+                path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+                "resources",
+                "amsterdam-logo.jpg",
+            ),
+            "rb",
+        ) as image_file:
+            file_content = image_file.read()
+
+        padded_file = file_content + (b"\0" * ((1024 * 1024 + 1) - len(file_content)))
+
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            files={"file": ("amsterdam-logo.jpg", padded_file, "image/jpeg")},
+            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        await db_session.refresh(melding)
+        attachments = await melding.awaitable_attrs.attachments
+        assert len(attachments) == 1
+
+        blob_client = container_client.get_blob_client(attachments[0].file_path)
+        async with blob_client:
+            properties = await blob_client.get_blob_properties()
+
+        assert properties.size == len(padded_file)
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state"],
+        [("klacht over iets", MeldingStates.CLASSIFIED)],
+    )
     async def test_upload_attachment_too_large(
         self,
         app: FastAPI,
