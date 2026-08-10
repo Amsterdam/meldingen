@@ -312,14 +312,14 @@ AnswerQuestionOutputUnion = Annotated[
 ]
 
 
-class AttachmentOutput(BaseOutputModel):
-    original_filename: str
-    user: UserOutput
-
-
 class UserOutput(BaseOutputModel):
     email: str
     username: str
+
+
+class AttachmentOutput(BaseOutputModel):
+    original_filename: str
+    user: UserOutput | None
 
 
 class NoteRetrieveOutput(BaseOutputModel):

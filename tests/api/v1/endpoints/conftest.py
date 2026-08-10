@@ -1491,6 +1491,20 @@ async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -
 
 
 @pytest.fixture
+async def melding_with_attachments_and_users(
+    db_session: AsyncSession, melding_with_attachments: Melding, user: User
+) -> Melding:
+    for attachment in melding_with_attachments.attachments:
+        attachment.user = user
+        db_session.add(attachment)
+
+    await db_session.commit()
+    await db_session.refresh(melding_with_attachments)
+
+    return melding_with_attachments
+
+
+@pytest.fixture
 async def geojson_geometry(request: FixtureRequest) -> dict[str, Any] | None:
     if hasattr(request, "param"):
         return dict(request.param)

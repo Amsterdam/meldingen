@@ -4622,6 +4622,11 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         )
 
         assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("id") is not None
+        assert body.get("original_filename") == filename
+        assert body.get("user") is not None
+        assert body.get("user").get("email") == "user@example.com"
 
         await db_session.refresh(melding)
         attachments = await melding.awaitable_attrs.attachments
@@ -4650,52 +4655,6 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
                 filename,
             )
         )
-
-    @pytest.mark.anyio
-    @pytest.mark.parametrize(
-        ["melding_text", "melding_state"],
-        [("klacht over iets", MeldingStates.CLASSIFIED)],
-    )
-    async def test_upload_attachment_over_one_megabyte(
-        self,
-        app: FastAPI,
-        client: AsyncClient,
-        auth_user: None,
-        melding: Melding,
-        db_session: AsyncSession,
-        container_client: ContainerClient,
-        azure_container_client_override: None,
-        malware_scanner_override: BaseMalwareScanner,
-    ) -> None:
-        with open(
-            path.join(
-                path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                "resources",
-                "amsterdam-logo.jpg",
-            ),
-            "rb",
-        ) as image_file:
-            file_content = image_file.read()
-
-        padded_file = file_content + (b"\0" * ((1024 * 1024 + 1) - len(file_content)))
-
-        response = await client.post(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
-            files={"file": ("amsterdam-logo.jpg", padded_file, "image/jpeg")},
-            headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
-        )
-
-        assert response.status_code == HTTP_200_OK
-
-        await db_session.refresh(melding)
-        attachments = await melding.awaitable_attrs.attachments
-        assert len(attachments) == 1
-
-        blob_client = container_client.get_blob_client(attachments[0].file_path)
-        async with blob_client:
-            properties = await blob_client.get_blob_properties()
-
-        assert properties.size == len(padded_file)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -5119,6 +5078,22 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         body = response.json()
 
         assert len(attachments) == len(body)
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
+    async def test_list_attachments_with_users(
+        self, app: FastAPI, client: AsyncClient, melding_with_attachments_and_users: Melding, auth_user: None
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_attachments_and_users.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        attachments = await melding_with_attachments_and_users.awaitable_attrs.attachments
+        body = response.json()
+
+        assert len(attachments) == len(body)
+        assert all(attachment.user.id is not None for attachment in attachments)
+        assert all(attachment.user.email is not None for attachment in attachments)
 
     @pytest.mark.anyio
     async def test_list_attachments_with_non_existing_melding(

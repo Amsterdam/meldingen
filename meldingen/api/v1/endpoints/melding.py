@@ -94,6 +94,7 @@ from meldingen.authentication import authenticate_user, verify_melding_token
 from meldingen.dependencies import (
     answer_output_factory,
     asset_output_factory,
+    attachment_output_factory,
     form_io_question_component_repository,
     melder_melding_download_attachment_action,
     melder_melding_list_assets_action,
@@ -189,6 +190,7 @@ from meldingen.schemas.output_factories import (
     AnswerListOutputFactory,
     AnswerOutputFactory,
     AssetOutputFactory,
+    AttachmentOutputFactory,
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
@@ -857,15 +859,6 @@ async def delete_answer(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
 
-def _hydrate_attachment_output(attachment: Attachment) -> AttachmentOutput:
-    return AttachmentOutput(
-        id=attachment.id,
-        original_filename=attachment.original_filename,
-        created_at=attachment.created_at,
-        updated_at=attachment.updated_at,
-    )
-
-
 @router.post(
     "/{melding_id}/attachment/melder",
     name="melding:attachment_melder",
@@ -881,6 +874,7 @@ async def upload_attachment_melder(
     token: Annotated[str, Query(description="The token of the melding.")],
     file: UploadFile,
     action: Annotated[MelderUploadAttachmentAction, Depends(melder_melding_upload_attachment_action)],
+    produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> AttachmentOutput:
     prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
 
@@ -906,7 +900,7 @@ async def upload_attachment_melder(
     except AttachmentLimitReachedException as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
-    return _hydrate_attachment_output(attachment)
+    return produce_output(attachment)
 
 
 @router.get(
@@ -951,12 +945,16 @@ async def melder_download_attachment(
 async def list_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
+    produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> list[AttachmentOutput]:
-    attachments = await action(melding_id)
+    try:
+        attachments = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     output = []
     for attachment in attachments:
-        output.append(_hydrate_attachment_output(attachment))
+        output.append(produce_output(attachment))
 
     return output
 
@@ -970,6 +968,7 @@ async def melder_list_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MelderListAttachmentsAction, Depends(melder_melding_list_attachments_action)],
+    produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> list[AttachmentOutput]:
     try:
         attachments = await action(melding_id, token)
@@ -980,7 +979,7 @@ async def melder_list_attachments(
 
     output = []
     for attachment in attachments:
-        output.append(_hydrate_attachment_output(attachment))
+        output.append(produce_output(attachment))
 
     return output
 
@@ -1019,6 +1018,7 @@ async def upload_attachment(
     user: Annotated[User, Depends(authenticate_user)],
     file: UploadFile,
     action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action)],
+    produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> AttachmentOutput:
     prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
 
@@ -1042,7 +1042,7 @@ async def upload_attachment(
     except AttachmentLimitReachedException as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
-    return _hydrate_attachment_output(attachment)
+    return produce_output(attachment)
 
 
 @router.patch(
