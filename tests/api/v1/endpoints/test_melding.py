@@ -2589,6 +2589,7 @@ class TestMeldingQuestionAnswer:
             ("ab:cd", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
             (1000, "Input should be a valid string"),
             (10.00, "Input should be a valid string"),
+            (None, "Input should be a valid string"),
         ],
     )
     async def test_create_time_answer_invalid(
@@ -2597,7 +2598,7 @@ class TestMeldingQuestionAnswer:
         client: AsyncClient,
         melding_with_classification: Melding,
         form_with_time_component: Form,
-        time_value: str | int,
+        time_value: str | int | float | None,
         error_message: str,
     ) -> None:
         components = await form_with_time_component.awaitable_attrs.components
@@ -2626,6 +2627,7 @@ class TestMeldingQuestionAnswer:
         detail = body.get("detail")
         assert len(detail) == 1
         assert detail[0].get("msg") == error_message
+        assert detail[0].get("type") == "pattern_mismatch"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
