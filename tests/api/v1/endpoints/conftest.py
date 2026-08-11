@@ -1494,7 +1494,7 @@ async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -
 async def melding_with_attachments_and_users(
     db_session: AsyncSession, melding_with_attachments: Melding, user: User
 ) -> Melding:
-    for attachment in melding_with_attachments.attachments:
+    for attachment in await melding_with_attachments.awaitable_attrs.attachments:
         attachment.user = user
         db_session.add(attachment)
 
