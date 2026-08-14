@@ -33,7 +33,7 @@ dependencies = [
     "opentelemetry-instrumentation-sqlalchemy>=0.55b1,<1.0",
     "pdok-api-client",
     "phonenumbers>=9.0.0,<9.1.0",
-    "pydantic-ai-slim[openai]>=1.63.0,<2.0.0",
+    "pydantic-ai-slim[openai]>=1.63.0,<3.0.0",
     "pydantic-extra-types>=2.10.2,<3.0.0",
     "pydantic-jsonlogic",
     "pydantic-media-type",
