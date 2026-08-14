@@ -5092,8 +5092,8 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         body = response.json()
 
         assert len(attachments) == len(body)
-        assert all(attachment.user.id is not None for attachment in attachments)
-        assert all(attachment.user.email is not None for attachment in attachments)
+        assert all(item.get("user") is not None for item in body)
+        assert all(item["user"]["email"] == "user@example.com" for item in body)
 
     @pytest.mark.anyio
     async def test_list_attachments_with_non_existing_melding(
