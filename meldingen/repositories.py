@@ -411,10 +411,7 @@ class AttachmentRepository(BaseSQLAlchemyRepository[Attachment], BaseAttachmentR
         return Attachment
 
     async def find_by_melding(self, melding_id: int) -> Sequence[Attachment]:
-        statement = (
-            select(Attachment)
-            .where(Attachment.melding_id == melding_id).options(selectinload(Attachment.user))
-        )
+        statement = select(Attachment).where(Attachment.melding_id == melding_id).options(selectinload(Attachment.user))
 
         result = await self._session.execute(statement)
 
