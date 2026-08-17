@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.exceptions import NotFoundException
 from starlette.responses import StreamingResponse
-from starlette.status import HTTP_404_NOT_FOUND
+from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions.attachment import DeleteAttachmentAction, DownloadAttachmentAction
 from meldingen.api.v1 import image_data_response, not_found_response, unauthorized_response
@@ -43,6 +43,7 @@ async def download_attachment(
 @router.delete(
     "/{id}",
     name="attachment:delete",
+    status_code=HTTP_204_NO_CONTENT,
     responses={**unauthorized_response, **not_found_response},
     dependencies=[Depends(authenticate_user)],
 )

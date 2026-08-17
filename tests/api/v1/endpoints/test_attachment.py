@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from meldingen_core.statemachine import MeldingStates
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.models import Attachment, User
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest
@@ -239,7 +239,7 @@ class TestDeleteAttachment(BaseUnauthorizedTest):
             app.url_path_for(self.get_route_name(), id=attachment_id),
         )
 
-        assert response.status_code == HTTP_200_OK
+        assert response.status_code == HTTP_204_NO_CONTENT
 
         async with blob_client:
             assert await blob_client.exists() is False
@@ -277,7 +277,7 @@ class TestDeleteAttachment(BaseUnauthorizedTest):
             app.url_path_for(self.get_route_name(), id=attachment_id),
         )
 
-        assert response.status_code == HTTP_200_OK
+        assert response.status_code == HTTP_204_NO_CONTENT
 
         async with blob_client:
             assert await blob_client.exists() is False
