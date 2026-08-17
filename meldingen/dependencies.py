@@ -66,6 +66,7 @@ from meldingen.actions.attachment import (
     DeleteAttachmentAction,
     DownloadAttachmentAction,
     ListAttachmentsAction,
+    MelderDeleteAttachmentAction,
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
     MelderUploadAttachmentAction,
@@ -1146,12 +1147,19 @@ def melder_melding_list_attachments_action(
     return MelderListAttachmentsAction(token_verifier, attachment_repository)
 
 
-def melding_delete_attachment_action(
+def melder_melding_delete_attachment_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
+) -> MelderDeleteAttachmentAction:
+    return MelderDeleteAttachmentAction(token_verifier, attachment_repository, filesystem)
+
+
+def delete_attachment_action(
+    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> DeleteAttachmentAction:
-    return DeleteAttachmentAction(token_verifier, attachment_repository, filesystem)
+    return DeleteAttachmentAction(attachment_repository, filesystem)
 
 
 def shape_point_factory() -> ShapePointFactory:
