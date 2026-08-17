@@ -4622,6 +4622,11 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         )
 
         assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("id") is not None
+        assert body.get("original_filename") == filename
+        assert body.get("user") is not None
+        assert body.get("user").get("email") == "user@example.com"
 
         await db_session.refresh(melding)
         attachments = await melding.awaitable_attrs.attachments
@@ -5073,6 +5078,22 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         body = response.json()
 
         assert len(attachments) == len(body)
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
+    async def test_list_attachments_with_users(
+        self, app: FastAPI, client: AsyncClient, melding_with_attachments_and_users: Melding, auth_user: None
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_attachments_and_users.id))
+
+        assert response.status_code == HTTP_200_OK
+
+        attachments = await melding_with_attachments_and_users.awaitable_attrs.attachments
+        body = response.json()
+
+        assert len(attachments) == len(body)
+        assert all(item.get("user") is not None for item in body)
+        assert all(item["user"]["email"] == "user@example.com" for item in body)
 
     @pytest.mark.anyio
     async def test_list_attachments_with_non_existing_melding(

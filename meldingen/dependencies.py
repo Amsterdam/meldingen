@@ -190,6 +190,7 @@ from meldingen.schemas.output_factories import (
     AnswerQuestionOutputFactory,
     AssetOutputFactory,
     AssetTypeOutputFactory,
+    AttachmentOutputFactory,
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
     FormComponentValueOutputFactory,
@@ -1255,6 +1256,10 @@ def label_output_factory() -> LabelOutputFactory:
 
 def source_output_factory() -> SourceOutputFactory:
     return SourceOutputFactory()
+
+
+def attachment_output_factory() -> AttachmentOutputFactory:
+    return AttachmentOutputFactory()
 
 
 def melding_output_factory(
