@@ -48,8 +48,8 @@ from starlette.status import (
 
 from meldingen.actions.asset import ListAssetsAction, MelderListAssetsAction
 from meldingen.actions.attachment import (
-    DeleteAttachmentAction,
     ListAttachmentsAction,
+    MelderDeleteAttachmentAction,
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
     MelderUploadAttachmentAction,
@@ -96,6 +96,7 @@ from meldingen.dependencies import (
     asset_output_factory,
     attachment_output_factory,
     form_io_question_component_repository,
+    melder_melding_delete_attachment_action,
     melder_melding_download_attachment_action,
     melder_melding_list_assets_action,
     melder_melding_list_attachments_action,
@@ -116,7 +117,6 @@ from meldingen.dependencies import (
     melding_create_action,
     melding_create_output_factory,
     melding_delete_asset_action,
-    melding_delete_attachment_action,
     melding_get_possible_next_states_action,
     melding_list_action,
     melding_list_assets_action,
@@ -993,7 +993,7 @@ async def delete_attachment(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[DeleteAttachmentAction, Depends(melding_delete_attachment_action)],
+    action: Annotated[MelderDeleteAttachmentAction, Depends(melder_melding_delete_attachment_action)],
 ) -> None:
     try:
         await action(melding_id, attachment_id, token)

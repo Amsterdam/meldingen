@@ -6,10 +6,10 @@ from meldingen_core.exceptions import NotFoundException
 from starlette.responses import StreamingResponse
 from starlette.status import HTTP_404_NOT_FOUND
 
-from meldingen.actions.attachment import DownloadAttachmentAction
+from meldingen.actions.attachment import DeleteAttachmentAction, DownloadAttachmentAction
 from meldingen.api.v1 import image_data_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
-from meldingen.dependencies import download_attachment_action
+from meldingen.dependencies import delete_attachment_action, download_attachment_action
 
 router = APIRouter()
 
@@ -38,3 +38,19 @@ async def download_attachment(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return StreamingResponse(iterator, media_type=media_type)
+
+
+@router.delete(
+    "/{id}",
+    name="attachment:delete",
+    responses={**unauthorized_response, **not_found_response},
+    dependencies=[Depends(authenticate_user)],
+)
+async def delete_attachment(
+    action: Annotated[DeleteAttachmentAction, Depends(delete_attachment_action)],
+    id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
+) -> None:
+    try:
+        await action(id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
