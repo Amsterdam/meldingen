@@ -14,14 +14,35 @@ from pydantic import (
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
-from meldingen.markdown import MarkdownToPlainTextConverter
+from meldingen.markdown import MarkdownLinkSchemeValidator, MarkdownToPlainTextConverter
 from meldingen.models import AnswerTypeEnum, FormIoComponentTypeEnum, FormIoFormDisplayEnum
 from meldingen.schemas.types import DateAnswerObject, FormIOConditional, PhoneNumber, ValueLabelObject
 from meldingen.validators import create_non_match_validator
 
 NOTE_MAX_PLAIN_TEXT_LENGTH = 1000
 
+# The only URL schemes a mail composed in the backoffice may link to. Everything else is refused,
+# which covers both the schemes that execute code in the browser previewing the mail
+# (``javascript:``, ``data:``, ``vbscript:``) and the ones that hand the recipient of a mail from a
+# municipal sender an action they did not ask for.
+MAIL_ALLOWED_LINK_SCHEMES = ("http", "https", "mailto", "tel")
+
 _markdown_to_plain_text = MarkdownToPlainTextConverter()
+_disallowed_mail_links = MarkdownLinkSchemeValidator(MAIL_ALLOWED_LINK_SCHEMES)
+
+
+def validate_mail_link_schemes(value: str) -> str:
+    """Reject a mail body that links to a scheme outside the allowlist.
+
+    Rejecting rather than rewriting is deliberate: the body is markdown composed by a signed in
+    user, so refusing it is a message they can act on, and it cannot leave a link behind that a
+    rewrite of the markdown source happened not to recognise. The rendered preview of this body is
+    shown in the backoffice, where an ``href`` is a live link in a browser rather than in a mail
+    client, so this validation runs before the text reaches the renderer at all.
+    """
+    if _disallowed_mail_links(value):
+        raise ValueError(f"Mail text may only link to: {', '.join(MAIL_ALLOWED_LINK_SCHEMES)}")
+    return value
 
 
 def validate_note_plain_text_length(value: str) -> str:
@@ -273,11 +294,11 @@ AnswerInputUnion = Annotated[
 class MailPreviewInput(BaseModel):
     title: str
     preview_text: str
-    body_text: str
+    body_text: Annotated[str, AfterValidator(validate_mail_link_schemes)]
 
 
 class CompleteMeldingInput(BaseModel):
-    mail_body: str
+    mail_body: Annotated[str, AfterValidator(validate_mail_link_schemes)]
 
 
 class AssetTypeInput(BaseModel):
