@@ -2,7 +2,13 @@ import pytest
 from pydantic import ValidationError
 
 from meldingen.models import AnswerTypeEnum
-from meldingen.schemas.input import NoteInput, TimeAnswerInput, _markdown_to_plain_text
+from meldingen.schemas.input import (
+    CompleteMeldingInput,
+    MailPreviewInput,
+    NoteInput,
+    TimeAnswerInput,
+    _markdown_to_plain_text,
+)
 
 
 def test_note_input_strips_whitespace() -> None:
@@ -65,6 +71,32 @@ def test_note_input_rejects_visible_text_over_limit_even_with_line_breaks() -> N
     text = ("a" * 500) + "\n\n" + ("a" * 501)
     with pytest.raises(ValidationError):
         NoteInput(text=text)
+
+
+MAIL_BODY_WITH_DISALLOWED_LINK = "Wij hebben uw melding afgehandeld. [Klik hier](javascript:alert(1))"
+
+
+def test_mail_preview_input_accepts_allowlisted_links() -> None:
+    body = "Bel [14 020](tel:14020) of kijk op [amsterdam.nl](https://amsterdam.nl)."
+
+    assert MailPreviewInput(title="Titel", preview_text="Preview", body_text=body).body_text == body
+
+
+def test_mail_preview_input_rejects_link_outside_the_allowlist() -> None:
+    # The preview is rendered in the backoffice, where this href would be a live link in a browser.
+    with pytest.raises(ValidationError):
+        MailPreviewInput(title="Titel", preview_text="Preview", body_text=MAIL_BODY_WITH_DISALLOWED_LINK)
+
+
+def test_complete_melding_input_accepts_allowlisted_links() -> None:
+    body = "Wij hebben uw melding afgehandeld. Vragen? Bel [14 020](tel:14020)."
+
+    assert CompleteMeldingInput(mail_body=body).mail_body == body
+
+
+def test_complete_melding_input_rejects_link_outside_the_allowlist() -> None:
+    with pytest.raises(ValidationError):
+        CompleteMeldingInput(mail_body=MAIL_BODY_WITH_DISALLOWED_LINK)
 
 
 @pytest.mark.parametrize(

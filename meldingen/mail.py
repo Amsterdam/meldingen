@@ -7,6 +7,7 @@ from amsterdam_mail_service_client.models.send_request import SendRequest
 from fastapi import BackgroundTasks
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 
+from meldingen.markdown import escape_markdown_link_syntax
 from meldingen.models import Melding
 
 
@@ -75,7 +76,9 @@ class SendConfirmationMailTask:
 
         title = self._title_template
         preview_text = self._preview_template.format(melding.public_id)
-        body_text = self._body_template.format(melding.text, melding.public_id)
+        # The template is markdown and the reporter's text is not: escaping it keeps the reporter
+        # from adding markup, and links in particular, to a mail sent from a municipal sender.
+        body_text = self._body_template.format(escape_markdown_link_syntax(melding.text), melding.public_id)
         subject = self._subject_template.format(melding.public_id)
 
         await self._send_mail(title, preview_text, body_text, self._from, melding.email, subject)
