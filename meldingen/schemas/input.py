@@ -20,6 +20,7 @@ from meldingen.schemas.types import DateAnswerObject, FormIOConditional, PhoneNu
 from meldingen.validators import create_non_match_validator
 
 NOTE_MAX_PLAIN_TEXT_LENGTH = 1000
+RECLASSIFICATION_REASON_MAX_LENGTH = 1000
 
 _markdown_to_plain_text = MarkdownToPlainTextConverter()
 
@@ -82,6 +83,19 @@ class MeldingUpdateInput(BaseModel):
     urgency: Literal[-1, 0, 1] | None = Field(default=None)
     label_ids: list[int] | None = Field(default=None)
     source_id: int | None = Field(default=None)
+
+
+class MeldingReclassificationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    classification_id: int = Field(ge=1)
+    # Plain text, unlike NoteInput: the reason is a short justification typed into a plain field,
+    # not a document composed in the rich text editor. So the limit counts the characters as sent
+    # rather than the characters a markdown source renders to.
+    reason: Annotated[
+        str,
+        StringConstraints(min_length=1, max_length=RECLASSIFICATION_REASON_MAX_LENGTH, strip_whitespace=True),
+    ]
 
 
 class MeldingContactInput(BaseModel):

@@ -228,6 +228,31 @@ class Reopen(BaseTransition[Melding]):
         return MeldingStates.REOPENED
 
 
+class Reclassify(BaseTransition[Melding]):
+    """Moves a melding back to "gemeld" after a Behandelaar assigned it a different classification.
+
+    Reclassification is a backoffice action, so a melding that is still being filled in by the
+    melder cannot be reclassified: it would skip the remaining steps of the melder's flow. A
+    completed or canceled melding is closed and is excluded for the same reason it cannot be
+    submitted again.
+    """
+
+    @property
+    def from_states(self) -> list[str]:
+        return [
+            MeldingStates.SUBMITTED,
+            MeldingStates.PROCESSING_REQUESTED,
+            MeldingStates.PROCESSING,
+            MeldingStates.PLANNED,
+            MeldingStates.REOPEN_REQUESTED,
+            MeldingStates.REOPENED,
+        ]
+
+    @property
+    def to_state(self) -> str:
+        return MeldingStates.SUBMITTED
+
+
 class Cancel(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
