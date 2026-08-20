@@ -706,6 +706,7 @@ class NoteOutputFactory:
             text=note.text,
             melding_id=note.melding_id,
             user_id=note.user_id,
+            classification_id=note.classification_id,
             created_at=note.created_at,
             updated_at=note.updated_at,
         )
@@ -725,6 +726,7 @@ class NoteRetrieveOutputFactory:
                 created_at=user.created_at,
                 updated_at=user.updated_at,
             ),
+            classification_id=note.classification_id,
             created_at=note.created_at,
             updated_at=note.updated_at,
         )
