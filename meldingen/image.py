@@ -268,16 +268,13 @@ class Ingestor(BaseIngestor[Attachment]):
 
     async def _strip_metadata_from_image(self, image_path: str) -> None:
         """Strips the metadata from the uploaded image. This happens before the response is sent, so
-        the image can never be downloaded with its metadata still attached. When stripping fails we
-        remove the image altogether, as we don't want to hold on to an image we can't clean up."""
+        the image is normally never downloadable with its metadata still attached. A failure is
+        logged but not propagated: the upload succeeds and the image is kept as it was uploaded,
+        metadata included."""
         try:
             await self._strip_metadata(image_path)
         except Exception:
-            logger.exception("Failed to strip metadata from '%s', deleting it!", image_path)
-
-            await self._filesystem.delete(image_path)
-
-            raise
+            logger.exception("Failed to strip metadata from '%s'!", image_path)
 
     async def __call__(self, attachment: Attachment, data: AsyncIterator[bytes]) -> None:
         path = f"{self._base_directory}/{str(uuid4()).replace("-", "/")}/"

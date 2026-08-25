@@ -363,17 +363,19 @@ async def test_ingestor_skips_background_tasks_for_non_image() -> None:
 
 
 @pytest.mark.anyio
-async def test_ingestor_deletes_image_when_stripping_metadata_fails() -> None:
+async def test_ingestor_keeps_image_when_stripping_metadata_fails() -> None:
     filesystem = AsyncMock(Filesystem)
     task_manager = Mock(BackgroundTasks)
+    optimizer_task = Mock(ImageOptimizerTask)
+    thumbnail_task = Mock(ThumbnailGeneratorTask)
     metadata_stripper = AsyncMock(BaseMetadataStripper, side_effect=MetadataStripperException)
     attachment = Attachment(original_filename="image.jpg", original_media_type="image/jpeg", melding=Mock(Melding))
     ingest = Ingestor(
         AsyncMock(BaseMalwareScanner),
         filesystem,
         task_manager,
-        Mock(ImageOptimizerTask),
-        Mock(ThumbnailGeneratorTask),
+        optimizer_task,
+        thumbnail_task,
         metadata_stripper,
         "/tmp",
     )
@@ -381,8 +383,10 @@ async def test_ingestor_deletes_image_when_stripping_metadata_fails() -> None:
     async def iterate() -> AsyncIterator[bytes]:
         yield b"Hello"
 
-    with pytest.raises(MetadataStripperException):
-        await ingest(attachment, iterate())
+    # The failure is logged, not propagated, so the upload succeeds
+    await ingest(attachment, iterate())
 
-    filesystem.delete.assert_awaited_once_with(attachment.file_path)
-    task_manager.add_task.assert_not_called()
+    # The image is kept as it was uploaded, metadata included
+    filesystem.delete.assert_not_called()
+    task_manager.add_task.assert_any_call(optimizer_task, attachment=attachment)
+    task_manager.add_task.assert_any_call(thumbnail_task, attachment=attachment)
