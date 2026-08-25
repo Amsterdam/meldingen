@@ -8,6 +8,7 @@ from meldingen_core.actions.melding import MeldingAddContactInfoAction as BaseMe
 from meldingen_core.actions.melding import MeldingAnswerDeleteAction as BaseMeldingAnswerDeleteAction
 from meldingen_core.actions.melding import MeldingDeleteAssetAction as BaseMeldingDeleteAssetAction
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
+from meldingen_core.actions.melding import MeldingReclassifyAction as BaseMeldingReclassifyAction
 from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
 from meldingen_core.actions.melding import MeldingSubmitAction as BaseMeldingSubmitAction
 from meldingen_core.actions.melding import MeldingSubmitActionMelder as BaseMeldingSubmitActionMelder
@@ -15,12 +16,12 @@ from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.repositories import BaseMeldingRepository
-from meldingen_core.statemachine import MeldingBackofficeStates
+from meldingen_core.statemachine import MeldingBackofficeStates, MeldingTransitions
 from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
-from meldingen.models import Answer, Asset, AssetType, Melding
+from meldingen.models import Answer, Asset, AssetType, Classification, Melding, Note, User
 from meldingen.repositories import AttributeNotFoundException
 from meldingen.schemas.types import Address, GeoJson
 from meldingen.statemachine import MeldingStateMachine
@@ -116,6 +117,15 @@ class AddLocationToMeldingAction:
         return melding
 
 
+class MeldingReclassifyAction(BaseMeldingReclassifyAction[Melding, Classification, Note, User]):
+    """The classification repository hides soft-deleted classifications from ``retrieve``, so a
+    melding can not be moved to a classification that is no longer offered.
+
+    Both repositories share the request's session, which is what makes the two saves the action
+    performs land in one transaction, and makes saving the melding last read back the ``updated_at``
+    the database writes itself."""
+
+
 class MeldingGetPossibleNextStatesAction:
     _state_machine: MeldingStateMachine
     _melding_repository: BaseMeldingRepository[Melding]
@@ -135,5 +145,9 @@ class MeldingGetPossibleNextStatesAction:
         return [
             transition.to_state
             for transition_name, transition in self._state_machine._state_machine._transitions.items()
-            if melding_state in transition.from_states and melding_state in MeldingBackofficeStates
+            # Reclassification transitions the melding too, but it has its own endpoint and is not
+            # a status offered in the list of states the melding can be moved to next.
+            if transition_name != MeldingTransitions.RECLASSIFY
+            and melding_state in transition.from_states
+            and melding_state in MeldingBackofficeStates
         ]

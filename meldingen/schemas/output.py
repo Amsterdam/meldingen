@@ -62,6 +62,9 @@ class NoteOutput(BaseOutputModel):
     text: str
     melding_id: int
     user_id: int
+    # Set on the note that records why a melding was reclassified, pointing at the classification
+    # it was moved to. None for a note a Behandelaar wrote by hand.
+    classification_id: int | None = Field(default=None)
 
 
 class MeldingOutput(BaseOutputModel):
@@ -326,6 +329,8 @@ class NoteRetrieveOutput(BaseOutputModel):
     text: str
     melding_id: int
     user: UserOutput
+    # See NoteOutput.classification_id.
+    classification_id: int | None = Field(default=None)
 
 
 class AssetOutput(BaseOutputModel):

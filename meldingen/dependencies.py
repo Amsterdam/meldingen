@@ -103,6 +103,7 @@ from meldingen.actions.melding import (
     MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
+    MeldingReclassifyAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
@@ -237,6 +238,7 @@ from meldingen.statemachine import (
     MpFsmMeldingStateMachine,
     Plan,
     Process,
+    Reclassify,
     Reopen,
     RequestProcessing,
     RequestReopen,
@@ -490,6 +492,7 @@ def melding_state_machine(
                 MeldingTransitions.REQUEST_REOPEN: RequestReopen(),
                 MeldingTransitions.REOPEN: Reopen(),
                 MeldingTransitions.COMPLETE: Complete(),
+                MeldingTransitions.RECLASSIFY: Reclassify(),
             }
         )
     )
@@ -793,6 +796,16 @@ def melding_submit_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingSubmitAction:
     return MeldingSubmitAction(state_machine, repository)
+
+
+def melding_reclassify_action(
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+    note_repository: Annotated[NoteRepository, Depends(note_repository)],
+    note_factory: Annotated[NoteFactory, Depends(note_factory)],
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+) -> MeldingReclassifyAction:
+    return MeldingReclassifyAction(repository, classification_repository, note_repository, note_factory, state_machine)
 
 
 def send_completed_mail_task(mailer: Annotated[BaseMailer, Depends(mailer)]) -> SendCompletedMailTask:

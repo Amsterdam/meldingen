@@ -65,6 +65,7 @@ from meldingen.actions.melding import (
     MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
+    MeldingReclassifyAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
@@ -127,6 +128,7 @@ from meldingen.dependencies import (
     melding_plan_action,
     melding_primary_form_validator,
     melding_process_action,
+    melding_reclassify_action,
     melding_reopen_action,
     melding_repository,
     melding_request_processing_action,
@@ -170,6 +172,7 @@ from meldingen.schemas.input import (
     MeldingAssetInput,
     MeldingContactInput,
     MeldingInput,
+    MeldingReclassificationInput,
     MeldingUpdateInput,
     NoteInput,
     NoteUpdateInput,
@@ -719,6 +722,50 @@ async def cancel_melding(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
+
+    return await produce_output(melding)
+
+
+@router.post(
+    "/{melding_id}/reclassification",
+    name="melding:reclassification",
+    status_code=HTTP_200_OK,
+    responses={
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+        **{
+            HTTP_400_BAD_REQUEST: {
+                "description": "The melding is in a state that may not be reclassified.",
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Melding may not be reclassified from current state"},
+                    }
+                },
+            }
+        },
+    },
+)
+async def reclassify_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    reclassification_input: MeldingReclassificationInput,
+    user: Annotated[User, Depends(authenticate_user)],
+    action: Annotated[MeldingReclassifyAction, Depends(melding_reclassify_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(
+            melding_id,
+            reclassification_input.classification_id,
+            reclassification_input.reason,
+            user,
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e) or None) from e
+    except WrongStateException as e:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST, detail="Melding may not be reclassified from current state"
+        ) from e
 
     return await produce_output(melding)
 
