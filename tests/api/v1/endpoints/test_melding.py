@@ -18,7 +18,7 @@ from meldingen_core.statemachine import (
     MeldingStates,
     get_all_backoffice_states,
 )
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import (
     HTTP_200_OK,
@@ -1510,6 +1510,176 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         assert response.status_code == HTTP_404_NOT_FOUND
         body = response.json()
         assert body.get("detail") == "Failed to find source with id 999"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_state"], [(state,) for state in MeldingFormStates], indirect=True)
+    async def test_update_melding_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_user: None,
+        melding: Melding,
+        classification: Classification,
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"classification_id": classification.id},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("classification", {}).get("id") == classification.id
+        assert body.get("state") == MeldingStates.CLASSIFIED
+
+        await db_session.refresh(melding)
+        assert melding.classification_id == classification.id
+        assert melding.state == MeldingStates.CLASSIFIED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_state"], [(MeldingStates.LOCATION_SUBMITTED,)], indirect=True)
+    async def test_update_melding_classification_discards_answers_and_assets(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_user: None,
+        melding_with_classification_with_asset_type: Melding,
+        form: Form,
+        classification: Classification,
+    ) -> None:
+        """The answers belong to the form of the old classification and the assets to its asset
+        type, so both go when the classification changes, just like in the melder's flow."""
+        melding = melding_with_classification_with_asset_type
+        component = (await form.awaitable_attrs.components)[0]
+        question = await component.awaitable_attrs.question
+        db_session.add(TextAnswer(question=question, melding=melding, text="Het antwoord van de melder"))
+        await db_session.commit()
+
+        assert len(await melding.awaitable_attrs.assets) == 1
+
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"classification_id": classification.id},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        assert response.json().get("classification", {}).get("id") == classification.id
+
+        await db_session.refresh(melding)
+        assert len(await melding.awaitable_attrs.assets) == 0
+        assert await db_session.scalar(select(func.count(Answer.id)).where(Answer.melding_id == melding.id)) == 0
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_state"], [(MeldingStates.LOCATION_SUBMITTED,)], indirect=True)
+    async def test_update_melding_with_unchanged_classification_keeps_answers_and_state(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_user: None,
+        melding_with_classification: Melding,
+        classification: Classification,
+        form: Form,
+    ) -> None:
+        """Sending the classification the melding already has is not a reclassification: it neither
+        throws the melder's input away nor sends the melding back to the classified state."""
+        melding = melding_with_classification
+        component = (await form.awaitable_attrs.components)[0]
+        question = await component.awaitable_attrs.question
+        db_session.add(TextAnswer(question=question, melding=melding, text="Het antwoord van de melder"))
+        await db_session.commit()
+
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"classification_id": classification.id, "urgency": 1},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body.get("state") == MeldingStates.LOCATION_SUBMITTED
+        assert body.get("urgency") == 1
+
+        await db_session.refresh(melding)
+        assert melding.state == MeldingStates.LOCATION_SUBMITTED
+        assert await db_session.scalar(select(func.count(Answer.id)).where(Answer.melding_id == melding.id)) == 1
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_state"], [(state,) for state in get_all_backoffice_states()], indirect=True)
+    async def test_update_melding_classification_from_backoffice_state_returns_400(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_user: None,
+        melding: Melding,
+        classification: Classification,
+        melding_state: str,
+    ) -> None:
+        """This endpoint may not be used to get around the reclassification endpoint, which records
+        a reason and keeps what the melder supplied."""
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"classification_id": classification.id, "urgency": 1},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response.json().get("detail") == (
+            "Melding may not be classified from current state, "
+            f"use POST /melding/{melding.id}/reclassification instead"
+        )
+
+        # Refused before anything is written: not even the urgency that came with it is applied.
+        await db_session.refresh(melding)
+        assert melding.classification_id is None
+        assert melding.state == melding_state
+        assert melding.urgency == 0
+
+    @pytest.mark.anyio
+    async def test_update_melding_classification_with_non_existing_classification(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"classification_id": 999},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+        assert response.json().get("detail") == "Failed to find classification with id 999"
+
+    @pytest.mark.anyio
+    async def test_update_melding_classification_with_deleted_classification(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_user: None,
+        melding: Melding,
+        classification: Classification,
+    ) -> None:
+        """A soft-deleted classification is no longer offered, so a melding cannot be moved to it."""
+        classification.deleted_at = func.now()
+        db_session.add(classification)
+        await db_session.commit()
+
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"classification_id": classification.id},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+
+    @pytest.mark.anyio
+    async def test_update_melding_classification_invalid_value(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
+            json={"classification_id": 0},
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.json().get("detail")[0].get("loc") == ["body", "classification_id"]
 
 
 class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
