@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     imgproxy_key: str
     imgproxy_salt: str
     imgproxy_base_url: str
+    # Quality imgproxy re-encodes uploaded images with when stripping their metadata. Higher than
+    # the imgproxy default of 80, since this replaces the original the backoffice works with.
+    imgproxy_metadata_strip_quality: int = 90
 
     # azure storage blobs
     azure_storage_container: str
