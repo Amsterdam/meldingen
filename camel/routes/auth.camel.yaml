@@ -1,0 +1,67 @@
+- route:
+    id: request-oidc-token
+    from:
+      uri: direct:request-oidc-token
+      steps:
+        - setProperty:
+            name: oidcGrantType
+            constant: "{{env:CAMEL_OIDC_GRANT_TYPE}}"
+        - setHeader:
+            name: CamelHttpMethod
+            constant: POST
+        - setHeader:
+            name: Content-Type
+            constant: application/x-www-form-urlencoded
+        - setHeader:
+            name: Accept
+            constant: application/json
+        - choice:
+            when:
+              - simple: "${exchangeProperty.oidcGrantType} == 'client_credentials'"
+                steps:
+                  - setBody:
+                      simple: "grant_type=client_credentials&client_id={{env:CAMEL_OIDC_CLIENT_ID}}&client_secret={{env:CAMEL_OIDC_CLIENT_SECRET}}&scope={{env:CAMEL_OIDC_SCOPE_ENCODED}}"
+            otherwise:
+              steps:
+                - setBody:
+                    simple: "grant_type=password&client_id={{env:CAMEL_OIDC_CLIENT_ID}}&username={{env:CAMEL_OIDC_USERNAME}}&password={{env:CAMEL_OIDC_PASSWORD}}&scope={{env:CAMEL_OIDC_SCOPE_ENCODED}}"
+        - to:
+            uri: "{{env:CAMEL_OIDC_TOKEN_URL}}"
+            parameters:
+              bridgeEndpoint: true
+              throwExceptionOnFailure: false
+
+- route:
+    id: camel-bearer-token-endpoint
+    from:
+      uri: undertow:http://0.0.0.0:{{env:CAMEL_HTTP_PORT}}/bearer-token
+      parameters:
+        httpMethodRestrict: POST
+      steps:
+        - to:
+            uri: direct:request-oidc-token
+        - setHeader:
+            name: Cache-Control
+            constant: no-store
+        - setHeader:
+            name: Pragma
+            constant: no-cache
+        - choice:
+            when:
+              - simple: "${header.CamelHttpResponseCode} >= 400"
+                steps:
+                  - log:
+                      message: "Token request failed with status=${header.CamelHttpResponseCode} using grant_type=${exchangeProperty.oidcGrantType}"
+                      loggingLevel: WARN
+            otherwise:
+              steps:
+                - unmarshal:
+                    json: {}
+                - setHeader:
+                    name: Content-Type
+                    constant: text/plain
+                - setBody:
+                    simple: "Bearer ${body[access_token]}"
+                - log:
+                    message: "Issued bearer token using grant_type=${exchangeProperty.oidcGrantType}"
+                    loggingLevel: INFO
