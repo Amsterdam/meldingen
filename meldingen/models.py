@@ -623,6 +623,12 @@ class Note(AsyncAttrs, BaseDBModel, BaseNote):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), init=False)
     user: Mapped[User] = relationship()
 
+    # Set on the note that records why a melding was reclassified: it points at the classification
+    # the melding was moved to, so the reason is shown next to the classification it argues for.
+    # None for a note a Behandelaar wrote by hand.
+    classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), init=False, default=None)
+    classification: Mapped[Classification | None] = relationship(default=None)
+
 
 class LlmEvalRunStatus(enum.StrEnum):
     pending = "pending"

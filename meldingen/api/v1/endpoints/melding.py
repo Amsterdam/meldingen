@@ -48,8 +48,8 @@ from starlette.status import (
 
 from meldingen.actions.asset import ListAssetsAction, MelderListAssetsAction
 from meldingen.actions.attachment import (
-    DeleteAttachmentAction,
     ListAttachmentsAction,
+    MelderDeleteAttachmentAction,
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
     MelderUploadAttachmentAction,
@@ -65,6 +65,7 @@ from meldingen.actions.melding import (
     MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
+    MeldingReclassifyAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
@@ -94,7 +95,9 @@ from meldingen.authentication import authenticate_user, verify_melding_token
 from meldingen.dependencies import (
     answer_output_factory,
     asset_output_factory,
+    attachment_output_factory,
     form_io_question_component_repository,
+    melder_melding_delete_attachment_action,
     melder_melding_download_attachment_action,
     melder_melding_list_assets_action,
     melder_melding_list_attachments_action,
@@ -115,7 +118,6 @@ from meldingen.dependencies import (
     melding_create_action,
     melding_create_output_factory,
     melding_delete_asset_action,
-    melding_delete_attachment_action,
     melding_get_possible_next_states_action,
     melding_list_action,
     melding_list_assets_action,
@@ -126,6 +128,7 @@ from meldingen.dependencies import (
     melding_plan_action,
     melding_primary_form_validator,
     melding_process_action,
+    melding_reclassify_action,
     melding_reopen_action,
     melding_repository,
     melding_request_processing_action,
@@ -169,6 +172,7 @@ from meldingen.schemas.input import (
     MeldingAssetInput,
     MeldingContactInput,
     MeldingInput,
+    MeldingReclassificationInput,
     MeldingUpdateInput,
     NoteInput,
     NoteUpdateInput,
@@ -189,6 +193,7 @@ from meldingen.schemas.output_factories import (
     AnswerListOutputFactory,
     AnswerOutputFactory,
     AssetOutputFactory,
+    AttachmentOutputFactory,
     MeldingCreateOutputFactory,
     MeldingOutputFactory,
     MeldingUpdateOutputFactory,
@@ -721,6 +726,50 @@ async def cancel_melding(
     return await produce_output(melding)
 
 
+@router.post(
+    "/{melding_id}/reclassification",
+    name="melding:reclassification",
+    status_code=HTTP_200_OK,
+    responses={
+        **unauthorized_response,
+        **not_found_response,
+        **default_response,
+        **{
+            HTTP_400_BAD_REQUEST: {
+                "description": "The melding is in a state that may not be reclassified.",
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Melding may not be reclassified from current state"},
+                    }
+                },
+            }
+        },
+    },
+)
+async def reclassify_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    reclassification_input: MeldingReclassificationInput,
+    user: Annotated[User, Depends(authenticate_user)],
+    action: Annotated[MeldingReclassifyAction, Depends(melding_reclassify_action)],
+    produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
+) -> MeldingOutput:
+    try:
+        melding = await action(
+            melding_id,
+            reclassification_input.classification_id,
+            reclassification_input.reason,
+            user,
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e) or None) from e
+    except WrongStateException as e:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST, detail="Melding may not be reclassified from current state"
+        ) from e
+
+    return await produce_output(melding)
+
+
 async def resolve_answer_type_through_question_id(
     request: Request,
     question_id: int,
@@ -857,15 +906,6 @@ async def delete_answer(
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
 
-def _hydrate_attachment_output(attachment: Attachment) -> AttachmentOutput:
-    return AttachmentOutput(
-        id=attachment.id,
-        original_filename=attachment.original_filename,
-        created_at=attachment.created_at,
-        updated_at=attachment.updated_at,
-    )
-
-
 @router.post(
     "/{melding_id}/attachment/melder",
     name="melding:attachment_melder",
@@ -881,6 +921,7 @@ async def upload_attachment_melder(
     token: Annotated[str, Query(description="The token of the melding.")],
     file: UploadFile,
     action: Annotated[MelderUploadAttachmentAction, Depends(melder_melding_upload_attachment_action)],
+    produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> AttachmentOutput:
     prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
 
@@ -906,7 +947,7 @@ async def upload_attachment_melder(
     except AttachmentLimitReachedException as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
-    return _hydrate_attachment_output(attachment)
+    return produce_output(attachment)
 
 
 @router.get(
@@ -951,12 +992,16 @@ async def melder_download_attachment(
 async def list_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
+    produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> list[AttachmentOutput]:
-    attachments = await action(melding_id)
+    try:
+        attachments = await action(melding_id)
+    except NotFoundException:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     output = []
     for attachment in attachments:
-        output.append(_hydrate_attachment_output(attachment))
+        output.append(produce_output(attachment))
 
     return output
 
@@ -970,6 +1015,7 @@ async def melder_list_attachments(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MelderListAttachmentsAction, Depends(melder_melding_list_attachments_action)],
+    produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> list[AttachmentOutput]:
     try:
         attachments = await action(melding_id, token)
@@ -980,7 +1026,7 @@ async def melder_list_attachments(
 
     output = []
     for attachment in attachments:
-        output.append(_hydrate_attachment_output(attachment))
+        output.append(produce_output(attachment))
 
     return output
 
@@ -994,7 +1040,7 @@ async def delete_attachment(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[DeleteAttachmentAction, Depends(melding_delete_attachment_action)],
+    action: Annotated[MelderDeleteAttachmentAction, Depends(melder_melding_delete_attachment_action)],
 ) -> None:
     try:
         await action(melding_id, attachment_id, token)
@@ -1019,6 +1065,7 @@ async def upload_attachment(
     user: Annotated[User, Depends(authenticate_user)],
     file: UploadFile,
     action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action)],
+    produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> AttachmentOutput:
     prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
 
@@ -1042,7 +1089,7 @@ async def upload_attachment(
     except AttachmentLimitReachedException as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
-    return _hydrate_attachment_output(attachment)
+    return produce_output(attachment)
 
 
 @router.patch(

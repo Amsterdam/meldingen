@@ -66,6 +66,7 @@ from meldingen.actions.attachment import (
     DeleteAttachmentAction,
     DownloadAttachmentAction,
     ListAttachmentsAction,
+    MelderDeleteAttachmentAction,
     MelderDownloadAttachmentAction,
     MelderListAttachmentsAction,
     MelderUploadAttachmentAction,
@@ -102,6 +103,7 @@ from meldingen.actions.melding import (
     MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
+    MeldingReclassifyAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
@@ -193,6 +195,7 @@ from meldingen.schemas.output_factories import (
     AnswerQuestionOutputFactory,
     AssetOutputFactory,
     AssetTypeOutputFactory,
+    AttachmentOutputFactory,
     FormCheckboxComponentOutputFactory,
     FormComponentOutputFactory,
     FormComponentValueOutputFactory,
@@ -238,6 +241,7 @@ from meldingen.statemachine import (
     MpFsmMeldingStateMachine,
     Plan,
     Process,
+    Reclassify,
     Reopen,
     RequestProcessing,
     RequestReopen,
@@ -491,6 +495,7 @@ def melding_state_machine(
                 MeldingTransitions.REQUEST_REOPEN: RequestReopen(),
                 MeldingTransitions.REOPEN: Reopen(),
                 MeldingTransitions.COMPLETE: Complete(),
+                MeldingTransitions.RECLASSIFY: Reclassify(),
             }
         )
     )
@@ -794,6 +799,16 @@ def melding_submit_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingSubmitAction:
     return MeldingSubmitAction(state_machine, repository)
+
+
+def melding_reclassify_action(
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+    note_repository: Annotated[NoteRepository, Depends(note_repository)],
+    note_factory: Annotated[NoteFactory, Depends(note_factory)],
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+) -> MeldingReclassifyAction:
+    return MeldingReclassifyAction(repository, classification_repository, note_repository, note_factory, state_machine)
 
 
 def send_completed_mail_task(mailer: Annotated[BaseMailer, Depends(mailer)]) -> SendCompletedMailTask:
@@ -1166,12 +1181,19 @@ def melder_melding_list_attachments_action(
     return MelderListAttachmentsAction(token_verifier, attachment_repository)
 
 
-def melding_delete_attachment_action(
+def melder_melding_delete_attachment_action(
     token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
+) -> MelderDeleteAttachmentAction:
+    return MelderDeleteAttachmentAction(token_verifier, attachment_repository, filesystem)
+
+
+def delete_attachment_action(
+    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+    filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> DeleteAttachmentAction:
-    return DeleteAttachmentAction(token_verifier, attachment_repository, filesystem)
+    return DeleteAttachmentAction(attachment_repository, filesystem)
 
 
 def shape_point_factory() -> ShapePointFactory:
@@ -1276,6 +1298,10 @@ def label_output_factory() -> LabelOutputFactory:
 
 def source_output_factory() -> SourceOutputFactory:
     return SourceOutputFactory()
+
+
+def attachment_output_factory() -> AttachmentOutputFactory:
+    return AttachmentOutputFactory()
 
 
 def melding_output_factory(

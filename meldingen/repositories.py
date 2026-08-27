@@ -93,18 +93,19 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
 
     async def list(
         self,
-        *,
         limit: int | None = None,
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
         filters: NameListFilters | None = None,
+        apply_visibility_filters: bool = True,
     ) -> Sequence[T]:
         _type = self.get_model_type()
         statement = select(_type)
 
-        for visibility_filter in self._visibility_filters():
-            statement = statement.where(visibility_filter)
+        if apply_visibility_filters:
+            for visibility_filter in self._visibility_filters():
+                statement = statement.where(visibility_filter)
 
         if filters is not None and filters.name_contains is not None:
             statement = statement.where(_type.name.ilike(f"%{filters.name_contains}%"))
@@ -139,12 +140,17 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
         await self._session.delete(db_item)
         await self._session.commit()
 
-    async def count(self, filters: List[ColumnExpressionArgument[bool]] | None = None) -> int:
+    async def count(
+        self,
+        filters: List[ColumnExpressionArgument[bool]] | None = None,
+        apply_visibility_filters: bool = True,
+    ) -> int:
         _type = self.get_model_type()
         statement = select(func.count(_type.id))
 
-        for visibility_filter in self._visibility_filters():
-            statement = statement.where(visibility_filter)
+        if apply_visibility_filters:
+            for visibility_filter in self._visibility_filters():
+                statement = statement.where(visibility_filter)
 
         if filters is not None:
             for filter_condition in filters:
@@ -405,7 +411,7 @@ class AttachmentRepository(BaseSQLAlchemyRepository[Attachment], BaseAttachmentR
         return Attachment
 
     async def find_by_melding(self, melding_id: int) -> Sequence[Attachment]:
-        statement = select(Attachment).where(Attachment.melding_id == melding_id)
+        statement = select(Attachment).where(Attachment.melding_id == melding_id).options(selectinload(Attachment.user))
 
         result = await self._session.execute(statement)
 

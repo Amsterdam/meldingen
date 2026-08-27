@@ -119,12 +119,12 @@ class ContentRangeHeaderAdder(Generic[T]):
         response: Response,
         pagination: Annotated[PaginationParams, Depends(pagination_params)],
         filters: List[ColumnExpressionArgument[bool]] | None = None,
+        apply_visibility_filters: bool = True,
     ) -> int:
         limit = pagination["limit"] or 0
         offset = pagination["offset"] or 0
+        total = await self._repository.count(filters, apply_visibility_filters=apply_visibility_filters)
 
-        response.headers["Content-Range"] = (
-            f"{self._identifier} {offset}-{limit - 1 + offset}/{await self._repository.count(filters)}"
-        )
+        response.headers["Content-Range"] = f"{self._identifier} {offset}-{limit - 1 + offset}/{total}"
 
         return 0

@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import NameListFilters
 from sqlalchemy import ColumnExpressionArgument
@@ -100,23 +100,36 @@ async def list_classifications(
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[ClassificationListAction, Depends(classification_list_action)],
     filter_params: Annotated[FilterParams, Depends(filter_param)],
+    include_deleted: Annotated[
+        bool,
+        Query(
+            description="Include soft-deleted classifications in the list result when true.",
+        ),
+    ] = False,
 ) -> list[ClassificationOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
     q = filter_params.q
+
+    content_range_filters: list[ColumnExpressionArgument[bool]] | None = (
+        [Classification.name.ilike(f"%{q}%")] if q is not None else None
+    )
+    name_filters = NameListFilters(name_contains=q) if q is not None else None
 
     classifications = await action(
         limit=limit,
         offset=offset,
         sort_attribute_name=sort.get_attribute_name(),
         sort_direction=sort.get_direction(),
-        filters=NameListFilters(name_contains=q) if q is not None else None,
+        filters=name_filters,
+        apply_visibility_filters=not include_deleted,
     )
-
-    content_range_filters: list[ColumnExpressionArgument[bool]] | None = (
-        [Classification.name.ilike(f"%{q}%")] if q is not None else None
+    await content_range_header_adder(
+        response,
+        pagination,
+        content_range_filters,
+        apply_visibility_filters=not include_deleted,
     )
-    await content_range_header_adder(response, pagination, content_range_filters)
 
     return [await _hydrate_output(classification) for classification in classifications]
 
