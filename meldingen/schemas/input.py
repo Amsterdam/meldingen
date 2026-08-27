@@ -83,6 +83,9 @@ class MeldingUpdateInput(BaseModel):
     urgency: Literal[-1, 0, 1] | None = Field(default=None)
     label_ids: list[int] | None = Field(default=None)
     source_id: int | None = Field(default=None)
+    # Only accepted while the melding is still in the melder's flow; once it reaches the backoffice
+    # the classification may only be changed through the reclassification endpoint.
+    classification_id: int | None = Field(default=None, ge=1)
 
 
 class MeldingReclassificationInput(BaseModel):

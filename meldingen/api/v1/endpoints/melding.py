@@ -30,6 +30,7 @@ from meldingen_core.exceptions import InvalidInputException, LimitReachedExcepti
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import InvalidLabelException
 from meldingen_core.managers import RelationshipExistsException
+from meldingen_core.reclassification import ReclassificationNotAllowedException
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
 from meldingen_core.token import TokenException
 from meldingen_core.validators import AttachmentLimitReachedException, MediaTypeIntegrityError, MediaTypeNotAllowed
@@ -353,13 +354,32 @@ async def retrieve_melding_melder(
     "/{melding_id}",
     name="melding:update",
     status_code=HTTP_200_OK,
-    responses={**unauthorized_response, **not_found_response},
+    responses={
+        **unauthorized_response,
+        **not_found_response,
+        **{
+            HTTP_400_BAD_REQUEST: {
+                "description": "The melding is in a state that may not be classified through this endpoint.",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "detail": (
+                                "Melding may not be classified from current state, "
+                                "use POST /melding/1/reclassification instead"
+                            )
+                        },
+                    }
+                },
+            }
+        },
+    },
     dependencies=[Depends(authenticate_user)],
 )
 async def update_melding(
+    request: Request,
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     melding_input: MeldingUpdateInput,
-    action: Annotated[MeldingUpdateAction[Melding, Label, Source], Depends(melding_update_action)],
+    action: Annotated[MeldingUpdateAction[Melding, Classification, Label, Source], Depends(melding_update_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
@@ -368,6 +388,15 @@ async def update_melding(
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e) or None) from e
     except InvalidLabelException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except ReclassificationNotAllowedException as e:
+        # A melding that reached the backoffice is reclassified through its own endpoint, which
+        # records a reason and keeps the melder's input. Name that route, so a caller that ended up
+        # here does not have to guess which one it should have used.
+        reclassification_path = request.app.url_path_for("melding:reclassification", melding_id=melding_id)
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Melding may not be classified from current state, use POST {reclassification_path} instead",
+        ) from e
 
     return await produce_output(melding)
 

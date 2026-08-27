@@ -648,8 +648,13 @@ def melding_update_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     label_replacer: Annotated[LabelReplacer, Depends(label_replacer)],
     source_repository: Annotated[SourceRepository, Depends(source_repository)],
-) -> MeldingUpdateAction[Melding, Label, Source]:
-    return MeldingUpdateAction(repository, label_replacer, source_repository)
+    classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+    reclassifier: Annotated[Reclassifier, Depends(reclassifier)],
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+) -> MeldingUpdateAction[Melding, Classification, Label, Source]:
+    return MeldingUpdateAction(
+        repository, label_replacer, source_repository, classification_repository, reclassifier, state_machine
+    )
 
 
 def melding_update_action_melder(
