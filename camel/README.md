@@ -3,12 +3,16 @@
 This PoC runs Apache Camel as a separate container in the existing Docker Compose stack.
 It exposes a local HTTP endpoint that fetches a bearer token from the configured OIDC provider on demand.
 It also exposes a second local HTTP endpoint that pulls data from the Meldingen API.
+It also exposes a third endpoint that applies a V1 compatibility transform to that payload.
+The public HTTP endpoints are exposed with Camel Rest DSL, which also generates an OpenAPI document.
 
 ## What it proves
 
 - Camel starts locally without adding Java tooling to this repository.
 - Camel can fetch a local development token from Keycloak without polling.
 - Camel can proxy the protected Meldingen `/melding` endpoint with a fresh bearer token.
+- Camel can return a transformed V1 compatibility payload from an external DataSonnet script.
+- Camel can document the public compatibility endpoints with generated OpenAPI.
 - Route changes stay isolated in `camel/routes/`.
 
 ## Start the stack
@@ -17,8 +21,7 @@ From the repository root:
 
 ```bash
 cp .env.example .env
-docker compose up -d --build meldingen
-docker compose up -d keycloak camel
+docker compose up -d --build
 docker compose logs -f camel
 ```
 
@@ -33,20 +36,81 @@ That returns a plain-text value in the form `Bearer <access-token>`.
 You can also pull the configured protected API endpoint through Camel:
 
 ```bash
-curl http://127.0.0.1:8088/pull
+curl http://127.0.0.1:8088/meldingen
+```
+
+The raw pull endpoint currently supports the `state` query parameter and forwards it to the upstream API:
+
+```bash
+curl "http://127.0.0.1:8088/meldingen?state=processing,completed"
+```
+
+And you can request the transformed V1 compatibility payload:
+
+```bash
+curl http://127.0.0.1:8088/meldingen-v1
+```
+
+The V1 endpoint supports the same `state` filter before transformation:
+
+```bash
+curl "http://127.0.0.1:8088/meldingen-v1?state=processing,completed"
+```
+
+For the V1 compatibility endpoint, Camel normalizes legacy V1 workflow states to V2 backoffice states before calling the upstream API.
+Only V1 states that have a clear V2 equivalent are mapped.
+
+Current V1-to-V2 filter mappings:
+
+- `m` -> `submitted`
+- `i` -> `processing_requested`
+- `b` -> `processing`
+- `ingepland` -> `planned`
+- `o` -> `completed`
+- `a` -> `canceled`
+- `reopened` -> `reopened`
+- `reopen requested` -> `reopen_requested`
+
+Other legacy-only V1 workflow states do not get a compatibility mapping yet and are treated as unmatched by the upstream V2 filter.
+
+You can inspect the generated OpenAPI document at:
+
+```bash
+curl http://127.0.0.1:8088/openapi
 ```
 
 ## Route files
 
 Camel loads these route files:
 
-- `camel/routes/auth.config.yaml`
+- `camel/routes/auth.camel.yaml`
 - `camel/routes/pull.camel.yaml`
+- `camel/routes/v1.camel.yaml`
+
+The V1 compatibility mapping lives in `camel/transforms/meldingen-to-v1.ds`.
+
+The route responsibilities are:
+
+- `auth.camel.yaml`: Rest configuration, generated OpenAPI endpoint, bearer token endpoint, and token acquisition route.
+- `pull.camel.yaml`: raw `/meldingen` endpoint and the shared `direct:fetch-meldingen` upstream fetch route.
+- `v1.camel.yaml`: `/meldingen-v1` endpoint and the shared V1 transformation route.
 
 Camel listens on `127.0.0.1:8088` on the host and is only published on loopback.
 Inside Docker Compose it still reaches Keycloak over `http://keycloak:8002`.
 
-The pull route calls `CAMEL_API_URL + /melding`.
+The public HTTP edge is declared with Camel Rest DSL and the internal logic stays on `direct:` routes.
+
+The raw pull route calls `CAMEL_API_URL + /melding`.
+The V1 endpoint reuses that same fetch route and then applies the external DataSonnet transform.
+
+The generated OpenAPI currently documents these public endpoints:
+
+- `POST /bearer-token`
+- `GET /meldingen`
+- `GET /meldingen-v1`
+- `GET /openapi`
+
+The first supported compatibility filter is `state`. Camel allowlists that query parameter and forwards it to the upstream API. Later filters such as category slug can be added in the same way once the backend exposes them.
 
 ## Token endpoint behavior
 

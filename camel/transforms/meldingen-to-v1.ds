@@ -1,0 +1,210 @@
+local fieldOrNull(obj, field) =
+  if obj == null || std.type(obj) != 'object' || !std.objectHas(obj, field) then null else obj[field];
+
+local valueOrEmpty(value) = if value == null then '' else std.toString(value);
+
+local asString(value) = if value == null then null else std.toString(value);
+
+local labelNames(melding) =
+  if fieldOrNull(melding, 'labels') == null then []
+  else std.map(function(label) fieldOrNull(label, 'name'), fieldOrNull(melding, 'labels'));
+
+local sourceName(melding) =
+  local source = fieldOrNull(melding, 'source');
+  if source == null then null
+  else if std.type(source) == 'string' then source
+  else fieldOrNull(source, 'name');
+
+local classification(melding) = fieldOrNull(melding, 'classification');
+
+local categoryName(melding) =
+  local item = classification(melding);
+  if item == null || fieldOrNull(item, 'name') == null then 'Onbekend' else fieldOrNull(item, 'name');
+
+local categoryInstructions(melding) =
+  local item = classification(melding);
+  if item == null then null else fieldOrNull(item, 'instructions');
+
+local slugify(value) =
+  if value == null then 'onbekend'
+  else std.asciiLower(
+    std.strReplace(
+      std.strReplace(
+        std.strReplace(
+          std.strReplace(std.toString(value), ' ', '-'),
+          '/',
+          '-'
+        ),
+        '&',
+        'en'
+      ),
+      '.',
+      ''
+    )
+  );
+
+local hasContact(melding) = fieldOrNull(melding, 'email') != null || fieldOrNull(melding, 'phone') != null;
+
+local hasItems(value) = value != null && std.type(value) == 'array' && std.length(value) > 0;
+
+local mappedState(state) =
+  if state == null then ''
+  else if state == 'processing_requested' then 'i'
+  else if state == 'planned' then 'ingepland'
+  else if state == 'processing' then 'b'
+  else if state == 'completed' then 'o'
+  else if state == 'canceled' || state == 'cancelled' then 'a'
+  else if state == 'reopen_requested' then 'reopen requested'
+  else if state == 'reopened' then 'reopened'
+  else if state == 'submitted' || state == 'new' || state == 'classified' || state == 'questions_answered' || state == 'location_submitted' || state == 'attachments_added' || state == 'contact_info_added' then 'm'
+  else '';
+
+local mappedStateDisplay(state) =
+  if state == 'processing_requested' then 'In afwachting van behandeling'
+  else if state == 'planned' then 'Ingepland'
+  else if state == 'processing' then 'In behandeling'
+  else if state == 'completed' then 'Afgehandeld'
+  else if state == 'canceled' || state == 'cancelled' then 'Geannuleerd'
+  else if state == 'reopen_requested' then 'Verzoek tot heropenen'
+  else if state == 'reopened' then 'Heropend'
+  else if state == 'submitted' || state == 'new' || state == 'classified' || state == 'questions_answered' || state == 'location_submitted' || state == 'attachments_added' || state == 'contact_info_added' then 'Gemeld'
+  else if state == null then 'Onbekend'
+  else std.toString(state);
+
+local mappedPriority(urgency) =
+  if urgency == 1 then 'high'
+  else if urgency == -1 then 'low'
+  else 'normal';
+
+local geometry(melding) =
+  local geoLocation = fieldOrNull(melding, 'geo_location');
+  if geoLocation == null then null else fieldOrNull(geoLocation, 'geometry');
+
+local geometryProperties(melding) =
+  local geoLocation = fieldOrNull(melding, 'geo_location');
+  if geoLocation == null then null else fieldOrNull(geoLocation, 'properties');
+
+local addressText(melding) =
+  local street = valueOrEmpty(fieldOrNull(melding, 'street'));
+  local houseNumber = valueOrEmpty(fieldOrNull(melding, 'house_number'));
+  local houseNumberAddition = valueOrEmpty(fieldOrNull(melding, 'house_number_addition'));
+  local postalCode = valueOrEmpty(fieldOrNull(melding, 'postal_code'));
+  local city = valueOrEmpty(fieldOrNull(melding, 'city'));
+  local base =
+    if street != '' then
+      street + (if houseNumber != '' then ' ' + houseNumber else '') + houseNumberAddition
+    else if postalCode != '' then
+      postalCode
+    else
+      'Onbekend adres';
+  base + (if city == '' then '' else ', ' + city);
+
+local displayValue(melding) =
+  if fieldOrNull(melding, 'public_id') != null then fieldOrNull(melding, 'public_id')
+  else if fieldOrNull(melding, 'id') != null then std.toString(fieldOrNull(melding, 'id'))
+  else 'unknown';
+
+local signalIdentifier(melding) =
+  if fieldOrNull(melding, 'signal_id') != null then fieldOrNull(melding, 'signal_id')
+  else displayValue(melding);
+
+local pageLinks = if std.type(body) == 'object' then fieldOrNull(body, '_links') else null;
+
+local pageHref(rel) = fieldOrNull(fieldOrNull(pageLinks, rel), 'href');
+
+local inputResults =
+  if std.type(body) == 'array' then body
+  else if std.type(body) == 'object' && std.objectHas(body, 'results') && std.type(body.results) == 'array' then body.results
+  else [];
+
+local inputCount =
+  if std.type(body) == 'object' && std.objectHas(body, 'count') && body.count != null then body.count
+  else std.length(inputResults);
+
+local transformMelding(melding) =
+  {
+    _links: {},
+    _display: displayValue(melding),
+    id: fieldOrNull(melding, 'id'),
+    id_display: displayValue(melding),
+    signal_id: signalIdentifier(melding),
+    text: if fieldOrNull(melding, 'text') == null then '' else fieldOrNull(melding, 'text'),
+    status: {
+      text: null,
+      user: null,
+      state: mappedState(fieldOrNull(melding, 'state')),
+      state_display: mappedStateDisplay(fieldOrNull(melding, 'state')),
+      target_api: null,
+      extra_properties: {
+        source_state: fieldOrNull(melding, 'state'),
+      },
+      send_email: false,
+      created_at: if fieldOrNull(melding, 'updated_at') == null then fieldOrNull(melding, 'created_at') else fieldOrNull(melding, 'updated_at'),
+      email_override: null,
+    },
+    location: {
+      id: fieldOrNull(melding, 'id'),
+      stadsdeel: null,
+      buurt_code: null,
+      area_type_code: null,
+      area_code: null,
+      area_name: null,
+      address: null,
+      address_text: addressText(melding),
+      postcode: fieldOrNull(melding, 'postal_code'),
+      geometrie: geometry(melding),
+      extra_properties: geometryProperties(melding),
+      created_by: null,
+      bag_validated: false,
+    },
+    category: {
+      sub: categoryName(melding),
+      sub_slug: slugify(categoryName(melding)),
+      main: categoryName(melding),
+      main_slug: slugify(categoryName(melding)),
+      category_url: null,
+      departments: '',
+      created_by: null,
+      text: categoryInstructions(melding),
+      deadline: null,
+      deadline_factor_3: null,
+    },
+    reporter: {
+      email: fieldOrNull(melding, 'email'),
+      phone: fieldOrNull(melding, 'phone'),
+      sharing_allowed: hasContact(melding),
+      allows_contact: hasContact(melding),
+    },
+    priority: {
+      priority: mappedPriority(fieldOrNull(melding, 'urgency')),
+      created_by: null,
+    },
+    created_at: fieldOrNull(melding, 'created_at'),
+    updated_at: fieldOrNull(melding, 'updated_at'),
+    incident_date_start: fieldOrNull(melding, 'created_at'),
+    incident_date_end: null,
+    operational_date: null,
+    has_attachments: if hasItems(fieldOrNull(melding, 'attachments')) then 'true' else 'false',
+    extra_properties: {
+      public_id: fieldOrNull(melding, 'public_id'),
+      urgency: fieldOrNull(melding, 'urgency'),
+      labels: labelNames(melding),
+      source_name: sourceName(melding),
+    },
+    notes: [],
+    directing_departments: [],
+    routing_departments: [],
+    has_parent: 'false',
+    has_children: 'false',
+    assigned_user_email: null,
+  } + (if sourceName(melding) == null then {} else { source: sourceName(melding) });
+
+{
+  _links: {
+    "self": { href: pageHref('self') },
+    "next": { href: pageHref('next') },
+    "previous": { href: pageHref('previous') },
+  },
+  count: inputCount,
+  results: std.map(function(melding) transformMelding(melding), inputResults),
+}
