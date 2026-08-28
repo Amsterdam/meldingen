@@ -1,3 +1,15 @@
+- restConfiguration:
+    component: undertow
+    host: 0.0.0.0
+    port: "{{env:CAMEL_HTTP_PORT}}"
+    apiContextPath: /openapi
+
+- rest:
+    post:
+      - path: "/bearer-token"
+        produces: "text/plain"
+        to: "direct:camel-bearer-token-endpoint"
+
 - route:
     id: request-oidc-token
     from:
@@ -34,9 +46,7 @@
 - route:
     id: camel-bearer-token-endpoint
     from:
-      uri: undertow:http://0.0.0.0:{{env:CAMEL_HTTP_PORT}}/bearer-token
-      parameters:
-        httpMethodRestrict: POST
+      uri: direct:camel-bearer-token-endpoint
       steps:
         - to:
             uri: direct:request-oidc-token

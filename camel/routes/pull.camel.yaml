@@ -1,18 +1,20 @@
+- rest:
+    get:
+      - path: "/meldingen"
+        produces: "application/json"
+        param:
+          - name: state
+            type: "query"
+            description: "Optional comma-separated list of melding states to pass through to the upstream API, for example processing,completed."
+        to: "direct:camel-protected-api-pull-endpoint"
+
 - route:
-    id: camel-protected-api-pull-endpoint
+    id: fetch-meldingen
     from:
-      uri: undertow:http://0.0.0.0:{{env:CAMEL_HTTP_PORT}}/meldingen
-      parameters:
-        httpMethodRestrict: GET
+      uri: direct:fetch-meldingen
       steps:
         - to:
-            uri: direct:request-oidc-token  # TODO nu voor testen, maar later verwijderen
-        - setHeader:
-            name: Cache-Control
-            constant: no-store
-        - setHeader:
-            name: Pragma
-            constant: no-cache
+            uri: direct:request-oidc-token # TODO clients need to do it themselves, remove later.
         - choice:
             when:
               - simple: "${header.CamelHttpResponseCode} >= 400"
@@ -30,18 +32,43 @@
                 - setHeader:
                     name: Accept
                     constant: application/json
+                - removeHeaders:
+                    pattern: CamelHttp*
                 - setHeader:
                     name: CamelHttpMethod
                     constant: GET
+                - choice:
+                    when:
+                      - simple: "${header.state} != null && ${header.state} != ''"
+                        steps:
+                          - setHeader:
+                              name: CamelHttpQuery
+                              simple: "state=${header.state}"
                 - setBody:
                     constant: ""
-                - removeHeader:
-                    name: Content-Type
+                - removeHeaders:
+                    pattern: Content-Type|state
                 - to:
                     uri: "{{env:CAMEL_API_URL}}/melding/"
                     parameters:
                       bridgeEndpoint: true
                       throwExceptionOnFailure: false
+                - removeHeaders:
+                    pattern: Authorization|Accept|CamelHttp*
                 - log:
                     message: "Pulled protected API with status=${header.CamelHttpResponseCode} from {{env:CAMEL_API_URL}}/melding"
                     loggingLevel: INFO
+
+- route:
+    id: camel-protected-api-pull-endpoint
+    from:
+      uri: direct:camel-protected-api-pull-endpoint
+      steps:
+        - to:
+            uri: direct:fetch-meldingen
+        - setHeader:
+            name: Cache-Control
+            constant: no-store
+        - setHeader:
+            name: Pragma
+            constant: no-cache

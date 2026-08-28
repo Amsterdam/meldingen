@@ -1,0 +1,71 @@
+- rest:
+    get:
+      - path: "/meldingen-v1"
+        produces: "application/json"
+        param:
+          - name: state
+            type: "query"
+            description: "Optional comma-separated list of V2 backoffice states, or V1 states that have a V2 equivalent. Supported V1 aliases are mapped upstream before applying the V1 transform, for example m,o or processing,completed."
+        to: "direct:camel-protected-api-v1-endpoint"
+
+- route:
+    id: transform-meldingen-to-v1
+    from:
+      uri: direct:transform-meldingen-to-v1
+      steps:
+        - transform:
+            expression:
+              datasonnet:
+                expression: "resource:file:/etc/camel/transforms/meldingen-to-v1.ds"
+                bodyMediaType: application/json
+                outputMediaType: application/json
+                resultType: java.lang.String
+        - setHeader:
+            name: Content-Type
+            constant: application/json
+
+- route:
+    id: camel-protected-api-v1-endpoint
+    from:
+      uri: direct:camel-protected-api-v1-endpoint
+      steps:
+        - choice:
+            when:
+              - simple: "${header.state} != null && ${header.state} != ''"
+                steps:
+                  - setBody:
+                      simple: "${header.state}"
+                  - transform:
+                      expression:
+                        datasonnet:
+                          expression: "resource:file:/etc/camel/transforms/v1-state-filter-to-v2.ds"
+                          bodyMediaType: text/plain
+                          outputMediaType: application/json
+                          resultType: java.lang.String
+                  - unmarshal:
+                      json: {}
+                  - setHeader:
+                      name: state
+                      simple: "${body}"
+        - to:
+            uri: direct:fetch-meldingen
+        - setHeader:
+            name: Cache-Control
+            constant: no-store
+        - setHeader:
+            name: Pragma
+            constant: no-cache
+        - choice:
+            when:
+              - simple: "${header.CamelHttpResponseCode} >= 400"
+                steps:
+                  - log:
+                      message: "Skipping V1 transform because upstream returned status=${header.CamelHttpResponseCode}"
+                      loggingLevel: WARN
+            otherwise:
+              steps:
+                - to:
+                    uri: direct:transform-meldingen-to-v1
+                - log:
+                    message: "Returned V1 compatibility payload for {{env:CAMEL_API_URL}}/melding"
+                    loggingLevel: INFO

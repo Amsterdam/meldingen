@@ -73,7 +73,7 @@ services:
 
   camel:
     image: apache/camel-jbang:4.4.0
-    command: ["run", "--dev", "--deps=camel:http,camel:jackson,camel:undertow", "/etc/camel/routes/auth.camel.yaml", "/etc/camel/routes/pull.camel.yaml"]
+    command: ["run", "--dev", "--deps=camel:http,camel:jackson,camel:undertow,camel:datasonnet,camel:rest,camel:openapi-java", "/etc/camel/routes/auth.camel.yaml", "/etc/camel/routes/pull.camel.yaml", "/etc/camel/routes/v1.camel.yaml"]
     depends_on:
       meldingen:
         condition: service_started
@@ -93,6 +93,7 @@ services:
       CAMEL_API_URL: "http://meldingen:8000"
     volumes:
       - "./camel/routes:/etc/camel/routes:ro"
+      - "./camel/transforms:/etc/camel/transforms:ro"
     networks:
       - meldingen_network
 
