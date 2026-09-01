@@ -15,6 +15,31 @@ The public HTTP endpoints are exposed with Camel Rest DSL, which also generates 
 - Camel can document the public compatibility endpoints with generated OpenAPI.
 - Route changes stay isolated in `camel/routes/`.
 
+## Why an integration platform?
+
+The integration platform helps with two recurring situations:
+
+- Municipality-specific integrations often need their own mappings, filters, or contracts. That logic should not live in the Meldingen API or the business logic.
+- Not every external integration has a team available to actively migrate. During a move from V1 to V2, the integration platform can provide a compatibility layer so the municipality does not have to wait for changes from the external party.
+
+```mermaid
+flowchart TD
+	A[New integration request] --> B{What kind of request is this?}
+	B --> C[Municipality-specific integration]
+	B --> D[Existing integration must move from V1 to V2]
+
+	C --> E{Is new Meldingen domain logic required?}
+	E -->|Yes| F[Change the Meldingen API or business logic]
+	E -->|No| G[Design the route and transformation in the integration platform]
+	G --> H[The API stays generic and integration code stays separate]
+
+	D --> I{Can the external integration migrate to V2 in time?}
+	I -->|Yes| J[Connect the integration directly to V2]
+	I -->|No| K[Add a compatibility layer in the integration platform]
+	K --> L[Temporarily preserve the existing contract for the municipality]
+	L --> M[The platform translates requests and responses between V1 and V2]
+```
+
 ## Start the stack
 
 From the repository root:
