@@ -20,6 +20,7 @@ from meldingen.schemas.types import DateAnswerObject, FormIOConditional, PhoneNu
 from meldingen.validators import create_non_match_validator
 
 NOTE_MAX_PLAIN_TEXT_LENGTH = 1000
+RECLASSIFICATION_REASON_MAX_LENGTH = 1000
 
 # The only URL schemes a mail composed in the backoffice may link to. Everything else is refused,
 # which covers both the schemes that execute code in the browser previewing the mail
@@ -103,6 +104,22 @@ class MeldingUpdateInput(BaseModel):
     urgency: Literal[-1, 0, 1] | None = Field(default=None)
     label_ids: list[int] | None = Field(default=None)
     source_id: int | None = Field(default=None)
+    # Only accepted while the melding is still in the melder's flow; once it reaches the backoffice
+    # the classification may only be changed through the reclassification endpoint.
+    classification_id: int | None = Field(default=None, ge=1)
+
+
+class MeldingReclassificationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    classification_id: int = Field(ge=1)
+    # Plain text, unlike NoteInput: the reason is a short justification typed into a plain field,
+    # not a document composed in the rich text editor. So the limit counts the characters as sent
+    # rather than the characters a markdown source renders to.
+    reason: Annotated[
+        str,
+        StringConstraints(min_length=1, max_length=RECLASSIFICATION_REASON_MAX_LENGTH, strip_whitespace=True),
+    ]
 
 
 class MeldingContactInput(BaseModel):

@@ -103,6 +103,7 @@ from meldingen.actions.melding import (
     MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
+    MeldingReclassifyAction,
     MeldingRetrieveAction,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
@@ -136,10 +137,13 @@ from meldingen.factories import (
 )
 from meldingen.generators import PublicIdGenerator
 from meldingen.image import (
+    BaseMetadataStripper,
     ImageOptimizerTask,
     IMGProxyImageOptimizer,
     IMGProxyImageOptimizerUrlGenerator,
     IMGProxyImageProcessor,
+    IMGProxyMetadataStripper,
+    IMGProxyMetadataStripUrlGenerator,
     IMGProxySignatureGenerator,
     IMGProxyThumbnailGenerator,
     IMGProxyThumbnailUrlGenerator,
@@ -237,6 +241,7 @@ from meldingen.statemachine import (
     MpFsmMeldingStateMachine,
     Plan,
     Process,
+    Reclassify,
     Reopen,
     RequestProcessing,
     RequestReopen,
@@ -490,6 +495,7 @@ def melding_state_machine(
                 MeldingTransitions.REQUEST_REOPEN: RequestReopen(),
                 MeldingTransitions.REOPEN: Reopen(),
                 MeldingTransitions.COMPLETE: Complete(),
+                MeldingTransitions.RECLASSIFY: Reclassify(),
             }
         )
     )
@@ -642,8 +648,13 @@ def melding_update_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     label_replacer: Annotated[LabelReplacer, Depends(label_replacer)],
     source_repository: Annotated[SourceRepository, Depends(source_repository)],
-) -> MeldingUpdateAction[Melding, Label, Source]:
-    return MeldingUpdateAction(repository, label_replacer, source_repository)
+    classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+    reclassifier: Annotated[Reclassifier, Depends(reclassifier)],
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+) -> MeldingUpdateAction[Melding, Classification, Label, Source]:
+    return MeldingUpdateAction(
+        repository, label_replacer, source_repository, classification_repository, reclassifier, state_machine
+    )
 
 
 def melding_update_action_melder(
@@ -793,6 +804,16 @@ def melding_submit_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
 ) -> MeldingSubmitAction:
     return MeldingSubmitAction(state_machine, repository)
+
+
+def melding_reclassify_action(
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+    note_repository: Annotated[NoteRepository, Depends(note_repository)],
+    note_factory: Annotated[NoteFactory, Depends(note_factory)],
+    state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
+) -> MeldingReclassifyAction:
+    return MeldingReclassifyAction(repository, classification_repository, note_repository, note_factory, state_machine)
 
 
 def send_completed_mail_task(mailer: Annotated[BaseMailer, Depends(mailer)]) -> SendCompletedMailTask:
@@ -1047,6 +1068,22 @@ def thumbnail_generator_task(
     return ThumbnailGeneratorTask(thumbnail_generator, attachment_repository)
 
 
+def img_proxy_metadata_strip_url_generator(
+    signature_generator: Annotated[IMGProxySignatureGenerator, Depends(img_proxy_signature_generator)],
+) -> IMGProxyMetadataStripUrlGenerator:
+    return IMGProxyMetadataStripUrlGenerator(
+        signature_generator, settings.imgproxy_base_url, settings.imgproxy_metadata_strip_quality
+    )
+
+
+def metadata_stripper(
+    url_generator: Annotated[IMGProxyMetadataStripUrlGenerator, Depends(img_proxy_metadata_strip_url_generator)],
+    http_client: Annotated[AsyncClient, Depends(http_client)],
+    filesystem_factory: Annotated[BaseFilesystemFactory, Depends(filesystem_factory)],
+) -> BaseMetadataStripper:
+    return IMGProxyMetadataStripper(url_generator, http_client, filesystem_factory)
+
+
 def malware_scanner(
     container_client: Annotated[ContainerClient, Depends(azure_container_client)],
 ) -> BaseMalwareScanner:
@@ -1064,6 +1101,7 @@ def attachment_ingestor(
     background_task_manager: BackgroundTasks,
     optimizer_task: Annotated[ImageOptimizerTask, Depends(image_optimizer_task)],
     thumbnail_task: Annotated[ThumbnailGeneratorTask, Depends(thumbnail_generator_task)],
+    metadata_stripper: Annotated[BaseMetadataStripper, Depends(metadata_stripper)],
 ) -> Ingestor:
     return Ingestor(
         scanner,
@@ -1071,6 +1109,7 @@ def attachment_ingestor(
         background_task_manager,
         optimizer_task,
         thumbnail_task,
+        metadata_stripper,
         str(settings.attachment_storage_base_directory),
     )
 
