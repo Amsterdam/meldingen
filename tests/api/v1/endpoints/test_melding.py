@@ -4511,6 +4511,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
         await db_session.refresh(attachments[0])
 
         assert attachments[0].original_filename == filename
+        assert attachments[0].original_media_type is not None
 
         split_path, _ = attachments[0].file_path.rsplit(".", 1)
         optimized_path = f"{split_path}-optimized.webp"
@@ -4853,6 +4854,7 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("id") is not None
         assert body.get("original_filename") == filename
+        assert body.get("original_media_type") is not None
         assert body.get("user") is not None
         assert body.get("user").get("email") == "user@example.com"
 
@@ -5299,6 +5301,7 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         body = response.json()
 
         assert len(attachments) == len(body)
+        assert all(item.get("original_media_type") is not None for item in body)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
@@ -5362,6 +5365,7 @@ class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert len(attachments) == len(body)
+        assert all(item.get("original_media_type") is not None for item in body)
 
 
 class TestMeldingDeleteAttachmentAction(BaseTokenAuthenticationTest):
