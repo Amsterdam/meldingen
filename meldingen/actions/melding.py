@@ -9,7 +9,6 @@ from meldingen_core.actions.melding import MeldingAnswerDeleteAction as BaseMeld
 from meldingen_core.actions.melding import MeldingDeleteAssetAction as BaseMeldingDeleteAssetAction
 from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingReclassifyAction as BaseMeldingReclassifyAction
-from meldingen_core.actions.melding import MeldingRetrieveAction as BaseMeldingRetrieveAction
 from meldingen_core.actions.melding import MeldingSubmitAction as BaseMeldingSubmitAction
 from meldingen_core.actions.melding import MeldingSubmitActionMelder as BaseMeldingSubmitActionMelder
 from meldingen_core.address import BaseAddressEnricher

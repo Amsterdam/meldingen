@@ -2660,7 +2660,7 @@ class TestMeldingQuestionAnswer:
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_token"],
+        "melding_token",
         ["supersecuretoken"],
     )
     async def test_answer_question_does_not_exists(
@@ -2892,8 +2892,8 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("loc") == ["body", "time", "time"]
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_date_answer(
         self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
@@ -2935,8 +2935,8 @@ class TestMeldingQuestionAnswer:
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_date_answer_invalid(
         self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
@@ -3018,8 +3018,8 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("input") == converted_date_input
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_date_answer_i_dont_know_option(
         self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
@@ -3063,8 +3063,8 @@ class TestMeldingQuestionAnswer:
         assert date.get("label") == "Ik weet het niet"
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_select_component_answer(
         self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding_with_classification: Melding
@@ -3106,8 +3106,8 @@ class TestMeldingQuestionAnswer:
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_select_component_answer_invalid(
         self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding_with_classification: Melding
@@ -3142,8 +3142,8 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("loc") == ["body", "value_label", "values_and_labels"]
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_radio_component_answer(
         self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
@@ -3185,8 +3185,8 @@ class TestMeldingQuestionAnswer:
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_invalid_answer_without_type(
         self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding_with_classification: Melding
@@ -3222,8 +3222,8 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("input") == {"time": "10:30"}
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_answer_non_matching_answer_types(
         self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
@@ -3259,8 +3259,8 @@ class TestMeldingQuestionAnswer:
         )
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_answer_empty_type(
         self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding_with_classification: Melding
@@ -3296,8 +3296,8 @@ class TestMeldingQuestionAnswer:
         )
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_checkbox_component_answer(
         self,
@@ -3343,8 +3343,8 @@ class TestMeldingQuestionAnswer:
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_checkbox_component_answer_invalid(
         self,
@@ -5294,7 +5294,7 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         return self.PATH_PARAMS
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token"], ["supersecuretoken"])
+    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
     async def test_list_attachments(
         self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding, auth_user: None
     ) -> None:
@@ -5308,7 +5308,7 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         assert len(attachments) == len(body)
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token"], ["supersecuretoken"])
+    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
     async def test_list_attachments_with_users(
         self, app: FastAPI, client: AsyncClient, melding_with_attachments_and_users: Melding, auth_user: None
     ) -> None:
@@ -5354,7 +5354,7 @@ class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_404_NOT_FOUND
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token"], ["supersecuretoken"])
+    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
     async def test_melder_list_attachments(
         self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding
     ) -> None:
