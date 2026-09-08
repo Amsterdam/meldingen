@@ -8,7 +8,6 @@ from geojson_pydantic.geometries import Geometry
 from meldingen_core.actions.attachment import AttachmentTypes
 from meldingen_core.actions.melding import (
     AssetData,
-    MelderMeldingListQuestionsAnswersAction,
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCancelAction,
@@ -32,7 +31,6 @@ from meldingen_core.labels import InvalidLabelException
 from meldingen_core.managers import RelationshipExistsException
 from meldingen_core.reclassification import ReclassificationNotAllowedException
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
-from meldingen_core.token import TokenException
 from meldingen_core.validators import AttachmentLimitReachedException, MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
 from pydantic import BaseModel, TypeAdapter, ValidationError
@@ -41,33 +39,29 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
-    HTTP_401_UNAUTHORIZED,
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
-from meldingen.actions.asset import ListAssetsAction, MelderListAssetsAction
+from meldingen.actions.asset import ListAssetsAction
 from meldingen.actions.attachment import (
+    DownloadAttachmentAction,
     ListAttachmentsAction,
     MelderDeleteAttachmentAction,
-    MelderDownloadAttachmentAction,
-    MelderListAttachmentsAction,
-    MelderUploadAttachmentAction,
     UploadAttachmentAction,
 )
 from meldingen.actions.form import AnswerCreateAction, AnswerUpdateAction
 from meldingen.actions.melding import (
     AddContactInfoToMeldingAction,
     AddLocationToMeldingAction,
-    MelderMeldingRetrieveAction,
+    MeldingRetrieveAction,
     MeldingAddAssetAction,
     MeldingAnswerDeleteAction,
     MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
     MeldingReclassifyAction,
-    MeldingRetrieveAction,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
 )
@@ -92,19 +86,15 @@ from meldingen.api.v1 import (
     transition_not_allowed,
     unauthorized_response,
 )
-from meldingen.authentication import authenticate_user, verify_melding_token
+from meldingen.authentication import authenticate_user, verify_token_and_retrieve_melding
 from meldingen.dependencies import (
     answer_output_factory,
     asset_output_factory,
     attachment_output_factory,
+    melding_upload_attachment_action_backoffice,
+    download_attachment_action,
     form_io_question_component_repository,
     melder_melding_delete_attachment_action,
-    melder_melding_download_attachment_action,
-    melder_melding_list_assets_action,
-    melder_melding_list_attachments_action,
-    melder_melding_list_questions_and_answers_action,
-    melder_melding_retrieve_action,
-    melder_melding_upload_attachment_action,
     melding_add_asset_action,
     melding_add_attachments_action,
     melding_add_contact_action,
@@ -119,6 +109,7 @@ from meldingen.dependencies import (
     melding_create_action,
     melding_create_output_factory,
     melding_delete_asset_action,
+    melding_upload_attachment_action_form,
     melding_get_possible_next_states_action,
     melding_list_action,
     melding_list_assets_action,
@@ -132,16 +123,15 @@ from meldingen.dependencies import (
     melding_reclassify_action,
     melding_reopen_action,
     melding_repository,
+    melding_repository_item,
     melding_request_processing_action,
     melding_request_reopen_action,
-    melding_retrieve_action,
     melding_submit_action,
     melding_submit_action_melder,
     melding_submit_location_action,
     melding_update_action,
     melding_update_action_melder,
     melding_update_output_factory,
-    melding_upload_attachment_action,
     note_create_action,
     note_list_action,
     note_list_output_factory,
@@ -156,7 +146,6 @@ from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
 from meldingen.models import (
     Answer,
-    Attachment,
     Classification,
     FormIoComponentToAnswerTypeMap,
     FormIoComponentTypeEnum,
@@ -261,7 +250,7 @@ async def list_meldingen(
         Annotated[
             str,
             Query(
-                examples=f"{MeldingStates.PROCESSING},{MeldingStates.COMPLETED}",
+                examples=[MeldingStates.PROCESSING, MeldingStates.COMPLETED],
                 description="Comma-seperated list of states that the melding should have. If left empty, meldingen will be filtered by backoffice states.",
             ),
         ]
@@ -318,12 +307,12 @@ async def list_meldingen(
 )
 async def retrieve_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    action: Annotated[MeldingRetrieveAction, Depends(melding_retrieve_action)],
+    action: Annotated[MeldingRetrieveAction, Depends(melding_repository_item)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
-    melding = await action(pk=melding_id)
-
-    if not melding:
+    try:
+        melding = await action(melding_id)
+    except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
     return await produce_output(melding)
@@ -335,17 +324,14 @@ async def retrieve_melding(
     responses={**unauthorized_response, **not_found_response},
 )
 async def retrieve_melding_melder(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[MelderMeldingRetrieveAction, Depends(melder_melding_retrieve_action)],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
+    action: Annotated[MeldingRetrieveAction, Depends(melding_repository_item)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
-        melding = await action(melding_id, token)
+        melding = await action(melding.id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(melding)
 
@@ -408,8 +394,7 @@ async def update_melding(
     responses={**unauthorized_response, **not_found_response},
 )
 async def update_melding_melder(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     melding_input: MeldingInput,
     validate_using_jsonlogic: Annotated[MeldingPrimaryFormValidator, Depends(melding_primary_form_validator)],
     action: Annotated[MeldingUpdateActionMelder[Melding, Classification], Depends(melding_update_action_melder)],
@@ -420,11 +405,9 @@ async def update_melding_melder(
     await validate_using_jsonlogic(melding_dict)
 
     try:
-        melding = await action(pk=melding_id, values=melding_dict, token=token)
+        melding = await action(pk=melding.id, values=melding_dict)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(melding)
 
@@ -440,7 +423,7 @@ async def update_melding_melder(
     },
 )
 async def answer_questions(
-    melding: Annotated[Melding, Depends(verify_melding_token)],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     action: Annotated[MeldingAnswerQuestionsAction[Melding], Depends(melding_answer_questions_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
@@ -467,19 +450,16 @@ async def answer_questions(
     },
 )
 async def add_attachments(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     action: Annotated[MeldingAddAttachmentsAction[Melding], Depends(melding_add_attachments_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
-        melding = await action(melding_id, token)
+        melding = await action(melding.id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(melding)
 
@@ -495,21 +475,18 @@ async def add_attachments(
     },
 )
 async def submit_location(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     action: Annotated[MeldingSubmitLocationAction[Melding], Depends(melding_submit_location_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
-        melding = await action(melding_id, token)
+        melding = await action(melding.id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
     except GuardException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Location must be added before submitting")
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(melding)
 
@@ -551,19 +528,16 @@ async def melding_submit(
     },
 )
 async def melding_submit_melder(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     action: Annotated[MeldingSubmitActionMelder, Depends(melding_submit_action_melder)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
-        melding = await action(melding_id, token)
+        melding = await action(melding.id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(melding)
 
@@ -854,19 +828,16 @@ async def resolve_answer_type_through_question_id(
     },
 )
 async def answer_additional_question(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     question_id: Annotated[int, Path(description="The id of the question.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
     answer_input: AnswerInputUnion,
     action: Annotated[AnswerCreateAction, Depends(melding_answer_create_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutputUnion:
     try:
-        answer = await action(melding_id, token, question_id, answer_input)
+        answer = await action(melding.id, question_id, answer_input)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
     except MeldingNotClassifiedException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Melding not classified")
 
@@ -899,19 +870,16 @@ async def answer_additional_question(
     },
 )
 async def update_answer(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     answer_id: Annotated[int, Path(description="The id of the answer.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
     answer_input: AnswerInputUnion,
     action: Annotated[AnswerUpdateAction, Depends(melding_answer_update_action)],
     produce_output: Annotated[AnswerOutputFactory, Depends(answer_output_factory)],
 ) -> AnswerOutputUnion:
     try:
-        answer = await action(melding_id, token, answer_id, answer_input)
+        answer = await action(melding.id, answer_id, answer_input)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(answer)
 
@@ -922,17 +890,14 @@ async def update_answer(
     responses={**not_found_response, **unauthorized_response},
 )
 async def delete_answer(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     answer_id: Annotated[int, Path(description="The id of the answer.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingAnswerDeleteAction, Depends(melding_answer_delete_action)],
 ) -> None:
     try:
-        await action(melding_id, answer_id, token)
+        await action(melding.id, answer_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
 
 @router.post(
@@ -946,27 +911,24 @@ async def delete_answer(
     },
 )
 async def upload_attachment_melder(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     file: UploadFile,
-    action: Annotated[MelderUploadAttachmentAction, Depends(melder_melding_upload_attachment_action)],
+    action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action_form)],
     produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> AttachmentOutput:
     prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
 
     try:
         attachment = await action(
-            melding_id,
-            token,
+            melding.id,
             prepared_upload.filename,
             prepared_upload.content_type,
             prepared_upload.data_header,
             prepared_upload.iterator,
+            user=None,
         )
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
     except MediaTypeNotAllowed:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Attachment not allowed")
     except MediaTypeIntegrityError:
@@ -990,10 +952,9 @@ async def upload_attachment_melder(
     },
 )
 async def melder_download_attachment(
-    action: Annotated[MelderDownloadAttachmentAction, Depends(melder_melding_download_attachment_action)],
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    action: Annotated[DownloadAttachmentAction, Depends(download_attachment_action)],
     _type: Annotated[
         AttachmentTypes,
         Query(
@@ -1003,12 +964,9 @@ async def melder_download_attachment(
     ] = AttachmentTypes.ORIGINAL,
 ) -> StreamingResponse:
     try:
-        iterator, media_type = await action(melding_id, attachment_id, token, _type)
+        iterator, media_type = await action(melding.id, attachment_id, _type)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
-
     return StreamingResponse(iterator, media_type=media_type)
 
 
@@ -1041,17 +999,14 @@ async def list_attachments(
     responses={**not_found_response, **unauthorized_response},
 )
 async def melder_list_attachments(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[MelderListAttachmentsAction, Depends(melder_melding_list_attachments_action)],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
+    action: Annotated[ListAttachmentsAction, Depends(melding_list_attachments_action)],
     produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> list[AttachmentOutput]:
     try:
-        attachments = await action(melding_id, token)
+        attachments = await action(melding.id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     output = []
     for attachment in attachments:
@@ -1066,17 +1021,14 @@ async def melder_list_attachments(
     responses={**not_found_response, **unauthorized_response},
 )
 async def delete_attachment(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MelderDeleteAttachmentAction, Depends(melder_melding_delete_attachment_action)],
 ) -> None:
     try:
-        await action(melding_id, attachment_id, token)
+        await action(melding.id, attachment_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
 
 @router.post(
@@ -1093,7 +1045,7 @@ async def upload_attachment(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     user: Annotated[User, Depends(authenticate_user)],
     file: UploadFile,
-    action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action)],
+    action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action_backoffice)],
     produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> AttachmentOutput:
     prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
@@ -1127,18 +1079,15 @@ async def upload_attachment(
     responses={**not_found_response, **unauthorized_response},
 )
 async def add_location_to_melding(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     location: GeoJson,
     action: Annotated[AddLocationToMeldingAction, Depends(melding_add_location_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
-        melding = await action(melding_id, token, location)
+        melding = await action(melding.id, location)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(melding)
 
@@ -1149,8 +1098,7 @@ async def add_location_to_melding(
     responses={**not_found_response, **unauthorized_response},
 )
 async def add_contact_to_melding(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     contact_details: MeldingContactInput,
     action: Annotated[AddContactInfoToMeldingAction, Depends(melding_add_contact_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
@@ -1158,11 +1106,9 @@ async def add_contact_to_melding(
     phone, email = contact_details.phone, contact_details.email
 
     try:
-        melding = await action(melding_id, phone, email, token)
+        melding = await action(melding.id, phone, email)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(melding)
 
@@ -1178,19 +1124,16 @@ async def add_contact_to_melding(
     },
 )
 async def add_contact_info(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     action: Annotated[MeldingContactInfoAddedAction[Melding], Depends(melding_contact_info_added_action)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
-        melding = await action(melding_id, token)
+        melding = await action(melding.id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
     except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(melding)
 
@@ -1204,20 +1147,17 @@ async def add_contact_info(
     },
 )
 async def melder_list_answers(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     action: Annotated[
-        MelderMeldingListQuestionsAnswersAction[Melding, Answer],
-        Depends(melder_melding_list_questions_and_answers_action),
+        MeldingListQuestionsAnswersAction[Answer],
+        Depends(melding_list_questions_and_answers_action),
     ],
     produce_output: Annotated[AnswerListOutputFactory, Depends(melding_list_questions_and_answers_output_factory)],
 ) -> list[AnswerQuestionOutputUnion]:
     try:
-        answers = await action(melding_id, token)
+        answers = await action(melding.id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
     return await produce_output(answers)
 
@@ -1250,27 +1190,23 @@ async def list_answers(
     responses={**not_found_response, **unauthorized_response},
 )
 async def add_asset(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     input: MeldingAssetInput,
     action: Annotated[MeldingAddAssetAction, Depends(melding_add_asset_action)],
     produce_output: Annotated[MeldingUpdateOutputFactory, Depends(melding_update_output_factory)],
 ) -> MeldingUpdateOutput:
     try:
         melding = await action(
-            melding_id,
+            melding.id,
             AssetData(
                 external_id=input.external_id,
                 asset_type_id=input.asset_type_id,
                 label=input.label,
                 subtype=input.subtype,
             ),
-            token,
         )
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
-    except TokenException as e:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
     except RelationshipExistsException as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except LimitReachedException as e:
@@ -1287,17 +1223,14 @@ async def add_asset(
     responses={**not_found_response, **unauthorized_response},
 )
 async def melder_list_assets(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
-    action: Annotated[MelderListAssetsAction, Depends(melder_melding_list_assets_action)],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
+    action: Annotated[ListAssetsAction, Depends(melding_list_assets_action)],
     produce_output: Annotated[AssetOutputFactory, Depends(asset_output_factory)],
 ) -> list[AssetOutput]:
     try:
-        assets = await action(melding_id, token)
+        assets = await action(melding.id)
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
-    except TokenException as e:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
 
     output = []
     for asset in assets:
@@ -1335,17 +1268,14 @@ async def list_assets(
     responses={**not_found_response, **unauthorized_response},
 )
 async def delete_asset(
-    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     asset_id: Annotated[int, Path(description="The id of the asset.", ge=1)],
-    token: Annotated[str, Query(description="The token of the melding.")],
     action: Annotated[MeldingDeleteAssetAction, Depends(melding_delete_asset_action)],
 ) -> None:
     try:
-        await action(melding_id, asset_id, token)
+        await action(melding.id, asset_id)
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
-    except TokenException as e:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED) from e
 
 
 @router.post(

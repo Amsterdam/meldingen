@@ -4,7 +4,8 @@ from typing import Any
 from fastapi import HTTPException
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction, BaseRetrieveAction
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.token import TokenVerifier
+from meldingen_core.repositories import BaseRepository
+from meldingen_core.repository_item import RepositoryItem
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.actions.base import BaseListAction
@@ -362,7 +363,6 @@ class FormRetrieveByClassificationAction(BaseCRUDAction[Form]):
 
 
 class AnswerCreateAction(BaseCRUDAction[Answer]):
-    _token_verifier: TokenVerifier[Melding]
     _question_repository: QuestionRepository
     _component_repository: FormIoQuestionComponentRepository
     _jsonlogic_validate: JSONLogicValidator
@@ -371,26 +371,26 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
     def __init__(
         self,
         repository: AnswerRepository,
-        token_verifier: TokenVerifier[Melding],
+        melding_repository_item: RepositoryItem[Melding],
         question_repository: QuestionRepository,
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
         answer_factory: AnswerFactory,
     ):
         super().__init__(repository)
-        self._token_verifier = token_verifier
         self._question_repository = question_repository
         self._component_repository = component_repository
         self._jsonlogic_validate = jsonlogic_validator
         self._create_answer = answer_factory
+        self._melding_repository_item = melding_repository_item
 
-    async def __call__(self, melding_id: int, token: str, question_id: int, answer_input: AnswerInputUnion) -> Answer:
+    async def __call__(self, melding_id: int, question_id: int, answer_input: AnswerInputUnion) -> Answer:
         """
         Create and store an Answer in the database, subject to several conditions:
 
         Conditions:
         1. The question must exist
-        2. The provided token must be valid
+        2. The melding must exist
         3. The melding must be classified
         4. The question must belong to an existing and active form.
         5. The form must have a classification
@@ -403,8 +403,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         if question is None:
             raise NotFoundException()
 
-        # Token must be valid
-        melding = await self._token_verifier(melding_id, token)
+        melding = await self._melding_repository_item(melding_id)
 
         # Melding must be classified
         if not await melding.awaitable_attrs.classification:
@@ -468,23 +467,23 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
 
 
 class AnswerUpdateAction(BaseCRUDAction[Answer]):
-    _token_verifier: TokenVerifier[Melding]
+    _melding_repository_item: RepositoryItem[Melding]
     _component_repository: FormIoQuestionComponentRepository
     _jsonlogic_validate: JSONLogicValidator
 
     def __init__(
         self,
         repository: AnswerRepository,
-        token_verifier: TokenVerifier[Melding],
+        melding_repository_item: RepositoryItem[Melding],
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
     ):
         super().__init__(repository)
-        self._token_verifier = token_verifier
+        self._melding_repository_item = melding_repository_item
         self._component_repository = component_repository
         self._jsonlogic_validate = jsonlogic_validator
 
-    async def __call__(self, melding_id: int, token: str, answer_id: int, answer_input: AnswerInputUnion) -> Answer:
+    async def __call__(self, melding_id: int, answer_id: int, answer_input: AnswerInputUnion) -> Answer:
         """
         Conditions:
         1. The provided token must be valid
@@ -494,8 +493,8 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
         5. If the question has JSONlogic validation, the updated answer must pass this validation
         """
 
-        # Validate token
-        melding = await self._token_verifier(melding_id, token)
+        # Retrieve melding
+        melding = await self._melding_repository_item(melding_id)
 
         # Validate answer exists
         answer = await self._repository.retrieve(answer_id)
@@ -544,7 +543,7 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
 
 
 class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]):
-    _repository: StaticFormRepository
+    _repository: BaseRepository[StaticForm]
 
     def __init__(self, repository: StaticFormRepository):
         super().__init__(repository)
@@ -554,7 +553,7 @@ class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]):
 
 
 class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
-    _repository: StaticFormRepository
+    _repository: BaseRepository[StaticForm]
 
     async def _create_component_values(
         self, component: BaseFormIoValuesComponent, values: list[dict[str, Any]]

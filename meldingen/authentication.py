@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Path, Query
@@ -12,7 +13,6 @@ from jwt import (
 )
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenException, TokenVerifier
-from sqlalchemy.exc import NoResultFound
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
 
 from meldingen.config import settings
@@ -68,14 +68,14 @@ async def authenticate_user(
     return await user_repository.find_by_email_or_create(email)
 
 
-async def verify_melding_token(
-    melding_id: Annotated[int, Path(ge=1)],
-    token: Annotated[str, Query()],
-    verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+async def verify_token_and_retrieve_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    verify_token_and_retrieve_melding: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> Melding:
     try:
-        return await verifier(melding_id, token)
-    except NotFoundException:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except TokenException:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+        return await verify_token_and_retrieve_melding(melding_id, token)
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e))
+    except TokenException as e:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail=str(e))

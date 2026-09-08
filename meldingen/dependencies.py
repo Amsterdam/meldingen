@@ -1,7 +1,7 @@
 import logging
 import os
 from functools import lru_cache
-from typing import Annotated, Any, AsyncIterator
+from typing import Annotated, Any, AsyncIterator, Callable
 
 from amsterdam_mail_service_client.api.default_api import DefaultApi
 from amsterdam_mail_service_client.api_client import ApiClient
@@ -13,7 +13,6 @@ from httpx import AsyncClient
 from jsonlogic.resolving import DotReferenceParser, ReferenceParser
 from jwt import PyJWKClient, PyJWT
 from meldingen_core.actions.melding import (
-    MelderMeldingListQuestionsAnswersAction,
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
     MeldingCancelAction,
@@ -36,6 +35,7 @@ from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.managers import RelationshipManager
+from meldingen_core.repository_item import RepositoryItem
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from meldingen_core.wfs import AssetTypeToWfsProviderConverter, BaseWfsProviderValidator
@@ -53,7 +53,7 @@ from pydantic_ai.providers.azure import AzureProvider
 from pydantic_ai.providers.openai import OpenAIProvider
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-from meldingen.actions.asset import ListAssetsAction, MelderListAssetsAction
+from meldingen.actions.asset import ListAssetsAction
 from meldingen.actions.asset_type import (
     AssetTypeCreateAction,
     AssetTypeDeleteAction,
@@ -67,9 +67,6 @@ from meldingen.actions.attachment import (
     DownloadAttachmentAction,
     ListAttachmentsAction,
     MelderDeleteAttachmentAction,
-    MelderDownloadAttachmentAction,
-    MelderListAttachmentsAction,
-    MelderUploadAttachmentAction,
     UploadAttachmentAction,
 )
 from meldingen.actions.classification import (
@@ -97,14 +94,12 @@ from meldingen.actions.mail import PreviewMailAction
 from meldingen.actions.melding import (
     AddContactInfoToMeldingAction,
     AddLocationToMeldingAction,
-    MelderMeldingRetrieveAction,
     MeldingAddAssetAction,
     MeldingAnswerDeleteAction,
     MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
     MeldingReclassifyAction,
-    MeldingRetrieveAction,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
 )
@@ -461,6 +456,12 @@ def token_verifier(
     return TokenVerifier(repository)
 
 
+def melding_repository_item(
+    repository: Annotated[MeldingRepository, Depends(melding_repository)],
+) -> RepositoryItem[Melding]:
+    return RepositoryItem(repository)
+
+
 def token_invalidator() -> TokenInvalidator:
     return TokenInvalidator()
 
@@ -530,18 +531,6 @@ def melding_create_action(
     token_generator: Annotated[BaseTokenGenerator, Depends(token_generator)],
 ) -> MeldingCreateAction[Melding, Classification]:
     return MeldingCreateAction(repository, classifier, state_machine, token_generator, settings.token_duration)
-
-
-def melding_retrieve_action(
-    repository: Annotated[MeldingRepository, Depends(melding_repository)],
-) -> MeldingRetrieveAction:
-    return MeldingRetrieveAction(repository)
-
-
-def melder_melding_retrieve_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
-) -> MelderMeldingRetrieveAction:
-    return MelderMeldingRetrieveAction(token_verifier)
 
 
 def melding_list_action(repository: Annotated[MeldingRepository, Depends(melding_repository)]) -> MeldingListAction:
@@ -659,19 +648,17 @@ def melding_update_action(
 
 def melding_update_action_melder(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     classifier: Annotated[Classifier[Classification], Depends(classifier)],
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     reclassifier: Annotated[Reclassifier, Depends(reclassifier)],
 ) -> MeldingUpdateActionMelder[Melding, Classification]:
-    return MeldingUpdateActionMelder(repository, token_verifier, classifier, state_machine, reclassifier)
+    return MeldingUpdateActionMelder(repository, classifier, state_machine, reclassifier)
 
 
 def melding_add_contact_action(
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> AddContactInfoToMeldingAction:
-    return AddContactInfoToMeldingAction(repository, token_verifier)
+    return AddContactInfoToMeldingAction(repository)
 
 
 def melding_answer_questions_action(
@@ -684,9 +671,8 @@ def melding_answer_questions_action(
 def melding_add_attachments_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> MeldingAddAttachmentsAction[Melding]:
-    return MeldingAddAttachmentsAction(state_machine, repository, token_verifier)
+    return MeldingAddAttachmentsAction(state_machine, repository)
 
 
 def melding_request_processing_action(
@@ -734,9 +720,8 @@ def melding_cancel_action(
 def melding_submit_location_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> MeldingSubmitLocationAction[Melding]:
-    return MeldingSubmitLocationAction(state_machine, repository, token_verifier)
+    return MeldingSubmitLocationAction(state_machine, repository)
 
 
 def mail_configuration() -> Configuration:
@@ -792,11 +777,10 @@ def melding_confirmation_mailer(
 def melding_submit_action_melder(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     token_invalidator: Annotated[TokenInvalidator, Depends(token_invalidator)],
     confirmation_mailer: Annotated[BaseMeldingConfirmationMailer[Melding], Depends(melding_confirmation_mailer)],
 ) -> MeldingSubmitActionMelder:
-    return MeldingSubmitActionMelder(repository, state_machine, token_verifier, token_invalidator, confirmation_mailer)
+    return MeldingSubmitActionMelder(repository, state_machine, token_invalidator, confirmation_mailer)
 
 
 def melding_submit_action(
@@ -859,7 +843,7 @@ def form_io_question_component_repository(
 
 def melding_answer_create_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    melding_repository_item: Annotated[RepositoryItem[Melding], Depends(melding_repository_item)],
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
     jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
@@ -867,7 +851,7 @@ def melding_answer_create_action(
 ) -> AnswerCreateAction:
     return AnswerCreateAction(
         answer_repository,
-        token_verifier,
+        melding_repository_item,
         question_repository,
         component_repository,
         jsonlogic_validator,
@@ -877,13 +861,13 @@ def melding_answer_create_action(
 
 def melding_answer_update_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    melding_repository_item: Annotated[RepositoryItem[Melding], Depends(melding_repository_item)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
     jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
 ) -> AnswerUpdateAction:
     return AnswerUpdateAction(
         answer_repository,
-        token_verifier,
+        melding_repository_item,
         component_repository,
         jsonlogic_validator,
     )
@@ -895,22 +879,14 @@ def melding_list_questions_and_answers_action(
     return MeldingListQuestionsAnswersAction(answer_repository)
 
 
-def melder_melding_list_questions_and_answers_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
-    answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
-) -> MelderMeldingListQuestionsAnswersAction[Melding, Answer]:
-    return MelderMeldingListQuestionsAnswersAction(token_verifier, answer_repository)
-
-
 def melding_answer_delete_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    melding_repository_item: Annotated[RepositoryItem[Melding], Depends(melding_repository_item)],
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
 ) -> MeldingAnswerDeleteAction:
-    return MeldingAnswerDeleteAction(token_verifier, answer_repository)
+    return MeldingAnswerDeleteAction(melding_repository_item, answer_repository)
 
 
 def melding_add_asset_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
     melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     asset_repository: Annotated[AssetRepository, Depends(asset_repository)],
     asset_type_repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
@@ -918,21 +894,10 @@ def melding_add_asset_action(
     relationship_manager: Annotated[RelationshipManager[Melding, Asset], Depends(melding_asset_relationship_manager)],
 ) -> MeldingAddAssetAction:
     return MeldingAddAssetAction(
-        token_verifier,
         melding_repository,
         asset_repository,
         asset_type_repository,
         asset_factory,
-        relationship_manager,
-    )
-
-
-def melder_melding_list_assets_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
-    relationship_manager: Annotated[RelationshipManager[Melding, Asset], Depends(melding_asset_relationship_manager)],
-) -> MelderListAssetsAction:
-    return MelderListAssetsAction(
-        token_verifier,
         relationship_manager,
     )
 
@@ -948,12 +913,12 @@ def melding_list_assets_action(
 
 
 def melding_delete_asset_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    melding_repository_item: Annotated[RepositoryItem[Melding], Depends(melding_repository_item)],
     asset_repository: Annotated[AssetRepository, Depends(asset_repository)],
     relationship_manager: Annotated[RelationshipManager[Melding, Asset], Depends(melding_asset_relationship_manager)],
 ) -> MeldingDeleteAssetAction:
     return MeldingDeleteAssetAction(
-        token_verifier,
+        melding_repository_item,
         asset_repository,
         relationship_manager,
     )
@@ -990,14 +955,6 @@ def backoffice_media_type_validator() -> MediaTypeValidator:
 
 def media_type_integrity_validator() -> MediaTypeIntegrityValidator:
     return MediaTypeIntegrityValidator()
-
-
-def melding_form_attachment_limit_validator() -> MeldingFormAttachmentLimitValidator:
-    return MeldingFormAttachmentLimitValidator(settings.form_attachment_limit)
-
-
-def backoffice_attachment_limit_validator() -> BackofficeAttachmentLimitValidator:
-    return BackofficeAttachmentLimitValidator(settings.backoffice_attachment_limit)
 
 
 def img_proxy_signature_generator() -> IMGProxySignatureGenerator:
@@ -1114,63 +1071,47 @@ def attachment_ingestor(
     )
 
 
-def melding_upload_attachment_action(
-    factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
-    repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-    backoffice_media_type_validator: Annotated[MediaTypeValidator, Depends(backoffice_media_type_validator)],
-    media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
-    backoffice_attachment_limit_validator: Annotated[
-        BackofficeAttachmentLimitValidator, Depends(backoffice_attachment_limit_validator)
-    ],
-    ingestor: Annotated[Ingestor, Depends(attachment_ingestor)],
-    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
-) -> UploadAttachmentAction:
-    return UploadAttachmentAction(
-        factory,
-        repository,
-        backoffice_media_type_validator,
-        media_type_integrity_validator,
-        backoffice_attachment_limit_validator,
-        ingestor,
-        melding_repository,
-    )
+def melding_upload_attachment_action_dependency_factory(
+    attachment_limit_validator: BackofficeAttachmentLimitValidator | MeldingFormAttachmentLimitValidator,
+) -> Callable[..., UploadAttachmentAction]:
+    def melding_upload_attachment_action(
+        attachment_factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
+        attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+        backoffice_media_type_validator: Annotated[MediaTypeValidator, Depends(backoffice_media_type_validator)],
+        media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
+        ingestor: Annotated[Ingestor, Depends(attachment_ingestor)],
+        melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    ) -> UploadAttachmentAction:
+
+        return UploadAttachmentAction(
+            attachment_factory,
+            attachment_repository,
+            backoffice_media_type_validator,
+            media_type_integrity_validator,
+            attachment_limit_validator,
+            ingestor,
+            melding_repository,
+        )
+
+    return melding_upload_attachment_action
 
 
-def melder_melding_upload_attachment_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
-    factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
-    repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-    form_media_type_validator: Annotated[MediaTypeValidator, Depends(form_media_type_validator)],
-    media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
-    melding_form_attachment_limit_validator: Annotated[
-        MeldingFormAttachmentLimitValidator, Depends(melding_form_attachment_limit_validator)
-    ],
-    ingestor: Annotated[Ingestor, Depends(attachment_ingestor)],
-) -> MelderUploadAttachmentAction:
-    return MelderUploadAttachmentAction(
-        token_verifier,
-        factory,
-        repository,
-        form_media_type_validator,
-        media_type_integrity_validator,
-        melding_form_attachment_limit_validator,
-        ingestor,
-    )
+melding_upload_attachment_action_form = melding_upload_attachment_action_dependency_factory(
+    MeldingFormAttachmentLimitValidator(settings.form_attachment_limit)
+)
 
 
-def melder_melding_download_attachment_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
-    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-    filesystem: Annotated[Filesystem, Depends(filesystem)],
-) -> MelderDownloadAttachmentAction:
-    return MelderDownloadAttachmentAction(token_verifier, attachment_repository, filesystem)
+melding_upload_attachment_action_backoffice = melding_upload_attachment_action_dependency_factory(
+    BackofficeAttachmentLimitValidator(settings.backoffice_attachment_limit)
+)
 
 
 def download_attachment_action(
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
+    melding_repository_item: Annotated[RepositoryItem[Melding], Depends(melding_repository_item)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> DownloadAttachmentAction:
-    return DownloadAttachmentAction(attachment_repository, filesystem)
+    return DownloadAttachmentAction(melding_repository_item, attachment_repository, filesystem)
 
 
 def melding_list_attachments_action(
@@ -1179,19 +1120,12 @@ def melding_list_attachments_action(
     return ListAttachmentsAction(attachment_repository)
 
 
-def melder_melding_list_attachments_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
-    attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-) -> MelderListAttachmentsAction:
-    return MelderListAttachmentsAction(token_verifier, attachment_repository)
-
-
 def melder_melding_delete_attachment_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    melding_repository_item: Annotated[RepositoryItem[Melding], Depends(melding_repository_item)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> MelderDeleteAttachmentAction:
-    return MelderDeleteAttachmentAction(token_verifier, attachment_repository, filesystem)
+    return MelderDeleteAttachmentAction(melding_repository_item, attachment_repository, filesystem)
 
 
 def delete_attachment_action(
@@ -1282,14 +1216,14 @@ def location_output_transformer(
 
 
 def melding_add_location_action(
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    melding_repository_item: Annotated[RepositoryItem[Melding], Depends(melding_repository_item)],
     location_ingestor: Annotated[MeldingLocationIngestor, Depends(location_ingestor)],
     background_task_manager: BackgroundTasks,
     address_enricher_task: Annotated[AddressEnricherTask, Depends(address_enricher_task)],
     wkb_to_point_shape_transformer: Annotated[WKBToPointShapeTransformer, Depends(wkb_to_point_shape_transformer)],
 ) -> AddLocationToMeldingAction:
     return AddLocationToMeldingAction(
-        token_verifier,
+        melding_repository_item,
         location_ingestor,
         background_task_manager,
         address_enricher_task,
@@ -1338,9 +1272,8 @@ def melding_update_output_factory(
 def melding_contact_info_added_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    token_verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> MeldingContactInfoAddedAction[Melding]:
-    return MeldingContactInfoAddedAction(state_machine, repository, token_verifier)
+    return MeldingContactInfoAddedAction(state_machine, repository)
 
 
 def melding_get_possible_next_states_action(

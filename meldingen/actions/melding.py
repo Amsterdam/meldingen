@@ -16,8 +16,8 @@ from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.repositories import BaseMeldingRepository
+from meldingen_core.repository_item import RepositoryItem
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingTransitions
-from meldingen_core.token import TokenVerifier
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
@@ -53,17 +53,14 @@ class MeldingListAction(BaseMeldingListAction[Melding]):
             )
 
 
-class MeldingRetrieveAction(BaseMeldingRetrieveAction[Melding]): ...
+class MeldingRetrieveAction:
+    _melding_repository_item: RepositoryItem[Melding]
 
+    def __init__(self, melding_repository_item: RepositoryItem[Melding]):
+        self._melding_repository_item = melding_repository_item
 
-class MelderMeldingRetrieveAction:
-    _verify_token: TokenVerifier[Melding]
-
-    def __init__(self, token_verifier: TokenVerifier[Melding]):
-        self._verify_token = token_verifier
-
-    async def __call__(self, melding_id: int, token: str) -> Melding:
-        return await self._verify_token(melding_id, token)
+    async def __call__(self, melding_id: int) -> Melding:
+        return await self._melding_repository_item(melding_id)
 
 
 class AddContactInfoToMeldingAction(BaseMeldingAddContactInfoAction[Melding]): ...
@@ -85,7 +82,7 @@ class MeldingSubmitActionMelder(BaseMeldingSubmitActionMelder[Melding]): ...
 
 
 class AddLocationToMeldingAction:
-    _verify_token: TokenVerifier[Melding]
+    _melding_repository_item: RepositoryItem[Melding]
     _ingest_location: MeldingLocationIngestor
     _background_task_manager: BackgroundTasks
     _add_address: BaseAddressEnricher[Melding, Address]
@@ -93,20 +90,20 @@ class AddLocationToMeldingAction:
 
     def __init__(
         self,
-        token_verifier: TokenVerifier[Melding],
+        melding_repository_item: RepositoryItem[Melding],
         location_ingestor: MeldingLocationIngestor,
         background_task_manager: BackgroundTasks,
         address_enricher: BaseAddressEnricher[Melding, Address],
         wkb_to_point_shape_transformer: WKBToPointShapeTransformer,
     ) -> None:
-        self._verify_token = token_verifier
+        self._melding_repository_item = melding_repository_item
         self._ingest_location = location_ingestor
         self._background_task_manager = background_task_manager
         self._add_address = address_enricher
         self._wkb_to_point_shape = wkb_to_point_shape_transformer
 
-    async def __call__(self, melding_id: int, token: str, location: GeoJson) -> Melding:
-        melding = await self._verify_token(melding_id, token)
+    async def __call__(self, melding_id: int, location: GeoJson) -> Melding:
+        melding = await self._melding_repository_item(melding_id)
         melding = await self._ingest_location(melding, location)
 
         assert melding.geo_location is not None
