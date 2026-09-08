@@ -2831,7 +2831,7 @@ class TestMeldingQuestionAnswer:
                 melding_id=melding_with_classification.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding_token},
             json={"time": time_value, "type": AnswerTypeEnum.time},
         )
 
