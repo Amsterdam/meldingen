@@ -945,14 +945,6 @@ def filesystem_factory() -> BaseFilesystemFactory:
     return AzureFilesystemFactory()
 
 
-def form_media_type_validator() -> MediaTypeValidator:
-    return MediaTypeValidator(settings.form_attachment_allow_media_types)
-
-
-def backoffice_media_type_validator() -> MediaTypeValidator:
-    return MediaTypeValidator(settings.backoffice_attachment_allow_media_types)
-
-
 def media_type_integrity_validator() -> MediaTypeIntegrityValidator:
     return MediaTypeIntegrityValidator()
 
@@ -1073,11 +1065,12 @@ def attachment_ingestor(
 
 def melding_upload_attachment_action_dependency_factory(
     attachment_limit_validator: BackofficeAttachmentLimitValidator | MeldingFormAttachmentLimitValidator,
+    media_type_validator: MediaTypeValidator,
 ) -> Callable[..., UploadAttachmentAction]:
     def melding_upload_attachment_action(
         attachment_factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
         attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-        backoffice_media_type_validator: Annotated[MediaTypeValidator, Depends(backoffice_media_type_validator)],
+        media_type_validator: Annotated[MediaTypeValidator, Depends(media_type_validator)],
         media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
         ingestor: Annotated[Ingestor, Depends(attachment_ingestor)],
         melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
@@ -1086,7 +1079,7 @@ def melding_upload_attachment_action_dependency_factory(
         return UploadAttachmentAction(
             attachment_factory,
             attachment_repository,
-            backoffice_media_type_validator,
+            media_type_validator,
             media_type_integrity_validator,
             attachment_limit_validator,
             ingestor,
@@ -1097,12 +1090,14 @@ def melding_upload_attachment_action_dependency_factory(
 
 
 melding_upload_attachment_action_form = melding_upload_attachment_action_dependency_factory(
-    MeldingFormAttachmentLimitValidator(settings.form_attachment_limit)
+    MeldingFormAttachmentLimitValidator(settings.form_attachment_limit),
+    MediaTypeValidator(settings.form_attachment_allow_media_types),
 )
 
 
 melding_upload_attachment_action_backoffice = melding_upload_attachment_action_dependency_factory(
-    BackofficeAttachmentLimitValidator(settings.backoffice_attachment_limit)
+    BackofficeAttachmentLimitValidator(settings.backoffice_attachment_limit),
+    MediaTypeValidator(settings.backoffice_attachment_allow_media_types),
 )
 
 
