@@ -2661,7 +2661,7 @@ class TestMeldingQuestionAnswer:
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_token"],
-        [("supersecuretoken",)],
+        ["supersecuretoken"],
     )
     async def test_answer_question_does_not_exists(
         self,
@@ -5294,7 +5294,7 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         return self.PATH_PARAMS
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
+    @pytest.mark.parametrize(["melding_token"], ["supersecuretoken"])
     async def test_list_attachments(
         self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding, auth_user: None
     ) -> None:
@@ -5308,7 +5308,7 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         assert len(attachments) == len(body)
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
+    @pytest.mark.parametrize(["melding_token"], ["supersecuretoken"])
     async def test_list_attachments_with_users(
         self, app: FastAPI, client: AsyncClient, melding_with_attachments_and_users: Melding, auth_user: None
     ) -> None:
@@ -5354,7 +5354,7 @@ class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_404_NOT_FOUND
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
+    @pytest.mark.parametrize(["melding_token"], ["supersecuretoken"])
     async def test_melder_list_attachments(
         self, app: FastAPI, client: AsyncClient, melding_with_attachments: Melding
     ) -> None:
