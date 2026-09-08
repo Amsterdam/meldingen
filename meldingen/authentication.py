@@ -70,10 +70,10 @@ async def authenticate_user(
 async def verify_token_and_retrieve_melding(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     token: Annotated[str, Query(description="The token of the melding.")],
-    verify_token_and_retrieve_melding: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+    verify_and_retrieve: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> Melding:
     try:
-        return await verify_token_and_retrieve_melding(melding_id, token)
+        return await verify_and_retrieve(melding_id, token)
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e))
     except TokenException as e:
