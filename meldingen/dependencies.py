@@ -1070,7 +1070,6 @@ def melding_upload_attachment_action_dependency_factory(
     def melding_upload_attachment_action(
         attachment_factory: Annotated[AttachmentFactory, Depends(attachment_factory)],
         attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
-        media_type_validator: Annotated[MediaTypeValidator, Depends(media_type_validator)],
         media_type_integrity_validator: Annotated[MediaTypeIntegrityValidator, Depends(media_type_integrity_validator)],
         ingestor: Annotated[Ingestor, Depends(attachment_ingestor)],
         melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],

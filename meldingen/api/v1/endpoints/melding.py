@@ -916,6 +916,7 @@ async def upload_attachment_melder(
     action: Annotated[UploadAttachmentAction, Depends(melding_upload_attachment_action_form)],
     produce_output: Annotated[AttachmentOutputFactory, Depends(attachment_output_factory)],
 ) -> AttachmentOutput:
+
     prepared_upload = await PreparedAttachmentUpload.from_upload_file(file)
 
     try:
