@@ -325,14 +325,8 @@ async def retrieve_melding(
 )
 async def retrieve_melding_melder(
     melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
-    action: Annotated[MeldingRetrieveAction, Depends(melding_repository_item)],
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
-    try:
-        melding = await action(melding.id)
-    except NotFoundException:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-
     return await produce_output(melding)
 
 
