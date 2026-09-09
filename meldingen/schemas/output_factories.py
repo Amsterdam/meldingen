@@ -1026,6 +1026,7 @@ class AttachmentOutputFactory:
         return AttachmentOutput(
             id=attachment.id,
             original_filename=attachment.original_filename,
+            original_media_type=attachment.original_media_type,
             created_at=attachment.created_at,
             updated_at=attachment.updated_at,
             user=(
