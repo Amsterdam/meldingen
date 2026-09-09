@@ -4511,7 +4511,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
         await db_session.refresh(attachments[0])
 
         assert attachments[0].original_filename == filename
-        assert attachments[0].original_media_type is not None
+        assert attachments[0].original_media_type == ("image/webp" if filename.endswith(".webp") else "image/jpeg")
 
         split_path, _ = attachments[0].file_path.rsplit(".", 1)
         optimized_path = f"{split_path}-optimized.webp"
