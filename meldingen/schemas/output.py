@@ -322,6 +322,7 @@ class UserOutput(BaseOutputModel):
 
 class AttachmentOutput(BaseOutputModel):
     original_filename: str
+    original_media_type: str
     user: UserOutput | None
 
 
