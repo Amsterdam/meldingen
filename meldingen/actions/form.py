@@ -486,7 +486,7 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
     async def __call__(self, melding_id: int, answer_id: int, answer_input: AnswerInputUnion) -> Answer:
         """
         Conditions:
-        1. The provided token must be valid
+        1. The melding must exist
         2. The answer must exist
         3. The answer must belong to the melding identified by melding_id
         4. The type of the answer_input must correspond to the type of the existing answer
