@@ -5301,7 +5301,7 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         body = response.json()
 
         assert len(attachments) == len(body)
-        assert all(item.get("original_media_type") is not None for item in body)
+        assert all(item.get("original_media_type") == "image/jpeg" for item in body)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
