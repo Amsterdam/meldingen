@@ -1,3 +1,4 @@
+import aiofiles
 import pytest
 from fastapi import HTTPException
 
@@ -36,3 +37,8 @@ def test_sort_param(attribute: str, direction: str) -> None:
 def test_sort_param_invalid_input() -> None:
     with pytest.raises(HTTPException):
         sort_param("asdf")
+
+
+async def async_open_file(filename: str) -> bytes:
+    async with aiofiles.open(filename, "rb") as file:
+        return await file.read()

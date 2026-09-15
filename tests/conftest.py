@@ -139,11 +139,14 @@ def app() -> FastAPI:
 
 @pytest.fixture
 async def client(app: FastAPI, test_database: None, override_dependencies: None) -> AsyncGenerator[AsyncClient]:
-    async with LifespanManager(app), AsyncClient(
-        transport=ASGITransport(app=app, raise_app_exceptions=False),
-        base_url="http://testserver",
-        headers={"Content-Type": "application/json"},
-    ) as client:
+    async with (
+        LifespanManager(app),
+        AsyncClient(
+            transport=ASGITransport(app=app, raise_app_exceptions=False),
+            base_url="http://testserver",
+            headers={"Content-Type": "application/json"},
+        ) as client,
+    ):
         yield client
 
 

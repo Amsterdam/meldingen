@@ -14,13 +14,11 @@ class InvalidAPIRequestException(Exception): ...
 
 
 class BaseAddressTransformer(metaclass=ABCMeta):
-
     @abstractmethod
     def __call__(self, data: dict[str, Any]) -> Address: ...
 
 
 class PDOKAddressTransformer(BaseAddressTransformer):
-
     def __call__(self, data: dict[str, str | int | None]) -> Address:
         street = data.get("straatnaam")
         assert isinstance(street, str)

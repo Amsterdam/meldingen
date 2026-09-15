@@ -11,7 +11,6 @@ from jsonlogic.typing import OperatorArgument
 
 
 class JSONLogicValidationException(Exception):
-
     def __init__(self, msg: str, input: dict[str, Any]) -> None:
         self.msg = msg
         self.input = input

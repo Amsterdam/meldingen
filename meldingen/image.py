@@ -122,6 +122,10 @@ class BaseMetadataStripper(metaclass=ABCMeta):
     async def __call__(self, image_path: str) -> None: ...
 
 
+class IMGProxyContainerClientException(Exception):
+    """Exception raised when the IMGProxy container client fails."""
+
+
 class IMGProxyMetadataStripper(BaseMetadataStripper):
     """Replaces an image with a metadata free version of itself."""
 
@@ -151,7 +155,7 @@ class IMGProxyMetadataStripper(BaseMetadataStripper):
 
             return
 
-        raise Exception("Failed to get container client!")
+        raise IMGProxyContainerClientException("Failed to get container client!")
 
 
 class IMGProxyImageProcessor:
@@ -184,7 +188,7 @@ class IMGProxyImageProcessor:
 
             return processed_path, "image/webp"
 
-        raise Exception("Failed to get container client!")
+        raise IMGProxyContainerClientException("Failed to get container client!")
 
 
 class IMGProxyImageOptimizer(BaseImageOptimizer):
@@ -277,7 +281,7 @@ class Ingestor(BaseIngestor[Attachment]):
             logger.exception("Failed to strip metadata from '%s'!", image_path)
 
     async def __call__(self, attachment: Attachment, data: AsyncIterator[bytes]) -> None:
-        path = f"{self._base_directory}/{str(uuid4()).replace("-", "/")}/"
+        path = f"{self._base_directory}/{str(uuid4()).replace('-', '/')}/"
         attachment.file_path = path + attachment.original_filename
 
         await self._filesystem.makedirs(path)

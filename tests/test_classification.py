@@ -89,5 +89,5 @@ async def test_build_dynamic_classification_response_model_rejects_invalid_name(
 
     model = await build_dynamic_classification_response_model(repository)
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         model(classification="Onbekend")

@@ -12,7 +12,6 @@ class UrlSafeTokenGenerator(BaseTokenGenerator):
 
 
 class TokenInvalidator(BaseTokenInvalidator[Melding]):
-
     @property
     def allowed_states(self) -> list[str]:
         return [MeldingStates.SUBMITTED]

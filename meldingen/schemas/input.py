@@ -224,7 +224,13 @@ The panel is a holder for other input components, and therefore cannot be part o
 F.e. A panel should be allowed to hold another panel, only a valid input component.
 """
 FormComponentInputUnion = Annotated[
-    FormTextAreaComponentInput | FormTextFieldComponentInput | FormRadioComponentInput | FormCheckboxComponentInput | FormSelectComponentInput | FormDateComponentInput | FormTimeComponentInput,
+    FormTextAreaComponentInput
+    | FormTextFieldComponentInput
+    | FormRadioComponentInput
+    | FormCheckboxComponentInput
+    | FormSelectComponentInput
+    | FormDateComponentInput
+    | FormTimeComponentInput,
     Discriminator("type"),
 ]
 
@@ -234,7 +240,14 @@ The panel component is a special case, because it can contain other components.
 This is used at the root of a Form, where input components and panels are both allowed.
 """
 FormComponentUnion = Annotated[
-    FormPanelComponentInput | FormTextAreaComponentInput | FormTextFieldComponentInput | FormRadioComponentInput | FormCheckboxComponentInput | FormSelectComponentInput | FormDateComponentInput | FormTimeComponentInput,
+    FormPanelComponentInput
+    | FormTextAreaComponentInput
+    | FormTextFieldComponentInput
+    | FormRadioComponentInput
+    | FormCheckboxComponentInput
+    | FormSelectComponentInput
+    | FormDateComponentInput
+    | FormTimeComponentInput,
     Discriminator("type"),
 ]
 
@@ -260,7 +273,10 @@ class ValueLabelAnswerInput(BaseModel):
 
 
 AnswerInputUnion = Annotated[
-    Annotated[TextAnswerInput, Tag(AnswerTypeEnum.text)] | Annotated[TimeAnswerInput, Tag(AnswerTypeEnum.time)] | Annotated[DateAnswerInput, Tag(AnswerTypeEnum.date)] | Annotated[ValueLabelAnswerInput, Tag(AnswerTypeEnum.value_label)],
+    Annotated[TextAnswerInput, Tag(AnswerTypeEnum.text)]
+    | Annotated[TimeAnswerInput, Tag(AnswerTypeEnum.time)]
+    | Annotated[DateAnswerInput, Tag(AnswerTypeEnum.date)]
+    | Annotated[ValueLabelAnswerInput, Tag(AnswerTypeEnum.value_label)],
     Discriminator("type"),
 ]
 

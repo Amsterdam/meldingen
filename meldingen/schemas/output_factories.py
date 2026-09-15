@@ -95,7 +95,7 @@ class ValidateAdder:
         jsonlogic = await component.awaitable_attrs.jsonlogic
         if jsonlogic is not None:
             output.validate_ = FormComponentOutputValidate.model_validate_json(
-                f'{{"json": {jsonlogic}, "required": {"true" if required else "false"}, "required_error_message": {json.dumps(required_error_message)if required_error_message else "null"} }}'
+                f'{{"json": {jsonlogic}, "required": {"true" if required else "false"}, "required_error_message": {json.dumps(required_error_message) if required_error_message else "null"} }}'
             )
         else:
             output.validate_ = FormComponentOutputValidate(
@@ -262,11 +262,23 @@ class StaticFormComponentOutputFactory:
         self._radio_component = radio_factory
         self._select_component = select_factory
 
-    async def __call__(self, components: list[FormIoComponent]) -> list[
-        StaticFormPanelComponentOutput | StaticFormTextAreaComponentOutput | StaticFormTextFieldInputComponentOutput | StaticFormCheckboxComponentOutput | StaticFormRadioComponentOutput | StaticFormSelectComponentOutput
+    async def __call__(
+        self, components: list[FormIoComponent]
+    ) -> list[
+        StaticFormPanelComponentOutput
+        | StaticFormTextAreaComponentOutput
+        | StaticFormTextFieldInputComponentOutput
+        | StaticFormCheckboxComponentOutput
+        | StaticFormRadioComponentOutput
+        | StaticFormSelectComponentOutput
     ]:
         output_components: list[
-            StaticFormPanelComponentOutput | StaticFormTextAreaComponentOutput | StaticFormTextFieldInputComponentOutput | StaticFormCheckboxComponentOutput | StaticFormRadioComponentOutput | StaticFormSelectComponentOutput
+            StaticFormPanelComponentOutput
+            | StaticFormTextAreaComponentOutput
+            | StaticFormTextFieldInputComponentOutput
+            | StaticFormCheckboxComponentOutput
+            | StaticFormRadioComponentOutput
+            | StaticFormSelectComponentOutput
         ] = []
         for component in components:
             if isinstance(component, FormIoPanelComponent):
@@ -548,11 +560,27 @@ class FormComponentOutputFactory:
         self._date_component = date_factory
         self._time_component = time_factory
 
-    async def __call__(self, components: list[FormIoComponent]) -> list[
-        FormPanelComponentOutput | FormTextAreaComponentOutput | FormTextFieldInputComponentOutput | FormCheckboxComponentOutput | FormRadioComponentOutput | FormSelectComponentOutput | FormDateComponentOutput | FormTimeComponentOutput
+    async def __call__(
+        self, components: list[FormIoComponent]
+    ) -> list[
+        FormPanelComponentOutput
+        | FormTextAreaComponentOutput
+        | FormTextFieldInputComponentOutput
+        | FormCheckboxComponentOutput
+        | FormRadioComponentOutput
+        | FormSelectComponentOutput
+        | FormDateComponentOutput
+        | FormTimeComponentOutput
     ]:
         output_components: list[
-            FormPanelComponentOutput | FormTextAreaComponentOutput | FormTextFieldInputComponentOutput | FormCheckboxComponentOutput | FormRadioComponentOutput | FormSelectComponentOutput | FormDateComponentOutput | FormTimeComponentOutput
+            FormPanelComponentOutput
+            | FormTextAreaComponentOutput
+            | FormTextFieldInputComponentOutput
+            | FormCheckboxComponentOutput
+            | FormRadioComponentOutput
+            | FormSelectComponentOutput
+            | FormDateComponentOutput
+            | FormTimeComponentOutput
         ] = []
         for component in components:
             if isinstance(component, FormIoPanelComponent):
@@ -832,8 +860,12 @@ class MeldingUpdateOutputFactory(MeldingOutputFactory):
         )
 
 
-class AnswerOutputFactory:
+class UnsupportedAnswerTypeException(Exception):
+    def __init__(self, answer_type: type):
+        super().__init__(f"Unsupported answer-question output type: {answer_type}")
 
+
+class AnswerOutputFactory:
     async def __call__(self, answer: Answer) -> AnswerOutputUnion:
         fields = {
             "id": answer.id,
@@ -867,7 +899,7 @@ class AnswerOutputFactory:
                 values_and_labels=await answer.awaitable_attrs.values_and_labels,
             )
         else:
-            raise Exception(f"Unsupported answer-question output type: {type(answer)}")
+            raise UnsupportedAnswerTypeException(type(answer))
 
 
 class AnswerQuestionOutputFactory:
@@ -907,7 +939,7 @@ class AnswerQuestionOutputFactory:
                 values_and_labels=await answer.awaitable_attrs.values_and_labels,
             )
         else:
-            raise Exception(f"Unsupported answer-question output type: {type(answer)}")
+            raise UnsupportedAnswerTypeException(type(answer))
 
 
 class AnswerListOutputFactory:
@@ -987,7 +1019,6 @@ class AssetOutputFactory:
 
 
 class AttachmentOutputFactory:
-
     def __call__(self, attachment: Attachment) -> AttachmentOutput:
 
         return AttachmentOutput(

@@ -53,6 +53,7 @@ from meldingen.models import (
     ValueLabelAnswer,
 )
 from meldingen.repositories import MeldingRepository
+from tests.api.test_utils import async_open_file
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 # The metadata that "amsterdam-logo-with-metadata.jpg" carries: GPS coordinates, a date and time, a
@@ -432,8 +433,8 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         auth_user: None,
         meldingen_with_location: list[Melding],
     ) -> None:
-        with open("tests/resources/stadsdeel-centrum.json") as f:
-            geojson = f.read()
+
+        geojson = await async_open_file("tests/resources/stadsdeel-centrum.json")
 
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson})
 
@@ -586,8 +587,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         auth_user: None,
         meldingen_with_different_states_and_locations: list[Melding],
     ) -> None:
-        with open("tests/resources/stadsdeel-centrum.json") as f:
-            geojson = f.read()
+        geojson = await async_open_file("tests/resources/stadsdeel-centrum.json")
 
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson, "state": MeldingStates.SUBMITTED}
@@ -4487,13 +4487,12 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": melding.token},
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         filename,
                     ),
-                    "rb",
                 ),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
@@ -4540,13 +4539,12 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": melding.token},
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         "too-large.jpg",
                     ),
-                    "rb",
                 ),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
@@ -4574,13 +4572,12 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": melding.token},
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         filename,
                     ),
-                    "rb",
                 ),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
@@ -4610,13 +4607,12 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             files={
                 "file": (
                     "amsterdam-logo.png",
-                    open(
+                    await async_open_file(
                         path.join(
                             path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                             "resources",
                             "amsterdam-logo.png",
                         ),
-                        "rb",
                     ),
                     "image/jpeg",
                 ),
@@ -4644,13 +4640,12 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=123),
             params={"token": "supersecuretoken"},
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         "test_file.txt",
                     ),
-                    "rb",
                 ),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
@@ -4674,13 +4669,12 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         "test_file.txt",
                     ),
-                    "rb",
                 ),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
@@ -4709,13 +4703,12 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         "test_file.txt",
                     ),
-                    "rb",
                 ),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
@@ -4741,13 +4734,12 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         "test_file.txt",
                     ),
-                    "rb",
                 ),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
@@ -4775,13 +4767,12 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding_with_attachments.id),
             params={"token": melding_with_attachments.token},
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         "amsterdam-logo.png",
-                    ),
-                    "rb",
+                    )
                 ),
             },
             headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
@@ -4835,13 +4826,12 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         filename,
-                    ),
-                    "rb",
+                    )
                 ),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
@@ -4893,13 +4883,12 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         "too-large.jpg",
                     ),
-                    "rb",
                 ),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
@@ -4926,13 +4915,12 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             files={
-                "file": open(
+                "file": await async_open_file(
                     path.join(
                         path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                         "resources",
                         filename,
                     ),
-                    "rb",
                 ),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
@@ -4962,13 +4950,12 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
             files={
                 "file": (
                     "amsterdam-logo.png",
-                    open(
+                    await async_open_file(
                         path.join(
                             path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
                             "resources",
                             "amsterdam-logo.png",
-                        ),
-                        "rb",
+                        )
                     ),
                     "image/jpeg",
                 ),
@@ -4993,19 +4980,20 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         client: AsyncClient,
         auth_user: None,
     ) -> None:
+
+        filename = path.join(
+            path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+            "resources",
+            "amsterdam-logo.png",
+        )
+        send_files = await async_open_file(filename)
+
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=123),
             files={
                 "file": (
                     "amsterdam-logo.png",
-                    open(
-                        path.join(
-                            path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                            "resources",
-                            "amsterdam-logo.png",
-                        ),
-                        "rb",
-                    ),
+                    send_files,
                     "image/jpeg",
                 ),
             },
@@ -5043,17 +5031,17 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         assert len(attachments) == settings.backoffice_attachment_limit
         assert all(attachment.user_id == auth_behandelaar.id for attachment in attachments)
 
+        filename = path.join(
+            path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
+            "resources",
+            "amsterdam-logo.png",
+        )
+        send_files = await async_open_file(filename)
+
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        "amsterdam-logo.png",
-                    ),
-                    "rb",
-                ),
+                "file": send_files,
             },
             headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
         )

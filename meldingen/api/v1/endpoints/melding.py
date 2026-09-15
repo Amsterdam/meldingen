@@ -36,7 +36,7 @@ from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, 
 from meldingen_core.token import TokenException
 from meldingen_core.validators import AttachmentLimitReachedException, MediaTypeIntegrityError, MediaTypeNotAllowed
 from mp_fsm.statemachine import GuardException, WrongStateException
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import BaseModel, ValidationError
 from sqlalchemy.exc import IntegrityError
 from starlette.status import (
     HTTP_200_OK,
@@ -98,7 +98,6 @@ from meldingen.dependencies import (
     answer_output_factory,
     asset_output_factory,
     attachment_output_factory,
-    form_io_question_component_repository,
     melder_melding_delete_attachment_action,
     melder_melding_download_attachment_action,
     melder_melding_list_assets_action,
@@ -158,15 +157,13 @@ from meldingen.generators import PublicIdGenerator
 from meldingen.models import (
     Answer,
     Classification,
-    FormIoComponentToAnswerTypeMap,
-    FormIoComponentTypeEnum,
     Label,
     Melding,
     Note,
     Source,
     User,
 )
-from meldingen.repositories import FormIoQuestionComponentRepository, MeldingRepository
+from meldingen.repositories import MeldingRepository
 from meldingen.schemas.input import (
     AnswerInputUnion,
     CompleteMeldingInput,
@@ -357,21 +354,19 @@ async def retrieve_melding_melder(
     responses={
         **unauthorized_response,
         **not_found_response,
-        
-            HTTP_400_BAD_REQUEST: {
-                "description": "The melding is in a state that may not be classified through this endpoint.",
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "detail": (
-                                "Melding may not be classified from current state, "
-                                "use POST /melding/1/reclassification instead"
-                            )
-                        },
-                    }
-                },
-            }
-        ,
+        HTTP_400_BAD_REQUEST: {
+            "description": "The melding is in a state that may not be classified through this endpoint.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": (
+                            "Melding may not be classified from current state, "
+                            "use POST /melding/1/reclassification instead"
+                        )
+                    },
+                }
+            },
+        },
     },
     dependencies=[Depends(authenticate_user)],
 )
@@ -763,16 +758,14 @@ async def cancel_melding(
         **unauthorized_response,
         **not_found_response,
         **default_response,
-        
-            HTTP_400_BAD_REQUEST: {
-                "description": "The melding is in a state that may not be reclassified.",
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Melding may not be reclassified from current state"},
-                    }
-                },
-            }
-        ,
+        HTTP_400_BAD_REQUEST: {
+            "description": "The melding is in a state that may not be reclassified.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Melding may not be reclassified from current state"},
+                }
+            },
+        },
     },
 )
 async def reclassify_melding(
@@ -799,34 +792,6 @@ async def reclassify_melding(
     return await produce_output(melding)
 
 
-async def resolve_answer_type_through_question_id(
-    request: Request,
-    question_id: int,
-    form_question_component_repository: FormIoQuestionComponentRepository = Depends(
-        form_io_question_component_repository
-    ),
-) -> AnswerInputUnion:
-    """Dependency that dynamically selects the correct AnswerInputUnion member based on the question type."""
-
-    try:
-        component = await form_question_component_repository.find_component_by_question_id(question_id)
-    except NotFoundException:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND, detail=f"Question component not found for question_id {question_id}"
-        )
-
-    answer_type = FormIoComponentToAnswerTypeMap.get(FormIoComponentTypeEnum(component.type))
-
-    body = await request.json()
-    body["type"] = answer_type
-
-    # Use type adapter to validate a python Union and create correct union member
-    try:
-        return TypeAdapter(AnswerInputUnion).validate_python(body)
-    except ValidationError as e:
-        raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT, detail=e.errors()) from e
-
-
 @router.post(
     "/{melding_id}/question/{question_id}",
     name="melding:answer-question",
@@ -836,21 +801,19 @@ async def resolve_answer_type_through_question_id(
         **not_found_response,
         **unauthorized_response,
         **default_response,
-        
-            HTTP_400_BAD_REQUEST: {
-                "description": "",
-                "content": {
-                    "application/json": {
-                        "examples": {
-                            "The melding is not classified.": {"value": {"detail": "Melding not classified"}},
-                            "The melding and form classifications are not the same ": {
-                                "value": {"detail": "Classification mismatch"}
-                            },
-                        }
+        HTTP_400_BAD_REQUEST: {
+            "description": "",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "The melding is not classified.": {"value": {"detail": "Melding not classified"}},
+                        "The melding and form classifications are not the same ": {
+                            "value": {"detail": "Classification mismatch"}
+                        },
                     }
-                },
-            }
-        ,
+                }
+            },
+        },
     },
 )
 async def answer_additional_question(
@@ -882,20 +845,18 @@ async def answer_additional_question(
     responses={
         **not_found_response,
         **unauthorized_response,
-        
-            HTTP_400_BAD_REQUEST: {
-                "description": "",
-                "content": {
-                    "application/json": {
-                        "examples": {
-                            "The answer does not belong to the melding.": {
-                                "value": {"detail": "Answer does not belong to the melding"}
-                            },
+        HTTP_400_BAD_REQUEST: {
+            "description": "",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "The answer does not belong to the melding.": {
+                            "value": {"detail": "Answer does not belong to the melding"}
                         },
                     },
                 },
-            }
-        ,
+            },
+        },
     },
 )
 async def update_answer(

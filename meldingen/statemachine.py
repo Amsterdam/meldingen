@@ -1,4 +1,3 @@
-
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
 from mp_fsm.statemachine import BaseGuard, BaseStateMachine, BaseTransition
