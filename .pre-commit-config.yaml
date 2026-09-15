@@ -5,17 +5,17 @@ repos:
       - id: check-added-large-files
   - repo: local
     hooks:
-      - id: black
-        name: Black
-        description: This hook runs Black through uv
-        entry: uv run black . --check
+      - id: ruffcheck
+        name: Ruff Check
+        description: This hook runs Ruff through uv
+        entry: uv run ruff check .
         language: system
         always_run: true
         pass_filenames: false
-      - id: isort
-        name: iSort
-        description: This hook runs iSort through uv
-        entry: uv run isort . --check
+      - id: ruffformat
+        name: Ruff Format
+        description: This hook runs Ruff through uv
+        entry: uv run ruff format .
         language: system
         always_run: true
         pass_filenames: false
