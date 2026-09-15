@@ -1,4 +1,4 @@
-from typing import Any, Final
+from typing import Any, ClassVar, Final
 
 import pytest
 from fastapi import FastAPI
@@ -62,7 +62,7 @@ class TestStaticFormRetrieve(BaseStaticFormTest):
 class TestStaticFormUpdate(BaseUnauthorizedTest, BaseFormTest):
     ROUTE_NAME: Final[str] = "static-form:update"
     METHOD: Final[str] = "PUT"
-    PATH_PARAMS: dict[str, Any] = {"static_form_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"static_form_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -515,7 +515,6 @@ class TestStaticFormList(BaseStaticFormTest):
         assert len(data) == len(static_forms)
 
         for form in data:
-
             fixture_form = next(static_form for static_form in static_forms if static_form.type == form.get("type"))
 
             assert form.get("title") == fixture_form.title

@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from os import path
-from typing import Any, Final, override
+from typing import Any, ClassVar, Final, override
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -801,7 +801,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
 class TestMeldingRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:retrieve"
     METHOD: Final[str] = "GET"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -1400,7 +1400,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
 class TestMeldingUpdate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:update"
     METHOD: Final[str] = "PATCH"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -1476,7 +1476,10 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         body = response.json()
         response_labels = body.get("labels", [])
 
-        assert {response_labels[0].get("id"), response_labels[1].get("id")} == {initial_labels[0].id, initial_labels[1].id}
+        assert {response_labels[0].get("id"), response_labels[1].get("id")} == {
+            initial_labels[0].id,
+            initial_labels[1].id,
+        }
         assert body.get("urgency") == 1
 
     @pytest.mark.anyio
@@ -1661,8 +1664,7 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert response.json().get("detail") == (
-            "Melding may not be classified from current state, "
-            f"use POST /melding/{melding.id}/reclassification instead"
+            f"Melding may not be classified from current state, use POST /melding/{melding.id}/reclassification instead"
         )
 
         # Refused before anything is written: not even the urgency that came with it is applied.
@@ -4796,7 +4798,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
 
 class TestMeldingUploadAttachment(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:attachment"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -5274,7 +5276,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
 
 class TestMeldingListAttachments(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:attachments"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -6161,7 +6163,7 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
 
 
 class TestMeldingSubmit(BaseUnauthorizedTest):
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return "melding:submit"
@@ -6460,7 +6462,7 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
 
 class TestMeldingMelderListAssets(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:assets_melder"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -6506,7 +6508,7 @@ class TestMeldingMelderListAssets(BaseTokenAuthenticationTest):
 
 class TestMeldingListAssets(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:assets"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
