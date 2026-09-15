@@ -38,12 +38,12 @@ def test_note_input_does_not_count_paragraph_breaks_towards_the_limit() -> None:
         "Bug: Wanneer was het? in back office werkt nog niet",
         "Bug: /locatie laat maar 4 assets zien als je er 5 kiest. Reproduceren, klokken?",
         "Bug: leeggooien aanvullende tekstvraag werkt niet",
-        "Bug: als je in back office melding aanmaakt met aanvullende vragen, dan in summary naar "
+        ("Bug: als je in back office melding aanmaakt met aanvullende vragen, dan in summary naar "
         "primary form gaan, dan aanpast naar cat zonder aanvullende vragen, dan krijg je state "
-        "transition error?",
-        "Bug: vanuit back office begin je wat makkelijker een nieuwe melding dan in MF. Gebeurt dan "
+        "transition error?"),
+        ("Bug: vanuit back office begin je wat makkelijker een nieuwe melding dan in MF. Gebeurt dan "
         "iets sneller dat je een nieuwe melding hebt, maar address cookie nog gevuld is van een "
-        "niet-afgemaakte melding",
+        "niet-afgemaakte melding"),
         "Bug: Als je wordt uitgelogd kom je niet automatisch terug op de pagina waar je was",
         "Bug: Wanneer was het? in back office werkt nog niet",
         "Bug: /locatie laat maar 4 assets zien als je er 5 kiest. Reproduceren, klokken?",

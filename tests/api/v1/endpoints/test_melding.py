@@ -1476,9 +1476,7 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         body = response.json()
         response_labels = body.get("labels", [])
 
-        assert set([response_labels[0].get("id"), response_labels[1].get("id")]) == set(
-            [initial_labels[0].id, initial_labels[1].id]
-        )
+        assert {response_labels[0].get("id"), response_labels[1].get("id")} == {initial_labels[0].id, initial_labels[1].id}
         assert body.get("urgency") == 1
 
     @pytest.mark.anyio

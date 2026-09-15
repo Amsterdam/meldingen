@@ -1,7 +1,7 @@
 import builtins
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
-from typing import Any, TypeVar
+from typing import Any
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
@@ -17,7 +17,6 @@ from meldingen_core.repositories import (
     BaseMeldingRepository,
     BaseNoteRepository,
     BaseQuestionRepository,
-    BaseRepository,
     BaseSourceRepository,
     BaseUserRepository,
 )
@@ -55,10 +54,7 @@ class AttributeNotFoundException(Exception):
         self.message = message
 
 
-T = TypeVar("T", bound=BaseDBModel)
-
-
-class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
+class BaseSQLAlchemyRepository[T: BaseDBModel](metaclass=ABCMeta):
     """Base repository for SqlAlchemy based repositories."""
 
     _session: AsyncSession
@@ -77,17 +73,17 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
         """
         return ()
 
-    async def save(self, model: T, *, commit: bool = True) -> None:
-        self._session.add(model)
+    async def save(self, obj: T, *, commit: bool = True) -> None:
+        self._session.add(obj)
 
         if commit:
             try:
                 await self._session.commit()
-            except IntegrityError as integrity_error:
+            except IntegrityError:
                 await self._session.rollback()
-                raise integrity_error
+                raise
 
-            await self._session.refresh(model)
+            await self._session.refresh(obj)
 
     async def flush(self) -> None:
         await self._session.flush()

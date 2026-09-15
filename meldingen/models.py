@@ -135,7 +135,8 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
         default_factory=list,
     )
     geo_location: Mapped[WKBElement | None] = mapped_column(
-        Geometry(geometry_type="GEOMETRY", srid=4326), default=None  # WGS84
+        Geometry(geometry_type="GEOMETRY", srid=4326),
+        default=None,  # WGS84
     )
     street: Mapped[str | None] = mapped_column(String, default=None)
     house_number: Mapped[int | None] = mapped_column(Integer, default=None)
