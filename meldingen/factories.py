@@ -66,7 +66,6 @@ class NoteFactory(BaseNoteFactory[Note, Melding, User]):
 class UnsupportedAnswerTypeException(Exception):
     """Raised when an unsupported answer type is provided."""
 
-    pass
 
 
 class AnswerFactory:

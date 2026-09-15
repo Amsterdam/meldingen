@@ -1,5 +1,6 @@
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Annotated, AsyncIterator, Generic, List, TypedDict, TypeVar
+from typing import Annotated, Generic, TypedDict, TypeVar
 
 from fastapi import Depends, HTTPException, Query, Response, UploadFile
 from meldingen_core import SortingDirection
@@ -118,7 +119,7 @@ class ContentRangeHeaderAdder(Generic[T]):
         self,
         response: Response,
         pagination: Annotated[PaginationParams, Depends(pagination_params)],
-        filters: List[ColumnExpressionArgument[bool]] | None = None,
+        filters: list[ColumnExpressionArgument[bool]] | None = None,
         apply_visibility_filters: bool = True,
     ) -> int:
         limit = pagination["limit"] or 0

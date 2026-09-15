@@ -6,9 +6,8 @@ Create Date: 2024-07-31 14:55:15.907483
 
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
-import sqlalchemy as sa
 from alembic import op
 from alembic_postgresql_enum import TableReference
 

@@ -53,7 +53,6 @@ from meldingen.models import (
     ValueLabelAnswer,
 )
 from meldingen.repositories import MeldingRepository
-from meldingen.statemachine import Process
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 # The metadata that "amsterdam-logo-with-metadata.jpg" carries: GPS coordinates, a date and time, a
@@ -3689,7 +3688,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         db_session: AsyncSession,
         melding_with_classification: Melding,
         form_with_time_component: Form,
-        time_value: str | int | float,
+        time_value: str | float,
         error_message: str,
     ) -> None:
         components = await form_with_time_component.awaitable_attrs.components

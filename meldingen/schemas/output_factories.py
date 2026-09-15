@@ -1,6 +1,5 @@
 import json
 from collections.abc import Sequence
-from typing import Union
 
 from meldingen.location import LocationOutputTransformer
 from meldingen.models import (
@@ -264,24 +263,10 @@ class StaticFormComponentOutputFactory:
         self._select_component = select_factory
 
     async def __call__(self, components: list[FormIoComponent]) -> list[
-        Union[
-            StaticFormPanelComponentOutput,
-            StaticFormTextAreaComponentOutput,
-            StaticFormTextFieldInputComponentOutput,
-            StaticFormCheckboxComponentOutput,
-            StaticFormRadioComponentOutput,
-            StaticFormSelectComponentOutput,
-        ]
+        StaticFormPanelComponentOutput | StaticFormTextAreaComponentOutput | StaticFormTextFieldInputComponentOutput | StaticFormCheckboxComponentOutput | StaticFormRadioComponentOutput | StaticFormSelectComponentOutput
     ]:
         output_components: list[
-            Union[
-                StaticFormPanelComponentOutput,
-                StaticFormTextAreaComponentOutput,
-                StaticFormTextFieldInputComponentOutput,
-                StaticFormCheckboxComponentOutput,
-                StaticFormRadioComponentOutput,
-                StaticFormSelectComponentOutput,
-            ]
+            StaticFormPanelComponentOutput | StaticFormTextAreaComponentOutput | StaticFormTextFieldInputComponentOutput | StaticFormCheckboxComponentOutput | StaticFormRadioComponentOutput | StaticFormSelectComponentOutput
         ] = []
         for component in components:
             if isinstance(component, FormIoPanelComponent):
@@ -564,28 +549,10 @@ class FormComponentOutputFactory:
         self._time_component = time_factory
 
     async def __call__(self, components: list[FormIoComponent]) -> list[
-        Union[
-            FormPanelComponentOutput,
-            FormTextAreaComponentOutput,
-            FormTextFieldInputComponentOutput,
-            FormCheckboxComponentOutput,
-            FormRadioComponentOutput,
-            FormSelectComponentOutput,
-            FormDateComponentOutput,
-            FormTimeComponentOutput,
-        ]
+        FormPanelComponentOutput | FormTextAreaComponentOutput | FormTextFieldInputComponentOutput | FormCheckboxComponentOutput | FormRadioComponentOutput | FormSelectComponentOutput | FormDateComponentOutput | FormTimeComponentOutput
     ]:
         output_components: list[
-            Union[
-                FormPanelComponentOutput,
-                FormTextAreaComponentOutput,
-                FormTextFieldInputComponentOutput,
-                FormCheckboxComponentOutput,
-                FormRadioComponentOutput,
-                FormSelectComponentOutput,
-                FormDateComponentOutput,
-                FormTimeComponentOutput,
-            ]
+            FormPanelComponentOutput | FormTextAreaComponentOutput | FormTextFieldInputComponentOutput | FormCheckboxComponentOutput | FormRadioComponentOutput | FormSelectComponentOutput | FormDateComponentOutput | FormTimeComponentOutput
         ] = []
         for component in components:
             if isinstance(component, FormIoPanelComponent):

@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 from urllib.parse import quote
 from uuid import uuid4
 

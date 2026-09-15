@@ -279,7 +279,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
 
-        for i in range(0, len(data)):
+        for i in range(len(data)):
             assert data[i]["name"] == expected[i]["name"]
             assert data[i]["form"] == expected[i]["form"]
             assert data[i]["asset_type"] == expected[i]["asset_type"]
@@ -336,7 +336,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
 
-        for i in range(0, len(data)):
+        for i in range(len(data)):
             assert data[i]["name"] == expected[i]["name"]
             assert data[i]["form"] == expected[i]["form"]
             assert data[i]["asset_type"] == expected[i]["asset_type"]

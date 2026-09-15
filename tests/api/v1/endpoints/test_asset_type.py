@@ -17,7 +17,6 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
-from meldingen.dependencies import wfs_provider_validator
 from meldingen.models import AssetType
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -403,7 +402,7 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
 
         data = response.json()
 
-        for i in range(0, len(data)):
+        for i in range(len(data)):
             assert data[i]["name"] == expected[i]["name"]
             assert data[i]["class_name"] == expected[i]["class_name"]
             assert data[i]["arguments"] == expected[i]["arguments"]
@@ -460,7 +459,7 @@ class TestAssetTypeList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSort
 
         data = response.json()
 
-        for i in range(0, len(data)):
+        for i in range(len(data)):
             assert data[i]["name"] == expected[i]["name"]
             assert data[i]["class_name"] == expected[i]["class_name"]
             assert data[i]["arguments"] == expected[i]["arguments"]

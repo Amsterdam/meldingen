@@ -1,5 +1,4 @@
 from secrets import token_urlsafe
-from typing import override
 
 from meldingen_core.statemachine import MeldingStates
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator

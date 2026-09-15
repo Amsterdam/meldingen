@@ -589,9 +589,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "maxCharCount": 255,
                         }
                     )
-                elif child.type == FormIoComponentTypeEnum.text_field:
-                    pass
-                elif child.type == FormIoComponentTypeEnum.time:
+                elif child.type == FormIoComponentTypeEnum.text_field or child.type == FormIoComponentTypeEnum.time:
                     pass
                 elif child.type == FormIoComponentTypeEnum.date:
                     base_child.update(

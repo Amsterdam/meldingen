@@ -61,7 +61,7 @@ def load_classification_values(file_path: str) -> list[dict[str, str | None]]:
         with open(file_path) as f:
             data = json.load(f)
     except FileNotFoundError:
-        print(f"🟡 - Seeding of classsifactions aborted: no seed file found. ")
+        print("🟡 - Seeding of classsifactions aborted: no seed file found. ")
         raise typer.Exit
 
     if not isinstance(data, list):

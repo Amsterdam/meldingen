@@ -1,5 +1,6 @@
 import contextlib
-from typing import Any, AsyncGenerator, AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -137,14 +138,13 @@ def app() -> FastAPI:
 
 
 @pytest.fixture
-async def client(app: FastAPI, test_database: None, override_dependencies: None) -> AsyncGenerator[AsyncClient, None]:
-    async with LifespanManager(app):
-        async with AsyncClient(
-            transport=ASGITransport(app=app, raise_app_exceptions=False),
-            base_url="http://testserver",
-            headers={"Content-Type": "application/json"},
-        ) as client:
-            yield client
+async def client(app: FastAPI, test_database: None, override_dependencies: None) -> AsyncGenerator[AsyncClient]:
+    async with LifespanManager(app), AsyncClient(
+        transport=ASGITransport(app=app, raise_app_exceptions=False),
+        base_url="http://testserver",
+        headers={"Content-Type": "application/json"},
+    ) as client:
+        yield client
 
 
 @pytest.fixture(scope="session")

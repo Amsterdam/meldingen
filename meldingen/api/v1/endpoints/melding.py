@@ -1,5 +1,6 @@
 import logging
-from typing import Annotated, Any, Sequence
+from collections.abc import Sequence
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
@@ -156,7 +157,6 @@ from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
 from meldingen.models import (
     Answer,
-    Attachment,
     Classification,
     FormIoComponentToAnswerTypeMap,
     FormIoComponentTypeEnum,
@@ -357,7 +357,7 @@ async def retrieve_melding_melder(
     responses={
         **unauthorized_response,
         **not_found_response,
-        **{
+        
             HTTP_400_BAD_REQUEST: {
                 "description": "The melding is in a state that may not be classified through this endpoint.",
                 "content": {
@@ -371,7 +371,7 @@ async def retrieve_melding_melder(
                     }
                 },
             }
-        },
+        ,
     },
     dependencies=[Depends(authenticate_user)],
 )
@@ -666,7 +666,7 @@ async def request_processing_melding(
         melding = await action(melding_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-    except WrongStateException as e:
+    except WrongStateException:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Transition not allowed from current state")
 
     return await produce_output(melding)
@@ -763,7 +763,7 @@ async def cancel_melding(
         **unauthorized_response,
         **not_found_response,
         **default_response,
-        **{
+        
             HTTP_400_BAD_REQUEST: {
                 "description": "The melding is in a state that may not be reclassified.",
                 "content": {
@@ -772,7 +772,7 @@ async def cancel_melding(
                     }
                 },
             }
-        },
+        ,
     },
 )
 async def reclassify_melding(
@@ -836,7 +836,7 @@ async def resolve_answer_type_through_question_id(
         **not_found_response,
         **unauthorized_response,
         **default_response,
-        **{
+        
             HTTP_400_BAD_REQUEST: {
                 "description": "",
                 "content": {
@@ -850,7 +850,7 @@ async def resolve_answer_type_through_question_id(
                     }
                 },
             }
-        },
+        ,
     },
 )
 async def answer_additional_question(
@@ -882,7 +882,7 @@ async def answer_additional_question(
     responses={
         **not_found_response,
         **unauthorized_response,
-        **{
+        
             HTTP_400_BAD_REQUEST: {
                 "description": "",
                 "content": {
@@ -894,8 +894,8 @@ async def answer_additional_question(
                         },
                     },
                 },
-            },
-        },
+            }
+        ,
     },
 )
 async def update_answer(

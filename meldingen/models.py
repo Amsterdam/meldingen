@@ -386,7 +386,7 @@ class FormIoSelectComponent(FormIoQuestionComponent):
 
 class FormIoComponentValue(BaseDBModel, BaseFormIoComponentValue):
     component_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_component.id"), default=None, nullable=True)
-    component: Mapped[Optional[BaseFormIoValuesComponent]] = relationship(
+    component: Mapped[BaseFormIoValuesComponent | None] = relationship(
         cascade="save-update, merge, delete",
         back_populates="values",
         default=None,

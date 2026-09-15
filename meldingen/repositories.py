@@ -1,6 +1,7 @@
+import builtins
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
-from typing import Any, List, TypeVar
+from typing import Any, TypeVar
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
@@ -142,7 +143,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
 
     async def count(
         self,
-        filters: List[ColumnExpressionArgument[bool]] | None = None,
+        filters: builtins.list[ColumnExpressionArgument[bool]] | None = None,
         apply_visibility_filters: bool = True,
     ) -> int:
         _type = self.get_model_type()
@@ -238,11 +239,11 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
 
     def filter_input_to_expression_arguments(
         self, filters: MeldingListFilters | None = None
-    ) -> List[ColumnExpressionArgument[bool]] | None:
+    ) -> list[ColumnExpressionArgument[bool]] | None:
         if filters is None:
             return None
 
-        expressions: List[ColumnExpressionArgument[bool]] = []
+        expressions: list[ColumnExpressionArgument[bool]] = []
 
         area = None if filters is None else filters.area
         states = None if filters is None else filters.states

@@ -12,7 +12,6 @@ from jwt import (
 )
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.token import TokenException, TokenVerifier
-from sqlalchemy.exc import NoResultFound
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
 
 from meldingen.config import settings

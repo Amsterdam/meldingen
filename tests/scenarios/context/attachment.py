@@ -6,7 +6,6 @@ from httpx import AsyncClient
 from pytest_bdd import given, parsers, then, when
 from starlette.status import HTTP_200_OK
 
-from tests.conftest import malware_scanner_override
 from tests.scenarios.conftest import async_step
 
 ROUTE_ADD_ATTACHMENTS: Final[str] = "melding:attachment_melder"
