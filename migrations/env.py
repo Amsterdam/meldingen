@@ -1,6 +1,7 @@
 import asyncio
 from logging.config import fileConfig
 
+import alembic_postgresql_enum  # noqa: F401
 from alembic import context
 from geoalchemy2 import alembic_helpers
 from sqlalchemy import Connection, pool
