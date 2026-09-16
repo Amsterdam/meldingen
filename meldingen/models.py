@@ -42,8 +42,10 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_
 class BaseDBModel(MappedAsDataclass, DeclarativeBase):
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
 
-    created_at: Mapped[datetime] = mapped_column(init=False, default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(init=False, default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), init=False, default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), init=False, default=func.now(), onupdate=func.now()
+    )
 
     @declared_attr.directive
     def __tablename__(cls) -> str:
@@ -128,7 +130,7 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
     classification: Mapped[Classification | None] = relationship(default=None, lazy="joined")
     token: Mapped[str | None] = mapped_column(String, default=None)
-    token_expires: Mapped[DateTime | None] = mapped_column(DateTime, default=None)
+    token_expires: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), default=None)
     attachments: Mapped[list["Attachment"]] = relationship(
         cascade="save-update, merge, delete, delete-orphan",
         back_populates="melding",
@@ -650,8 +652,8 @@ class LlmEvalRun(BaseDBModel):
     failed: Mapped[int] = mapped_column(Integer, default=0)
     errored: Mapped[int] = mapped_column(Integer, default=0)
     error: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
     created_by_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("user.id", ondelete="SET NULL"), nullable=True, default=None
     )
