@@ -17,6 +17,7 @@ from meldingen_core.repositories import (
     BaseMeldingRepository,
     BaseNoteRepository,
     BaseQuestionRepository,
+    BaseRepository,
     BaseSourceRepository,
     BaseUserRepository,
 )
@@ -54,7 +55,7 @@ class AttributeNotFoundException(Exception):
         self.message = message
 
 
-class BaseSQLAlchemyRepository[T: BaseDBModel](metaclass=ABCMeta):
+class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCMeta):
     """Base repository for SqlAlchemy based repositories."""
 
     _session: AsyncSession
@@ -253,7 +254,7 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         return expressions
 
 
-class UserRepository(BaseSQLAlchemyRepository[User], BaseUserRepository):
+class UserRepository(BaseSQLAlchemyRepository[User], BaseUserRepository[User]):
     def get_model_type(self) -> type[User]:
         return User
 
@@ -324,7 +325,7 @@ class ClassificationRepository(BaseSQLAlchemyRepository[Classification], BaseCla
         await self.save(classification)
 
 
-class FormRepository(BaseSQLAlchemyRepository[Form], BaseFormRepository):
+class FormRepository(BaseSQLAlchemyRepository[Form], BaseFormRepository[Form]):
     def get_model_type(self) -> type[Form]:
         return Form
 
@@ -353,7 +354,7 @@ class StaticFormRepository(BaseSQLAlchemyRepository[StaticForm]):
             raise NotFoundException() from e
 
 
-class QuestionRepository(BaseSQLAlchemyRepository[Question], BaseQuestionRepository):
+class QuestionRepository(BaseSQLAlchemyRepository[Question], BaseQuestionRepository[Question]):
     def get_model_type(self) -> type[Question]:
         return Question
 

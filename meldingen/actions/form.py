@@ -38,7 +38,6 @@ from meldingen.repositories import (
     FormIoQuestionComponentRepository,
     FormRepository,
     QuestionRepository,
-    StaticFormRepository,
 )
 from meldingen.schemas.input import (
     AnswerInputUnion,
@@ -52,7 +51,6 @@ from meldingen.schemas.input import (
 
 
 class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
-    _repository: FormRepository
     _question_repository: QuestionRepository
     _produce_question_component: FormIoQuestionComponentFactory
 
@@ -307,6 +305,7 @@ class FormDeleteAction(BaseDeleteAction[Form]): ...
 
 
 class FormUpdateAction(BaseFormCreateUpdateAction):
+    _repository: FormRepository
     _classification_repository: ClassificationRepository
 
     def __init__(
@@ -546,11 +545,6 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
 
 
 class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]):
-    _repository: StaticFormRepository
-
-    def __init__(self, repository: StaticFormRepository):
-        super().__init__(repository)
-
     async def __call__(self, static_form_id: int) -> StaticForm | None:
         return await self._repository.retrieve(static_form_id)
 
@@ -560,8 +554,6 @@ class FormComponentException(Exception):
 
 
 class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
-    _repository: StaticFormRepository
-
     async def _create_component_values(
         self, component: BaseFormIoValuesComponent, values: list[dict[str, Any]]
     ) -> None:

@@ -33,8 +33,6 @@ tests/api/v1/endpoints/test_melding.py:0: note: See https://mypy.readthedocs.io/
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (expression has type "datetime", variable has type "SQLCoreOperations[DateTime | None] | DateTime | None")  [assignment]
 tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (expression has type "str", variable has type "SQLCoreOperations[WKBElement | None] | WKBElement | None")  [assignment]
 tests/api/v1/endpoints/conftest.py:0: error: Returning Any from function declared to return "list[str]"  [no-any-return]
-tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (expression has type "str", variable has type "SQLCoreOperations[WKBElement | None] | WKBElement | None")  [assignment]
-tests/api/v1/endpoints/conftest.py:0: error: Incompatible types in assignment (expression has type "str", variable has type "SQLCoreOperations[WKBElement | None] | WKBElement | None")  [assignment]
 meldingen/main.py:0: error: Argument 1 to "add_middleware" of "Starlette" has incompatible type "type[ContentSizeLimitMiddleware]"; expected "_MiddlewareFactory[[int]]"  [arg-type]
 meldingen/main.py:0: note: Following member(s) of "ContentSizeLimitMiddleware" have conflicts:
 meldingen/main.py:0: note: Expected:
