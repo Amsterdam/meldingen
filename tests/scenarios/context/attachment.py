@@ -43,12 +43,11 @@ async def upload_the_file(
     my_melding: dict[str, Any],
     token: str,
 ) -> dict[str, Any]:
-    send_files = await read_file(filepath)
 
     response = await client.post(
         app.url_path_for(ROUTE_ADD_ATTACHMENTS, melding_id=my_melding["id"]),
         params={"token": token},
-        files={"file": send_files},
+        files={"file": read_file(filepath)},
         # We have to provide the header and boundary manually, otherwise httpx will set the content-type
         # to application/json and the request will fail.
         headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},

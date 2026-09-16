@@ -433,8 +433,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         meldingen_with_location: list[Melding],
     ) -> None:
 
-        geojson = await read_file("tests/resources/stadsdeel-centrum.json", "r")
-
+        geojson = read_file("tests/resources/stadsdeel-centrum.json", "r")
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson})
 
         assert response.status_code == 200
@@ -586,8 +585,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         auth_user: None,
         meldingen_with_different_states_and_locations: list[Melding],
     ) -> None:
-        geojson = await read_file("tests/resources/stadsdeel-centrum.json", "r")
-
+        geojson = read_file("tests/resources/stadsdeel-centrum.json", "r")
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson, "state": MeldingStates.SUBMITTED}
         )
