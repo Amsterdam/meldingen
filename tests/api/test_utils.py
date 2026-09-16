@@ -39,6 +39,6 @@ def test_sort_param_invalid_input() -> None:
         sort_param("asdf")
 
 
-async def async_open_file(filename: str) -> bytes:
-    async with aiofiles.open(filename, "rb") as file:
+async def async_open_file(filename: str) -> str:
+    async with aiofiles.open(filename, "r", encoding="utf-8") as file:
         return await file.read()
