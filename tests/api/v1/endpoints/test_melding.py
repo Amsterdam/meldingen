@@ -52,7 +52,7 @@ from meldingen.models import (
     ValueLabelAnswer,
 )
 from meldingen.repositories import MeldingRepository
-from tests.api.test_utils import async_read_file, open_resource_file
+from tests.api.test_utils import open_resource_file, read_file
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 # The metadata that "amsterdam-logo-with-metadata.jpg" carries: GPS coordinates, a date and time, a
@@ -433,7 +433,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         meldingen_with_location: list[Melding],
     ) -> None:
 
-        geojson = await async_read_file("tests/resources/stadsdeel-centrum.json", "r")
+        geojson = await read_file("tests/resources/stadsdeel-centrum.json", "r")
 
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson})
 
@@ -586,7 +586,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         auth_user: None,
         meldingen_with_different_states_and_locations: list[Melding],
     ) -> None:
-        geojson = await async_read_file("tests/resources/stadsdeel-centrum.json", "r")
+        geojson = await read_file("tests/resources/stadsdeel-centrum.json", "r")
 
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson, "state": MeldingStates.SUBMITTED}

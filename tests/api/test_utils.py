@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import BinaryIO, Literal
 
-import aiofiles
 import pytest
 from fastapi import HTTPException
 
@@ -49,10 +48,10 @@ def open_resource_file(filename: str) -> BinaryIO:
     return open(str(resource_path), "rb")
 
 
-async def async_read_file(filename: str, read_mode: Literal["r", "rb", "rb+"] = "rb") -> str | bytes:
+def read_file(filename: str, read_mode: Literal["r", "rb", "rb+"] = "rb") -> str | bytes:
     if read_mode in ("rb", "rb+"):
-        async with aiofiles.open(filename, read_mode) as f:
-            return await f.read()
+        with open(filename, read_mode) as f:
+            return f.read()
 
-    async with aiofiles.open(filename, read_mode, encoding="utf-8") as f:
-        return await f.read()
+    with open(filename, read_mode, encoding="utf-8") as f:
+        return f.read()
