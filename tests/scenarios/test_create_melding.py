@@ -1,14 +1,14 @@
 from pytest_bdd import scenario
 
-from tests.scenarios.context.asset import *  # noqa
-from tests.scenarios.context.attachment import *  # noqa
-from tests.scenarios.context.classification import *  # noqa
-from tests.scenarios.context.contact import *  # noqa
-from tests.scenarios.context.form import *  # noqa
-from tests.scenarios.context.location import *  # noqa
-from tests.scenarios.context.mail import *  # noqa
-from tests.scenarios.context.melding import *  # noqa
-from tests.scenarios.context.statemachine import *  # noqa
+from tests.scenarios.context.asset import *
+from tests.scenarios.context.attachment import *
+from tests.scenarios.context.classification import *
+from tests.scenarios.context.contact import *
+from tests.scenarios.context.form import *
+from tests.scenarios.context.location import *
+from tests.scenarios.context.mail import *
+from tests.scenarios.context.melding import *
+from tests.scenarios.context.statemachine import *
 
 
 @scenario("create_melding.feature", "A melder successfully submits a melding")

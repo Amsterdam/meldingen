@@ -22,7 +22,7 @@ async def async_add_user(email: str) -> None:
         try:
             await user_repository.save(user)
         except IntegrityError:
-            print(f"[red]Error[/red] - User already exists!")
+            print("[red]Error[/red] - User already exists!")
             raise typer.Exit
 
         print(f'[green]Success[/green] - User "{email}" created!')

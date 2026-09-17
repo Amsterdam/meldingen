@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from typing import TypeVar
 
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
@@ -9,10 +8,8 @@ from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.repositories import AttributeNotFoundException
 
-T = TypeVar("T")
 
-
-class BaseListAction(BaseCoreListAction[T]):
+class BaseListAction[T](BaseCoreListAction[T]):
     async def __call__(
         self,
         limit: int | None = None,

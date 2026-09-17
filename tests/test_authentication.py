@@ -10,12 +10,10 @@ from jwt import (
     PyJWKClient,
     PyJWT,
 )
-from sqlalchemy.exc import NoResultFound
 
 from meldingen.authentication import (
     InvalidRequestException,
     InvalidTokenException,
-    UnauthenticatedException,
     authenticate_user,
 )
 from meldingen.models import User

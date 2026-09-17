@@ -1,7 +1,8 @@
 import logging
 import os
+from collections.abc import AsyncIterator
 from functools import lru_cache
-from typing import Annotated, Any, AsyncIterator
+from typing import Annotated, Any
 
 from amsterdam_mail_service_client.api.default_api import DefaultApi
 from amsterdam_mail_service_client.api_client import ApiClient

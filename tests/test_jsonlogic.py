@@ -1,6 +1,6 @@
 import pytest
 from jsonlogic import JSONLogicSyntaxError
-from jsonlogic.registry import UnkownOperator as UnknownOperator
+from jsonlogic.registry import UnknownOperator
 from jsonlogic.resolving import DotReferenceParser
 
 from meldingen.jsonlogic import JSONLogicValidationException, JSONLogicValidator

@@ -12,7 +12,6 @@ from meldingen.schemas.types import GeoJson
 
 
 class GeoJsonFeatureFactory:
-
     def __call__(self, geometry: GeoJsonPoint) -> GeoJson:
         return GeoJson(
             type="Feature",
@@ -22,7 +21,6 @@ class GeoJsonFeatureFactory:
 
 
 class ShapePointFactory:
-
     def __call__(self, lat: float, long: float) -> Point:
         return Point(lat, long)
 
@@ -50,7 +48,6 @@ class ShapeToGeoJSONTransformer:
 
 
 class WKBToPointShapeTransformer:
-
     def __call__(self, wkb_element: WKBElement) -> Point:
         shape = to_shape(wkb_element)
         assert isinstance(shape, Point)

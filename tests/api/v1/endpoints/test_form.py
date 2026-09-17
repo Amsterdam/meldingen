@@ -1,4 +1,4 @@
-from typing import Any, Final
+from typing import Any, ClassVar, Final
 
 import pytest
 from fastapi import FastAPI
@@ -420,7 +420,7 @@ class TestFormRetrieve(BaseFormTest):
 class TestFormDelete(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "form:delete"
     METHOD: Final[str] = "DELETE"
-    PATH_PARAMS: dict[str, Any] = {"form_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"form_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -455,7 +455,7 @@ class TestFormDelete(BaseUnauthorizedTest):
 class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
     ROUTE_NAME: Final[str] = "form:update"
     METHOD: Final[str] = "PUT"
-    PATH_PARAMS: dict[str, Any] = {"form_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"form_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -589,9 +589,7 @@ class TestFormUpdate(BaseUnauthorizedTest, BaseFormTest):
                             "maxCharCount": 255,
                         }
                     )
-                elif child.type == FormIoComponentTypeEnum.text_field:
-                    pass
-                elif child.type == FormIoComponentTypeEnum.time:
+                elif child.type == FormIoComponentTypeEnum.text_field or child.type == FormIoComponentTypeEnum.time:
                     pass
                 elif child.type == FormIoComponentTypeEnum.date:
                     base_child.update(

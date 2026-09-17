@@ -1,5 +1,4 @@
 from secrets import token_urlsafe
-from typing import override
 
 from meldingen_core.statemachine import MeldingStates
 from meldingen_core.token import BaseTokenGenerator, BaseTokenInvalidator
@@ -13,7 +12,6 @@ class UrlSafeTokenGenerator(BaseTokenGenerator):
 
 
 class TokenInvalidator(BaseTokenInvalidator[Melding]):
-
     @property
     def allowed_states(self) -> list[str]:
         return [MeldingStates.SUBMITTED]

@@ -53,6 +53,7 @@ from mp_fsm.statemachine import BaseGuard
 
 from meldingen.models import Melding
 
+
 class HasLocation(BaseGuard[Melding]):
     async def __call__(self, obj: Melding) -> bool:
         return obj.geo_location is not None
@@ -83,7 +84,6 @@ def melding_state_machine(
             }
         )
     )
-
 ```
 
 Finally, we use the BaseStateTransitionAction from meldingen-core to perform the state change:

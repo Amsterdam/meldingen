@@ -38,7 +38,6 @@ from meldingen.repositories import (
     FormIoQuestionComponentRepository,
     FormRepository,
     QuestionRepository,
-    StaticFormRepository,
 )
 from meldingen.schemas.input import (
     AnswerInputUnion,
@@ -52,7 +51,6 @@ from meldingen.schemas.input import (
 
 
 class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
-    _repository: FormRepository
     _question_repository: QuestionRepository
     _produce_question_component: FormIoQuestionComponentFactory
 
@@ -81,7 +79,9 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
 
         for component in input_components:
             if component.key in seen_keys:
-                raise Exception(f"Duplicate component key '{component.key}' found. Must be unique within the form.")
+                raise FormComponentException(
+                    f"Duplicate component key '{component.key}' found. Must be unique within the form."
+                )
 
             seen_keys.add(component.key)
 
@@ -223,7 +223,7 @@ class BaseFormCreateUpdateAction(BaseCRUDAction[Form]):
                 form = await parent.awaitable_attrs.form
 
         if form is None:
-            raise Exception("Failed to get form from component or parent!")
+            raise FormComponentException("Failed to get form from component or parent!")
 
         question = Question(text=component.label, form=form)
         await self._question_repository.save(question, commit=False)
@@ -305,6 +305,7 @@ class FormDeleteAction(BaseDeleteAction[Form]): ...
 
 
 class FormUpdateAction(BaseFormCreateUpdateAction):
+    _repository: FormRepository
     _classification_repository: ClassificationRepository
 
     def __init__(
@@ -544,18 +545,15 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
 
 
 class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]):
-    _repository: StaticFormRepository
-
-    def __init__(self, repository: StaticFormRepository):
-        super().__init__(repository)
-
     async def __call__(self, static_form_id: int) -> StaticForm | None:
         return await self._repository.retrieve(static_form_id)
 
 
-class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
-    _repository: StaticFormRepository
+class FormComponentException(Exception):
+    """Exception raised when a misconfigured form component is encountered."""
 
+
+class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
     async def _create_component_values(
         self, component: BaseFormIoValuesComponent, values: list[dict[str, Any]]
     ) -> None:
@@ -629,7 +627,7 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
                 elif component_values.get("type") == FormIoComponentTypeEnum.text_field:
                     parent_components.append(FormIoTextFieldComponent(**component_values))
                 else:
-                    raise Exception(f"Unsupported component type: {component_values.get('type')}")
+                    raise FormComponentException(f"Unsupported component type: {component_values.get('type')}")
 
         parent_components.reorder()
 

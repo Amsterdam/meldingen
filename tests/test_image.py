@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from typing import Self
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -86,7 +87,7 @@ async def test_imgproxy_image_processor() -> None:
     class AIterator(AsyncIterator[Filesystem]):
         _round: int = 0
 
-        def __aiter__(self) -> AsyncIterator[Filesystem]:
+        def __aiter__(self) -> Self:
             return self
 
         async def __anext__(self) -> Filesystem:
@@ -125,7 +126,7 @@ async def test_imgproxy_image_processor_request_failed() -> None:
     class AIterator(AsyncIterator[Filesystem]):
         _round: int = 0
 
-        def __aiter__(self) -> AsyncIterator[Filesystem]:
+        def __aiter__(self) -> Self:
             return self
 
         async def __anext__(self) -> Filesystem:
@@ -157,7 +158,7 @@ async def test_imgproxy_metadata_stripper() -> None:
     class AIterator(AsyncIterator[Filesystem]):
         _round: int = 0
 
-        def __aiter__(self) -> AsyncIterator[Filesystem]:
+        def __aiter__(self) -> Self:
             return self
 
         async def __anext__(self) -> Filesystem:
@@ -196,7 +197,7 @@ async def test_imgproxy_metadata_stripper_request_failed() -> None:
     class AIterator(AsyncIterator[Filesystem]):
         _round: int = 0
 
-        def __aiter__(self) -> AsyncIterator[Filesystem]:
+        def __aiter__(self) -> Self:
             return self
 
         async def __anext__(self) -> Filesystem:
