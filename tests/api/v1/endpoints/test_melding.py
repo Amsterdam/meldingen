@@ -4893,14 +4893,12 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         auth_user: None,
     ) -> None:
 
-        send_files = open_resource_file("amsterdam-logo.png")
-
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=123),
             files={
                 "file": (
                     "amsterdam-logo.png",
-                    send_files,
+                    open_resource_file("amsterdam-logo.png"),
                     "image/jpeg",
                 ),
             },
@@ -4938,12 +4936,10 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         assert len(attachments) == settings.backoffice_attachment_limit
         assert all(attachment.user_id == auth_behandelaar.id for attachment in attachments)
 
-        send_files = open_resource_file("amsterdam-logo.png")
-
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             files={
-                "file": send_files,
+                "file": open_resource_file("amsterdam-logo.png"),
             },
             headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
         )
