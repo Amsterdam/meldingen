@@ -1,6 +1,7 @@
 import asyncio
 import functools
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from mypy_extensions import KwArg, VarArg
 

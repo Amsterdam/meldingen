@@ -1,4 +1,4 @@
-from typing import Any, Final
+from typing import Any, ClassVar, Final
 
 import pytest
 from fastapi import FastAPI
@@ -396,7 +396,7 @@ class TestUserList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParam
 class TestUserRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "user:retrieve"
     METHOD: Final[str] = "GET"
-    PATH_PARAMS: dict[str, Any] = {"user_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"user_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -438,7 +438,7 @@ class TestUserRetrieve(BaseUnauthorizedTest):
 class TestUserDelete(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "user:delete"
     METHOD: Final[str] = "DELETE"
-    PATH_PARAMS: dict[str, Any] = {"user_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"user_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -498,7 +498,7 @@ class TestUserDelete(BaseUnauthorizedTest):
 class TestUserUpdate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "user:update"
     METHOD: Final[str] = "PATCH"
-    PATH_PARAMS: dict[str, Any] = {"user_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"user_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME

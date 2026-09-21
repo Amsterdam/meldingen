@@ -1,4 +1,4 @@
-.PHONY: help build push up rebuild lint typecheck typecheck-sync test test-pdb test-coverage update check-all migration migrate upgrade-core switch-core
+.PHONY: help build push up rebuild format typecheck typecheck-sync test test-pdb test-coverage update check-all migration migrate upgrade-core switch-core
 REGISTRY ?= localhost:5000
 VERSION ?= latest
 INSTALL_DEV ?= false
@@ -21,9 +21,9 @@ up: ## Start Docker Compose stack (detached)
 rebuild: ## Rebuild and start Docker Compose stack (detached)
 	$(dc) up -d --build
 
-format: ## Auto-fix formatting (black + isort)
-	$(api) uv run black .
-	$(api) uv run isort .
+format: ## Auto-fix formatting + linting (ruff)
+	$(api) uv run ruff check --fix .
+	$(api) uv run ruff format .
 
 typecheck: ## Run mypy type checking
 	$(api) sh -c "rm -rf .mypy_cache && uv run mypy --strict . | uv run mypy-baseline filter"

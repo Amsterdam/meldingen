@@ -38,25 +38,13 @@ If `API_LLM_ENABLED` is unset or false, every test in the suite is skipped with 
 
 **Dataset:** all classifications and evaluation cases live in a single JSON file at [`tests/llm_eval/test_cases.json`](../../tests/llm_eval/test_cases.json). Edit that file directly to add categories or new test cases — no code changes needed. Each test case becomes a separate parametrized pytest invocation.
 
-## Black
+## Ruff
 
-Black is a code formatter for Python. To check if the code complies with Black 
-formatting standards, run the following command:
-
-```bash
-docker compose run --rm meldingen uv run black . --check
-```
-
-This command checks whether the code in the project directory conforms to 
-Black's formatting rules without actually modifying the files.
-
-## iSort
-
-iSort is used for sorting Python imports. To ensure proper import sorting 
-within the Meldingen application, execute the following command:
+Ruff is used for formatting and linting.
 
 ```bash
-docker compose run --rm meldingen uv run isort .
+docker compose run --rm meldingen uv run ruff check .
+docker compose run --rm meldingen uv run ruff format .
 ```
 
 This command sorts the imports in Python files in the project directory 

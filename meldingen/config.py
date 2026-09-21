@@ -119,9 +119,7 @@ Gemeente Amsterdam
 
     # LLM
     llm_enabled: bool = False  # If True enables the AgentClassifierAdapter instead of the DummyClassifierAdapter
-    llm_provider: str = (
-        "openai"  # The provider of the LLM, e.g. "azure" or "openai". This is used to determine how to format requests to the LLM API
-    )
+    llm_provider: str = "openai"  # The provider of the LLM, e.g. "azure" or "openai". This is used to determine how to format requests to the LLM API
     llm_base_url: str = os.getenv(
         "LLM_URL", ""
     )  # LLM_URL is injected by docker compose and specifies the OpenAI compatible API endpoint base URL

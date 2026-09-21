@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 from geoalchemy2 import Geometry, WKBElement
 from meldingen_core.models import Answer as BaseAnswer
@@ -42,8 +42,10 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_
 class BaseDBModel(MappedAsDataclass, DeclarativeBase):
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
 
-    created_at: Mapped[datetime] = mapped_column(init=False, default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(init=False, default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), init=False, default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), init=False, default=func.now(), onupdate=func.now()
+    )
 
     @declared_attr.directive
     def __tablename__(cls) -> str:
@@ -128,14 +130,15 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
     classification: Mapped[Classification | None] = relationship(default=None, lazy="joined")
     token: Mapped[str | None] = mapped_column(String, default=None)
-    token_expires: Mapped[DateTime | None] = mapped_column(DateTime, default=None)
+    token_expires: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), default=None)
     attachments: Mapped[list["Attachment"]] = relationship(
         cascade="save-update, merge, delete, delete-orphan",
         back_populates="melding",
         default_factory=list,
     )
     geo_location: Mapped[WKBElement | None] = mapped_column(
-        Geometry(geometry_type="GEOMETRY", srid=4326), default=None  # WGS84
+        Geometry(geometry_type="GEOMETRY", srid=4326),
+        default=None,  # WGS84
     )
     street: Mapped[str | None] = mapped_column(String, default=None)
     house_number: Mapped[int | None] = mapped_column(Integer, default=None)
@@ -203,13 +206,13 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
             "polymorphic_on": "type",
         }
 
-    __table_args__ = (
-        CheckConstraint("form_id IS NULL OR static_form_id IS NULL", name="only_form_or_static_form_constraint"),
-    )
-
     # Form.io attr's
     label: Mapped[str] = mapped_column(String(), nullable=True)
     key: Mapped[str] = mapped_column(String())
+
+    __table_args__: ClassVar = (
+        CheckConstraint("form_id IS NULL OR static_form_id IS NULL", name="only_form_or_static_form_constraint"),
+    )
 
     description: Mapped[str] = mapped_column(String(), nullable=True, default=None)
     type: Mapped[str] = mapped_column(
@@ -245,7 +248,7 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
 
 
 class FormIoPanelComponent(FormIoComponent):
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar = {"extend_existing": True}
 
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:
@@ -265,7 +268,7 @@ class FormIoPanelComponent(FormIoComponent):
 
 
 class FormIoQuestionComponent(FormIoComponent):
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar = {"extend_existing": True}
 
     question_id: Mapped[int | None] = mapped_column(ForeignKey("question.id", ondelete="SET NULL"), default=None)
     jsonlogic: Mapped[str | None] = mapped_column(String(), nullable=True, default=None)
@@ -283,7 +286,7 @@ class FormIoQuestionComponent(FormIoComponent):
 
 
 class FormIoTextAreaComponent(FormIoQuestionComponent):
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar = {"extend_existing": True}
 
     auto_expand: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
     max_char_count: Mapped[int | None] = mapped_column(Integer(), nullable=True, default=None)
@@ -369,7 +372,7 @@ class FormIoSelectComponentValue(BaseDBModel, BaseFormIoComponentValue):
 
 
 class FormIoSelectComponent(FormIoQuestionComponent):
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar = {"extend_existing": True}
 
     widget: Mapped[str] = mapped_column(String(), nullable=True, default=None)
     placeholder: Mapped[str] = mapped_column(String(), nullable=True, default=None)
@@ -386,7 +389,7 @@ class FormIoSelectComponent(FormIoQuestionComponent):
 
 class FormIoComponentValue(BaseDBModel, BaseFormIoComponentValue):
     component_id: Mapped[int | None] = mapped_column(ForeignKey("form_io_component.id"), default=None, nullable=True)
-    component: Mapped[Optional[BaseFormIoValuesComponent]] = relationship(
+    component: Mapped[BaseFormIoValuesComponent | None] = relationship(
         cascade="save-update, merge, delete",
         back_populates="values",
         default=None,
@@ -395,7 +398,7 @@ class FormIoComponentValue(BaseDBModel, BaseFormIoComponentValue):
 
 class FormIoDateComponent(FormIoQuestionComponent):
     # A component that allows the user to select a date in the past or today.
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar = {"extend_existing": True}
 
     """
     The amount of days a date in the past can be selected from today.
@@ -534,7 +537,7 @@ class Answer(AsyncAttrs, BaseAnswer, BaseDBModel, kw_only=True):
 
 
 class TextAnswer(Answer):
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar = {"extend_existing": True}
 
     text: Mapped[str] = mapped_column(String(), nullable=True)
 
@@ -549,7 +552,7 @@ class TimeAnswer(Answer):
     """Answer type for time values. Stored as hh:mm string,
     because it's only used as a simple display of the user's input"""
 
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar = {"extend_existing": True}
 
     time: Mapped[str | None] = mapped_column(String(), nullable=True)
 
@@ -564,7 +567,7 @@ class DateAnswer(Answer):
     """Answer type for date component saved as a JSON object
     with value, label and converted_date as keys"""
 
-    __table_args__ = {"extend_existing": True}
+    __table_args__: ClassVar = {"extend_existing": True}
     date: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=True)
 
     @declared_attr.directive
@@ -579,8 +582,7 @@ class ValueLabelAnswer(Answer):
     select, radio and checkbox components. Stored as a list of objects
     f.e. [{"value": "option1", "label": "Option 1"}, ...]"""
 
-    __table_args__ = {"extend_existing": True}
-
+    __table_args__: ClassVar = {"extend_existing": True}
     values_and_labels: Mapped[list[dict[str, str]]] = mapped_column(JSON, nullable=True)
 
     @declared_attr.directive
@@ -650,8 +652,8 @@ class LlmEvalRun(BaseDBModel):
     failed: Mapped[int] = mapped_column(Integer, default=0)
     errored: Mapped[int] = mapped_column(Integer, default=0)
     error: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
     created_by_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("user.id", ondelete="SET NULL"), nullable=True, default=None
     )

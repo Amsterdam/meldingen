@@ -1,4 +1,4 @@
-from typing import Any, Final
+from typing import Any, ClassVar, Final
 
 import pytest
 from fastapi import FastAPI
@@ -279,7 +279,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
 
-        for i in range(0, len(data)):
+        for i in range(len(data)):
             assert data[i]["name"] == expected[i]["name"]
             assert data[i]["form"] == expected[i]["form"]
             assert data[i]["asset_type"] == expected[i]["asset_type"]
@@ -336,7 +336,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
         data = response.json()
 
-        for i in range(0, len(data)):
+        for i in range(len(data)):
             assert data[i]["name"] == expected[i]["name"]
             assert data[i]["form"] == expected[i]["form"]
             assert data[i]["asset_type"] == expected[i]["asset_type"]
@@ -427,7 +427,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 class TestClassificationRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:retrieve"
     METHOD: Final[str] = "GET"
-    PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"classification_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -517,7 +517,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
 class TestClassificationUpdate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:update"
     METHOD: Final[str] = "PATCH"
-    PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"classification_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -647,7 +647,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
 class TestClassificationDelete(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "classification:delete"
     METHOD: Final[str] = "DELETE"
-    PATH_PARAMS: dict[str, Any] = {"classification_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"classification_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME

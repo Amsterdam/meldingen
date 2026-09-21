@@ -1,7 +1,5 @@
-from abc import ABCMeta
-
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates, get_all_backoffice_states
+from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
 from mp_fsm.statemachine import BaseGuard, BaseStateMachine, BaseTransition
 
 from meldingen.models import Melding

@@ -1,9 +1,11 @@
+import datetime as dt
 from datetime import datetime, timedelta
 from typing import Any, cast
 from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
+from geoalchemy2 import WKBElement
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
@@ -82,10 +84,10 @@ def melding_geo_location(request: FixtureRequest) -> str | None:
 
 
 @pytest.fixture
-def melding_token_expires(request: FixtureRequest) -> datetime | None:
+def melding_token_expires(request: FixtureRequest) -> dt.datetime | None:
     if hasattr(request, "param"):
         timedelta_adapter = TypeAdapter(timedelta)
-        return datetime.now() - timedelta_adapter.validate_python(request.param)
+        return dt.datetime.now(tz=dt.UTC) - timedelta_adapter.validate_python(request.param)
 
     return None
 
@@ -595,12 +597,10 @@ def melding_locations(request: FixtureRequest) -> list[str]:
 @pytest.fixture
 async def meldingen_with_location(db_session: AsyncSession, melding_locations: list[str]) -> list[Melding]:
     meldingen = []
-    i = 0
-    for location in melding_locations:
-        i += 1
-        melding = Melding(text=f"Melding {i}")
-        melding.public_id = f"MELDI{i}"
-        melding.geo_location = location
+    for i, location in enumerate(melding_locations):
+        melding = Melding(text=f"Melding {i + 1}")
+        melding.public_id = f"MELDI{i + 1}"
+        melding.geo_location = cast(WKBElement, location)
         melding.state = MeldingBackofficeStates.PROCESSING
 
         db_session.add(melding)
@@ -628,11 +628,9 @@ async def meldingen_with_different_states(
     db_session: AsyncSession, melding_states: list[MeldingStates]
 ) -> list[Melding]:
     meldingen = []
-    i = 0
-    for state in melding_states:
-        i += 1
-        melding = Melding(text=f"Melding {i}")
-        melding.public_id = f"MELDI{i}"
+    for i, state in enumerate(melding_states):
+        melding = Melding(text=f"Melding {i + 1}")
+        melding.public_id = f"MELDI{i + 1}"
         melding.state = state
 
         db_session.add(melding)
@@ -651,12 +649,11 @@ async def meldingen_with_different_states_and_locations(
     db_session: AsyncSession, melding_states: list[MeldingStates], melding_locations: list[str]
 ) -> list[Melding]:
     meldingen = []
-    i = 0
-    for state in melding_states:
-        location = melding_locations[i]
-        i += 1
-        melding = Melding(text=f"Melding {i}")
-        melding.public_id = f"MELDI{i}"
+
+    for i, state in enumerate(melding_states):
+        location = cast(WKBElement, melding_locations[i])
+        melding = Melding(text=f"Melding {i + 1}")
+        melding.public_id = f"MELDI{i + 1}"
         melding.state = state
         melding.geo_location = location
 
@@ -690,7 +687,7 @@ def user_email(request: FixtureRequest) -> str:
 @pytest.fixture
 def auth_user(app: FastAPI, user_username: str, user_email: str) -> None:
     async def authenticate_user_override() -> User:
-        now = datetime.utcnow()
+        now = datetime.now(tz=dt.UTC)
         user = User(username=user_username, email=user_email)
         user.id = 400
         user.created_at = now

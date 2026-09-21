@@ -1,5 +1,6 @@
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Annotated, AsyncIterator, Generic, List, TypedDict, TypeVar
+from typing import Annotated, TypedDict
 
 from fastapi import Depends, HTTPException, Query, Response, UploadFile
 from meldingen_core import SortingDirection
@@ -68,9 +69,6 @@ def filter_param(filter: Annotated[str | None, Query()] = None) -> FilterParams:
         raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, errors)
 
 
-T = TypeVar("T", bound=BaseDBModel)
-
-
 @dataclass(frozen=True)
 class PreparedAttachmentUpload:
     filename: str
@@ -106,7 +104,7 @@ class PreparedAttachmentUpload:
         )
 
 
-class ContentRangeHeaderAdder(Generic[T]):
+class ContentRangeHeaderAdder[T: BaseDBModel]:
     _repository: BaseSQLAlchemyRepository[T]
     _identifier: str
 
@@ -118,7 +116,7 @@ class ContentRangeHeaderAdder(Generic[T]):
         self,
         response: Response,
         pagination: Annotated[PaginationParams, Depends(pagination_params)],
-        filters: List[ColumnExpressionArgument[bool]] | None = None,
+        filters: list[ColumnExpressionArgument[bool]] | None = None,
         apply_visibility_filters: bool = True,
     ) -> int:
         limit = pagination["limit"] or 0

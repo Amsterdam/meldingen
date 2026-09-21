@@ -4,7 +4,6 @@ from meldingen.models import Label, Melding
 
 
 class LabelReplacer(BaseLabelReplacer[Melding, Label]):
-
     async def __call__(self, melding: Melding, label_ids: list[int]) -> Melding:
         labels = await self._label_repository.list_by_ids(label_ids)
 
