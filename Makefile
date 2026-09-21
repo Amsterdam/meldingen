@@ -21,9 +21,17 @@ up: ## Start Docker Compose stack (detached)
 rebuild: ## Rebuild and start Docker Compose stack (detached)
 	$(dc) up -d --build
 
-format: ## Auto-fix formatting + linting (ruff)
-	$(api) uv run ruff check --fix .
+format: ## Auto-fix formatting (ruff)
 	$(api) uv run ruff format .
+
+lint: ## Auto-fix linting issues (ruff)
+	$(api) uv run ruff check --fix .
+
+formatl: ## Auto-fix formatting (ruff)
+	uv run ruff format .
+
+lintl: ## Auto-fix linting issues (ruff)
+	uv run ruff check --fix .
 
 typecheck: ## Run mypy type checking
 	$(api) sh -c "rm -rf .mypy_cache && uv run mypy --strict . | uv run mypy-baseline filter"

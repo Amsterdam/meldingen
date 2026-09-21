@@ -97,10 +97,10 @@ jobs:
         run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
       - name: Ruff check
-        run: docker run --rm --user root -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} uv run ruff check .
+        run: docker run --rm --user root -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} uv run --no-cache-dir ruff check .
 
       - name: Ruff format (check)
-        run: docker run --rm --user root -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} uv run ruff format --check .
+        run: docker run --rm --user root -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} uv run --no-cache-dir ruff format --check .
 
   MyPy:
     needs: build_container_images
