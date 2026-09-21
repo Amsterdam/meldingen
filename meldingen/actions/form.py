@@ -553,10 +553,6 @@ class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]):
         return await self._repository.retrieve(static_form_id)
 
 
-# class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
-#     _repository: BaseRepository[StaticForm]
-
-
 class FormComponentException(Exception):
     """Exception raised when a misconfigured form component is encountered."""
 
