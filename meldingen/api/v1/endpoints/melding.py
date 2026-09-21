@@ -146,6 +146,7 @@ from meldingen.exceptions import MeldingNotClassifiedException
 from meldingen.generators import PublicIdGenerator
 from meldingen.models import (
     Answer,
+    Attachment,
     Classification,
     Label,
     Melding,
@@ -911,7 +912,7 @@ async def upload_attachment_melder(
 async def melder_download_attachment(
     melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
     attachment_id: Annotated[int, Path(description="The id of the attachment.", ge=1)],
-    action: Annotated[MelderDownloadAttachmentAction, Depends(melder_download_attachment_action)],
+    action: Annotated[MelderDownloadAttachmentAction[Attachment, Melding], Depends(melder_download_attachment_action)],
     _type: Annotated[
         AttachmentTypes,
         Query(

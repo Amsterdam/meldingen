@@ -53,9 +53,9 @@ class MeldingListAction(BaseMeldingListAction[Melding]):
 
 
 class MeldingRetrieveAction:
-    _melding_repository: BaseMeldingRepository
+    _melding_repository: BaseMeldingRepository[Melding]
 
-    def __init__(self, melding_repository: BaseMeldingRepository):
+    def __init__(self, melding_repository: BaseMeldingRepository[Melding]):
         self._melding_repository = melding_repository
 
     async def __call__(self, melding_id: int) -> Melding:
@@ -81,7 +81,7 @@ class MeldingSubmitActionMelder(BaseMeldingSubmitActionMelder[Melding]): ...
 
 
 class AddLocationToMeldingAction:
-    _melding_repository: BaseMeldingRepository
+    _melding_repository: BaseMeldingRepository[Melding]
     _ingest_location: MeldingLocationIngestor
     _background_task_manager: BackgroundTasks
     _add_address: BaseAddressEnricher[Melding, Address]
@@ -89,7 +89,7 @@ class AddLocationToMeldingAction:
 
     def __init__(
         self,
-        melding_repository: BaseMeldingRepository,
+        melding_repository: BaseMeldingRepository[Melding],
         location_ingestor: MeldingLocationIngestor,
         background_task_manager: BackgroundTasks,
         address_enricher: BaseAddressEnricher[Melding, Address],
@@ -124,7 +124,7 @@ class MeldingReclassifyAction(BaseMeldingReclassifyAction[Melding, Classificatio
 
 class MeldingGetPossibleNextStatesAction:
     _state_machine: MeldingStateMachine
-    _melding_repository: BaseMeldingRepository
+    _melding_repository: BaseMeldingRepository[Melding]
 
     def __init__(self, state_machine: MeldingStateMachine, repository: BaseMeldingRepository[Melding]) -> None:
         self._state_machine = state_machine

@@ -29,6 +29,7 @@ from meldingen.models import (
     FormIoSelectComponentValue,
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
+    Melding,
     Question,
     StaticForm,
 )
@@ -372,7 +373,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
     def __init__(
         self,
         repository: AnswerRepository,
-        melding_repository: BaseMeldingRepository,
+        melding_repository: BaseMeldingRepository[Melding],
         question_repository: QuestionRepository,
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
@@ -468,14 +469,14 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
 
 
 class AnswerUpdateAction(BaseCRUDAction[Answer]):
-    _melding_repository: BaseMeldingRepository
+    _melding_repository: BaseMeldingRepository[Melding]
     _component_repository: FormIoQuestionComponentRepository
     _jsonlogic_validate: JSONLogicValidator
 
     def __init__(
         self,
         repository: AnswerRepository,
-        melding_repository: BaseMeldingRepository,
+        melding_repository: BaseMeldingRepository[Melding],
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
     ):
