@@ -206,13 +206,13 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
             "polymorphic_on": "type",
         }
 
-    __table_args__ = (
-        CheckConstraint("form_id IS NULL OR static_form_id IS NULL", name="only_form_or_static_form_constraint"),
-    )
-
     # Form.io attr's
     label: Mapped[str] = mapped_column(String(), nullable=True)
     key: Mapped[str] = mapped_column(String())
+
+    __table_args__: ClassVar = (
+        CheckConstraint("form_id IS NULL OR static_form_id IS NULL", name="only_form_or_static_form_constraint"),
+    )
 
     description: Mapped[str] = mapped_column(String(), nullable=True, default=None)
     type: Mapped[str] = mapped_column(
@@ -248,7 +248,7 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
 
 
 class FormIoPanelComponent(FormIoComponent):
-    __table_args__: ClassVar = {"extend_existing": True}  # type: ignore # MyPy complains about ClassVar type overriding an instance variable eventhough the type is factually correct.
+    __table_args__: ClassVar = {"extend_existing": True}
 
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:
@@ -268,7 +268,7 @@ class FormIoPanelComponent(FormIoComponent):
 
 
 class FormIoQuestionComponent(FormIoComponent):
-    __table_args__: ClassVar = {"extend_existing": True}  # type: ignore
+    __table_args__: ClassVar = {"extend_existing": True}
 
     question_id: Mapped[int | None] = mapped_column(ForeignKey("question.id", ondelete="SET NULL"), default=None)
     jsonlogic: Mapped[str | None] = mapped_column(String(), nullable=True, default=None)
@@ -286,7 +286,7 @@ class FormIoQuestionComponent(FormIoComponent):
 
 
 class FormIoTextAreaComponent(FormIoQuestionComponent):
-    __table_args__: ClassVar = {"extend_existing": True}  # type: ignore
+    __table_args__: ClassVar = {"extend_existing": True}
 
     auto_expand: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
     max_char_count: Mapped[int | None] = mapped_column(Integer(), nullable=True, default=None)
@@ -372,7 +372,7 @@ class FormIoSelectComponentValue(BaseDBModel, BaseFormIoComponentValue):
 
 
 class FormIoSelectComponent(FormIoQuestionComponent):
-    __table_args__: ClassVar = {"extend_existing": True}  # type: ignore
+    __table_args__: ClassVar = {"extend_existing": True}
 
     widget: Mapped[str] = mapped_column(String(), nullable=True, default=None)
     placeholder: Mapped[str] = mapped_column(String(), nullable=True, default=None)
@@ -398,7 +398,7 @@ class FormIoComponentValue(BaseDBModel, BaseFormIoComponentValue):
 
 class FormIoDateComponent(FormIoQuestionComponent):
     # A component that allows the user to select a date in the past or today.
-    __table_args__: ClassVar = {"extend_existing": True}  # type: ignore
+    __table_args__: ClassVar = {"extend_existing": True}
 
     """
     The amount of days a date in the past can be selected from today.
@@ -537,7 +537,7 @@ class Answer(AsyncAttrs, BaseAnswer, BaseDBModel, kw_only=True):
 
 
 class TextAnswer(Answer):
-    __table_args__: ClassVar = {"extend_existing": True}  # type: ignore
+    __table_args__: ClassVar = {"extend_existing": True}
 
     text: Mapped[str] = mapped_column(String(), nullable=True)
 
@@ -552,7 +552,7 @@ class TimeAnswer(Answer):
     """Answer type for time values. Stored as hh:mm string,
     because it's only used as a simple display of the user's input"""
 
-    __table_args__: ClassVar = {"extend_existing": True}  # type: ignore
+    __table_args__: ClassVar = {"extend_existing": True}
 
     time: Mapped[str | None] = mapped_column(String(), nullable=True)
 
@@ -567,7 +567,7 @@ class DateAnswer(Answer):
     """Answer type for date component saved as a JSON object
     with value, label and converted_date as keys"""
 
-    __table_args__: ClassVar = {"extend_existing": True}  # type: ignore
+    __table_args__: ClassVar = {"extend_existing": True}
     date: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=True)
 
     @declared_attr.directive
@@ -582,7 +582,7 @@ class ValueLabelAnswer(Answer):
     select, radio and checkbox components. Stored as a list of objects
     f.e. [{"value": "option1", "label": "Option 1"}, ...]"""
 
-    __table_args__: ClassVar = {"extend_existing": True}  # type: ignore
+    __table_args__: ClassVar = {"extend_existing": True}
     values_and_labels: Mapped[list[dict[str, str]]] = mapped_column(JSON, nullable=True)
 
     @declared_attr.directive
