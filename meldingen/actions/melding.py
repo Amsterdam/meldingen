@@ -81,7 +81,6 @@ class MeldingSubmitActionMelder(BaseMeldingSubmitActionMelder[Melding]): ...
 
 
 class AddLocationToMeldingAction:
-    _melding_repository: BaseMeldingRepository[Melding]
     _ingest_location: MeldingLocationIngestor
     _background_task_manager: BackgroundTasks
     _add_address: BaseAddressEnricher[Melding, Address]
@@ -89,20 +88,17 @@ class AddLocationToMeldingAction:
 
     def __init__(
         self,
-        melding_repository: BaseMeldingRepository[Melding],
         location_ingestor: MeldingLocationIngestor,
         background_task_manager: BackgroundTasks,
         address_enricher: BaseAddressEnricher[Melding, Address],
         wkb_to_point_shape_transformer: WKBToPointShapeTransformer,
     ) -> None:
-        self._melding_repository = melding_repository
         self._ingest_location = location_ingestor
         self._background_task_manager = background_task_manager
         self._add_address = address_enricher
         self._wkb_to_point_shape = wkb_to_point_shape_transformer
 
-    async def __call__(self, melding_id: int, location: GeoJson) -> Melding:
-        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id, "Melding not found")
+    async def __call__(self, melding: Melding, location: GeoJson) -> Melding:
         melding = await self._ingest_location(melding, location)
 
         assert melding.geo_location is not None

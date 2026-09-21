@@ -1206,14 +1206,12 @@ def location_output_transformer(
 
 
 def melding_add_location_action(
-    melding_repository: Annotated[BaseMeldingRepository[Melding], Depends(melding_repository)],
     location_ingestor: Annotated[MeldingLocationIngestor, Depends(location_ingestor)],
     background_task_manager: BackgroundTasks,
     address_enricher_task: Annotated[AddressEnricherTask, Depends(address_enricher_task)],
     wkb_to_point_shape_transformer: Annotated[WKBToPointShapeTransformer, Depends(wkb_to_point_shape_transformer)],
 ) -> AddLocationToMeldingAction:
     return AddLocationToMeldingAction(
-        melding_repository,
         location_ingestor,
         background_task_manager,
         address_enricher_task,

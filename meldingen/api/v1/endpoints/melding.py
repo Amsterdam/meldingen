@@ -1043,7 +1043,7 @@ async def add_location_to_melding(
     produce_output: Annotated[MeldingOutputFactory, Depends(melding_output_factory)],
 ) -> MeldingOutput:
     try:
-        melding = await action(melding.id, location)
+        melding = await action(melding, location)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
