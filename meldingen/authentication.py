@@ -76,5 +76,5 @@ async def verify_token_and_retrieve_melding(
         return await verify_and_retrieve(melding_id, token)
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e))
-    except TokenException as e:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail=str(e))
+    except TokenException:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
