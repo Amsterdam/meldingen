@@ -1,11 +1,9 @@
 import logging
 import os
+from base64 import b64encode
 from functools import lru_cache
 from typing import Annotated, Any, AsyncIterator
 
-from amsterdam_mail_service_client.api.default_api import DefaultApi
-from amsterdam_mail_service_client.api_client import ApiClient
-from amsterdam_mail_service_client.configuration import Configuration
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from azure.storage.blob.aio import ContainerClient
 from fastapi import BackgroundTasks, Depends
@@ -119,6 +117,8 @@ from meldingen.actions.user import (
 )
 from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
 from meldingen.adapters.classification.dummy_classifier import DummyClassifierAdapter
+from meldingen.adapters.mail.jinja_renderer import JinjaMailRenderer, logo_bytes
+from meldingen.adapters.mail.smtp_mailer import LOGO_SRC, SmtpMailer
 from meldingen.adapters.malware.azure_defender_for_storage_scanner import AzureDefenderForStorageMalwareScanner
 from meldingen.adapters.malware.dummy_scanner import DummyMalwareScanner
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
@@ -159,12 +159,10 @@ from meldingen.location import (
     WKBToPointShapeTransformer,
 )
 from meldingen.mail import (
-    AmsterdamMailServiceMailer,
-    AmsterdamMailServiceMailPreviewer,
-    AmsterdamMailServiceMeldingCompleteMailer,
-    AmsterdamMailServiceMeldingConfirmationMailer,
+    BackgroundTaskMeldingCompleteMailer,
+    BackgroundTaskMeldingConfirmationMailer,
     BaseMailer,
-    BaseMailPreviewer,
+    BaseMailRenderer,
     SendCompletedMailTask,
     SendConfirmationMailTask,
 )
@@ -736,42 +734,52 @@ def melding_submit_location_action(
     return MeldingSubmitLocationAction(state_machine, repository, token_verifier)
 
 
-def mail_configuration() -> Configuration:
-    return Configuration(host=settings.mail_service_api_base_url)
+@lru_cache
+def mail_logo() -> bytes:
+    return logo_bytes()
 
 
-async def mail_api_client(
-    configuration: Annotated[Configuration, Depends(mail_configuration)],
-) -> AsyncIterator[ApiClient]:
-    async with ApiClient(configuration) as api_client:
-        yield api_client
+def mail_renderer() -> BaseMailRenderer:
+    """Renderer for mails that go out: the logo travels along as a related MIME part."""
+    return JinjaMailRenderer(LOGO_SRC, settings.mail_disclaimer)
 
 
-def mail_default_api(api_client: Annotated[ApiClient, Depends(mail_api_client)]) -> DefaultApi:
-    return DefaultApi(api_client)
+def preview_mail_renderer() -> BaseMailRenderer:
+    """Renderer for the back office preview: a browser cannot resolve cid:, so inline the logo."""
+    return JinjaMailRenderer(
+        f"data:image/png;base64,{b64encode(mail_logo()).decode()}",
+        settings.mail_disclaimer,
+    )
 
 
-def mail_previewer(api: Annotated[DefaultApi, Depends(mail_default_api)]) -> BaseMailPreviewer:
-    return AmsterdamMailServiceMailPreviewer(api)
+def preview_mail_action(renderer: Annotated[BaseMailRenderer, Depends(preview_mail_renderer)]) -> PreviewMailAction:
+    return PreviewMailAction(renderer)
 
 
-def preview_mail_action(previewer: Annotated[BaseMailPreviewer, Depends(mail_previewer)]) -> PreviewMailAction:
-    return PreviewMailAction(previewer)
-
-
-def mailer(api: Annotated[DefaultApi, Depends(mail_default_api)]) -> BaseMailer:
-    return AmsterdamMailServiceMailer(api)
+def mailer() -> BaseMailer:
+    return SmtpMailer(
+        settings.mail_default_sender,
+        mail_logo(),
+        settings.mail_smtp_host,
+        settings.mail_smtp_port,
+        settings.mail_smtp_username,
+        settings.mail_smtp_password,
+        settings.mail_smtp_start_tls,
+        settings.mail_smtp_use_tls,
+        settings.mail_smtp_timeout,
+    )
 
 
 def send_confirmation_mail_task(
+    renderer: Annotated[BaseMailRenderer, Depends(mail_renderer)],
     mailer: Annotated[BaseMailer, Depends(mailer)],
 ) -> SendConfirmationMailTask:
     return SendConfirmationMailTask(
+        renderer,
         mailer,
         settings.mail_melding_confirmation_title,
         settings.mail_melding_confirmation_preview_text,
         settings.mail_melding_confirmation_body_text,
-        settings.mail_default_sender,
         settings.mail_melding_confirmation_subject,
     )
 
@@ -780,7 +788,7 @@ def melding_confirmation_mailer(
     background_task_manager: BackgroundTasks,
     send_confirmation_mail_task: Annotated[SendConfirmationMailTask, Depends(send_confirmation_mail_task)],
 ) -> BaseMeldingConfirmationMailer[Melding]:
-    return AmsterdamMailServiceMeldingConfirmationMailer(
+    return BackgroundTaskMeldingConfirmationMailer(
         background_task_manager,
         send_confirmation_mail_task,
     )
@@ -813,12 +821,15 @@ def melding_reclassify_action(
     return MeldingReclassifyAction(repository, classification_repository, note_repository, note_factory, state_machine)
 
 
-def send_completed_mail_task(mailer: Annotated[BaseMailer, Depends(mailer)]) -> SendCompletedMailTask:
+def send_completed_mail_task(
+    renderer: Annotated[BaseMailRenderer, Depends(mail_renderer)],
+    mailer: Annotated[BaseMailer, Depends(mailer)],
+) -> SendCompletedMailTask:
     return SendCompletedMailTask(
+        renderer,
         mailer,
         settings.mail_melding_completed_title,
         settings.mail_melding_completed_preview_text,
-        settings.mail_default_sender,
         settings.mail_melding_completed_subject,
     )
 
@@ -827,7 +838,7 @@ def melding_complete_mailer(
     background_task_manager: BackgroundTasks,
     send_completed_mail_task: Annotated[SendCompletedMailTask, Depends(send_completed_mail_task)],
 ) -> BaseMeldingCompleteMailer[Melding]:
-    return AmsterdamMailServiceMeldingCompleteMailer(background_task_manager, send_completed_mail_task)
+    return BackgroundTaskMeldingCompleteMailer(background_task_manager, send_completed_mail_task)
 
 
 def melding_complete_action(

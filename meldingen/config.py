@@ -87,8 +87,18 @@ class Settings(BaseSettings):
     address_api_resolver_retries: int = 5
 
     # Mail
-    mail_service_api_base_url: str = "http://mail-service:8003"
+    mail_smtp_host: str = "mailpit"
+    mail_smtp_port: int = 1025
+    mail_smtp_username: str | None = "test_smtp_user"
+    mail_smtp_password: str | None = "smtp_secret"
+    mail_smtp_start_tls: bool = False  # Enable against a real relay; mailpit speaks plain SMTP.
+    mail_smtp_use_tls: bool = False  # Implicit TLS, typically on port 465.
+    mail_smtp_timeout: float = 10.0
     mail_default_sender: str = "meldingen@example.com"
+    mail_disclaimer: str = (
+        "U ontvangt deze e-mail omdat er een melding is gedaan met dit e-mailadres. "
+        "U kunt niet op dit bericht antwoorden."
+    )
     mail_melding_confirmation_title: str = "Uw melding"
     mail_melding_confirmation_preview_text: str = "Uw melding: {}"
     mail_melding_confirmation_body_text: str = """U heeft ons het volgende laten weten:
