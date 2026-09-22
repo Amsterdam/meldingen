@@ -4,7 +4,6 @@ from typing import Any
 from fastapi import HTTPException
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction, BaseRetrieveAction
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.repositories import BaseMeldingRepository, BaseRepository
 from meldingen_core.repository_helpers import retrieve_or_raise_not_found
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
@@ -29,7 +28,6 @@ from meldingen.models import (
     FormIoSelectComponentValue,
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
-    Melding,
     Question,
     StaticForm,
 )
@@ -38,6 +36,7 @@ from meldingen.repositories import (
     ClassificationRepository,
     FormIoQuestionComponentRepository,
     FormRepository,
+    MeldingRepository,
     QuestionRepository,
     StaticFormRepository,
 )
@@ -365,6 +364,7 @@ class FormRetrieveByClassificationAction(BaseCRUDAction[Form]):
 
 
 class AnswerCreateAction(BaseCRUDAction[Answer]):
+    _melding_repository: MeldingRepository
     _question_repository: QuestionRepository
     _component_repository: FormIoQuestionComponentRepository
     _jsonlogic_validate: JSONLogicValidator
@@ -373,7 +373,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
     def __init__(
         self,
         repository: AnswerRepository,
-        melding_repository: BaseMeldingRepository[Melding],
+        melding_repository: MeldingRepository,
         question_repository: QuestionRepository,
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
@@ -469,14 +469,14 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
 
 
 class AnswerUpdateAction(BaseCRUDAction[Answer]):
-    _melding_repository: BaseMeldingRepository[Melding]
+    _melding_repository: MeldingRepository
     _component_repository: FormIoQuestionComponentRepository
     _jsonlogic_validate: JSONLogicValidator
 
     def __init__(
         self,
         repository: AnswerRepository,
-        melding_repository: BaseMeldingRepository[Melding],
+        melding_repository: MeldingRepository,
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
     ):
@@ -545,7 +545,7 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
 
 
 class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]):
-    _repository: BaseRepository[StaticForm]
+    _repository: StaticFormRepository
 
     def __init__(self, repository: StaticFormRepository):
         super().__init__(repository)
@@ -654,4 +654,8 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
         return obj
 
 
-class StaticFormListAction(BaseListAction[StaticForm]): ...
+class StaticFormListAction(BaseListAction[StaticForm]):
+    _repository: StaticFormRepository
+
+    def __init__(self, repository: StaticFormRepository):
+        self._repository = repository

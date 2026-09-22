@@ -36,7 +36,6 @@ from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.managers import RelationshipManager
-from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.statemachine import MeldingTransitions
 from meldingen_core.token import BaseTokenGenerator, TokenVerifier
 from meldingen_core.wfs import AssetTypeToWfsProviderConverter, BaseWfsProviderValidator
@@ -832,7 +831,7 @@ def form_io_question_component_repository(
 
 def melding_answer_create_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
-    melding_repository: Annotated[BaseMeldingRepository[Melding], Depends(melding_repository)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     question_repository: Annotated[QuestionRepository, Depends(question_repository)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
     jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
@@ -850,7 +849,7 @@ def melding_answer_create_action(
 
 def melding_answer_update_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
-    melding_repository: Annotated[BaseMeldingRepository[Melding], Depends(melding_repository)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     component_repository: Annotated[FormIoQuestionComponentRepository, Depends(form_io_question_component_repository)],
     jsonlogic_validator: Annotated[JSONLogicValidator, Depends(jsonlogic_validator)],
 ) -> AnswerUpdateAction:
@@ -869,7 +868,7 @@ def melding_list_questions_and_answers_action(
 
 
 def melding_answer_delete_action(
-    melding_repository: Annotated[BaseMeldingRepository[Melding], Depends(melding_repository)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
 ) -> MeldingAnswerDeleteAction:
     return MeldingAnswerDeleteAction(melding_repository, answer_repository)
@@ -902,7 +901,7 @@ def melding_list_assets_action(
 
 
 def melding_delete_asset_action(
-    melding_repository: Annotated[BaseMeldingRepository[Melding], Depends(melding_repository)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     asset_repository: Annotated[AssetRepository, Depends(asset_repository)],
     relationship_manager: Annotated[RelationshipManager[Melding, Asset], Depends(melding_asset_relationship_manager)],
 ) -> MeldingDeleteAssetAction:
@@ -1097,7 +1096,7 @@ def download_attachment_action(
 
 
 def melder_download_attachment_action(
-    melding_repository: Annotated[BaseMeldingRepository[Melding], Depends(melding_repository)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> MelderDownloadAttachmentAction:
@@ -1111,7 +1110,7 @@ def melding_list_attachments_action(
 
 
 def melder_melding_delete_attachment_action(
-    melding_repository: Annotated[BaseMeldingRepository[Melding], Depends(melding_repository)],
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
     attachment_repository: Annotated[AttachmentRepository, Depends(attachment_repository)],
     filesystem: Annotated[Filesystem, Depends(filesystem)],
 ) -> MelderDeleteAttachmentAction:

@@ -14,14 +14,13 @@ from meldingen_core.actions.melding import MeldingSubmitActionMelder as BaseMeld
 from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters
-from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.repository_helpers import retrieve_or_raise_not_found
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingTransitions
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
 from meldingen.models import Answer, Asset, AssetType, Classification, Melding, Note, User
-from meldingen.repositories import AttributeNotFoundException
+from meldingen.repositories import AttributeNotFoundException, MeldingRepository
 from meldingen.schemas.types import Address, GeoJson
 from meldingen.statemachine import MeldingStateMachine
 
@@ -53,9 +52,9 @@ class MeldingListAction(BaseMeldingListAction[Melding]):
 
 
 class MeldingRetrieveAction:
-    _melding_repository: BaseMeldingRepository[Melding]
+    _melding_repository: MeldingRepository
 
-    def __init__(self, melding_repository: BaseMeldingRepository[Melding]):
+    def __init__(self, melding_repository: MeldingRepository):
         self._melding_repository = melding_repository
 
     async def __call__(self, melding_id: int) -> Melding:
@@ -120,9 +119,9 @@ class MeldingReclassifyAction(BaseMeldingReclassifyAction[Melding, Classificatio
 
 class MeldingGetPossibleNextStatesAction:
     _state_machine: MeldingStateMachine
-    _melding_repository: BaseMeldingRepository[Melding]
+    _melding_repository: MeldingRepository
 
-    def __init__(self, state_machine: MeldingStateMachine, repository: BaseMeldingRepository[Melding]) -> None:
+    def __init__(self, state_machine: MeldingStateMachine, repository: MeldingRepository) -> None:
         self._state_machine = state_machine
         self._melding_repository = repository
 
