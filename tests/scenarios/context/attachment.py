@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from pytest_bdd import given, parsers, then, when
 from starlette.status import HTTP_200_OK
 
-from tests.conftest import malware_scanner_override
+from tests.api.test_utils import open_resource_file
 from tests.scenarios.conftest import async_step
 
 ROUTE_ADD_ATTACHMENTS: Final[str] = "melding:attachment_melder"
@@ -46,12 +46,7 @@ async def upload_the_file(
     response = await client.post(
         app.url_path_for(ROUTE_ADD_ATTACHMENTS, melding_id=my_melding["id"]),
         params={"token": token},
-        files={
-            "file": open(
-                filepath,
-                "rb",
-            )
-        },
+        files={"file": open_resource_file(filepath)},
         # We have to provide the header and boundary manually, otherwise httpx will set the content-type
         # to application/json and the request will fail.
         headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},

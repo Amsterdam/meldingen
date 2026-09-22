@@ -75,8 +75,7 @@ def llm_agent() -> Agent:
     provider = llm_provider_generator()
     if provider is None:
         pytest.skip(
-            "llm_provider_generator() returned None. Check API_LLM_PROVIDER, LLM_URL "
-            "and (for azure) API_LLM_API_KEY."
+            "llm_provider_generator() returned None. Check API_LLM_PROVIDER, LLM_URL and (for azure) API_LLM_API_KEY."
         )
 
     agent = classifier_agent(provider)

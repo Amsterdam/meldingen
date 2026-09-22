@@ -1,5 +1,5 @@
 import logging
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, Field, create_model
 
@@ -12,14 +12,19 @@ class ClassificationResponse(BaseModel):
     classification: str = Field(..., description="The chosen classification")
 
 
-async def build_dynamic_classification_response_model(repository: ClassificationRepository) -> type[BaseModel]:
+async def build_dynamic_classification_response_model(
+    repository: ClassificationRepository,
+) -> type[ClassificationResponse]:
     """Function to create a dynamic Pydantic model to ensure the LLM's response is one of the valid classification names inside the Literal tuple."""
 
     classifications_list = [c.name for c in await repository.list()]
     classification_type = Literal[tuple(classifications_list)]
-    return create_model(
-        "ClassificationResponse",
-        classification=(classification_type, Field(..., description="The chosen classification")),
+    return cast(
+        type[ClassificationResponse],
+        create_model(
+            "ClassificationResponse",
+            classification=(classification_type, Field(..., description="The chosen classification")),
+        ),
     )
 
 

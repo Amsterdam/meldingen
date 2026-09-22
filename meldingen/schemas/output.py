@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Any, Literal, Union, final
+from typing import Annotated, Any, Literal, Union
 
 from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field, field_serializer
 from pydantic.alias_generators import to_camel
@@ -284,7 +284,7 @@ class ValueLabelAnswerOutput(AnswerOutput):
 
 
 AnswerOutputUnion = Annotated[
-    Union[TextAnswerOutput, TimeAnswerOutput, DateAnswerOutput, ValueLabelAnswerOutput],
+    TextAnswerOutput | TimeAnswerOutput | DateAnswerOutput | ValueLabelAnswerOutput,
     Field(discriminator="type"),
 ]
 
@@ -310,7 +310,7 @@ class ValueLabelAnswerQuestionOutput(ValueLabelAnswerOutput):
 
 
 AnswerQuestionOutputUnion = Annotated[
-    Union[TextAnswerQuestionOutput, TimeAnswerQuestionOutput, DateAnswerQuestionOutput, ValueLabelAnswerQuestionOutput],
+    TextAnswerQuestionOutput | TimeAnswerQuestionOutput | DateAnswerQuestionOutput | ValueLabelAnswerQuestionOutput,
     Field(discriminator="type"),
 ]
 
@@ -322,6 +322,7 @@ class UserOutput(BaseOutputModel):
 
 class AttachmentOutput(BaseOutputModel):
     original_filename: str
+    original_media_type: str
     user: UserOutput | None
 
 

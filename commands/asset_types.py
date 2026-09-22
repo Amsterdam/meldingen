@@ -22,7 +22,7 @@ async def async_add_asset_type(name: str, class_name: str, arguments: dict[str, 
         try:
             await asset_type_repository.save(asset_type)
         except IntegrityError:
-            print(f"[red]Error[/red] - Asset Type already exists!")
+            print("[red]Error[/red] - Asset Type already exists!")
             raise typer.Exit
 
         print(f'[green]Success[/green] - Asset Type "{name}" created!')

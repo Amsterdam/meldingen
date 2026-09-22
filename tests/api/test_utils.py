@@ -1,7 +1,12 @@
+from pathlib import Path
+from typing import BinaryIO, Literal, overload
+
 import pytest
 from fastapi import HTTPException
 
 from meldingen.api.utils import pagination_params, sort_param
+
+TESTS_RESOURCES_DIR = Path(__file__).resolve().parents[1] / "resources"
 
 
 @pytest.mark.parametrize(
@@ -36,3 +41,31 @@ def test_sort_param(attribute: str, direction: str) -> None:
 def test_sort_param_invalid_input() -> None:
     with pytest.raises(HTTPException):
         sort_param("asdf")
+
+
+def open_resource_file(filename: str) -> BinaryIO:
+    resource_path = TESTS_RESOURCES_DIR / filename
+    return open(str(resource_path), "rb")
+
+
+@overload
+def read_file(filename: str) -> bytes: ...
+
+
+@overload
+def read_file(filename: str, read_mode: Literal["r"]) -> str: ...
+
+
+@overload
+def read_file(filename: str, read_mode: Literal["rb", "rb+"]) -> bytes: ...
+
+
+def read_file(filename: str, read_mode: Literal["r", "rb", "rb+"] = "rb") -> str | bytes:
+    if read_mode in ("rb", "rb+"):
+        with open(filename, read_mode) as f:
+            result_bytes: bytes = f.read()
+            return result_bytes
+
+    with open(filename, read_mode, encoding="utf-8") as f:
+        result_str: str = f.read()
+        return result_str

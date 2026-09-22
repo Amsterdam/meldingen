@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_503_SERVICE_UNAVAILABLE
+from starlette.status import HTTP_200_OK, HTTP_503_SERVICE_UNAVAILABLE
 
 from meldingen.dependencies import classifier_agent
 from tests.api.v1.endpoints.base import BaseUnauthorizedTest

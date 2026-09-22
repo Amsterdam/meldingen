@@ -66,11 +66,8 @@ class NoteFactory(BaseNoteFactory[Note, Melding, User]):
 class UnsupportedAnswerTypeException(Exception):
     """Raised when an unsupported answer type is provided."""
 
-    pass
-
 
 class AnswerFactory:
-
     def __call__(
         self,
         answer_input: AnswerInputUnion,
@@ -130,7 +127,6 @@ class UnsupportedFormComponentTypeException(Exception):
 
 
 class FormIoQuestionComponentFactory:
-
     def __call__(self, validated_component_input: dict[str, Any]) -> FormIoQuestionComponent:
         component_type = validated_component_input.get("type")
 

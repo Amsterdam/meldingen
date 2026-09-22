@@ -1,12 +1,11 @@
 import asyncio
 from logging.config import fileConfig
 
-import alembic_postgresql_enum
+import alembic_postgresql_enum  # noqa: F401
 from alembic import context
 from geoalchemy2 import alembic_helpers
 from sqlalchemy import Connection, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
-from sqlalchemy.sql.schema import SchemaItem
 
 from meldingen import models
 from meldingen.config import settings
@@ -28,7 +27,6 @@ config.set_section_option(section, "sqlalchemy.url", f"{settings.database_dsn}")
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from meldingen import models
 
 target_metadata = models.BaseDBModel.metadata
 

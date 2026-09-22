@@ -1,6 +1,7 @@
+import builtins
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
-from typing import Any, List, TypeVar
+from typing import Any
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
@@ -54,10 +55,7 @@ class AttributeNotFoundException(Exception):
         self.message = message
 
 
-T = TypeVar("T", bound=BaseDBModel)
-
-
-class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
+class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCMeta):
     """Base repository for SqlAlchemy based repositories."""
 
     _session: AsyncSession
@@ -76,17 +74,17 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
         """
         return ()
 
-    async def save(self, model: T, *, commit: bool = True) -> None:
-        self._session.add(model)
+    async def save(self, obj: T, *, commit: bool = True) -> None:
+        self._session.add(obj)
 
         if commit:
             try:
                 await self._session.commit()
-            except IntegrityError as integrity_error:
+            except IntegrityError:
                 await self._session.rollback()
-                raise integrity_error
+                raise
 
-            await self._session.refresh(model)
+            await self._session.refresh(obj)
 
     async def flush(self) -> None:
         await self._session.flush()
@@ -142,7 +140,7 @@ class BaseSQLAlchemyRepository(BaseRepository[T], metaclass=ABCMeta):
 
     async def count(
         self,
-        filters: List[ColumnExpressionArgument[bool]] | None = None,
+        filters: builtins.list[ColumnExpressionArgument[bool]] | None = None,
         apply_visibility_filters: bool = True,
     ) -> int:
         _type = self.get_model_type()
@@ -238,11 +236,11 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
 
     def filter_input_to_expression_arguments(
         self, filters: MeldingListFilters | None = None
-    ) -> List[ColumnExpressionArgument[bool]] | None:
+    ) -> list[ColumnExpressionArgument[bool]] | None:
         if filters is None:
             return None
 
-        expressions: List[ColumnExpressionArgument[bool]] = []
+        expressions: list[ColumnExpressionArgument[bool]] = []
 
         area = None if filters is None else filters.area
         states = None if filters is None else filters.states
@@ -256,7 +254,7 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         return expressions
 
 
-class UserRepository(BaseSQLAlchemyRepository[User], BaseUserRepository):
+class UserRepository(BaseSQLAlchemyRepository[User], BaseUserRepository[User]):
     def get_model_type(self) -> type[User]:
         return User
 
@@ -327,7 +325,7 @@ class ClassificationRepository(BaseSQLAlchemyRepository[Classification], BaseCla
         await self.save(classification)
 
 
-class FormRepository(BaseSQLAlchemyRepository[Form], BaseFormRepository):
+class FormRepository(BaseSQLAlchemyRepository[Form], BaseFormRepository[Form]):
     def get_model_type(self) -> type[Form]:
         return Form
 
@@ -356,7 +354,7 @@ class StaticFormRepository(BaseSQLAlchemyRepository[StaticForm]):
             raise NotFoundException() from e
 
 
-class QuestionRepository(BaseSQLAlchemyRepository[Question], BaseQuestionRepository):
+class QuestionRepository(BaseSQLAlchemyRepository[Question], BaseQuestionRepository[Question]):
     def get_model_type(self) -> type[Question]:
         return Question
 

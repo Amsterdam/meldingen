@@ -75,7 +75,7 @@ jobs:
           docker run -d --rm -p "8025:8025" -p "1025:1025" -e MP_SMTP_AUTH_ALLOW_INSECURE=true -e MP_SMTP_AUTH=test_smtp_user:smtp_secret --network meldingen_network --network-alias mailpit axllent/mailpit:latest
           docker run --rm -v $(pwd):/opt/meldingen --network meldingen_network --env-file .env -e COVERAGE_FILE=/tmp/.coverage ${REGISTRY}/${REPOSITORY}:${VERSION} pytest --cov --cov-fail-under=95 -n auto -v
 
-  Black:
+  FormatAndLint:
     needs: build_container_images
     runs-on: ubuntu-latest
     steps:
@@ -94,30 +94,11 @@ jobs:
       - name: Pull images
         run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
 
-      - name: black
-        run:  docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} black . --check
+      - name: Ruff check
+        run: docker run --rm --user root -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} uv run ruff check .
 
-  iSort:
-    needs: build_container_images
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Login to Docker Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create the .env file
-        run: cp .env.example .env
-
-      - name: Pull images
-        run: docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
-
-      - name: isort
-        run: docker run -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} isort . --check
+      - name: Ruff format (check)
+        run: docker run --rm --user root -v $(pwd):/opt/meldingen ${REGISTRY}/${REPOSITORY}:${VERSION} uv run ruff format --check .
 
   MyPy:
     needs: build_container_images

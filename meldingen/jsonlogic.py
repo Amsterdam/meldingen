@@ -5,13 +5,12 @@ from typing import Any, Self
 from jsonlogic import JSONLogicExpression, JSONLogicSyntaxError, Operator
 from jsonlogic.evaluation import EvaluationContext, evaluate, get_value
 from jsonlogic.operators import operator_registry
-from jsonlogic.registry import UnkownOperator as UnknownOperator
+from jsonlogic.registry import UnknownOperator
 from jsonlogic.resolving import ReferenceParser
 from jsonlogic.typing import OperatorArgument
 
 
 class JSONLogicValidationException(Exception):
-
     def __init__(self, msg: str, input: dict[str, Any]) -> None:
         self.msg = msg
         self.input = input

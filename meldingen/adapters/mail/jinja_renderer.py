@@ -15,7 +15,7 @@ LOGO_PATH: Final[Path] = TEMPLATE_DIR / "amsterdam-logo.png"
 
 # Mail clients show the preview text followed by whatever comes next in the body. Padding it with
 # zero width characters keeps the rest of the mail out of the inbox preview.
-_PREHEADER_PADDING: Final[str] = "‌​‍‎‏﻿" * 120
+_PREHEADER_PADDING: Final[str] = "\u200c\u200b\u200d\u200e\u200f\ufeff" * 120
 
 # Mail clients strip <style> blocks, so every tag markdown can produce needs its styling inline.
 _INLINE_STYLES: Final[dict[str, str]] = {

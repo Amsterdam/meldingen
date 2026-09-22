@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from os import path
-from typing import Any, Final, override
+from typing import Any, ClassVar, Final, override
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -53,8 +52,31 @@ from meldingen.models import (
     ValueLabelAnswer,
 )
 from meldingen.repositories import MeldingRepository
-from meldingen.statemachine import Process
+from tests.api.test_utils import open_resource_file, read_file
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
+
+# The metadata that "amsterdam-logo-with-metadata.jpg" carries: GPS coordinates, a date and time, a
+# camera make and a camera serial number. None of it may survive an upload. Note that imgproxy does
+# leave an Exif block of its own behind, holding technical data such as the orientation and the
+# resolution of the image it produced, which is why we look for the values we uploaded.
+METADATA_MARKERS: Final[list[bytes]] = [
+    b"TESTGPSDATUM",  # GPSMapDatum, part of the GPS data
+    b"2020:01:02 03:04:05",  # DateTime and DateTimeOriginal
+    b"TestCam",  # Make
+    b"SN-123456789",  # BodySerialNumber
+]
+
+
+async def assert_stored_file_has_no_metadata(container_client: ContainerClient, file_path: str) -> None:
+    blob_client = container_client.get_blob_client(file_path)
+    async with blob_client:
+        assert await blob_client.exists() is True
+        downloader = await blob_client.download_blob()
+        data = await downloader.readall()
+
+    assert len(data) > 0
+    for marker in METADATA_MARKERS:
+        assert marker not in data, f"'{file_path}' still contains metadata"
 
 
 class TestMeldingCreate:
@@ -410,9 +432,8 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         auth_user: None,
         meldingen_with_location: list[Melding],
     ) -> None:
-        with open("tests/resources/stadsdeel-centrum.json") as f:
-            geojson = f.read()
 
+        geojson = read_file("tests/resources/stadsdeel-centrum.json", "r")
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson})
 
         assert response.status_code == 200
@@ -564,9 +585,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         auth_user: None,
         meldingen_with_different_states_and_locations: list[Melding],
     ) -> None:
-        with open("tests/resources/stadsdeel-centrum.json") as f:
-            geojson = f.read()
-
+        geojson = read_file("tests/resources/stadsdeel-centrum.json", "r")
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME), params={"in_area": geojson, "state": MeldingStates.SUBMITTED}
         )
@@ -779,7 +798,7 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
 class TestMeldingRetrieve(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:retrieve"
     METHOD: Final[str] = "GET"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -851,6 +870,16 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
     def get_json(self) -> dict[str, Any] | None:
         return None
 
+    def get_files(self) -> dict[str, Any] | None:
+        """Endpoints that expect a file upload return one here, so these requests only fail on the
+        token and not on a missing body."""
+        return None
+
+    def get_headers(self) -> dict[str, str] | None:
+        """Needed together with `get_files()`, as the test client sends a json content type by
+        default."""
+        return None
+
     def get_extra_path_params(self) -> dict[str, Any]:
         return {}
 
@@ -860,6 +889,8 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=1, **self.get_extra_path_params()),
             json=self.get_json(),
+            files=self.get_files(),
+            headers=self.get_headers(),
         )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
@@ -879,6 +910,8 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
             app.url_path_for(self.get_route_name(), melding_id=melding.id, **self.get_extra_path_params()),
             params={"token": ""},
             json=self.get_json(),
+            files=self.get_files(),
+            headers=self.get_headers(),
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -895,6 +928,8 @@ class BaseTokenAuthenticationTest(metaclass=ABCMeta):
             app.url_path_for(self.get_route_name(), melding_id=melding.id, **self.get_extra_path_params()),
             params={"token": "supersecuretoken"},
             json=self.get_json(),
+            files=self.get_files(),
+            headers=self.get_headers(),
         )
 
         assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -1362,7 +1397,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
 class TestMeldingUpdate(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:update"
     METHOD: Final[str] = "PATCH"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -1438,9 +1473,10 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         body = response.json()
         response_labels = body.get("labels", [])
 
-        assert set([response_labels[0].get("id"), response_labels[1].get("id")]) == set(
-            [initial_labels[0].id, initial_labels[1].id]
-        )
+        assert {response_labels[0].get("id"), response_labels[1].get("id")} == {
+            initial_labels[0].id,
+            initial_labels[1].id,
+        }
         assert body.get("urgency") == 1
 
     @pytest.mark.anyio
@@ -1625,8 +1661,7 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
 
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert response.json().get("detail") == (
-            "Melding may not be classified from current state, "
-            f"use POST /melding/{melding.id}/reclassification instead"
+            f"Melding may not be classified from current state, use POST /melding/{melding.id}/reclassification instead"
         )
 
         # Refused before anything is written: not even the urgency that came with it is applied.
@@ -3650,7 +3685,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         db_session: AsyncSession,
         melding_with_classification: Melding,
         form_with_time_component: Form,
-        time_value: str | int | float,
+        time_value: str | float,
         error_message: str,
     ) -> None:
         components = await form_with_time_component.awaitable_attrs.components
@@ -4399,6 +4434,23 @@ class TestMeldingDeleteAnswer(BaseTokenAuthenticationTest):
 class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
     ROUTE_NAME_CREATE: Final[str] = "melding:attachment_melder"
 
+    # Without these the class stays abstract, which makes pytest skip it without saying so
+    def get_route_name(self) -> str:
+        return self.ROUTE_NAME_CREATE
+
+    def get_method(self) -> str:
+        return "POST"
+
+    @override
+    def get_files(self) -> dict[str, Any] | None:
+        return {
+            "file": open_resource_file("amsterdam-logo.jpg"),
+        }
+
+    @override
+    def get_headers(self) -> dict[str, str] | None:
+        return {"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"}
+
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_token", "filename"],
@@ -4407,6 +4459,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam-logo.png"),
             ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam-logo.webp"),
             ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam logo.webp"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "supersecuretoken", "amsterdam-logo-with-metadata.jpg"),
         ],
     )
     async def test_upload_attachment(
@@ -4424,14 +4477,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": melding.token},
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        filename,
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file(filename),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
             # to application/json and the request will fail.
@@ -4447,6 +4493,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
         await db_session.refresh(attachments[0])
 
         assert attachments[0].original_filename == filename
+        assert attachments[0].original_media_type.startswith("image/")
 
         split_path, _ = attachments[0].file_path.rsplit(".", 1)
         optimized_path = f"{split_path}-optimized.webp"
@@ -4455,18 +4502,11 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
         thumbnail_path = f"{split_path}-thumbnail.webp"
         assert attachments[0].thumbnail_path == thumbnail_path
 
-        blob_client = container_client.get_blob_client(attachments[0].file_path)
-        async with blob_client:
-            assert await blob_client.exists() is True
-            properties = await blob_client.get_blob_properties()
-
-        assert properties.size == path.getsize(
-            path.join(
-                path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                "resources",
-                filename,
-            )
-        )
+        # Neither the stored original nor the images derived from it may hold on to the metadata of
+        # the uploaded file
+        await assert_stored_file_has_no_metadata(container_client, attachments[0].file_path)
+        await assert_stored_file_has_no_metadata(container_client, optimized_path)
+        await assert_stored_file_has_no_metadata(container_client, thumbnail_path)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -4483,14 +4523,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": melding.token},
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        "too-large.jpg",
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file("too-large.jpg"),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
             # to application/json and the request will fail.
@@ -4517,14 +4550,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": melding.token},
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        filename,
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file(filename),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
             # to application/json and the request will fail.
@@ -4553,14 +4579,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             files={
                 "file": (
                     "amsterdam-logo.png",
-                    open(
-                        path.join(
-                            path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                            "resources",
-                            "amsterdam-logo.png",
-                        ),
-                        "rb",
-                    ),
+                    open_resource_file("amsterdam-logo.png"),
                     "image/jpeg",
                 ),
             },
@@ -4587,14 +4606,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=123),
             params={"token": "supersecuretoken"},
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        "test_file.txt",
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file("test_file.txt"),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
             # to application/json and the request will fail.
@@ -4617,14 +4629,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        "test_file.txt",
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file("test_file.txt"),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
             # to application/json and the request will fail.
@@ -4652,14 +4657,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        "test_file.txt",
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file("test_file.txt"),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
             # to application/json and the request will fail.
@@ -4684,14 +4682,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id),
             params={"token": "supersecuretoken"},
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        "test_file.txt",
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file("test_file.txt"),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
             # to application/json and the request will fail.
@@ -4718,14 +4709,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding_with_attachments.id),
             params={"token": melding_with_attachments.token},
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        "amsterdam-logo.png",
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file("amsterdam-logo.png"),
             },
             headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
         )
@@ -4741,7 +4725,7 @@ class TestMeldingUploadAttachmentMelder(BaseTokenAuthenticationTest):
 
 class TestMeldingUploadAttachment(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:attachment"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -4760,6 +4744,7 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
             ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam-logo.png"),
             ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam-logo.webp"),
             ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam logo.webp"),
+            ("klacht over iets", MeldingStates.CLASSIFIED, "amsterdam-logo-with-metadata.jpg"),
         ],
     )
     async def test_upload_attachment(
@@ -4777,14 +4762,7 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        filename,
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file(filename),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
             # to application/json and the request will fail.
@@ -4795,6 +4773,7 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("id") is not None
         assert body.get("original_filename") == filename
+        assert body.get("original_media_type") is not None
         assert body.get("user") is not None
         assert body.get("user").get("email") == "user@example.com"
 
@@ -4813,18 +4792,11 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         thumbnail_path = f"{split_path}-thumbnail.webp"
         assert attachments[0].thumbnail_path == thumbnail_path
 
-        blob_client = container_client.get_blob_client(attachments[0].file_path)
-        async with blob_client:
-            assert await blob_client.exists() is True
-            properties = await blob_client.get_blob_properties()
-
-        assert properties.size == path.getsize(
-            path.join(
-                path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                "resources",
-                filename,
-            )
-        )
+        # Neither the stored original nor the images derived from it may hold on to the metadata of
+        # the uploaded file
+        await assert_stored_file_has_no_metadata(container_client, attachments[0].file_path)
+        await assert_stored_file_has_no_metadata(container_client, optimized_path)
+        await assert_stored_file_has_no_metadata(container_client, thumbnail_path)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -4841,14 +4813,7 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        "too-large.jpg",
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file("too-large.jpg"),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
             # to application/json and the request will fail.
@@ -4874,14 +4839,7 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        filename,
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file(filename),
             },
             # We have to provide the header and boundary manually, otherwise httpx will set the content-type
             # to application/json and the request will fail.
@@ -4910,14 +4868,7 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
             files={
                 "file": (
                     "amsterdam-logo.png",
-                    open(
-                        path.join(
-                            path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                            "resources",
-                            "amsterdam-logo.png",
-                        ),
-                        "rb",
-                    ),
+                    open_resource_file("amsterdam-logo.png"),
                     "image/jpeg",
                 ),
             },
@@ -4941,19 +4892,13 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         client: AsyncClient,
         auth_user: None,
     ) -> None:
+
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=123),
             files={
                 "file": (
                     "amsterdam-logo.png",
-                    open(
-                        path.join(
-                            path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                            "resources",
-                            "amsterdam-logo.png",
-                        ),
-                        "rb",
-                    ),
+                    open_resource_file("amsterdam-logo.png"),
                     "image/jpeg",
                 ),
             },
@@ -4994,14 +4939,7 @@ class TestMeldingUploadAttachment(BaseUnauthorizedTest):
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             files={
-                "file": open(
-                    path.join(
-                        path.abspath(path.dirname(path.dirname(path.dirname(path.dirname(__file__))))),
-                        "resources",
-                        "amsterdam-logo.png",
-                    ),
-                    "rb",
-                ),
+                "file": open_resource_file("amsterdam-logo.png"),
             },
             headers={"Content-Type": "multipart/form-data; boundary=----MeldingenAttachmentFileUpload"},
         )
@@ -5224,7 +5162,7 @@ class TestMeldingDownloadAttachment(BaseTokenAuthenticationTest):
 
 class TestMeldingListAttachments(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:attachments"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -5248,6 +5186,7 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         body = response.json()
 
         assert len(attachments) == len(body)
+        assert all(item.get("original_media_type") == "image/jpeg" for item in body)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
@@ -5311,6 +5250,7 @@ class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert len(attachments) == len(body)
+        assert all(item.get("original_media_type") is not None for item in body)
 
 
 class TestMeldingDeleteAttachmentAction(BaseTokenAuthenticationTest):
@@ -6109,7 +6049,7 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
 
 
 class TestMeldingSubmit(BaseUnauthorizedTest):
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return "melding:submit"
@@ -6408,7 +6348,7 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
 
 class TestMeldingMelderListAssets(BaseTokenAuthenticationTest):
     ROUTE_NAME: Final[str] = "melding:assets_melder"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME
@@ -6454,7 +6394,7 @@ class TestMeldingMelderListAssets(BaseTokenAuthenticationTest):
 
 class TestMeldingListAssets(BaseUnauthorizedTest):
     ROUTE_NAME: Final[str] = "melding:assets"
-    PATH_PARAMS: dict[str, Any] = {"melding_id": 1}
+    PATH_PARAMS: ClassVar[dict[str, Any]] = {"melding_id": 1}
 
     def get_route_name(self) -> str:
         return self.ROUTE_NAME

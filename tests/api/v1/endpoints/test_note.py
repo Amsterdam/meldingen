@@ -1,3 +1,4 @@
+import datetime as dt
 from datetime import datetime
 from typing import Any
 
@@ -386,9 +387,9 @@ class TestListNotes:
         # Insert so that created_at order differs from insertion/id order, proving the
         # list is sorted on created_at and not on id.
         newer = Note(text="newer", melding=melding, user=user)
-        newer.created_at = datetime(2025, 1, 2, 12, 0, 0)
+        newer.created_at = datetime(2025, 1, 2, 12, 0, 0, tzinfo=dt.UTC)
         older = Note(text="older", melding=melding, user=user)
-        older.created_at = datetime(2025, 1, 1, 12, 0, 0)
+        older.created_at = datetime(2025, 1, 1, 12, 0, 0, tzinfo=dt.UTC)
         db_session.add(newer)
         db_session.add(older)
         await db_session.commit()
@@ -421,9 +422,9 @@ class TestListNotes:
         user: User,
     ) -> None:
         newer = Note(text="newer", melding=melding, user=user)
-        newer.created_at = datetime(2025, 1, 2, 12, 0, 0)
+        newer.created_at = datetime(2025, 1, 2, 12, 0, 0, tzinfo=dt.UTC)
         older = Note(text="older", melding=melding, user=user)
-        older.created_at = datetime(2025, 1, 1, 12, 0, 0)
+        older.created_at = datetime(2025, 1, 1, 12, 0, 0, tzinfo=dt.UTC)
         db_session.add(newer)
         db_session.add(older)
         await db_session.commit()

@@ -1,5 +1,5 @@
 from meldingen.models import Melding
-from meldingen.repositories import AnswerRepository, MeldingRepository
+from meldingen.repositories import MeldingRepository
 
 
 class AnswerPurger:
