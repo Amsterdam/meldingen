@@ -710,8 +710,8 @@ def auth_behandelaar(app: FastAPI, user: User) -> User:
 
 
 @pytest.fixture
-def classification_props(request: FixtureRequest) -> dict:
-    DEFAULT_CLASSIFICATION_PROPS = {
+def classification_props(request: FixtureRequest) -> dict[str, str]:
+    DEFAULT_CLASSIFICATION_PROPS: dict[str, str] = {
         "name": "classification name",
         "service_level_objective_text": "Service level objective text",
     }
@@ -722,7 +722,7 @@ def classification_props(request: FixtureRequest) -> dict:
 
 
 @pytest.fixture
-async def classification(db_session: AsyncSession, classification_props: dict) -> Classification:
+async def classification(db_session: AsyncSession, classification_props: dict[str, Any]) -> Classification:
     classification = Classification(**classification_props)
     db_session.add(classification)
     await db_session.commit()
