@@ -543,7 +543,9 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
         return answer
 
 
-class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]): ...
+class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]):
+    async def __call__(self, static_form_id: int) -> StaticForm | None:
+        return await self._repository.retrieve(static_form_id)
 
 
 class FormComponentException(Exception):
