@@ -38,7 +38,6 @@ from meldingen.repositories import (
     FormRepository,
     MeldingRepository,
     QuestionRepository,
-    StaticFormRepository,
 )
 from meldingen.schemas.input import (
     AnswerInputUnion,
@@ -544,14 +543,7 @@ class AnswerUpdateAction(BaseCRUDAction[Answer]):
         return answer
 
 
-class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]):
-    _repository: StaticFormRepository
-
-    def __init__(self, repository: StaticFormRepository):
-        super().__init__(repository)
-
-    async def __call__(self, static_form_id: int) -> StaticForm | None:
-        return await self._repository.retrieve(static_form_id)
+class StaticFormRetrieveAction(BaseCRUDAction[StaticForm]): ...
 
 
 class FormComponentException(Exception):
@@ -654,8 +646,4 @@ class StaticFormUpdateAction(BaseCRUDAction[StaticForm]):
         return obj
 
 
-class StaticFormListAction(BaseListAction[StaticForm]):
-    _repository: StaticFormRepository
-
-    def __init__(self, repository: StaticFormRepository):
-        self._repository = repository
+class StaticFormListAction(BaseListAction[StaticForm]): ...

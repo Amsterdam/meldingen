@@ -14,6 +14,7 @@ from meldingen_core.actions.melding import MeldingSubmitActionMelder as BaseMeld
 from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import MeldingListFilters
+from meldingen_core.repositories import BaseMeldingRepository
 from meldingen_core.repository_helpers import retrieve_or_raise_not_found
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingTransitions
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
@@ -119,9 +120,9 @@ class MeldingReclassifyAction(BaseMeldingReclassifyAction[Melding, Classificatio
 
 class MeldingGetPossibleNextStatesAction:
     _state_machine: MeldingStateMachine
-    _melding_repository: MeldingRepository
+    _melding_repository: BaseMeldingRepository[Melding]
 
-    def __init__(self, state_machine: MeldingStateMachine, repository: MeldingRepository) -> None:
+    def __init__(self, state_machine: MeldingStateMachine, repository: BaseMeldingRepository[Melding]) -> None:
         self._state_machine = state_machine
         self._melding_repository = repository
 
