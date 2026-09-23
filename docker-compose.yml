@@ -18,7 +18,7 @@ services:
     env_file:
       - .env
     environment:
-      SEED_FILE_CLASSIFICATIONS: ./seed/examples/classifications.json
+      API_SEED_FILE_CLASSIFICATIONS: ./seed/examples/classifications.json
     depends_on:
       database:
         condition: service_healthy

@@ -17,7 +17,7 @@ app = typer.Typer()
 @app.command()
 def seed(
     dry_run: bool = False,
-    file_path: str = typer.Option(None, "--seed-file-classifications", envvar="SEED_FILE_CLASSIFICATIONS"),
+    file_path: str = typer.Option(None, "--seed-file-classifications", envvar="API_SEED_FILE_CLASSIFICATIONS"),
 ) -> None:
     asyncio.run(async_seed_classification_from_file(file_path, dry_run))
 
