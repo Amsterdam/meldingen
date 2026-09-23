@@ -15,12 +15,19 @@ from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
 from meldingen.markdown import MarkdownToPlainTextConverter
-from meldingen.models import AnswerTypeEnum, FormIoComponentTypeEnum, FormIoFormDisplayEnum
+from meldingen.models import (
+    AnswerTypeEnum,
+    FormIoComponentTypeEnum,
+    FormIoFormDisplayEnum,
+    ServiceLevelObjectiveDayType,
+)
 from meldingen.schemas.types import DateAnswerObject, FormIOConditional, PhoneNumber, ValueLabelObject
 from meldingen.validators import create_non_match_validator
 
 NOTE_MAX_PLAIN_TEXT_LENGTH = 1000
 RECLASSIFICATION_REASON_MAX_LENGTH = 1000
+SERVICE_LEVEL_OBJECTIVE_TEXT_MAX_LENGTH = 1000
+SERVICE_LEVEL_OBJECTIVE_DAYS_MAX = 365
 
 _markdown_to_plain_text = MarkdownToPlainTextConverter()
 
@@ -60,6 +67,13 @@ class NoteUpdateInput(BaseModel):
 
 class ClassificationInput(BaseModel):
     name: str = Field(min_length=1)
+    service_level_objective_text: Annotated[
+        str,
+        StringConstraints(min_length=1, max_length=SERVICE_LEVEL_OBJECTIVE_TEXT_MAX_LENGTH, strip_whitespace=True),
+    ]
+    # These 2 are optional, defaults are added automatically if not provided.
+    service_level_objective_days: int | None = Field(default=None, ge=1, le=SERVICE_LEVEL_OBJECTIVE_DAYS_MAX)
+    service_level_objective_day_type: ServiceLevelObjectiveDayType | None = Field(default=None)
     instructions: str | None = Field(default=None)
 
 
@@ -71,6 +85,15 @@ class ClassificationUpdateInput(BaseModel):
     name: str | None = Field(min_length=1, default=None)
     instructions: str | None = Field(default=None)
     asset_type: int | None = Field(default=None)
+    service_level_objective_text: (
+        Annotated[
+            str,
+            StringConstraints(min_length=1, max_length=SERVICE_LEVEL_OBJECTIVE_TEXT_MAX_LENGTH, strip_whitespace=True),
+        ]
+        | None
+    ) = Field(default=None)
+    service_level_objective_days: int | None = Field(default=None, ge=1, le=SERVICE_LEVEL_OBJECTIVE_DAYS_MAX)
+    service_level_objective_day_type: ServiceLevelObjectiveDayType | None = Field(default=None)
 
 
 class MeldingInput(BaseModel):

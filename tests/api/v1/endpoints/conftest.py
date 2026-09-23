@@ -710,16 +710,20 @@ def auth_behandelaar(app: FastAPI, user: User) -> User:
 
 
 @pytest.fixture
-def classification_name(request: FixtureRequest) -> str:
+def classification_props(request: FixtureRequest) -> dict:
+    DEFAULT_CLASSIFICATION_PROPS = {
+        "name": "classification name",
+        "service_level_objective_text": "Service level objective text",
+    }
     if hasattr(request, "param"):
-        return str(request.param)
+        return {**DEFAULT_CLASSIFICATION_PROPS, **dict(request.param)}
     else:
-        return "classification name"
+        return DEFAULT_CLASSIFICATION_PROPS
 
 
 @pytest.fixture
-async def classification(db_session: AsyncSession, classification_name: str) -> Classification:
-    classification = Classification(name=classification_name)
+async def classification(db_session: AsyncSession, classification_props: dict) -> Classification:
+    classification = Classification(**classification_props)
     db_session.add(classification)
     await db_session.commit()
 
@@ -730,7 +734,7 @@ async def classification(db_session: AsyncSession, classification_name: str) -> 
 async def classifications(db_session: AsyncSession) -> list[Classification]:
     classifications = []
     for n in range(10):
-        classification = Classification(f"category: {n}")
+        classification = Classification(name=f"category: {n}")
         db_session.add(classification)
         classifications.append(classification)
 
@@ -741,7 +745,7 @@ async def classifications(db_session: AsyncSession) -> list[Classification]:
 
 @pytest.fixture
 async def classification_with_form(db_session: AsyncSession) -> Classification:
-    classification = Classification("test_classification")
+    classification = Classification(name="test_classification")
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
 
     db_session.add(form)
@@ -752,7 +756,7 @@ async def classification_with_form(db_session: AsyncSession) -> Classification:
 
 @pytest.fixture
 async def classification_with_asset_type(db_session: AsyncSession, asset_type: AssetType) -> Classification:
-    classification = Classification("test_classification")
+    classification = Classification(name="test_classification")
     classification.asset_type = asset_type
 
     db_session.add(classification)
@@ -763,7 +767,7 @@ async def classification_with_asset_type(db_session: AsyncSession, asset_type: A
 
 @pytest.fixture
 async def classification_with_asset_type_and_form(db_session: AsyncSession) -> Classification:
-    classification = Classification("test_classification")
+    classification = Classification(name="test_classification")
     classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={}, max_assets=3)
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
 

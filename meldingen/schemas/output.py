@@ -48,6 +48,9 @@ class ClassificationOutput(BaseOutputModel):
     instructions: str | None = Field(default=None)
     form: int | None = None
     asset_type: int | None = None
+    service_level_objective_text: str
+    service_level_objective_days: int
+    service_level_objective_day_type: str
 
 
 class LabelOutput(BaseOutputModel):
