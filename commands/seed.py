@@ -17,9 +17,16 @@ app = typer.Typer()
 @app.command()
 def seed(
     dry_run: bool = False,
-    file_path: str = typer.Option(None, "--seed-file-classifications", envvar="API_SEED_FILE_CLASSIFICATIONS"),
+    file_path_classifications: str = typer.Option(
+        None, "--seed-file-classifications", envvar="API_SEED_FILE_CLASSIFICATIONS"
+    ),
 ) -> None:
-    asyncio.run(async_seed_classification_from_file(file_path, dry_run))
+
+    if file_path_classifications is None:
+        print("🔴 - Seeding of classifications aborted: no seed file specified.")
+        raise typer.Exit
+
+    asyncio.run(async_seed_classification_from_file(file_path_classifications, dry_run))
 
 
 def build_classification_insert(values: list[dict[str, str | None]]) -> Insert:
