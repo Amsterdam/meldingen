@@ -18,32 +18,21 @@ class EmailAddressMissingException(MailException): ...
 
 @dataclass(frozen=True)
 class RenderedMail:
-    """A mail body rendered into the two parts a MIME message carries."""
-
     html: str
     text: str
 
 
 class BaseMailRenderer(metaclass=ABCMeta):
-    """Turns the markdown we author into a mail body. Knows nothing about sending."""
-
     @abstractmethod
     async def __call__(self, title: str, preview_text: str, body_text: str) -> RenderedMail: ...
 
 
 class BaseMailer(metaclass=ABCMeta):
-    """Puts an already rendered body on the wire. Knows nothing about markdown or templates."""
-
     @abstractmethod
     async def __call__(self, to: str, subject: str, mail: RenderedMail) -> None: ...
 
 
 class SendMailTask:
-    """Renders a mail for a melding and hands it to the mailer.
-
-    Subclasses decide where the body text comes from; everything else is shared.
-    """
-
     _render: BaseMailRenderer
     _send_mail: BaseMailer
     _title: str
@@ -68,18 +57,12 @@ class SendMailTask:
         if melding.email is None:
             raise EmailAddressMissingException("Email address missing!")
 
-        mail = await self._render(
-            self._title,
-            self._preview_template.format(melding.public_id),
-            body_text,
-        )
+        mail = await self._render(self._title, self._preview_template.format(melding.public_id), body_text)
 
         try:
             await self._send_mail(melding.email, self._subject_template.format(melding.public_id), mail)
         except MailException:
-            # This runs after the response has been returned, so the reporter is told their
-            # melding was received while no mail goes out. Nothing retries it yet, so the log
-            # line is the only record of who is missing a confirmation.
+            # Runs as a background task, so without logging this failure would go unnoticed
             logger.exception("Failed to send mail for melding %s", melding.public_id)
             raise
 

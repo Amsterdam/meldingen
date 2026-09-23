@@ -744,12 +744,11 @@ def mail_logo() -> bytes:
 
 
 def mail_renderer() -> BaseMailRenderer:
-    """Renderer for mails that go out: the logo travels along as a related MIME part."""
     return JinjaMailRenderer(LOGO_SRC, settings.mail_disclaimer)
 
 
 def preview_mail_renderer() -> BaseMailRenderer:
-    """Renderer for the back office preview: a browser cannot resolve cid:, so inline the logo."""
+    # A browser can't resolve cid: urls, so the preview gets the logo as a data uri
     return JinjaMailRenderer(
         f"data:image/png;base64,{b64encode(mail_logo()).decode()}",
         settings.mail_disclaimer,

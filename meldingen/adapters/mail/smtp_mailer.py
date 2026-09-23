@@ -1,25 +1,15 @@
-import logging
 from email.message import EmailMessage
-from typing import Final, cast
+from typing import cast
 
 import aiosmtplib
 
 from meldingen.mail import BaseMailer, MailException, RenderedMail
 
-logger = logging.getLogger(__name__)
-
-LOGO_CONTENT_ID: Final[str] = "logo@amsterdam.nl"
-LOGO_SRC: Final[str] = f"cid:{LOGO_CONTENT_ID}"
+LOGO_CONTENT_ID = "logo@amsterdam.nl"
+LOGO_SRC = f"cid:{LOGO_CONTENT_ID}"
 
 
 class SmtpMailer(BaseMailer):
-    """Sends an already rendered mail over SMTP.
-
-    The logo travels with the message as a related part rather than as a link, because mail
-    clients block remote images by default and the recipient would see a gap where the logo
-    should be.
-    """
-
     _sender: str
     _logo: bytes
     _hostname: str
@@ -46,8 +36,7 @@ class SmtpMailer(BaseMailer):
         self._logo = logo
         self._hostname = hostname
         self._port = port
-        # An unset secret arrives as an empty string rather than as None, and an empty username
-        # would make us attempt AUTH against a relay that does not want it.
+        # Unset secrets come in as empty strings
         self._username = username or None
         self._password = password or None
         self._start_tls = start_tls
@@ -55,11 +44,9 @@ class SmtpMailer(BaseMailer):
         self._timeout = timeout
 
     async def __call__(self, to: str, subject: str, mail: RenderedMail) -> None:
-        message = self._build_message(to, subject, mail)
-
         try:
             await aiosmtplib.send(
-                message,
+                self._build_message(to, subject, mail),
                 hostname=self._hostname,
                 port=self._port,
                 username=self._username,
@@ -80,9 +67,7 @@ class SmtpMailer(BaseMailer):
         message.set_content(mail.text)
         message.add_alternative(mail.html, subtype="html")
 
-        # add_related has to land on the html part, not on the message, or the alternative
-        # structure collapses and clients stop offering the plain text version.
-        # The cast is because typeshed types get_payload as a broad union.
+        # The logo has to be related to the html part, not to the whole message
         html_part = cast(EmailMessage, message.get_payload(-1))
         html_part.add_related(
             self._logo,
@@ -90,9 +75,7 @@ class SmtpMailer(BaseMailer):
             subtype="png",
             cid=f"<{LOGO_CONTENT_ID}>",
             filename="amsterdam-logo.png",
-            # Without this the filename alone makes it "Content-Disposition: attachment", and the
-            # logo shows up as a paperclip next to the mail instead of inside it.
-            disposition="inline",
+            disposition="inline",  # otherwise it shows up as an attachment
         )
 
         return message

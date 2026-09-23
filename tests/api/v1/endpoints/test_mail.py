@@ -25,5 +25,4 @@ class TestMailPreview(BaseUnauthorizedTest):
         assert "<title>Test Title</title>" in response.text
         assert "Test Preview Text" in response.text
         assert "Test Body" in response.text
-        # A browser cannot resolve the cid: reference a sent mail uses, so the preview inlines it.
         assert "data:image/png;base64," in response.text

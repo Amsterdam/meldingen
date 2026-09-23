@@ -1,52 +1,30 @@
-{#
-  Mail layout for meldingen.
-
-  Everything is inlined on purpose: <style> blocks and external stylesheets are
-  stripped by most mail clients, and Outlook renders with the Word engine which
-  understands neither rem units nor flexbox. Hence the table layout and px sizes.
-#}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html dir="ltr" lang="nl" xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="nl">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="x-apple-disable-message-reformatting" />
-    <meta name="color-scheme" content="light dark" />
-    <meta name="supported-color-schemes" content="light dark" />
     <title>{{ title }}</title>
   </head>
   <body style="margin:0;padding:0;background-color:#ffffff;color:#000000;font-family:Helvetica,Arial,sans-serif;">
-    <div style="display:none;overflow:hidden;line-height:1px;opacity:0;max-height:0;max-width:0;">
-      {{ preview_text }}{{ preheader_padding }}
-    </div>
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#ffffff;">
+    <div style="display:none;max-height:0;overflow:hidden;">{{ preview_text }}</div>
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
       <tr>
         <td align="center" style="padding:24px 16px;">
           <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
             <tr>
               <td style="padding-bottom:24px;">
-                <img src="{{ logo_src }}" width="115" height="40" alt="Gemeente Amsterdam"
-                     style="display:block;outline:none;border:none;text-decoration:none;" />
+                <img src="{{ logo_src }}" width="115" height="40" alt="Gemeente Amsterdam" style="display:block;border:none;" />
               </td>
             </tr>
             <tr>
               <td>
-                <h1 style="margin:0 0 16px 0;font-family:Helvetica,Arial,sans-serif;font-size:28px;line-height:36px;font-weight:700;color:#000000;">{{ title }}</h1>
+                <h1 style="margin:0 0 16px 0;font-size:28px;line-height:36px;">{{ title }}</h1>
                 {{ body_html }}
               </td>
             </tr>
             <tr>
-              <td style="padding-top:24px;">
-                <hr style="width:100%;border:none;border-top:1px solid #b4b4b4;margin:0;" />
-              </td>
-            </tr>
-            <tr>
-              <td style="padding-top:16px;">
-                <p style="margin:0 0 16px 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:22px;color:#4f4f4f;">{{ disclaimer }}</p>
-                <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:22px;color:#4f4f4f;">
-                  <a href="https://www.amsterdam.nl/" style="color:#ec0000;text-decoration:underline;">amsterdam.nl</a>
-                  &nbsp;&middot;&nbsp;
-                  <a href="tel:14020" style="color:#ec0000;text-decoration:underline;">14 020</a>
-                </p>
+              <td style="padding-top:24px;border-top:1px solid #b4b4b4;">
+                <p style="margin:0;font-size:14px;line-height:22px;color:#4f4f4f;">{{ disclaimer }}</p>
               </td>
             </tr>
           </table>
