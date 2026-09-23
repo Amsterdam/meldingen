@@ -51,7 +51,7 @@ dependencies = [
 [dependency-groups]
 dev = [
   "asgi-lifespan>=2.1.0,<3",
-  "filelock>=3.20.3,<4",
+  "filelock>=3.20.3,<5",
   "mailpit-api-client[pytest]>=1.0.0,<2",
   "mkdocs-literate-nav>=0.6.1,<0.7",
   "mkdocs-material>=9.6.20,<10",
