@@ -217,7 +217,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert violation.get("msg") == "Field required"
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_props", [{"name": "bla"}], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_create_classification_duplicate_name(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
@@ -562,7 +562,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
         return self.PATH_PARAMS
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_props", [{"name": "bla"}], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_retrieve_classification(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
@@ -652,7 +652,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         return self.PATH_PARAMS
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_props", [{"name": "bla"}], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_update_classification(
         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
     ) -> None:
@@ -797,7 +797,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         return self.PATH_PARAMS
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_props", [{"name": "bla"}], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_delete_classification(
         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
     ) -> None:
@@ -806,7 +806,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         assert response.status_code == HTTP_204_NO_CONTENT
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_props", [{"name": "bla"}], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_delete_classification_with_attached_melding_soft_deletes(
         self,
         app: FastAPI,
@@ -841,7 +841,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         assert melding_response.json()["classification"]["name"] == "bla"
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_props", [{"name": "bla"}], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_deleted_classification_cannot_be_used_to_classify(
         self, db_session: AsyncSession, classification: Classification
     ) -> None:
@@ -853,7 +853,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
             await repository.find_by_name("bla")
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_props", [{"name": "bla"}], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_name_can_be_reused_after_deletion(
         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
     ) -> None:
@@ -868,7 +868,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         assert recreated.json()["id"] != classification.id
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_props", [{"name": "bla"}], indirect=True)
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_delete_already_deleted_classification_returns_404(
         self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
     ) -> None:
