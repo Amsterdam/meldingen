@@ -57,7 +57,7 @@ upgrade-core: ## Upgrade only meldingen-core
 switch-core: ## Switch meldingen-core to a specific branch or otherwise main, e.g. make switch-core CORE_BRANCH=feature/my-branch
 	$(api) uv add meldingen-core --branch "$(CORE_BRANCH)"
 
-check-all: ## Run all checks (format, linkt, typecheck, test)
+check-all: ## Run all checks (format, lint, typecheck, test)
 	$(MAKE) format
 	$(MAKE) lint
 	$(MAKE) typecheck
