@@ -2,8 +2,8 @@
 REGISTRY ?= localhost:5000
 VERSION ?= latest
 INSTALL_DEV ?= false
-UID:=$(shell id --user)
-GID:=$(shell id --group)
+UID:=$(shell id -u)
+GID:=$(shell id -g)
 TEST ?= # used to add testpath as argument to pytest, e.g. TEST=tests/api/v1/endpoints/test_melding.py
 CORE_BRANCH ?= main
 
@@ -64,6 +64,10 @@ check-all: ## Run all checks (format, lint, typecheck, test)
 	$(MAKE) test
 
 migration: ## Create a new Alembic migration (usage: make migration NAME="add new column")
+	@if [ -z "$(NAME)" ]; then \
+		echo "Error: NAME is required. Usage: make migration NAME=\"add new column\""; \
+		exit 1; \
+	fi
 	$(api) alembic revision --autogenerate -m "$(NAME)"
 
 migrate: ## Run Alembic migrations
