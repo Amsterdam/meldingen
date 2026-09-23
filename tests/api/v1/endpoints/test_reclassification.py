@@ -234,7 +234,7 @@ class TestReclassifyMelding:
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
-        assert response.json()["detail"] == "Failed to find melding with id 999999"
+        assert response.json()["detail"] == "Melding not found"
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_state"], [(MeldingStates.SUBMITTED,)], indirect=True)

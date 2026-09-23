@@ -2502,7 +2502,7 @@ class TestMeldingQuestionAnswer:
         assert response.status_code == HTTP_404_NOT_FOUND
 
         data = response.json()
-        assert data.get("detail") == "Not Found"
+        assert data.get("detail") == "Melding not found"
 
     @pytest.mark.anyio
     async def test_answer_question_unauthorized_token_invalid(
@@ -2645,7 +2645,7 @@ class TestMeldingQuestionAnswer:
             app.url_path_for(
                 self.ROUTE_NAME_CREATE, melding_id=melding_with_classification.id, question_id=question.id
             ),
-            params={"token": "supersecuretoken"},
+            params={"token": melding_with_classification.token},
             json=data,
         )
 
@@ -2655,6 +2655,10 @@ class TestMeldingQuestionAnswer:
         assert data.get("detail")[0].get("msg") == "Form classification is not the same as melding classification"
 
     @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "melding_token",
+        ["supersecuretoken"],
+    )
     async def test_answer_question_does_not_exists(
         self,
         app: FastAPI,
@@ -2665,7 +2669,7 @@ class TestMeldingQuestionAnswer:
 
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=999),
-            params={"token": "supersecuretoken"},
+            params={"token": melding.token},
             json=data,
         )
 
@@ -2786,14 +2790,14 @@ class TestMeldingQuestionAnswer:
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["time_value", "error_message"],
+        ["melding_token", "time_value", "error_message"],
         [
-            ("invalid-time-format", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
-            ("24:00:00", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
-            ("1560", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
-            ("ab:cd", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
-            (1000, "Input should be a valid string"),
-            (10.00, "Input should be a valid string"),
+            ("supersecrettoken", "invalid-time-format", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("supersecrettoken", "24:00:00", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("supersecrettoken", "1560", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("supersecrettoken", "ab:cd", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("supersecrettoken", 1000, "Input should be a valid string"),
+            ("supersecrettoken", 10.00, "Input should be a valid string"),
         ],
     )
     async def test_create_time_answer_invalid(
@@ -2801,10 +2805,12 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         melding_with_classification: Melding,
+        melding_token: str,
         form_with_time_component: Form,
         time_value: str | int,
         error_message: str,
     ) -> None:
+
         components = await form_with_time_component.awaitable_attrs.components
         assert len(components) == 1
 
@@ -2821,7 +2827,7 @@ class TestMeldingQuestionAnswer:
                 melding_id=melding_with_classification.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding_token},
             json={"time": time_value, "type": AnswerTypeEnum.time},
         )
 
@@ -2882,8 +2888,8 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("loc") == ["body", "time", "time"]
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_date_answer(
         self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
@@ -2925,8 +2931,8 @@ class TestMeldingQuestionAnswer:
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_date_answer_invalid(
         self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
@@ -3008,8 +3014,8 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("input") == converted_date_input
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_date_answer_i_dont_know_option(
         self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
@@ -3053,8 +3059,8 @@ class TestMeldingQuestionAnswer:
         assert date.get("label") == "Ik weet het niet"
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_select_component_answer(
         self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding_with_classification: Melding
@@ -3096,8 +3102,8 @@ class TestMeldingQuestionAnswer:
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_select_component_answer_invalid(
         self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding_with_classification: Melding
@@ -3132,8 +3138,8 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("loc") == ["body", "value_label", "values_and_labels"]
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_radio_component_answer(
         self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
@@ -3175,8 +3181,8 @@ class TestMeldingQuestionAnswer:
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_invalid_answer_without_type(
         self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding_with_classification: Melding
@@ -3212,8 +3218,8 @@ class TestMeldingQuestionAnswer:
         assert detail[0].get("input") == {"time": "10:30"}
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_answer_non_matching_answer_types(
         self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
@@ -3249,8 +3255,8 @@ class TestMeldingQuestionAnswer:
         )
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_answer_empty_type(
         self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding_with_classification: Melding
@@ -3286,8 +3292,8 @@ class TestMeldingQuestionAnswer:
         )
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_checkbox_component_answer(
         self,
@@ -3333,8 +3339,8 @@ class TestMeldingQuestionAnswer:
         assert body.get("panel_position") == 1
 
     @pytest.mark.parametrize(
-        ["melding_token"],
-        [("supersecrettoken",)],
+        "melding_token",
+        ["supersecrettoken"],
     )
     async def test_create_checkbox_component_answer_invalid(
         self,
@@ -3668,14 +3674,14 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["time_value", "error_message"],
+        ["melding_token", "time_value", "error_message"],
         [
-            ("invalid-time-format", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
-            ("24:00:00", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
-            ("1560", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
-            ("ab:cd", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
-            (1000, "Input should be a valid string"),
-            (10.00, "Input should be a valid string"),
+            ("supersecrettoken", "invalid-time-format", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("supersecrettoken", "24:00:00", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("supersecrettoken", "1560", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("supersecrettoken", "ab:cd", r"String should match pattern '^(?:[01]\d|2[0-3]):[0-5]\d$'"),
+            ("supersecrettoken", 1000, "Input should be a valid string"),
+            ("supersecrettoken", 10.00, "Input should be a valid string"),
         ],
     )
     async def test_update_time_answer_invalid(
@@ -6112,10 +6118,13 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
         return {"external_id": "some_external_id", "asset_type_id": 123, "label": "Container 123", "subtype": "gft"}
 
     @pytest.mark.anyio
-    async def test_add_asset_to_melding_that_does_not_exist(self, app: FastAPI, client: AsyncClient) -> None:
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_add_asset_to_melding_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, melding_token: str
+    ) -> None:
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=123),
-            params={"token": "supersecrettoken"},
+            params={"token": melding_token},
             json=self.get_json(),
         )
 
@@ -6131,7 +6140,7 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
     ) -> None:
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=melding.id),
-            params={"token": "supersecrettoken"},
+            params={"token": melding.token},
             json=self.get_json(),
         )
 
@@ -6151,7 +6160,7 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
     ) -> None:
         response = await client.post(
             app.url_path_for(self.get_route_name(), melding_id=melding_with_assets.id),
-            params={"token": "supersecrettoken"},
+            params={"token": melding_with_assets.token},
             json={
                 "external_id": "my_external_id",
                 "asset_type_id": asset_type.id,
@@ -6379,12 +6388,11 @@ class TestMeldingMelderListAssets(BaseTokenAuthenticationTest):
             assert asset.get("subtype") == "subtype"
 
     @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
     async def test_list_assets_with_non_existing_melding(
-        self, app: FastAPI, client: AsyncClient, auth_user: None
+        self, app: FastAPI, client: AsyncClient, melding_token: str
     ) -> None:
-        response = await client.get(
-            app.url_path_for(self.ROUTE_NAME, melding_id=123), params={"token": "supersecrettoken"}
-        )
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=123), params={"token": melding_token})
 
         assert response.status_code == HTTP_404_NOT_FOUND
         body = response.json()
@@ -6464,10 +6472,13 @@ class TestMeldingDeleteAsset(BaseTokenAuthenticationTest):
         assert len(melding_with_classification_with_asset_type.assets) == 0
 
     @pytest.mark.anyio
-    async def test_delete_asset_from_melding_that_does_not_exist(self, app: FastAPI, client: AsyncClient) -> None:
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_delete_asset_from_melding_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, melding_token: str
+    ) -> None:
         response = await client.delete(
             app.url_path_for(self.get_route_name(), melding_id=123, asset_id=456),
-            params={"token": "supersecrettoken"},
+            params={"token": melding_token},
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
@@ -6482,7 +6493,7 @@ class TestMeldingDeleteAsset(BaseTokenAuthenticationTest):
     ) -> None:
         response = await client.delete(
             app.url_path_for(self.get_route_name(), melding_id=melding.id, asset_id=456),
-            params={"token": "supersecrettoken"},
+            params={"token": melding.token},
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND

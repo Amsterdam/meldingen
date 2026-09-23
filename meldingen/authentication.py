@@ -67,14 +67,14 @@ async def authenticate_user(
     return await user_repository.find_by_email_or_create(email)
 
 
-async def verify_melding_token(
-    melding_id: Annotated[int, Path(ge=1)],
-    token: Annotated[str, Query()],
-    verifier: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
+async def verify_token_and_retrieve_melding(
+    melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
+    token: Annotated[str, Query(description="The token of the melding.")],
+    verify_and_retrieve: Annotated[TokenVerifier[Melding], Depends(token_verifier)],
 ) -> Melding:
     try:
-        return await verifier(melding_id, token)
-    except NotFoundException:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+        return await verify_and_retrieve(melding_id, token)
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e))
     except TokenException:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)

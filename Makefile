@@ -1,4 +1,4 @@
-.PHONY: help build push up rebuild format typecheck typecheck-sync test test-pdb test-coverage update check-all migration migrate upgrade-core switch-core
+.PHONY: help build push up rebuild format lint formatl lintl typecheck typecheck-sync test test-pdb test-coverage update check-all migration migrate upgrade-core switch-core
 REGISTRY ?= localhost:5000
 VERSION ?= latest
 INSTALL_DEV ?= false
@@ -21,9 +21,17 @@ up: ## Start Docker Compose stack (detached)
 rebuild: ## Rebuild and start Docker Compose stack (detached)
 	$(dc) up -d --build
 
-format: ## Auto-fix formatting + linting (ruff)
-	$(api) uv run ruff check --fix .
+format: ## Auto-fix formatting (ruff)
 	$(api) uv run ruff format .
+
+lint: ## Auto-fix linting issues (ruff)
+	$(api) uv run ruff check --fix .
+
+formatl: ## Auto-fix formatting (ruff)
+	uv run ruff format .
+
+lintl: ## Auto-fix linting issues (ruff)
+	uv run ruff check --fix .
 
 typecheck: ## Run mypy type checking
 	$(api) sh -c "rm -rf .mypy_cache && uv run mypy --strict . | uv run mypy-baseline filter"
@@ -49,8 +57,9 @@ upgrade-core: ## Upgrade only meldingen-core
 switch-core: ## Switch meldingen-core to a specific branch or otherwise main, e.g. make switch-core CORE_BRANCH=feature/my-branch
 	$(api) uv add meldingen-core --branch "$(CORE_BRANCH)"
 
-check-all: ## Run all checks (format, typecheck, test)
+check-all: ## Run all checks (format, lint, typecheck, test)
 	$(MAKE) format
+	$(MAKE) lint
 	$(MAKE) typecheck
 	$(MAKE) test
 
