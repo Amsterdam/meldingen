@@ -5,11 +5,20 @@ services:
       context: .
       args:
         INSTALL_DEV: ${INSTALL_DEV-true}
-    command: ["fastapi", "dev", "--host", "0.0.0.0", "/opt/meldingen/meldingen/main.py"]
+    command:
+      [
+        "fastapi",
+        "dev",
+        "--host",
+        "0.0.0.0",
+        "/opt/meldingen/meldingen/main.py",
+      ]
     ports:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      SEED_FILE_CLASSIFICATIONS: ./seed/examples/classifications.json
     depends_on:
       database:
         condition: service_healthy
@@ -38,7 +47,7 @@ services:
       - "./docker/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d"
       - "pgdata:/var/lib/postgresql/data"
     healthcheck:
-      test: [ "CMD", "pg_isready", "-q", "-d", "meldingen", "-U", "meldingen" ]
+      test: ["CMD", "pg_isready", "-q", "-d", "meldingen", "-U", "meldingen"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -162,8 +171,8 @@ services:
       - meldingen_network
 
 volumes:
-    pgdata: ~
-    azurite: ~
+  pgdata: ~
+  azurite: ~
 networks:
   meldingen_network:
     name: meldingen_network

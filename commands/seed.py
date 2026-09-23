@@ -1,6 +1,5 @@
 import asyncio
 import json
-from typing import Final
 
 import typer
 from rich import print
@@ -14,12 +13,13 @@ from meldingen.schemas.input import ClassificationCreateInput
 
 app = typer.Typer()
 
-CLASSIFICATION_SEED_FILE_PATH: Final[str] = "./seed/classifications.json"
-
 
 @app.command()
-def seed(dry_run: bool = False) -> None:
-    asyncio.run(async_seed_classification_from_file(CLASSIFICATION_SEED_FILE_PATH, dry_run))
+def seed(
+    dry_run: bool = False,
+    file_path: str = typer.Option(None, "--seed-file-classifications", envvar="SEED_FILE_CLASSIFICATIONS"),
+) -> None:
+    asyncio.run(async_seed_classification_from_file(file_path, dry_run))
 
 
 def build_classification_insert(values: list[dict[str, str | None]]) -> Insert:
