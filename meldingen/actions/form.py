@@ -4,7 +4,7 @@ from typing import Any
 from fastapi import HTTPException
 from meldingen_core.actions.base import BaseCRUDAction, BaseDeleteAction, BaseRetrieveAction
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.token import TokenVerifier
+from meldingen_core.repository_helpers import retrieve_or_raise_not_found
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.actions.base import BaseListAction
@@ -28,7 +28,6 @@ from meldingen.models import (
     FormIoSelectComponentValue,
     FormIoTextAreaComponent,
     FormIoTextFieldComponent,
-    Melding,
     Question,
     StaticForm,
 )
@@ -37,6 +36,7 @@ from meldingen.repositories import (
     ClassificationRepository,
     FormIoQuestionComponentRepository,
     FormRepository,
+    MeldingRepository,
     QuestionRepository,
 )
 from meldingen.schemas.input import (
@@ -363,7 +363,7 @@ class FormRetrieveByClassificationAction(BaseCRUDAction[Form]):
 
 
 class AnswerCreateAction(BaseCRUDAction[Answer]):
-    _token_verifier: TokenVerifier[Melding]
+    _melding_repository: MeldingRepository
     _question_repository: QuestionRepository
     _component_repository: FormIoQuestionComponentRepository
     _jsonlogic_validate: JSONLogicValidator
@@ -372,26 +372,26 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
     def __init__(
         self,
         repository: AnswerRepository,
-        token_verifier: TokenVerifier[Melding],
+        melding_repository: MeldingRepository,
         question_repository: QuestionRepository,
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
         answer_factory: AnswerFactory,
     ):
         super().__init__(repository)
-        self._token_verifier = token_verifier
         self._question_repository = question_repository
         self._component_repository = component_repository
         self._jsonlogic_validate = jsonlogic_validator
         self._create_answer = answer_factory
+        self._melding_repository = melding_repository
 
-    async def __call__(self, melding_id: int, token: str, question_id: int, answer_input: AnswerInputUnion) -> Answer:
+    async def __call__(self, melding_id: int, question_id: int, answer_input: AnswerInputUnion) -> Answer:
         """
         Create and store an Answer in the database, subject to several conditions:
 
         Conditions:
         1. The question must exist
-        2. The provided token must be valid
+        2. The melding must exist
         3. The melding must be classified
         4. The question must belong to an existing and active form.
         5. The form must have a classification
@@ -404,8 +404,7 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
         if question is None:
             raise NotFoundException()
 
-        # Token must be valid
-        melding = await self._token_verifier(melding_id, token)
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         # Melding must be classified
         if not await melding.awaitable_attrs.classification:
@@ -469,34 +468,34 @@ class AnswerCreateAction(BaseCRUDAction[Answer]):
 
 
 class AnswerUpdateAction(BaseCRUDAction[Answer]):
-    _token_verifier: TokenVerifier[Melding]
+    _melding_repository: MeldingRepository
     _component_repository: FormIoQuestionComponentRepository
     _jsonlogic_validate: JSONLogicValidator
 
     def __init__(
         self,
         repository: AnswerRepository,
-        token_verifier: TokenVerifier[Melding],
+        melding_repository: MeldingRepository,
         component_repository: FormIoQuestionComponentRepository,
         jsonlogic_validator: JSONLogicValidator,
     ):
         super().__init__(repository)
-        self._token_verifier = token_verifier
+        self._melding_repository = melding_repository
         self._component_repository = component_repository
         self._jsonlogic_validate = jsonlogic_validator
 
-    async def __call__(self, melding_id: int, token: str, answer_id: int, answer_input: AnswerInputUnion) -> Answer:
+    async def __call__(self, melding_id: int, answer_id: int, answer_input: AnswerInputUnion) -> Answer:
         """
         Conditions:
-        1. The provided token must be valid
+        1. The melding must exist
         2. The answer must exist
         3. The answer must belong to the melding identified by melding_id
         4. The type of the answer_input must correspond to the type of the existing answer
         5. If the question has JSONlogic validation, the updated answer must pass this validation
         """
 
-        # Validate token
-        melding = await self._token_verifier(melding_id, token)
+        # Retrieve melding
+        melding = await retrieve_or_raise_not_found(self._melding_repository, melding_id)
 
         # Validate answer exists
         answer = await self._repository.retrieve(answer_id)
