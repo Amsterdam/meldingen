@@ -13,18 +13,16 @@ from meldingen.schemas.input import ClassificationCreateInput
 
 app = typer.Typer()
 
+SEED_FILE_CLASSIFICATIONS: str = "./seed/classifications.json"
+
 
 @app.command()
 def seed(
     dry_run: bool = False,
     file_path_classifications: str = typer.Option(
-        None, "--seed-file-classifications", envvar="API_SEED_FILE_CLASSIFICATIONS"
+        SEED_FILE_CLASSIFICATIONS, "--seed-file-classifications", envvar="API_SEED_FILE_CLASSIFICATIONS"
     ),
 ) -> None:
-
-    if file_path_classifications is None:
-        print("🔴 - Seeding of classifications aborted: no seed file specified.")
-        raise typer.Exit
 
     asyncio.run(async_seed_classification_from_file(file_path_classifications, dry_run))
 
@@ -77,8 +75,8 @@ def load_classification_values(file_path: str) -> list[dict[str, str | None]]:
 
     values: list[dict[str, str | None]] = []
     for item in data:
-        input = ClassificationCreateInput(**item)
-        values.append({"name": input.name, "instructions": input.instructions})
+        input = dict(ClassificationCreateInput(**item))
+        values.append({key: value for key, value in input.items() if value is not None})
     return values
 
 
