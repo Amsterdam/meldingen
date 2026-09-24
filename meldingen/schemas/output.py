@@ -5,8 +5,14 @@ from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field, fie
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
-from meldingen.models import AnswerTypeEnum
-from meldingen.schemas.types import DateAnswerObject, FormIOConditional, GeoJson, PhoneNumber, ValueLabelObject
+from meldingen.models import AnswerTypeEnum, ServiceLevelObjectiveDayType
+from meldingen.schemas.types import (
+    DateAnswerObject,
+    FormIOConditional,
+    GeoJson,
+    PhoneNumber,
+    ValueLabelObject,
+)
 
 ### Form.io ###
 
@@ -50,7 +56,7 @@ class ClassificationOutput(BaseOutputModel):
     asset_type: int | None = None
     service_level_objective_text: str
     service_level_objective_days: int
-    service_level_objective_day_type: str
+    service_level_objective_day_type: ServiceLevelObjectiveDayType
 
 
 class LabelOutput(BaseOutputModel):
