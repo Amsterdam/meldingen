@@ -1,27 +1,12 @@
-from typing import ClassVar
-
 import pytest
 from pydantic import ValidationError
 
 from meldingen.models import AnswerTypeEnum
 from meldingen.schemas.input import (
-    ClassificationUpdateInput,
     NoteInput,
-    RejectExplicitNullsUpdateInput,
     TimeAnswerInput,
     _markdown_to_plain_text,
 )
-
-
-class _AllFieldsNullRejectUpdateInput(RejectExplicitNullsUpdateInput):
-    name: str | None = None
-    count: int | None = None
-
-
-class _ScopedNullRejectUpdateInput(RejectExplicitNullsUpdateInput):
-    reject_explicit_null_fields: ClassVar[set[str]] = {"name"}
-    name: str | None = None
-    count: int | None = None
 
 
 def test_note_input_strips_whitespace() -> None:
@@ -80,32 +65,6 @@ def test_note_input_does_not_count_paragraph_breaks_towards_the_limit() -> None:
     assert len(_markdown_to_plain_text(text)) > 1000
 
     assert NoteInput(text=text).text == text
-
-
-def test_reject_explicit_nulls_update_input_rejects_null_on_any_field_by_default() -> None:
-    with pytest.raises(ValidationError):
-        _AllFieldsNullRejectUpdateInput(name=None)
-
-
-def test_reject_explicit_nulls_update_input_allows_omitted_fields() -> None:
-    obj = _AllFieldsNullRejectUpdateInput()
-    assert obj.model_dump(exclude_unset=True) == {}
-
-
-def test_reject_explicit_null_fields_raises_for_configured_null_field() -> None:
-    with pytest.raises(ValidationError, match=r"Value error, Null is not allowed for update fields name"):
-        _ScopedNullRejectUpdateInput(name=None, count=None)
-
-
-def test_classification_update_input_rejects_null_on_scoped_fields() -> None:
-    with pytest.raises(ValidationError):
-        ClassificationUpdateInput(name=None)
-
-
-def test_classification_update_input_allows_null_on_unscoped_fields() -> None:
-    obj = ClassificationUpdateInput(instructions=None, asset_type=None)
-    assert obj.instructions is None
-    assert obj.asset_type is None
 
 
 def test_note_input_rejects_visible_text_over_limit_even_with_line_breaks() -> None:
