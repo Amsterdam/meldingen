@@ -677,10 +677,10 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         assert data.get("updated_at") is not None
 
     @pytest.mark.anyio
-    async def test_update_classification_that_passes_explicit_null_values(
+    async def test_update_classification_cannot_pass_null_values_for_defined_properties(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.patch(app.url_path_for(self.ROUTE_NAME, classification_id=404), json={"name": None})
+        response = await client.patch(app.url_path_for(self.ROUTE_NAME, classification_id=123123), json={"name": None})
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
@@ -693,6 +693,21 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
             violation.get("msg")
             == "Value error, Null is not allowed for update fields name. Omit those fields instead."
         )
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("classification_name", ["My classification"], indirect=True)
+    async def test_update_classification_can_pass_null_values_nullable_fields(
+        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"instructions": None}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("instructions") is None
+        assert body.get("name") == "My classification"
 
     @pytest.mark.anyio
     async def test_update_classification_that_does_not_exist(

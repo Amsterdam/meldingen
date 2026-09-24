@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, ClassVar, Literal
 
 from pydantic import (
     AfterValidator,
@@ -53,13 +53,22 @@ class RejectExplicitNullsUpdateInput(BaseModel):
     """Base model for patch-style updates that reject explicit null values.
 
     Omitting a field is allowed, but providing it with ``null`` is rejected.
+    Subclasses may scope this behavior to specific fields by setting
+    ``reject_explicit_null_fields`` to a set of field names.
     """
+
+    reject_explicit_null_fields: ClassVar[set[str] | None] = None
 
     @model_validator(mode="before")
     @classmethod
     def reject_explicit_nulls(cls, data: Any) -> Any:
         if isinstance(data, dict):
-            null_fields = sorted(key for key, value in data.items() if value is None)
+            configured_fields = cls.reject_explicit_null_fields
+            null_fields = sorted(
+                key
+                for key, value in data.items()
+                if value is None and (configured_fields is None or key in configured_fields)
+            )
             if null_fields:
                 raise ValueError(
                     f"Null is not allowed for update fields {', '.join(null_fields)}. Omit those fields instead."
@@ -101,6 +110,14 @@ class ClassificationCreateInput(ClassificationInput):
 
 
 class ClassificationUpdateInput(RejectExplicitNullsUpdateInput):
+    reject_explicit_null_fields: ClassVar[set[str]] = {
+        "name",
+        # Below fields have Non-nullable columns in the database
+        "service_level_objective_text",
+        "service_level_objective_days",
+        "service_level_objective_day_type",
+    }
+
     name: str | None = Field(min_length=1, default=None)
     instructions: str | None = Field(default=None)
     asset_type: int | None = Field(default=None)

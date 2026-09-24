@@ -721,7 +721,9 @@ def classification_name(request: FixtureRequest) -> str:
 async def classification(db_session: AsyncSession, classification_name: str) -> Classification:
 
     classification = Classification(
-        name=classification_name, service_level_objective_text="Service level objective text"
+        name=classification_name,
+        service_level_objective_text="Service level objective text",
+        instructions="Instructions for the classification",
     )
     db_session.add(classification)
     await db_session.commit()
