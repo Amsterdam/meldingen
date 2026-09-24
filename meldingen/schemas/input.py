@@ -112,7 +112,6 @@ class ClassificationCreateInput(ClassificationInput):
 class ClassificationUpdateInput(RejectExplicitNullsUpdateInput):
     reject_explicit_null_fields: ClassVar[set[str]] = {
         "name",
-        "asset_type",
         # Below fields have Non-nullable columns in the database
         "service_level_objective_text",
         "service_level_objective_days",
