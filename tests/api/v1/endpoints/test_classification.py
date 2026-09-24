@@ -682,7 +682,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
     ) -> None:
         response = await client.patch(app.url_path_for(self.ROUTE_NAME, classification_id=123123), json={"name": None})
 
-        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.status_code == HTTP_409_CONFLICT
 
         body = response.json()
         detail = body.get("detail")
