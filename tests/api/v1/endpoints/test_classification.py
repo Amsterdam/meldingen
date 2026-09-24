@@ -677,6 +677,24 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         assert data.get("updated_at") is not None
 
     @pytest.mark.anyio
+    async def test_update_classification_that_passes_explicit_null_values(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.patch(app.url_path_for(self.ROUTE_NAME, classification_id=404), json={"name": None})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        body = response.json()
+        detail = body.get("detail")
+        violation = detail[0]
+        assert violation.get("type") == "value_error"
+        assert violation.get("loc") == ["body"]
+        assert (
+            violation.get("msg")
+            == "Value error, Null is not allowed for update fields name. Omit those fields instead."
+        )
+
+    @pytest.mark.anyio
     async def test_update_classification_that_does_not_exist(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:

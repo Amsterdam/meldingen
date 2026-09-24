@@ -10,6 +10,7 @@ from pydantic import (
     Field,
     StringConstraints,
     Tag,
+    model_validator,
 )
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
@@ -48,6 +49,24 @@ def validate_note_plain_text_length(value: str) -> str:
     return value
 
 
+class RejectExplicitNullsUpdateInput(BaseModel):
+    """Base model for patch-style updates that reject explicit null values.
+
+    Omitting a field is allowed, but providing it with ``null`` is rejected.
+    """
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_explicit_nulls(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            null_fields = sorted(key for key, value in data.items() if value is None)
+            if null_fields:
+                raise ValueError(
+                    f"Null is not allowed for update fields {', '.join(null_fields)}. Omit those fields instead."
+                )
+        return data
+
+
 class NoteInput(BaseModel):
     text: Annotated[
         str,
@@ -81,7 +100,7 @@ class ClassificationCreateInput(ClassificationInput):
     asset_type: int | None = Field(default=None)
 
 
-class ClassificationUpdateInput(BaseModel):
+class ClassificationUpdateInput(RejectExplicitNullsUpdateInput):
     name: str | None = Field(min_length=1, default=None)
     instructions: str | None = Field(default=None)
     asset_type: int | None = Field(default=None)
