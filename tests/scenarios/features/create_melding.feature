@@ -52,6 +52,27 @@ Feature: Melding Form
         And the state of the melding should be "submitted"
         And a confirmation email should be sent to "test@example.com"
 
+    Scenario: A melder can submit a melding that could not be classified
+        When I create a melding with text "unclassifiable"
+        Then the melding should not be classified
+        And the state of the melding should be "classified"
+        And the melding should contain a token
+        Given I know the latitude 52.3680605 and longitude 4.897092 values of my melding
+        When I add the location as geojson to my melding
+        Then the location should be attached to the melding
+        When I finish my current step by completing "SUBMIT_LOCATION"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "location_submitted"
+        When I finish my current step by completing "ADD_ATTACHMENTS"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "attachments_added"
+        When I finish my current step by completing "ADD_CONTACT_INFO"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "contact_info_added"
+        When I finish my current step by completing "SUBMIT"
+        Then I should receive a response with the current content of my melding
+        And the state of the melding should be "submitted"
+
     Scenario: A melding can't be submitted if not all required additional questions are answered
         # Initial melding and classification
         When I create a melding with text "test"

@@ -240,6 +240,7 @@ from meldingen.statemachine import (
     Reopen,
     RequestProcessing,
     RequestReopen,
+    SkipsQuestionsOnlyWithoutClassification,
     Submit,
     SubmitLocation,
 )
@@ -483,7 +484,9 @@ def melding_state_machine(
             {
                 MeldingTransitions.CLASSIFY: Classify(),
                 MeldingTransitions.ANSWER_QUESTIONS: AnswerQuestions([has_answered_required_questions]),
-                MeldingTransitions.SUBMIT_LOCATION: SubmitLocation([HasLocation()]),
+                MeldingTransitions.SUBMIT_LOCATION: SubmitLocation(
+                    [SkipsQuestionsOnlyWithoutClassification(), HasLocation()]
+                ),
                 MeldingTransitions.ADD_ATTACHMENTS: AddAttachments(),
                 MeldingTransitions.ADD_CONTACT_INFO: AddContactInfo(),
                 MeldingTransitions.SUBMIT: Submit(),

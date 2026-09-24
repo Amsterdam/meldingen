@@ -1,6 +1,6 @@
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.statemachine import BaseMeldingStateMachine, MeldingStates
-from mp_fsm.statemachine import BaseGuard, BaseStateMachine, BaseTransition
+from mp_fsm.statemachine import BaseGuard, BaseStateMachine, BaseTransition, WrongStateException
 
 from meldingen.models import Melding
 from meldingen.repositories import AnswerRepository, FormRepository
@@ -10,6 +10,14 @@ from meldingen.repositories import AnswerRepository, FormRepository
 class HasLocation(BaseGuard[Melding]):
     async def __call__(self, obj: Melding) -> bool:
         return obj.geo_location is not None
+
+
+class SkipsQuestionsOnlyWithoutClassification(BaseGuard[Melding]):
+    async def __call__(self, obj: Melding) -> bool:
+        if obj.state == MeldingStates.CLASSIFIED and obj.classification_id is not None:
+            raise WrongStateException()
+
+        return True
 
 
 class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
@@ -102,6 +110,7 @@ class SubmitLocation(BaseTransition[Melding]):
     @property
     def from_states(self) -> list[str]:
         return [
+            MeldingStates.CLASSIFIED,
             MeldingStates.QUESTIONS_ANSWERED,
             MeldingStates.LOCATION_SUBMITTED,
             MeldingStates.ATTACHMENTS_ADDED,

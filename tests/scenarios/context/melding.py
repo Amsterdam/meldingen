@@ -45,6 +45,11 @@ def the_melding_should_be_classified_as(
     assert my_classification.get("id") == classification.id
 
 
+@then("the melding should not be classified")
+def the_melding_should_not_be_classified(my_melding: dict[str, Any]) -> None:
+    assert my_melding.get("classification") is None
+
+
 @then("the melding should contain a token", target_fixture="token")
 def the_melding_should_contain_a_token(my_melding: dict[str, Any]) -> str:
     assert isinstance(my_melding["token"], str)
