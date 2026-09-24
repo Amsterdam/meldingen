@@ -1,13 +1,13 @@
+import logging
 from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass
 
-from amsterdam_mail_service_client.api.default_api import DefaultApi
-from amsterdam_mail_service_client.exceptions import ApiException
-from amsterdam_mail_service_client.models.preview_request import PreviewRequest
-from amsterdam_mail_service_client.models.send_request import SendRequest
 from fastapi import BackgroundTasks
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 
 from meldingen.models import Melding
+
+logger = logging.getLogger(__name__)
 
 
 class MailException(Exception): ...
@@ -16,72 +16,82 @@ class MailException(Exception): ...
 class EmailAddressMissingException(MailException): ...
 
 
+@dataclass(frozen=True)
+class RenderedMail:
+    html: str
+    text: str
+
+
+class BaseMailRenderer(metaclass=ABCMeta):
+    @abstractmethod
+    async def __call__(self, title: str, preview_text: str, body_text: str) -> RenderedMail: ...
+
+
 class BaseMailer(metaclass=ABCMeta):
     @abstractmethod
-    async def __call__(
-        self, title: str, preview_text: str, body_text: str, _from: str, to: str, subject: str
-    ) -> None: ...
+    async def __call__(self, to: str, subject: str, mail: RenderedMail) -> None: ...
 
 
-class AmsterdamMailServiceMailer(BaseMailer):
-    _api: DefaultApi
-
-    def __init__(self, api: DefaultApi):
-        self._api = api
-
-    async def __call__(self, title: str, preview_text: str, body_text: str, _from: str, to: str, subject: str) -> None:
-        request = SendRequest(
-            title=title,
-            preview_text=preview_text,
-            body_text=body_text,
-            var_from=_from,
-            to=to,
-            subject=subject,
-        )
-
-        try:
-            await self._api.send(request)
-        except ApiException as e:
-            raise MailException("Failed to send mail!") from e
-
-
-class SendConfirmationMailTask:
+class SendMailTask:
+    _render: BaseMailRenderer
     _send_mail: BaseMailer
-    _title_template: str
+    _title: str
     _preview_template: str
-    _body_template: str
-    _from: str
     _subject_template: str
 
     def __init__(
         self,
+        renderer: BaseMailRenderer,
         mailer: BaseMailer,
-        title_template: str,
+        title: str,
         preview_template: str,
-        body_template: str,
-        _from: str,
         subject_template: str,
     ) -> None:
+        self._render = renderer
         self._send_mail = mailer
-        self._title_template = title_template
+        self._title = title
         self._preview_template = preview_template
-        self._body_template = body_template
-        self._from = _from
         self._subject_template = subject_template
 
-    async def __call__(self, melding: Melding) -> None:
+    async def _send(self, melding: Melding, body_text: str) -> None:
         if melding.email is None:
             raise EmailAddressMissingException("Email address missing!")
 
-        title = self._title_template
-        preview_text = self._preview_template.format(melding.public_id)
-        body_text = self._body_template.format(melding.text, melding.public_id)
-        subject = self._subject_template.format(melding.public_id)
+        mail = await self._render(self._title, self._preview_template.format(melding.public_id), body_text)
 
-        await self._send_mail(title, preview_text, body_text, self._from, melding.email, subject)
+        try:
+            await self._send_mail(melding.email, self._subject_template.format(melding.public_id), mail)
+        except MailException:
+            # Runs as a background task, so without logging this failure would go unnoticed
+            logger.exception("Failed to send mail for melding %s", melding.public_id)
+            raise
 
 
-class AmsterdamMailServiceMeldingConfirmationMailer(BaseMeldingConfirmationMailer[Melding]):
+class SendConfirmationMailTask(SendMailTask):
+    _body_template: str
+
+    def __init__(
+        self,
+        renderer: BaseMailRenderer,
+        mailer: BaseMailer,
+        title: str,
+        preview_template: str,
+        body_template: str,
+        subject_template: str,
+    ) -> None:
+        super().__init__(renderer, mailer, title, preview_template, subject_template)
+        self._body_template = body_template
+
+    async def __call__(self, melding: Melding) -> None:
+        await self._send(melding, self._body_template.format(melding.text, melding.public_id))
+
+
+class SendCompletedMailTask(SendMailTask):
+    async def __call__(self, melding: Melding, body_text: str) -> None:
+        await self._send(melding, body_text)
+
+
+class BackgroundTaskMeldingConfirmationMailer(BaseMeldingConfirmationMailer[Melding]):
     _background_task_manager: BackgroundTasks
     _send_confirmation_mail_task: SendConfirmationMailTask
 
@@ -95,65 +105,7 @@ class AmsterdamMailServiceMeldingConfirmationMailer(BaseMeldingConfirmationMaile
         self._background_task_manager.add_task(self._send_confirmation_mail_task, melding=melding)
 
 
-class BaseMailPreviewer(metaclass=ABCMeta):
-    @abstractmethod
-    async def __call__(self, title: str, preview_text: str, body_text: str) -> str: ...
-
-
-class AmsterdamMailServiceMailPreviewer(BaseMailPreviewer):
-    _api: DefaultApi
-
-    def __init__(self, api: DefaultApi) -> None:
-        self._api = api
-
-    async def __call__(self, title: str, preview_text: str, body_text: str) -> str:
-        request = PreviewRequest(
-            title=title,
-            preview_text=preview_text,
-            body_text=body_text,
-        )
-
-        try:
-            html = await self._api.preview(request)
-        except ApiException as e:
-            raise MailException("Failed to get preview!") from e
-
-        return html
-
-
-class SendCompletedMailTask:
-    _send_mail: BaseMailer
-    _title_template: str
-    _preview_template: str
-    _from: str
-    _subject_template: str
-
-    def __init__(
-        self,
-        mailer: BaseMailer,
-        title_template: str,
-        preview_template: str,
-        _from: str,
-        subject_template: str,
-    ) -> None:
-        self._send_mail = mailer
-        self._title_template = title_template
-        self._preview_template = preview_template
-        self._from = _from
-        self._subject_template = subject_template
-
-    async def __call__(self, melding: Melding, body_text: str) -> None:
-        if melding.email is None:
-            raise EmailAddressMissingException("Email address missing!")
-
-        title = self._title_template
-        preview_text = self._preview_template.format(melding.public_id)
-        subject = self._subject_template.format(melding.public_id)
-
-        await self._send_mail(title, preview_text, body_text, self._from, melding.email, subject)
-
-
-class AmsterdamMailServiceMeldingCompleteMailer(BaseMeldingCompleteMailer[Melding]):
+class BackgroundTaskMeldingCompleteMailer(BaseMeldingCompleteMailer[Melding]):
     _background_task_manager: BackgroundTasks
     _send_completed_mail_task: SendCompletedMailTask
 

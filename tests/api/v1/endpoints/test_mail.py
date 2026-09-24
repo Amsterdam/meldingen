@@ -22,4 +22,7 @@ class TestMailPreview(BaseUnauthorizedTest):
         )
 
         assert response.status_code == HTTP_200_OK
-        assert response.text
+        assert "<title>Test Title</title>" in response.text
+        assert "Test Preview Text" in response.text
+        assert "Test Body" in response.text
+        assert "data:image/png;base64," in response.text
