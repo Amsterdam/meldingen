@@ -2,7 +2,11 @@ import pytest
 from pydantic import ValidationError
 
 from meldingen.models import AnswerTypeEnum
-from meldingen.schemas.input import NoteInput, TimeAnswerInput, _markdown_to_plain_text
+from meldingen.schemas.input import (
+    NoteInput,
+    TimeAnswerInput,
+    _markdown_to_plain_text,
+)
 
 
 def test_note_input_strips_whitespace() -> None:

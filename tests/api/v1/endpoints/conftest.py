@@ -719,7 +719,12 @@ def classification_name(request: FixtureRequest) -> str:
 
 @pytest.fixture
 async def classification(db_session: AsyncSession, classification_name: str) -> Classification:
-    classification = Classification(name=classification_name)
+
+    classification = Classification(
+        name=classification_name,
+        service_level_objective_text="Service level objective text",
+        instructions="Instructions for the classification",
+    )
     db_session.add(classification)
     await db_session.commit()
 
@@ -730,7 +735,7 @@ async def classification(db_session: AsyncSession, classification_name: str) -> 
 async def classifications(db_session: AsyncSession) -> list[Classification]:
     classifications = []
     for n in range(10):
-        classification = Classification(f"category: {n}")
+        classification = Classification(name=f"category: {n}")
         db_session.add(classification)
         classifications.append(classification)
 
@@ -741,7 +746,7 @@ async def classifications(db_session: AsyncSession) -> list[Classification]:
 
 @pytest.fixture
 async def classification_with_form(db_session: AsyncSession) -> Classification:
-    classification = Classification("test_classification")
+    classification = Classification(name="test_classification")
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
 
     db_session.add(form)
@@ -752,7 +757,7 @@ async def classification_with_form(db_session: AsyncSession) -> Classification:
 
 @pytest.fixture
 async def classification_with_asset_type(db_session: AsyncSession, asset_type: AssetType) -> Classification:
-    classification = Classification("test_classification")
+    classification = Classification(name="test_classification")
     classification.asset_type = asset_type
 
     db_session.add(classification)
@@ -763,7 +768,7 @@ async def classification_with_asset_type(db_session: AsyncSession, asset_type: A
 
 @pytest.fixture
 async def classification_with_asset_type_and_form(db_session: AsyncSession) -> Classification:
-    classification = Classification("test_classification")
+    classification = Classification(name="test_classification")
     classification.asset_type = AssetType(name="test_asset_type", class_name="test_class", arguments={}, max_assets=3)
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
 
