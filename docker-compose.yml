@@ -17,8 +17,6 @@ services:
       - "8000:8000"
     env_file:
       - .env
-    environment:
-      - API_SEED_FILE_CLASSIFICATIONS=./seed/examples/classifications.json # seeding file location when using docker-compose setup (with mounted volume).
     depends_on:
       database:
         condition: service_healthy

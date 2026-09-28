@@ -13,6 +13,11 @@ from meldingen.schemas.input import ClassificationCreateInput
 
 app = typer.Typer()
 
+# Default seed file location.
+# Seed files are not included by default and must be provided at deploy time,
+# for example via a mounted volume or by copying them into the container
+# before seeding runs. If you use a custom path, set it via the env var or
+# command-line option.
 SEED_FILE_CLASSIFICATIONS: str = "./seed/classifications.json"
 
 
