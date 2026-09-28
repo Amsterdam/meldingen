@@ -2008,7 +2008,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiosmtplib", specifier = ">=4.0.0,<5.0.0" },
+    { name = "aiosmtplib", specifier = ">=4.0.0,<6.0.0" },
     { name = "alembic", specifier = ">=1.14.1,<2.0.0" },
     { name = "alembic-postgresql-enum", specifier = ">=1.5.0,<2.0.0" },
     { name = "asgi-correlation-id", specifier = ">=4.3.4,<6.0.0" },
@@ -2048,7 +2048,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "asgi-lifespan", specifier = ">=2.1.0,<3" },
-    { name = "filelock", specifier = ">=3.20.3,<4" },
+    { name = "filelock", specifier = ">=3.20.3,<5" },
     { name = "mailpit-api-client", extras = ["pytest"], specifier = ">=1.0.0,<2" },
     { name = "mkdocs-literate-nav", specifier = ">=0.6.1,<0.7" },
     { name = "mkdocs-material", specifier = ">=9.6.20,<10" },
@@ -2069,7 +2069,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git#63eb3fc5e00a2d31d18ce8d2d3f32076a24ee3d9" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git#cb29eb9787e0e9a04b63d41bb6506e1020f87fd7" }
 dependencies = [
     { name = "plugfs" },
 ]
