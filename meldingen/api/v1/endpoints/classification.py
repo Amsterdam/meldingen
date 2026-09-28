@@ -61,6 +61,9 @@ async def _hydrate_output(classification: Classification) -> ClassificationOutpu
         asset_type=classification.asset_type_id,
         created_at=classification.created_at,
         updated_at=classification.updated_at,
+        service_level_objective_text=classification.service_level_objective_text,
+        service_level_objective_days=classification.service_level_objective_days,
+        service_level_objective_day_type=classification.service_level_objective_day_type,
     )
 
 

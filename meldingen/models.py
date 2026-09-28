@@ -70,6 +70,15 @@ class Asset(BaseDBModel, BaseAsset):
     subtype: Mapped[str] = mapped_column(String)
 
 
+class ServiceLevelObjectiveDayType(enum.StrEnum):
+    working_days = "working_days"
+    calendar_days = "calendar_days"
+
+
+SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT = 5
+SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT = "-"
+
+
 class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
     # Names are unique among non-deleted classifications only, so a name can be reused
     # once its classification has been (soft-)deleted.
@@ -83,6 +92,21 @@ class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
     )
 
     name: Mapped[str] = mapped_column(String)
+
+    # Service level objective is the concept that defines the expected response time for meldingen bound to this classification.
+    service_level_objective_text: Mapped[str] = mapped_column(
+        String, default=SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT, server_default=SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT
+    )
+    service_level_objective_days: Mapped[int] = mapped_column(
+        Integer, default=SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT, server_default=str(SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT)
+    )
+    service_level_objective_day_type: Mapped[ServiceLevelObjectiveDayType] = mapped_column(
+        Enum(ServiceLevelObjectiveDayType, name="service_level_objective_day_type"),
+        default=ServiceLevelObjectiveDayType.calendar_days,
+        server_default=ServiceLevelObjectiveDayType.calendar_days,
+    )
+
+    # Instructions that are passed to an LLM for automatic melding classification.
     instructions: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     form: Mapped[Optional["Form"]] = relationship(default=None, back_populates="classification")
     asset_type_id: Mapped[int | None] = mapped_column(ForeignKey(AssetType.id), default=None)
