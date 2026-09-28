@@ -81,6 +81,7 @@ def load_classification_values(file_path: str) -> list[dict[str, str | None]]:
     values: list[dict[str, str | None]] = []
     for item in data:
         input = dict(ClassificationCreateInput(**item))
+        input["asset_type_id"] = input.pop("asset_type")
         values.append({key: value for key, value in input.items() if value is not None})
     return values
 
