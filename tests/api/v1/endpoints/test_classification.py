@@ -15,7 +15,14 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
-from meldingen.models import AssetType, Classification, Form, Melding
+from meldingen.models import (
+    SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
+    AssetType,
+    Classification,
+    Form,
+    Melding,
+    ServiceLevelObjectiveDayType,
+)
 from meldingen.repositories import ClassificationRepository
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -33,7 +40,8 @@ class TestClassificationCreate(BaseUnauthorizedTest):
     @pytest.mark.anyio
     async def test_create_classification(self, app: FastAPI, client: AsyncClient, auth_user: None) -> None:
         response = await client.post(
-            app.url_path_for(self.ROUTE_NAME), json={"name": "bla", "instructions": "test instructions"}
+            app.url_path_for(self.ROUTE_NAME),
+            json={"name": "bla", "instructions": "test instructions", "service_level_objective_text": "Foo Bar"},
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -42,6 +50,38 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert data.get("id") > 0
         assert data.get("name") == "bla"
         assert data.get("instructions") == "test instructions"
+        assert data.get("service_level_objective_text") == "Foo Bar"
+        assert data.get("service_level_objective_days") is SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT
+        assert data.get("service_level_objective_day_type") == ServiceLevelObjectiveDayType.calendar_days
+        assert data.get("form", "") is None
+        assert data.get("asset_type", "") is None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+
+    @pytest.mark.anyio
+    async def test_create_classification_with_all_service_level_objective_props(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME),
+            json={
+                "name": "bla",
+                "instructions": "test instructions",
+                "service_level_objective_text": "Foo Bar",
+                "service_level_objective_days": 10,
+                "service_level_objective_day_type": ServiceLevelObjectiveDayType.calendar_days,
+            },
+        )
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("id") > 0
+        assert data.get("name") == "bla"
+        assert data.get("instructions") == "test instructions"
+        assert data.get("service_level_objective_text") == "Foo Bar"
+        assert data.get("service_level_objective_days") == 10
+        assert data.get("service_level_objective_day_type") == ServiceLevelObjectiveDayType.calendar_days
         assert data.get("form", "") is None
         assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None
@@ -53,7 +93,12 @@ class TestClassificationCreate(BaseUnauthorizedTest):
     ) -> None:
         response = await client.post(
             app.url_path_for(self.ROUTE_NAME),
-            json={"name": "bla", "asset_type": asset_type.id, "instructions": "asset type instructions"},
+            json={
+                "name": "bla",
+                "asset_type": asset_type.id,
+                "instructions": "asset type instructions",
+                "service_level_objective_text": "Foo Bar",
+            },
         )
 
         assert response.status_code == HTTP_201_CREATED
@@ -71,7 +116,10 @@ class TestClassificationCreate(BaseUnauthorizedTest):
     async def test_create_classification_with_asset_type_that_does_not_exist(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla", "asset_type": 123})
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME),
+            json={"name": "bla", "asset_type": 123, "service_level_objective_text": "Foo Bar"},
+        )
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
@@ -82,7 +130,9 @@ class TestClassificationCreate(BaseUnauthorizedTest):
     async def test_create_classification_name_min_length_violation(
         self, app: FastAPI, client: AsyncClient, auth_user: None
     ) -> None:
-        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": ""})
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME), json={"name": "", "service_level_objective_text": "Foo Bar"}
+        )
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
@@ -96,11 +146,84 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert violation.get("msg") == "String should have at least 1 character"
 
     @pytest.mark.anyio
+    async def test_create_classification_service_level_objective_violations(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME),
+            json={
+                "name": "bla",
+                "service_level_objective_text": "",
+                "service_level_objective_days": 0,
+                "service_level_objective_day_type": "",
+            },
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        data = response.json()
+        detail = data.get("detail")
+        assert len(detail) == 3
+
+        violation = detail[0]
+        assert violation.get("type") == "string_too_short"
+        assert violation.get("loc") == ["body", "service_level_objective_text"]
+        assert violation.get("msg") == "String should have at least 1 character"
+
+        violation = detail[1]
+        assert violation.get("type") == "greater_than_equal"
+        assert violation.get("loc") == ["body", "service_level_objective_days"]
+        assert violation.get("msg") == "Input should be greater than or equal to 1"
+
+        violation = detail[2]
+        assert violation.get("type") == "enum"
+        assert violation.get("loc") == ["body", "service_level_objective_day_type"]
+        assert violation.get("msg") == "Input should be 'working_days' or 'calendar_days'"
+
+    @pytest.mark.anyio
+    async def test_create_classification_service_level_objective_text_max_length_violation(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME), json={"name": "bla", "service_level_objective_text": "a" * 1001}
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        data = response.json()
+        detail = data.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "string_too_long"
+        assert violation.get("loc") == ["body", "service_level_objective_text"]
+        assert violation.get("msg") == "String should have at most 1000 characters"
+
+    @pytest.mark.anyio
+    async def test_create_classification_service_level_objective_text_required_violation(
+        self, app: FastAPI, client: AsyncClient, auth_user: None
+    ) -> None:
+        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        data = response.json()
+        detail = data.get("detail")
+        assert len(detail) == 1
+
+        violation = detail[0]
+        assert violation.get("type") == "missing"
+        assert violation.get("loc") == ["body", "service_level_objective_text"]
+        assert violation.get("msg") == "Field required"
+
+    @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_create_classification_duplicate_name(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification: Classification
     ) -> None:
-        response = await client.post(app.url_path_for(self.ROUTE_NAME), json={"name": "bla"})
+        response = await client.post(
+            app.url_path_for(self.ROUTE_NAME), json={"name": "bla", "service_level_objective_text": "Foo Bar"}
+        )
 
         assert response.status_code == HTTP_409_CONFLICT
 
@@ -535,7 +658,11 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, classification_id=classification.id),
-            json={"name": "bladiebla", "instructions": "updated instructions"},
+            json={
+                "name": "bladiebla",
+                "instructions": "updated instructions",
+                "service_level_objective_text": "updated slo text",
+            },
         )
 
         assert response.status_code == HTTP_200_OK
@@ -543,10 +670,42 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         data = response.json()
         assert data.get("name") == "bladiebla"
         assert data.get("instructions") == "updated instructions"
+        assert data.get("service_level_objective_text") == "updated slo text"
         assert data.get("form", "") is None
         assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("classification_name", ["My classification"], indirect=True)
+    async def test_update_classification_cannot_pass_null_values_for_defined_properties(
+        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"name": None}
+        )
+
+        assert response.status_code == HTTP_409_CONFLICT
+
+        body = response.json()
+        detail = body.get("detail")
+
+        assert detail == "The requested operation could not be completed due to a conflict with existing data."
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("classification_name", ["My classification"], indirect=True)
+    async def test_update_classification_can_pass_null_values_nullable_fields(
+        self, app: FastAPI, client: AsyncClient, classification: Classification, auth_user: None
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classification.id), json={"instructions": None}
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        body = response.json()
+        assert body.get("instructions") is None
+        assert body.get("name") == "My classification"
 
     @pytest.mark.anyio
     async def test_update_classification_that_does_not_exist(
@@ -561,6 +720,16 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         body = response.json()
 
         assert body.get("detail") == "Not Found"
+
+    @pytest.mark.anyio
+    async def test_update_classification_without_payload(
+        self, app: FastAPI, client: AsyncClient, classifications: list[Classification], auth_user: None
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=classifications[0].id), json={}
+        )
+
+        assert response.status_code == HTTP_200_OK
 
     @pytest.mark.anyio
     async def test_update_classification_duplicate_name(
@@ -722,7 +891,9 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         delete = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
         assert delete.status_code == HTTP_204_NO_CONTENT
 
-        recreated = await client.post(app.url_path_for("classification:create"), json={"name": "bla"})
+        recreated = await client.post(
+            app.url_path_for("classification:create"), json={"name": "bla", "service_level_objective_text": "Some text"}
+        )
         assert recreated.status_code == HTTP_201_CREATED
         assert recreated.json()["name"] == "bla"
         assert recreated.json()["id"] != classification.id

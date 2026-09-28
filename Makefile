@@ -2,8 +2,8 @@
 REGISTRY ?= localhost:5000
 VERSION ?= latest
 INSTALL_DEV ?= false
-UID:=$(shell id --user)
-GID:=$(shell id --group)
+UID:=$(shell id -u)
+GID:=$(shell id -g)
 TEST ?= # used to add testpath as argument to pytest, e.g. TEST=tests/api/v1/endpoints/test_melding.py
 CORE_BRANCH ?= main
 
