@@ -91,7 +91,7 @@ class TestMeldingCreate:
         data = response.json()
         assert data.get("id") > 0
         assert data.get("text") == "This is a test melding."
-        assert data.get("state") == MeldingStates.NEW
+        assert data.get("state") == MeldingStates.CLASSIFIED
         assert data.get("urgency") == 0
         assert data.get("classification") is None
         assert data.get("token") is not None
@@ -112,7 +112,7 @@ class TestMeldingCreate:
         data = response.json()
         assert data.get("id") > 0
         assert data.get("text") == "This is a test melding."
-        assert data.get("state") == MeldingStates.NEW
+        assert data.get("state") == MeldingStates.CLASSIFIED
         assert data.get("urgency") == 0
         assert data.get("classification") is None
         assert data.get("token") is not None
@@ -2025,6 +2025,58 @@ class TestMeldingSubmitLocation(BaseTokenAuthenticationTest):
 
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert response.json() == {"detail": "Location must be added before submitting"}
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "melding_geo_location"],
+        [
+            (
+                "De restafvalcontainer is vol.",
+                MeldingStates.CLASSIFIED,
+                "supersecrettoken",
+                "POINT(52.3680 4.8970)",
+            )
+        ],
+        indirect=True,
+    )
+    async def test_submit_location_without_classification_skips_questions(
+        self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
+        assert melding.classification_id is None
+
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": "supersecrettoken"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        assert response.json().get("state") == MeldingStates.LOCATION_SUBMITTED
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        ["melding_text", "melding_state", "melding_token", "melding_geo_location"],
+        [
+            (
+                "De restafvalcontainer is vol.",
+                MeldingStates.CLASSIFIED,
+                "supersecrettoken",
+                "POINT(52.3680 4.8970)",
+            )
+        ],
+        indirect=True,
+    )
+    async def test_submit_location_with_classification_cannot_skip_questions(
+        self, app: FastAPI, client: AsyncClient, melding_with_classification: Melding
+    ) -> None:
+        response = await client.request(
+            self.get_method(),
+            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id),
+            params={"token": "supersecrettoken"},
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response.json() == {"detail": "Transition not allowed from current state"}
 
     @pytest.mark.anyio
     async def test_submit_location_not_found(self, app: FastAPI, client: AsyncClient) -> None:
