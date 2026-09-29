@@ -13,6 +13,10 @@ class HasLocation(BaseGuard[Melding]):
 
 
 class SkipsQuestionsOnlyWithoutClassification(BaseGuard[Melding]):
+    """Only a melding without classification may skip the additional questions step. Skipping
+    means going from CLASSIFIED straight to LOCATION_SUBMITTED, so later states are always let
+    through. A classified melding without a form still goes through ANSWER_QUESTIONS."""
+
     async def __call__(self, obj: Melding) -> bool:
         if obj.state == MeldingStates.CLASSIFIED and obj.classification_id is not None:
             raise WrongStateException()
@@ -60,6 +64,8 @@ class HasAnsweredRequiredQuestions(BaseGuard[Melding]):
 
 # transitions
 class Classify(BaseTransition[Melding]):
+    """Also taken when classifying fails, so a melding can be CLASSIFIED without a classification."""
+
     @property
     def from_states(self) -> list[str]:
         return [
