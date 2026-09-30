@@ -16,7 +16,9 @@ from meldingen.mail import (
     SendCompletedMailTask,
     SendConfirmationMailTask,
 )
+from meldingen.mail_data_templates import MeldingCompleteMailData, MeldingConfirmationMailData
 from meldingen.models import Melding
+from meldingen.utils import utc_now
 
 RENDERED_MAIL = RenderedMail(html="<p>Hoi</p>", text="Hoi")
 
@@ -100,9 +102,25 @@ async def test_smtp_mailer_send_fails() -> None:
 async def test_send_confirmation_mail_task() -> None:
     renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
     mailer = AsyncMock(BaseMailer)
-    melding = Mock(Melding, email="melder@example.com", public_id="ABC123", text="Kapotte stoeptegel")
+    melding = Mock(
+        Melding,
+        email="melder@example.com",
+        public_id="ABC123",
+        text="Kapotte stoeptegel",
+        created_at=utc_now(),
+        street=None,
+    )
 
-    task = SendConfirmationMailTask(renderer, mailer, "Titel", "Preview {}", "Tekst {} {}", "Onderwerp {}")
+    task = SendConfirmationMailTask(
+        renderer,
+        mailer,
+        MeldingConfirmationMailData(
+            title_template="Titel",
+            preview_template="Preview {melding_id}",
+            body_template="Tekst {melding_tekst} {melding_id}",
+            subject_template="Onderwerp {melding_id}",
+        ),
+    )
     await task(melding)
 
     renderer.assert_awaited_once_with("Titel", "Preview ABC123", "Tekst Kapotte stoeptegel ABC123")
@@ -112,9 +130,15 @@ async def test_send_confirmation_mail_task() -> None:
 @pytest.mark.anyio
 async def test_send_confirmation_mail_task_without_email() -> None:
     mailer = AsyncMock(BaseMailer)
-    melding = Mock(Melding, email=None, public_id="ABC123", text="Kapotte stoeptegel")
+    melding = Mock(
+        Melding,
+        email=None,
+        public_id="ABC123",
+        text="Kapotte stoeptegel",
+        created_at=utc_now(),
+    )
 
-    task = SendConfirmationMailTask(AsyncMock(BaseMailRenderer), mailer, "Titel", "Preview", "Tekst", "Onderwerp")
+    task = SendConfirmationMailTask(AsyncMock(BaseMailRenderer), mailer, MeldingConfirmationMailData())
 
     with pytest.raises(EmailAddressMissingException):
         await task(melding)
@@ -126,9 +150,24 @@ async def test_send_confirmation_mail_task_without_email() -> None:
 async def test_send_confirmation_mail_task_send_fails() -> None:
     renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
     mailer = AsyncMock(BaseMailer, side_effect=MailException)
-    melding = Mock(Melding, email="melder@example.com", public_id="ABC123", text="Kapotte stoeptegel")
+    melding = Mock(
+        Melding,
+        email="melder@example.com",
+        public_id="ABC123",
+        text="Kapotte stoeptegel",
+        created_at=utc_now(),
+    )
 
-    task = SendConfirmationMailTask(renderer, mailer, "Titel", "Preview", "Tekst", "Onderwerp")
+    task = SendConfirmationMailTask(
+        renderer,
+        mailer,
+        MeldingConfirmationMailData(
+            title_template="Titel",
+            preview_template="Preview {melding_id}",
+            body_template="Tekst {melding_tekst} {melding_id}",
+            subject_template="Onderwerp {melding_id}",
+        ),
+    )
 
     with pytest.raises(MailException):
         await task(melding)
@@ -138,10 +177,19 @@ async def test_send_confirmation_mail_task_send_fails() -> None:
 async def test_send_completed_mail_task() -> None:
     renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
     mailer = AsyncMock(BaseMailer)
-    melding = Mock(Melding, email="melder@example.com", public_id="ABC123")
+    melding = Mock(Melding, email="melder@example.com", public_id="ABC123", created_at=utc_now())
 
-    task = SendCompletedMailTask(renderer, mailer, "Titel", "Preview {}", "Onderwerp {}")
-    await task(melding, "Wij hebben de tegel vervangen.")
+    task = SendCompletedMailTask(
+        renderer,
+        mailer,
+        MeldingCompleteMailData(
+            title_template="Titel",
+            preview_template="Preview {melding_id}",
+            body_template="{user_supplied_body_text}",
+            subject_template="Onderwerp {melding_id}",
+        ),
+    )
+    await task(melding, body_text="Wij hebben de tegel vervangen.")
 
     renderer.assert_awaited_once_with("Titel", "Preview ABC123", "Wij hebben de tegel vervangen.")
     mailer.assert_awaited_once_with("melder@example.com", "Onderwerp ABC123", RENDERED_MAIL)

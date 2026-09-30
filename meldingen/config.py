@@ -28,6 +28,15 @@ class Settings(BaseSettings):
     default_page_size: int = 50
     content_size_limit: int = 1024 * 1024 * 20  # 20MB
 
+    # Time and date
+    date_time_format_locale: str = "nl_NL"
+    date_format_default_readable_format: str = "d MMMM y"
+    time_format_readable_format: str = "HH:mm"
+    date_time_format_readable_format: str = "d MMMM y',' HH:mm 'uur'"
+
+    # Address formatting
+    default_address_format: str = "O hT, P W"  # Straat nummer(-toevoeging), 1234AB, Woonplaats
+
     # Database settings
     database_dsn: PostgresDsn
     test_database_dsn: PostgresDsn = PostgresDsn("postgresql+asyncpg://meldingen:postgres@database:5432/meldingen-test")
@@ -103,29 +112,37 @@ class Settings(BaseSettings):
         "U kunt niet op dit bericht antwoorden."
     )
     mail_melding_confirmation_title: str = "Uw melding"
-    mail_melding_confirmation_preview_text: str = "Uw melding: {}"
-    mail_melding_confirmation_body_text: str = """U heeft ons het volgende laten weten:
+    mail_melding_confirmation_preview_text: str = "Uw melding: {melding_id}"
+    mail_melding_confirmation_body_text: str = """Geachte melder,
 
-*{}*
+Dank voor uw melding. Fijn dat u zich betrokken voelt bij de stad.
 
 ### Wat doen we met uw melding?
-Wij gaan aan het werk met uw melding. U hoort zo snel mogelijk wat wij hebben gedaan. Als de situatie gevaarlijk is
-gaan wij direct aan het werk.
+We onderzoeken uw melding en kijken wat we kunnen oppakken. We laten u binnen {melding_categorie_service_belofte_dagen} 
+{melding_categorie_service_belofte_dag_type} weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding 
+kunnen oppakken. We houden u op de hoogte via e-mail.
+
+### Uw melding
+{melding_tekst}
+
+Nummer: {melding_id}  
+Gemeld op: {melding_datum_tijd}  
+Plaats: {melding_plaats}
 
 ### Meer weten?
-Heeft u nog een vraag over uw melding? Bel met het telefoonnummer [14 020](tel:14020), maandag tot en met vrijdag
-van 08.00 tot 18.00. Geef dan ook het nummer van uw melding door: {}.
+Heeft u nog een vraag over uw melding? Bel met [14 020](tel:14020), maandag tot en met vrijdag
+van 08.00 tot 18.00 uur. Geef dan ook het nummer van uw melding door: {melding_id}.
 
 Met vriendelijke groet,
 
 Gemeente Amsterdam
 
 *Dit bericht is automatisch gemaakt met de informatie uit uw melding.*"""
-    mail_melding_confirmation_subject: str = "Uw melding {}: melding ontvangen"
+    mail_melding_confirmation_subject: str = "Uw melding {melding_id}: melding ontvangen"
 
-    mail_melding_completed_title: str = "Uw melding {}: melding afgehandeld"
-    mail_melding_completed_preview_text: str = "Uw melding: {}"
-    mail_melding_completed_subject: str = "Uw melding: {} afgehandeld"
+    mail_melding_completed_title: str = "Uw melding {melding_id}: melding afgehandeld"
+    mail_melding_completed_preview_text: str = "Uw melding: {melding_id}"
+    mail_melding_completed_subject: str = "Uw melding: {melding_id} afgehandeld"
 
     # LLM
     llm_enabled: bool = False  # If True enables the AgentClassifierAdapter instead of the DummyClassifierAdapter

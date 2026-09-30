@@ -1,10 +1,12 @@
 import logging
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
+from typing import Concatenate
 
 from fastapi import BackgroundTasks
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 
+from meldingen.mail_data_templates import MailDataTemplate, MailFormatted
 from meldingen.models import Melding
 
 logger = logging.getLogger(__name__)
@@ -32,88 +34,63 @@ class BaseMailer(metaclass=ABCMeta):
     async def __call__(self, to: str, subject: str, mail: RenderedMail) -> None: ...
 
 
-class SendMailTask:
+class SendMailTask[T: Melding, **P]:
     _render: BaseMailRenderer
     _send_mail: BaseMailer
-    _title: str
-    _preview_template: str
-    _subject_template: str
+    _format_mail_data: MailDataTemplate[Concatenate[T, P]]
 
     def __init__(
-        self,
-        renderer: BaseMailRenderer,
-        mailer: BaseMailer,
-        title: str,
-        preview_template: str,
-        subject_template: str,
+        self, renderer: BaseMailRenderer, mailer: BaseMailer, mail_data_template: MailDataTemplate[Concatenate[T, P]]
     ) -> None:
         self._render = renderer
         self._send_mail = mailer
-        self._title = title
-        self._preview_template = preview_template
-        self._subject_template = subject_template
+        self._format_mail_data = mail_data_template
 
-    async def _send(self, melding: Melding, body_text: str) -> None:
+    async def _send(self, melding: T, email: MailFormatted) -> None:
         if melding.email is None:
             raise EmailAddressMissingException("Email address missing!")
 
-        mail = await self._render(self._title, self._preview_template.format(melding.public_id), body_text)
+        mail = await self._render(email.title, email.preview_text, email.body)
 
         try:
-            await self._send_mail(melding.email, self._subject_template.format(melding.public_id), mail)
+            await self._send_mail(melding.email, email.subject, mail)
         except MailException:
             # Runs as a background task, so without logging this failure would go unnoticed
             logger.exception("Failed to send mail for melding %s", melding.public_id)
             raise
 
+    async def __call__(self, melding: T, *args: P.args, **kwargs: P.kwargs) -> None:
+        await self._send(melding, self._format_mail_data(melding, *args, **kwargs))
 
-class SendConfirmationMailTask(SendMailTask):
-    _body_template: str
 
-    def __init__(
-        self,
-        renderer: BaseMailRenderer,
-        mailer: BaseMailer,
-        title: str,
-        preview_template: str,
-        body_template: str,
-        subject_template: str,
-    ) -> None:
-        super().__init__(renderer, mailer, title, preview_template, subject_template)
-        self._body_template = body_template
-
+class SendConfirmationMailTask(SendMailTask[Melding, []]):
     async def __call__(self, melding: Melding) -> None:
-        await self._send(melding, self._body_template.format(melding.text, melding.public_id))
+        await self._send(melding, self._format_mail_data(melding))
 
 
-class SendCompletedMailTask(SendMailTask):
+class SendCompletedMailTask(SendMailTask[Melding, [str]]):
     async def __call__(self, melding: Melding, body_text: str) -> None:
-        await self._send(melding, body_text)
+        await super().__call__(melding, body_text)
 
 
-class BackgroundTaskMeldingConfirmationMailer(BaseMeldingConfirmationMailer[Melding]):
+class BackgroundTaskMeldingMailer[T: Melding, **P]:
     _background_task_manager: BackgroundTasks
-    _send_confirmation_mail_task: SendConfirmationMailTask
+    _send_mail_task: SendMailTask[T, P]
 
-    def __init__(
-        self, background_task_manager: BackgroundTasks, send_confirmation_mail_task: SendConfirmationMailTask
-    ) -> None:
+    def __init__(self, background_task_manager: BackgroundTasks, send_mail_task: SendMailTask[T, P]) -> None:
         self._background_task_manager = background_task_manager
-        self._send_confirmation_mail_task = send_confirmation_mail_task
+        self._send_mail_task = send_mail_task
 
+
+class BackgroundTaskMeldingConfirmationMailer(
+    BackgroundTaskMeldingMailer[Melding, []], BaseMeldingConfirmationMailer[Melding]
+):
     async def __call__(self, melding: Melding) -> None:
-        self._background_task_manager.add_task(self._send_confirmation_mail_task, melding=melding)
+        self._background_task_manager.add_task(self._send_mail_task, melding)
 
 
-class BackgroundTaskMeldingCompleteMailer(BaseMeldingCompleteMailer[Melding]):
-    _background_task_manager: BackgroundTasks
-    _send_completed_mail_task: SendCompletedMailTask
-
-    def __init__(
-        self, background_task_manager: BackgroundTasks, send_completed_mail_task: SendCompletedMailTask
-    ) -> None:
-        self._background_task_manager = background_task_manager
-        self._send_completed_mail_task = send_completed_mail_task
-
-    async def __call__(self, melding: Melding, mail_text: str) -> None:
-        self._background_task_manager.add_task(self._send_completed_mail_task, melding=melding, body_text=mail_text)
+class BackgroundTaskMeldingCompleteMailer(
+    BackgroundTaskMeldingMailer[Melding, [str]], BaseMeldingCompleteMailer[Melding]
+):
+    async def __call__(self, melding: Melding, body_text: str) -> None:
+        self._background_task_manager.add_task(self._send_mail_task, melding, body_text)

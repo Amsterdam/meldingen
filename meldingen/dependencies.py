@@ -31,7 +31,6 @@ from meldingen_core.actions.melding import (
 from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction, NoteUpdateAction
 from meldingen_core.classification import BaseClassifierAdapter, Classifier
 from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
-from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 from meldingen_core.malware import BaseMalwareScanner
 from meldingen_core.managers import RelationshipManager
 from meldingen_core.statemachine import MeldingTransitions
@@ -165,7 +164,9 @@ from meldingen.mail import (
     BaseMailRenderer,
     SendCompletedMailTask,
     SendConfirmationMailTask,
+    SendMailTask,
 )
+from meldingen.mail_data_templates import MailDataTemplate, TemplateID, get_mail_data_template
 from meldingen.models import Answer, Asset, Classification, Label, Melding, Note, Source, User
 from meldingen.reclassification import Reclassifier
 from meldingen.repositories import (
@@ -747,37 +748,41 @@ def mailer() -> BaseMailer:
     )
 
 
+async def confirmation_mail_data_template():
+    mail_data_template = await get_mail_data_template(TemplateID.melding_confirmation)
+    if mail_data_template is None:
+        raise RuntimeError("Could not load confirmation mail template")
+    return mail_data_template()
+
+
 def send_confirmation_mail_task(
     renderer: Annotated[BaseMailRenderer, Depends(mail_renderer)],
     mailer: Annotated[BaseMailer, Depends(mailer)],
+    confirmation_mail_data_template: Annotated[MailDataTemplate[[Melding]], Depends(confirmation_mail_data_template)],
 ) -> SendConfirmationMailTask:
-    return SendConfirmationMailTask(
-        renderer,
-        mailer,
-        settings.mail_melding_confirmation_title,
-        settings.mail_melding_confirmation_preview_text,
-        settings.mail_melding_confirmation_body_text,
-        settings.mail_melding_confirmation_subject,
-    )
+    return SendConfirmationMailTask(renderer, mailer, confirmation_mail_data_template)
 
 
 def melding_confirmation_mailer(
     background_task_manager: BackgroundTasks,
-    send_confirmation_mail_task: Annotated[SendConfirmationMailTask, Depends(send_confirmation_mail_task)],
-) -> BaseMeldingConfirmationMailer[Melding]:
-    return BackgroundTaskMeldingConfirmationMailer(
-        background_task_manager,
-        send_confirmation_mail_task,
-    )
+    send_mail_task: Annotated[SendConfirmationMailTask, Depends(send_confirmation_mail_task)],
+) -> BackgroundTaskMeldingConfirmationMailer:
+    return BackgroundTaskMeldingConfirmationMailer(background_task_manager, send_mail_task)
 
 
 def melding_submit_action_melder(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
     token_invalidator: Annotated[TokenInvalidator, Depends(token_invalidator)],
-    confirmation_mailer: Annotated[BaseMeldingConfirmationMailer[Melding], Depends(melding_confirmation_mailer)],
+    confirmation_mailer: Annotated[BackgroundTaskMeldingConfirmationMailer, Depends(melding_confirmation_mailer)],
 ) -> MeldingSubmitActionMelder:
-    return MeldingSubmitActionMelder(repository, state_machine, token_invalidator, confirmation_mailer)
+
+    return MeldingSubmitActionMelder(
+        repository,
+        state_machine,
+        token_invalidator,
+        confirmation_mailer,
+    )
 
 
 def melding_submit_action(
@@ -797,30 +802,32 @@ def melding_reclassify_action(
     return MeldingReclassifyAction(repository, classification_repository, note_repository, note_factory, state_machine)
 
 
-def send_completed_mail_task(
+async def complete_mail_data_template() -> MailDataTemplate[[Melding, str | None]]:
+    mail_data_template = await get_mail_data_template(TemplateID.melding_complete)
+    if mail_data_template is None:
+        raise RuntimeError("Could not load complete mail template")
+    return mail_data_template()
+
+
+def send_complete_mail_task(
     renderer: Annotated[BaseMailRenderer, Depends(mail_renderer)],
     mailer: Annotated[BaseMailer, Depends(mailer)],
+    complete_mail_data_template: Annotated[MailDataTemplate[[Melding, str]], Depends(complete_mail_data_template)],
 ) -> SendCompletedMailTask:
-    return SendCompletedMailTask(
-        renderer,
-        mailer,
-        settings.mail_melding_completed_title,
-        settings.mail_melding_completed_preview_text,
-        settings.mail_melding_completed_subject,
-    )
+    return SendCompletedMailTask(renderer, mailer, complete_mail_data_template)
 
 
 def melding_complete_mailer(
     background_task_manager: BackgroundTasks,
-    send_completed_mail_task: Annotated[SendCompletedMailTask, Depends(send_completed_mail_task)],
-) -> BaseMeldingCompleteMailer[Melding]:
-    return BackgroundTaskMeldingCompleteMailer(background_task_manager, send_completed_mail_task)
+    send_mail_task: Annotated[SendMailTask[Melding, [str]], Depends(send_complete_mail_task)],
+) -> BackgroundTaskMeldingCompleteMailer:
+    return BackgroundTaskMeldingCompleteMailer(background_task_manager, send_mail_task)
 
 
 def melding_complete_action(
     state_machine: Annotated[MeldingStateMachine, Depends(melding_state_machine)],
     repository: Annotated[MeldingRepository, Depends(melding_repository)],
-    mailer: Annotated[BaseMeldingCompleteMailer[Melding], Depends(melding_complete_mailer)],
+    mailer: Annotated[BackgroundTaskMeldingCompleteMailer, Depends(melding_complete_mailer)],
 ) -> MeldingCompleteAction[Melding]:
     return MeldingCompleteAction(state_machine, repository, mailer)
 
