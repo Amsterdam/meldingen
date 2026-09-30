@@ -103,24 +103,28 @@ class SendConfirmationMailTask(SendMailTask):
         self._body_template = body_template
 
     def _get_service_level_objective_props(self, melding: Melding) -> tuple[str, int, str]:
+
+        if not melding.classification:
+            return (
+                settings.mail_melding_confirmation_service_belofte_default,
+                SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
+                ServiceLevelObjectiveDayTypeReadable[SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT],
+            )
+
         service_level_objective_text = (
             melding.classification.service_level_objective_text
-            if melding.classification
-            and melding.classification.service_level_objective_text != SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT
+            if melding.classification.service_level_objective_text != SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT
             else settings.mail_melding_confirmation_service_belofte_default
         )
-        service_level_objective_days = (
-            melding.classification.service_level_objective_days
-            if melding.classification
-            else SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT
-        )
-        service_level_objective_day_type = (
-            ServiceLevelObjectiveDayTypeReadable[melding.classification.service_level_objective_day_type]
-            if melding.classification
-            else ServiceLevelObjectiveDayTypeReadable[SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT]
-        )
+        service_level_objective_days = melding.classification.service_level_objective_days
+        service_level_objective_day_type = ServiceLevelObjectiveDayTypeReadable[
+            melding.classification.service_level_objective_day_type
+        ]
+
+        # If the service level objective is only 1 day, remove the plural suffix from the day type.
         if service_level_objective_days == 1:
             service_level_objective_day_type = service_level_objective_day_type.removesuffix("en")
+
         return service_level_objective_text, service_level_objective_days, service_level_objective_day_type
 
     async def __call__(self, melding: Melding) -> None:
