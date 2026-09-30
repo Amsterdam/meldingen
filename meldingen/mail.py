@@ -13,6 +13,7 @@ from meldingen.models import (
     Melding,
     ServiceLevelObjectiveDayTypeReadable,
 )
+from meldingen.utils import format_safe
 
 logger = logging.getLogger(__name__)
 
@@ -65,13 +66,15 @@ class SendMailTask:
             raise EmailAddressMissingException("Email address missing!")
 
         mail = await self._render(
-            self._title.format(melding_id=melding.public_id),
-            self._preview_template.format(melding_id=melding.public_id),
+            format_safe(self._title, {"melding_id": melding.public_id}),
+            format_safe(self._preview_template, {"melding_id": melding.public_id}),
             body_text,
         )
 
         try:
-            await self._send_mail(melding.email, self._subject_template.format(melding_id=melding.public_id), mail)
+            await self._send_mail(
+                melding.email, format_safe(self._subject_template, {"melding_id": melding.public_id}), mail
+            )
         except MailException:
             # Runs as a background task, so without logging this failure would go unnoticed
             logger.exception("Failed to send mail for melding %s", melding.public_id)
@@ -108,7 +111,7 @@ class SendConfirmationMailTask(SendMailTask):
         service_level_objective_day_type = (
             ServiceLevelObjectiveDayTypeReadable[melding.classification.service_level_objective_day_type]
             if melding.classification
-            else SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT
+            else ServiceLevelObjectiveDayTypeReadable[SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT]
         )
         return service_level_objective_text, service_level_objective_days, service_level_objective_day_type
 
@@ -122,13 +125,16 @@ class SendConfirmationMailTask(SendMailTask):
         )
         await self._send(
             melding,
-            self._body_template.format(
-                melding_tekst=melding.text,
-                melding_id=melding.public_id,
-                melding_categorie_service_belofte_dagen=service_level_objective_days,
-                melding_categorie_service_belofte_dag_type=service_level_objective_day_type,
-                melding_categorie_service_belofte_tekst=classification_service_objective_text_formatted,
-            ),
+            format_safe(
+                self._body_template,
+                {
+                    "melding_tekst": melding.text,
+                    "melding_id": melding.public_id,
+                    "melding_categorie_service_belofte_dagen": service_level_objective_days,
+                    "melding_categorie_service_belofte_dag_type": service_level_objective_day_type,
+                    "melding_categorie_service_belofte_tekst": classification_service_objective_text_formatted,
+                },
+            ).strip(),
         )
 
 
