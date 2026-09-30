@@ -16,6 +16,11 @@ def test_create_melding(anyio_backend: str, test_database: None) -> None:
     pass
 
 
+@scenario("create_melding.feature", "A melder can submit a melding that could not be classified")
+def test_create_melding_without_classification(anyio_backend: str, test_database: None) -> None:
+    pass
+
+
 @scenario("create_melding.feature", "A melding can't be submitted without a valid location")
 def test_cant_submit_melding_without_location(anyio_backend: str, test_database: None) -> None:
     pass

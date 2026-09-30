@@ -22,7 +22,8 @@ def test_load_classification_values_reads_all_entries() -> None:
     values = load_classification_values(EXAMPLE_FILE_PATH)
 
     assert len(values) == expected
-    assert all(set(value) == {"name", "instructions"} for value in values)
+    assert all({"name", "instructions", "service_level_objective_text"} <= set(value) for value in values)
+    assert all(k is not None for value in values for k in value.values())
 
 
 def test_build_classification_insert_uses_on_conflict_do_nothing() -> None:
