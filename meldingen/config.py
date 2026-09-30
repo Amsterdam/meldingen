@@ -130,7 +130,7 @@ class Settings(BaseSettings):
 
     mail_melding_confirmation_title: str = "Uw melding"
     mail_melding_confirmation_preview_text: str = "Uw melding: {melding_id}"
-    mail_melding_confirmation_service_belofte_default: str = "We laten u binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken"
+    mail_melding_confirmation_service_belofte_default: str = "We laten u binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken."
     mail_melding_confirmation_body_text: str = """U heeft ons het volgende laten weten:
 
 *{melding_tekst}*
