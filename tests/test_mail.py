@@ -7,6 +7,7 @@ import pytest
 
 from meldingen.adapters.mail.jinja_renderer import JinjaMailRenderer
 from meldingen.adapters.mail.smtp_mailer import LOGO_CONTENT_ID, LOGO_SRC, SmtpMailer
+from meldingen.config import settings
 from meldingen.mail import (
     BaseMailer,
     BaseMailRenderer,
@@ -223,6 +224,16 @@ class TestServiceBelofteInMail:
             "Titel",
             "Preview ABC123",
             "Tekst Kapotte stoeptegel ABC123",
+        )
+
+    async def test_send_mail_with_default_confirmation_mail_without_markdown_parsing(self) -> None:
+        renderer, task = self.send_mail_task(settings.mail_melding_confirmation_body_text)
+
+        await task(self.get_melding_with_service_belofte())
+        renderer.assert_awaited_once_with(
+            "Titel",
+            "Preview ABC123",
+            "U heeft ons het volgende laten weten:\n\n*Kapotte stoeptegel*\n\n### Wat we doen met uw melding\nWe onderzoeken uw melding en kijken wat we kunnen oppakken. We laten u binnen 5 werkdagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken We houden u op de hoogte via e-mail.\n\n### Meer weten?\nHeeft u nog een vraag over uw melding? Bel met het telefoonnummer [14 020](tel:14020), maandag tot en met vrijdag\nvan 08.00 tot 18.00. Geef dan ook het nummer van uw melding door: ABC123.\n\nMet vriendelijke groet,\n\nGemeente Amsterdam\n\n*Dit bericht is automatisch gemaakt met de informatie uit uw melding.*",
         )
 
 
