@@ -11,7 +11,7 @@ from meldingen.models import (
     SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
     SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT,
     Melding,
-    ServiceLevelObjectiveDayTypeReadable,
+    ServiceLevelObjectiveDayType,
 )
 from meldingen.utils import format_safe
 
@@ -79,6 +79,12 @@ class SendMailTask:
             # Runs as a background task, so without logging this failure would go unnoticed
             logger.exception("Failed to send mail for melding %s", melding.public_id)
             raise
+
+
+ServiceLevelObjectiveDayTypeReadable = {
+    ServiceLevelObjectiveDayType.working_days: "werkdagen",
+    ServiceLevelObjectiveDayType.calendar_days: "dagen",
+}
 
 
 class SendConfirmationMailTask(SendMailTask):
