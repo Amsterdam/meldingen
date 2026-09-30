@@ -9,39 +9,39 @@
         to: "direct:camel-protected-api-v1-endpoint"
 
 - route:
-  id: fetch-meldingen
-  from:
-    uri: direct:fetch-meldingen
-    steps:
-    - setHeader:
-      name: Accept
-      constant: application/json
-    - removeHeaders:
-      pattern: CamelHttp*
-    - setHeader:
-      name: CamelHttpMethod
-      constant: GET
-    - choice:
-      when:
-        - simple: "${header.state} != null && ${header.state} != ''"
-          steps:
-            - setHeader:
-              name: CamelHttpQuery
-              simple: "state=${header.state}"
-    - setBody:
-      constant: ""
-    - removeHeaders:
-      pattern: Content-Type|state
-    - to:
-      uri: "{{env:CAMEL_API_URL}}/melding/"
-      parameters:
-        bridgeEndpoint: true
-        throwExceptionOnFailure: false
-    - removeHeaders:
-      pattern: Authorization|Accept|CamelHttp*
-    - log:
-      message: "Pulled protected API with status=${header.CamelHttpResponseCode} from {{env:CAMEL_API_URL}}/melding"
-      loggingLevel: INFO
+    id: fetch-meldingen
+    from:
+      uri: direct:fetch-meldingen
+      steps:
+        - setHeader:
+            name: Accept
+            constant: application/json
+        - removeHeaders:
+            pattern: CamelHttp*
+        - setHeader:
+            name: CamelHttpMethod
+            constant: GET
+        - choice:
+            when:
+              - simple: "${header.state} != null && ${header.state} != ''"
+                steps:
+                  - setHeader:
+                      name: CamelHttpQuery
+                      simple: "state=${header.state}"
+        - setBody:
+            constant: ""
+        - removeHeaders:
+            pattern: Content-Type|state
+        - to:
+            uri: "{{env:CAMEL_API_URL}}/melding/"
+            parameters:
+              bridgeEndpoint: true
+              throwExceptionOnFailure: false
+        - removeHeaders:
+            pattern: Authorization|Accept|CamelHttp*
+        - log:
+            message: "Pulled protected API with status=${header.CamelHttpResponseCode} from {{env:CAMEL_API_URL}}/melding"
+            loggingLevel: INFO
 
 - route:
     id: transform-meldingen-to-v1
