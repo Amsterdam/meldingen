@@ -97,17 +97,17 @@ class SendConfirmationMailTask(SendMailTask):
         preview_template: str,
         body_template: str,
         subject_template: str,
-        mail_melding_confirmation_service_belofte_default: str,
+        service_belofte_template: str,
     ) -> None:
         super().__init__(renderer, mailer, title, preview_template, subject_template)
-        self._mail_melding_confirmation_service_belofte_default = mail_melding_confirmation_service_belofte_default
+        self._service_belofte_template = service_belofte_template
         self._body_template = body_template
 
     def _get_service_level_objective_props(self, melding: Melding) -> tuple[str, int, str]:
 
         if not melding.classification:
             return (
-                self._mail_melding_confirmation_service_belofte_default,
+                self._service_belofte_template,
                 SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
                 ServiceLevelObjectiveDayTypeReadable[SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT],
             )
@@ -115,7 +115,7 @@ class SendConfirmationMailTask(SendMailTask):
         service_level_objective_text = (
             melding.classification.service_level_objective_text
             if melding.classification.service_level_objective_text != SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT
-            else self._mail_melding_confirmation_service_belofte_default
+            else self._service_belofte_template
         )
         service_level_objective_days = melding.classification.service_level_objective_days
         service_level_objective_day_type = ServiceLevelObjectiveDayTypeReadable[

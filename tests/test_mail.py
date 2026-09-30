@@ -148,6 +148,7 @@ async def test_send_confirmation_mail_task(melding: Melding) -> None:
         # Service level objective properties can also be used in the body template
         body_template="Tekst {melding_tekst} {melding_id}",
         subject_template="Onderwerp {melding_id}",
+        service_belofte_template="Service belofte {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type}",
     )
     await task(melding)
 
@@ -159,9 +160,10 @@ async def test_send_confirmation_mail_task(melding: Melding) -> None:
 class TestMailFormatting:
     def send_mail_task(
         self,
-        body_template: str,
+        body_template: str = "Tekst {melding_tekst} {melding_id}",
         subject_template: str = "Onderwerp {melding_id}",
         preview_template: str = "Preview {melding_id}",
+        service_belofte_template: str = "Service belofte {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type}",
         titel: str = "Titel",
     ) -> tuple[AsyncMock, SendConfirmationMailTask, AsyncMock]:
         renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
@@ -173,6 +175,7 @@ class TestMailFormatting:
             preview_template=preview_template,
             body_template=body_template,
             subject_template=subject_template,
+            service_belofte_template=service_belofte_template,
         )
         return renderer, task, mailer
 
@@ -195,33 +198,33 @@ class TestMailFormatting:
 
     async def test_send_mail_service_belofte_default(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
-            "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
+            body_template="Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
         await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
-            "Tekst Kapotte stoeptegel ABC123 We laten u binnen 5 dagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken.",
+            "Tekst Kapotte stoeptegel ABC123 Service belofte 5 dagen",
         )
 
     @pytest.mark.parametrize("service_belofte_days, service_belofte_type", [(4, "working_days")])
     async def test_send_mail_service_belofte_all_props(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
-            "Tekst {melding_tekst} {melding_id} 1. Wij nemen binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} contact met u op. 2. {melding_categorie_service_belofte_tekst}"
+            body_template="Tekst {melding_tekst} {melding_id} 1. Wij nemen binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} contact met u op. 2. {melding_categorie_service_belofte_tekst}"
         )
 
         await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
-            "Tekst Kapotte stoeptegel ABC123 1. Wij nemen binnen 4 werkdagen contact met u op. 2. We laten u binnen 4 werkdagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken.",
+            "Tekst Kapotte stoeptegel ABC123 1. Wij nemen binnen 4 werkdagen contact met u op. 2. Service belofte 4 werkdagen",
         )
 
     @pytest.mark.parametrize("service_belofte_days, service_belofte_type", [(4, "working_days")])
     async def test_send_mail_service_belofte_custom(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
-            "Tekst {melding_tekst} {melding_id} Wij nemen binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} contact met u op."
+            body_template="Tekst {melding_tekst} {melding_id} Wij nemen binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} contact met u op."
         )
 
         await task(melding)
@@ -234,20 +237,20 @@ class TestMailFormatting:
     @pytest.mark.parametrize("service_belofte_days, service_belofte_type", [(10, "calendar_days")])
     async def test_send_mail_service_belofte_default_with_custom_days_and_type(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
-            "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
+            body_template="Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
         await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
-            "Tekst Kapotte stoeptegel ABC123 We laten u binnen 10 dagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken.",
+            "Tekst Kapotte stoeptegel ABC123 Service belofte 10 dagen",
         )
 
     @pytest.mark.parametrize("service_belofte_text", ["We houden u op de hoogte via e-mail."])
     async def test_send_mail_service_belofte_custom_ignoring_days_and_type_settings(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
-            "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
+            body_template="Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
         await task(melding)
@@ -259,7 +262,7 @@ class TestMailFormatting:
 
     @pytest.mark.parametrize("service_belofte_text", ["We houden u op de hoogte via e-mail."])
     async def test_send_mail_without_service_belofte(self, melding: Melding) -> None:
-        renderer, task, _mailer = self.send_mail_task("Tekst {melding_tekst} {melding_id}")
+        renderer, task, _mailer = self.send_mail_task(body_template="Tekst {melding_tekst} {melding_id}")
 
         await task(melding)
         renderer.assert_awaited_once_with(
@@ -271,7 +274,7 @@ class TestMailFormatting:
     @pytest.mark.parametrize("service_belofte_text", [""])
     async def test_send_mail_with_empty_service_belofte(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
-            "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
+            body_template="Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
         await task(melding)
@@ -282,7 +285,10 @@ class TestMailFormatting:
         )
 
     async def test_send_mail_with_default_confirmation_mail_without_markdown_parsing(self, melding: Melding) -> None:
-        renderer, task, _mailer = self.send_mail_task(settings.mail_melding_confirmation_body_text)
+        renderer, task, _mailer = self.send_mail_task(
+            body_template=settings.mail_melding_confirmation_body_text,
+            service_belofte_template=settings.mail_melding_confirmation_service_belofte_default,
+        )
 
         await task(melding)
         renderer.assert_awaited_once_with(
@@ -295,7 +301,9 @@ class TestMailFormatting:
 @pytest.mark.anyio
 async def test_send_confirmation_mail_task_without_email(melding: Melding) -> None:
     mailer = AsyncMock(BaseMailer)
-    task = SendConfirmationMailTask(AsyncMock(BaseMailRenderer), mailer, "Titel", "Preview", "Tekst", "Onderwerp")
+    task = SendConfirmationMailTask(
+        AsyncMock(BaseMailRenderer), mailer, "Titel", "Preview", "Tekst", "Onderwerp", "Servicebelofte"
+    )
     melding.email = None
 
     with pytest.raises(EmailAddressMissingException):
@@ -308,7 +316,7 @@ async def test_send_confirmation_mail_task_without_email(melding: Melding) -> No
 async def test_send_confirmation_mail_task_send_fails(melding: Melding) -> None:
     renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
     mailer = AsyncMock(BaseMailer, side_effect=MailException)
-    task = SendConfirmationMailTask(renderer, mailer, "Titel", "Preview", "Tekst", "Onderwerp")
+    task = SendConfirmationMailTask(renderer, mailer, "Titel", "Preview", "Tekst", "Onderwerp", "Servicebelofte")
 
     with pytest.raises(MailException):
         await task(melding)
