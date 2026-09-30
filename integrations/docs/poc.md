@@ -41,3 +41,4 @@ Needs further investigation.
 
 - Make the Integration Layer OpenAPI spec viewable through something like Swagger or Scalar
 - Add automated tests for the Camel routes and golden-file tests for the DataSonnet filters and transforms. This could help with keeping the integration and API code in sync.
+- Find a way to make the conversion of data more DRY. Datasonnet doesn't seem to be working well with imports, therefore we might have to look for other options.
