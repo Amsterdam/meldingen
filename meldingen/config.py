@@ -103,13 +103,13 @@ class Settings(BaseSettings):
         "U kunt niet op dit bericht antwoorden."
     )
 
-    # Variables available:
+    # Variable descriptions:
     #
     # {melding_tekst}
     # The text of the melding provided by the user who submitted it.
     #
     # {melding_id}
-    # The unique identifier of the melding.
+    # The unique (public) identifier of the melding.
     #
     # {melding_categorie_service_belofte_dagen}
     # The number of days specified in the service level objective for the category of the melding.
@@ -121,6 +121,12 @@ class Settings(BaseSettings):
     # The text of the service level objective for the category of the melding. E.g "We will respond within 5 working days."
     # The {melding_categorie_service_belofte_tekst} variables itself can also contain placeholders for the number and type of days. E.g
     # "We will respond within {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type}."
+    #
+    # Available placeholders for mail templates.
+    # subject: {melding_id}
+    # title: {melding_id}
+    # preview: {melding_id}
+    # body: {melding_tekst} {melding_id} {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} {melding_categorie_service_belofte_tekst}
 
     mail_melding_confirmation_title: str = "Uw melding"
     mail_melding_confirmation_preview_text: str = "Uw melding: {melding_id}"
