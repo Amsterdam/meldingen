@@ -16,7 +16,7 @@ from meldingen.mail import (
     SendCompletedMailTask,
     SendConfirmationMailTask,
 )
-from meldingen.models import Melding
+from meldingen.models import Classification, Melding
 
 RENDERED_MAIL = RenderedMail(html="<p>Hoi</p>", text="Hoi")
 
@@ -100,13 +100,130 @@ async def test_smtp_mailer_send_fails() -> None:
 async def test_send_confirmation_mail_task() -> None:
     renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
     mailer = AsyncMock(BaseMailer)
-    melding = Mock(Melding, email="melder@example.com", public_id="ABC123", text="Kapotte stoeptegel")
+    melding = Mock(
+        Melding,
+        email="melder@example.com",
+        public_id="ABC123",
+        text="Kapotte stoeptegel",
+        classification=None,
+    )
 
-    task = SendConfirmationMailTask(renderer, mailer, "Titel", "Preview {}", "Tekst {} {}", "Onderwerp {}")
+    task = SendConfirmationMailTask(
+        renderer,
+        mailer,
+        title="Titel",
+        preview_template="Preview {melding_id}",
+        # Service level objective properties can also be used in the body template
+        body_template="Tekst {melding_tekst} {melding_id}",
+        subject_template="Onderwerp {melding_id}",
+    )
     await task(melding)
 
     renderer.assert_awaited_once_with("Titel", "Preview ABC123", "Tekst Kapotte stoeptegel ABC123")
     mailer.assert_awaited_once_with("melder@example.com", "Onderwerp ABC123", RENDERED_MAIL)
+
+
+@pytest.mark.anyio
+class TestServiceBelofteInMail:
+    def get_melding_with_service_belofte(
+        self, service_belofte_text: str = "-", service_belofte_days: int = 5, service_belofte_type: str = "working_days"
+    ):
+        melding = Mock(
+            Melding,
+            email="melder@example.com",
+            public_id="ABC123",
+            text="Kapotte stoeptegel",
+            classification=Mock(
+                Classification,
+                service_level_objective_text=service_belofte_text,
+                service_level_objective_days=service_belofte_days,
+                service_level_objective_day_type=service_belofte_type,
+            ),
+        )
+        return melding
+
+    def send_mail_task(self, body_template: str):
+        renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
+        mailer = AsyncMock(BaseMailer)
+        task = SendConfirmationMailTask(
+            renderer,
+            mailer,
+            title="Titel",
+            preview_template="Preview {melding_id}",
+            body_template=body_template,
+            subject_template="Onderwerp {melding_id}",
+        )
+        return renderer, task
+
+    async def test_send_mail_service_belofte_default(self) -> None:
+        renderer, task = self.send_mail_task(
+            "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
+        )
+
+        await task(self.get_melding_with_service_belofte())
+        renderer.assert_awaited_once_with(
+            "Titel",
+            "Preview ABC123",
+            "Tekst Kapotte stoeptegel ABC123 We laten u binnen 5 werkdagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken",
+        )
+
+    async def test_send_mail_service_belofte_all_props(self) -> None:
+        renderer, task = self.send_mail_task(
+            "Tekst {melding_tekst} {melding_id} 1. Wij nemen binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} contact met u op. 2. {melding_categorie_service_belofte_tekst}"
+        )
+
+        await task(self.get_melding_with_service_belofte(service_belofte_days=4, service_belofte_type="working_days"))
+        renderer.assert_awaited_once_with(
+            "Titel",
+            "Preview ABC123",
+            "Tekst Kapotte stoeptegel ABC123 1. Wij nemen binnen 4 werkdagen contact met u op. 2. We laten u binnen 4 werkdagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken",
+        )
+
+    async def test_send_mail_service_belofte_custom(self) -> None:
+        renderer, task = self.send_mail_task(
+            "Tekst {melding_tekst} {melding_id} Wij nemen binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} contact met u op."
+        )
+
+        await task(self.get_melding_with_service_belofte(service_belofte_days=4, service_belofte_type="working_days"))
+        renderer.assert_awaited_once_with(
+            "Titel",
+            "Preview ABC123",
+            "Tekst Kapotte stoeptegel ABC123 Wij nemen binnen 4 werkdagen contact met u op.",
+        )
+
+    async def test_send_mail_service_belofte_default_with_custom_days_and_type(self) -> None:
+        renderer, task = self.send_mail_task(
+            "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
+        )
+
+        await task(self.get_melding_with_service_belofte(service_belofte_days=10, service_belofte_type="calendar_days"))
+        renderer.assert_awaited_once_with(
+            "Titel",
+            "Preview ABC123",
+            "Tekst Kapotte stoeptegel ABC123 We laten u binnen 10 dagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken",
+        )
+
+    async def test_send_mail_service_belofte_custom_ignoring_days_and_type_settings(self) -> None:
+        renderer, task = self.send_mail_task(
+            "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
+        )
+
+        await task(self.get_melding_with_service_belofte(service_belofte_text="We houden u op de hoogte via e-mail."))
+        renderer.assert_awaited_once_with(
+            "Titel",
+            "Preview ABC123",
+            "Tekst Kapotte stoeptegel ABC123 We houden u op de hoogte via e-mail.",
+        )
+
+    async def test_send_mail_without_service_belofte(self) -> None:
+        renderer, task = self.send_mail_task("Tekst {melding_tekst} {melding_id}")
+
+        await task(self.get_melding_with_service_belofte(service_belofte_text="We houden u op de hoogte via e-mail."))
+        renderer.assert_awaited_once_with(
+            "Titel",
+            "Preview ABC123",
+            "Tekst Kapotte stoeptegel ABC123",
+        )
 
 
 @pytest.mark.anyio
@@ -140,7 +257,7 @@ async def test_send_completed_mail_task() -> None:
     mailer = AsyncMock(BaseMailer)
     melding = Mock(Melding, email="melder@example.com", public_id="ABC123")
 
-    task = SendCompletedMailTask(renderer, mailer, "Titel", "Preview {}", "Onderwerp {}")
+    task = SendCompletedMailTask(renderer, mailer, "Titel", "Preview {melding_id}", "Onderwerp {melding_id}")
     await task(melding, "Wij hebben de tegel vervangen.")
 
     renderer.assert_awaited_once_with("Titel", "Preview ABC123", "Wij hebben de tegel vervangen.")
