@@ -761,6 +761,7 @@ def send_confirmation_mail_task(
         settings.mail_melding_confirmation_preview_text,
         settings.mail_melding_confirmation_body_text,
         settings.mail_melding_confirmation_subject,
+        settings.mail_melding_confirmation_service_belofte_default,
     )
 
 

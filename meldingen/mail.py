@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from fastapi import BackgroundTasks
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 
-from meldingen.config import settings
 from meldingen.models import (
     SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT,
     SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
@@ -98,15 +97,17 @@ class SendConfirmationMailTask(SendMailTask):
         preview_template: str,
         body_template: str,
         subject_template: str,
+        mail_melding_confirmation_service_belofte_default: str,
     ) -> None:
         super().__init__(renderer, mailer, title, preview_template, subject_template)
+        self._mail_melding_confirmation_service_belofte_default = mail_melding_confirmation_service_belofte_default
         self._body_template = body_template
 
     def _get_service_level_objective_props(self, melding: Melding) -> tuple[str, int, str]:
 
         if not melding.classification:
             return (
-                settings.mail_melding_confirmation_service_belofte_default,
+                self._mail_melding_confirmation_service_belofte_default,
                 SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
                 ServiceLevelObjectiveDayTypeReadable[SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT],
             )
@@ -114,7 +115,7 @@ class SendConfirmationMailTask(SendMailTask):
         service_level_objective_text = (
             melding.classification.service_level_objective_text
             if melding.classification.service_level_objective_text != SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT
-            else settings.mail_melding_confirmation_service_belofte_default
+            else self._mail_melding_confirmation_service_belofte_default
         )
         service_level_objective_days = melding.classification.service_level_objective_days
         service_level_objective_day_type = ServiceLevelObjectiveDayTypeReadable[
