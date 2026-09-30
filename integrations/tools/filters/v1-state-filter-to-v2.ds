@@ -30,4 +30,4 @@ local mapStateToV2(state) =
 
 local states = if rawState == '' then [] else std.split(rawState, ',');
 
-  std.join(',', std.flattenArrays(std.map(function(state) mapStateToV2(state), states)))
+std.join(',', std.flattenArrays(std.map(function(state) mapStateToV2(state), states)))

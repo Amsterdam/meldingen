@@ -13,3 +13,4 @@ mypy-baseline.txt
 .pre-commit-config.yaml
 *.env
 .venv
+integrations/

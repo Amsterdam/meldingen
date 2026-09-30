@@ -7,6 +7,7 @@
 - rest:
     post:
       - path: "/bearer-token"
+        consumes: "application/x-www-form-urlencoded"
         produces: "text/plain"
         to: "direct:camel-bearer-token-endpoint"
 
@@ -36,7 +37,7 @@
             otherwise:
               steps:
                 - setBody:
-                    simple: "grant_type=password&client_id={{env:CAMEL_OIDC_CLIENT_ID}}&username={{env:CAMEL_OIDC_USERNAME}}&password={{env:CAMEL_OIDC_PASSWORD}}&scope={{env:CAMEL_OIDC_SCOPE_ENCODED}}"
+                    simple: "grant_type=password&client_id={{env:CAMEL_OIDC_CLIENT_ID}}&${body}&scope={{env:CAMEL_OIDC_SCOPE_ENCODED}}"
         - to:
             uri: "{{env:CAMEL_OIDC_TOKEN_URL}}"
             parameters:

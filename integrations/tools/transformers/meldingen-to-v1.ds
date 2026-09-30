@@ -1,9 +1,10 @@
-local fieldOrNull(obj, field) =
-  if obj == null || std.type(obj) != 'object' || !std.objectHas(obj, field) then null else obj[field];
+local common = import '../lib/common.libsonnet';
 
-local valueOrEmpty(value) = if value == null then '' else std.toString(value);
+local fieldOrNull = common.fieldOrNull;
 
-local asString(value) = if value == null then null else std.toString(value);
+local valueOrEmpty = common.valueOrEmpty;
+
+local asString = common.asString;
 
 local labelNames(melding) =
   if fieldOrNull(melding, 'labels') == null then []
@@ -45,7 +46,7 @@ local slugify(value) =
 
 local hasContact(melding) = fieldOrNull(melding, 'email') != null || fieldOrNull(melding, 'phone') != null;
 
-local hasItems(value) = value != null && std.type(value) == 'array' && std.length(value) > 0;
+local hasItems = common.hasItems;
 
 local mappedState(state) =
   if state == null then ''
