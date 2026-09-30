@@ -180,7 +180,7 @@ class TestMailFormatting:
         mailer.assert_awaited_once_with("melder@example.com", "Onderwerp {unknown_tag}", RENDERED_MAIL)
 
     async def test_send_mail_service_belofte_default(self) -> None:
-        renderer, task, mailer = self.send_mail_task(
+        renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
@@ -192,7 +192,7 @@ class TestMailFormatting:
         )
 
     async def test_send_mail_service_belofte_all_props(self) -> None:
-        renderer, task, mailer = self.send_mail_task(
+        renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} 1. Wij nemen binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} contact met u op. 2. {melding_categorie_service_belofte_tekst}"
         )
 
@@ -204,7 +204,7 @@ class TestMailFormatting:
         )
 
     async def test_send_mail_service_belofte_custom(self) -> None:
-        renderer, task, mailer = self.send_mail_task(
+        renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} Wij nemen binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} contact met u op."
         )
 
@@ -216,7 +216,7 @@ class TestMailFormatting:
         )
 
     async def test_send_mail_service_belofte_default_with_custom_days_and_type(self) -> None:
-        renderer, task, mailer = self.send_mail_task(
+        renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
@@ -228,7 +228,7 @@ class TestMailFormatting:
         )
 
     async def test_send_mail_service_belofte_custom_ignoring_days_and_type_settings(self) -> None:
-        renderer, task, mailer = self.send_mail_task(
+        renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
@@ -240,7 +240,7 @@ class TestMailFormatting:
         )
 
     async def test_send_mail_without_service_belofte(self) -> None:
-        renderer, task, mailer = self.send_mail_task("Tekst {melding_tekst} {melding_id}")
+        renderer, task, _mailer = self.send_mail_task("Tekst {melding_tekst} {melding_id}")
 
         await task(self.get_melding_with_service_belofte(service_belofte_text="We houden u op de hoogte via e-mail."))
         renderer.assert_awaited_once_with(
@@ -250,7 +250,7 @@ class TestMailFormatting:
         )
 
     async def test_send_mail_with_empty_service_belofte(self) -> None:
-        renderer, task, mailer = self.send_mail_task(
+        renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
@@ -262,7 +262,7 @@ class TestMailFormatting:
         )
 
     async def test_send_mail_with_default_confirmation_mail_without_markdown_parsing(self) -> None:
-        renderer, task, mailer = self.send_mail_task(settings.mail_melding_confirmation_body_text)
+        renderer, task, _mailer = self.send_mail_task(settings.mail_melding_confirmation_body_text)
 
         await task(self.get_melding_with_service_belofte())
         renderer.assert_awaited_once_with(
