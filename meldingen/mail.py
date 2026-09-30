@@ -121,9 +121,12 @@ class SendConfirmationMailTask(SendMailTask):
         service_level_objective_text, service_level_objective_days, service_level_objective_day_type = (
             self._get_service_level_objective_props(melding)
         )
-        classification_service_objective_text_formatted = service_level_objective_text.format(
-            melding_categorie_service_belofte_dagen=service_level_objective_days,
-            melding_categorie_service_belofte_dag_type=service_level_objective_day_type,
+        classification_service_objective_text_formatted = format_safe(
+            service_level_objective_text,
+            {
+                "melding_categorie_service_belofte_dagen": service_level_objective_days,
+                "melding_categorie_service_belofte_dag_type": service_level_objective_day_type,
+            },
         )
         await self._send(
             melding,
