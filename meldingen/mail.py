@@ -113,6 +113,8 @@ class SendConfirmationMailTask(SendMailTask):
             if melding.classification
             else ServiceLevelObjectiveDayTypeReadable[SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT]
         )
+        if service_level_objective_days == 1:
+            service_level_objective_day_type = service_level_objective_day_type.removesuffix("en")
         return service_level_objective_text, service_level_objective_days, service_level_objective_day_type
 
     async def __call__(self, melding: Melding) -> None:
