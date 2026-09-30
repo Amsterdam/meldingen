@@ -128,7 +128,7 @@ async def test_send_confirmation_mail_task() -> None:
 class TestMailFormatting:
     def get_melding_with_service_belofte(
         self, service_belofte_text: str = "-", service_belofte_days: int = 5, service_belofte_type: str = "working_days"
-    ):
+    ) -> Melding:
         melding = Mock(
             Melding,
             email="melder@example.com",
@@ -149,7 +149,7 @@ class TestMailFormatting:
         subject_template: str = "Onderwerp {melding_id}",
         preview_template: str = "Preview {melding_id}",
         titel: str = "Titel",
-    ):
+    ) -> tuple[AsyncMock, SendConfirmationMailTask, AsyncMock]:
         renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
         mailer = AsyncMock(BaseMailer)
         task = SendConfirmationMailTask(

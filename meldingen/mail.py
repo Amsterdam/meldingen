@@ -96,7 +96,7 @@ class SendConfirmationMailTask(SendMailTask):
         super().__init__(renderer, mailer, title, preview_template, subject_template)
         self._body_template = body_template
 
-    def _get_service_level_objective_props(self, melding: Melding):
+    def _get_service_level_objective_props(self, melding: Melding) -> tuple[str, int, str]:
         service_level_objective_text = (
             melding.classification.service_level_objective_text
             if melding.classification
