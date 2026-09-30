@@ -75,6 +75,13 @@ class ServiceLevelObjectiveDayType(enum.StrEnum):
     calendar_days = "calendar_days"
 
 
+ServiceLevelObjectiveDayTypeReadable = {
+    ServiceLevelObjectiveDayType.working_days: "werkdagen",
+    ServiceLevelObjectiveDayType.calendar_days: "dagen",
+}
+
+
+SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT = ServiceLevelObjectiveDayType.calendar_days
 SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT = 5
 SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT = "-"
 
