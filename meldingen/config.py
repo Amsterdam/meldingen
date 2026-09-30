@@ -102,6 +102,26 @@ class Settings(BaseSettings):
         "U ontvangt deze e-mail omdat er een melding is gedaan met dit e-mailadres. "
         "U kunt niet op dit bericht antwoorden."
     )
+
+    # Variables available:
+    #
+    # {melding_tekst}
+    # The text of the melding provided by the user who submitted it.
+    #
+    # {melding_id}
+    # The unique identifier of the melding.
+    #
+    # {melding_categorie_service_belofte_dagen}
+    # The number of days specified in the service level objective for the category of the melding.
+    #
+    # {melding_categorie_service_belofte_dag_type}
+    # The type of days specified in the service level objective for the category of the melding. E.g dagen or werkdagen.
+    #
+    # {melding_categorie_service_belofte_tekst}
+    # The text of the service level objective for the category of the melding. E.g "We will respond within 5 working days."
+    # The {melding_categorie_service_belofte_tekst} variables itself can also contain placeholders for the number and type of days. E.g
+    # "We will respond within {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type}."
+
     mail_melding_confirmation_title: str = "Uw melding"
     mail_melding_confirmation_preview_text: str = "Uw melding: {melding_id}"
     mail_melding_confirmation_service_belofte_default: str = "We laten u binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken"
@@ -110,7 +130,7 @@ class Settings(BaseSettings):
 *{melding_tekst}*
 
 ### Wat we doen met uw melding
-We onderzoeken uw melding en kijken wat we kunnen oppakken. {melding_categorie_service_belofte} We houden u op de hoogte via e-mail.
+We onderzoeken uw melding en kijken wat we kunnen oppakken. {melding_categorie_service_belofte_tekst} We houden u op de hoogte via e-mail.
 
 ### Meer weten?
 Heeft u nog een vraag over uw melding? Bel met het telefoonnummer [14 020](tel:14020), maandag tot en met vrijdag
