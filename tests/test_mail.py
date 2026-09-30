@@ -97,17 +97,48 @@ async def test_smtp_mailer_send_fails() -> None:
             await mailer("melder@example.com", "Onderwerp", RENDERED_MAIL)
 
 
-@pytest.mark.anyio
-async def test_send_confirmation_mail_task() -> None:
-    renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
-    mailer = AsyncMock(BaseMailer)
-    melding = Mock(
+@pytest.fixture
+def service_belofte_text(request: pytest.FixtureRequest) -> str:
+    return getattr(request, "param", None) or "-"
+
+
+@pytest.fixture
+def service_belofte_days(request: pytest.FixtureRequest) -> int:
+    return getattr(request, "param", None) or 5
+
+
+@pytest.fixture
+def service_belofte_type(request: pytest.FixtureRequest) -> str:
+    return getattr(request, "param", None) or "calendar_days"
+
+
+@pytest.fixture
+async def classification(
+    service_belofte_text: str, service_belofte_days: int, service_belofte_type: str
+) -> Classification:
+    return Mock(
+        Classification,
+        service_level_objective_text=service_belofte_text,
+        service_level_objective_days=service_belofte_days,
+        service_level_objective_day_type=service_belofte_type,
+    )
+
+
+@pytest.fixture
+async def melding(classification: Classification) -> Melding:
+    return Mock(
         Melding,
         email="melder@example.com",
         public_id="ABC123",
         text="Kapotte stoeptegel",
-        classification=None,
+        classification=classification,
     )
+
+
+@pytest.mark.anyio
+async def test_send_confirmation_mail_task(melding: Melding) -> None:
+    renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
+    mailer = AsyncMock(BaseMailer)
 
     task = SendConfirmationMailTask(
         renderer,
@@ -126,23 +157,6 @@ async def test_send_confirmation_mail_task() -> None:
 
 @pytest.mark.anyio
 class TestMailFormatting:
-    def get_melding_with_service_belofte(
-        self, service_belofte_text: str = "-", service_belofte_days: int = 5, service_belofte_type: str = "working_days"
-    ) -> Melding:
-        melding = Mock(
-            Melding,
-            email="melder@example.com",
-            public_id="ABC123",
-            text="Kapotte stoeptegel",
-            classification=Mock(
-                Classification,
-                service_level_objective_text=service_belofte_text,
-                service_level_objective_days=service_belofte_days,
-                service_level_objective_day_type=service_belofte_type,
-            ),
-        )
-        return melding
-
     def send_mail_task(
         self,
         body_template: str,
@@ -162,7 +176,7 @@ class TestMailFormatting:
         )
         return renderer, task, mailer
 
-    async def test_send_mail_formatting_handles_unmatched_placeholders(self) -> None:
+    async def test_send_mail_formatting_handles_unmatched_placeholders(self, melding: Melding) -> None:
         renderer, task, mailer = self.send_mail_task(
             body_template="Tekst {melding_tekst} {melding_id} {unknown_tag}",
             subject_template="Onderwerp {unknown_tag}",
@@ -170,7 +184,7 @@ class TestMailFormatting:
             titel="Titel {unknown_tag}",
         )
 
-        await task(self.get_melding_with_service_belofte())
+        await task(melding)
         renderer.assert_awaited_once_with(
             "Titel {unknown_tag}",
             "Preview {unknown_tag}",
@@ -179,105 +193,110 @@ class TestMailFormatting:
 
         mailer.assert_awaited_once_with("melder@example.com", "Onderwerp {unknown_tag}", RENDERED_MAIL)
 
-    async def test_send_mail_service_belofte_default(self) -> None:
+    async def test_send_mail_service_belofte_default(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
-        await task(self.get_melding_with_service_belofte())
+        await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
-            "Tekst Kapotte stoeptegel ABC123 We laten u binnen 5 werkdagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken",
+            "Tekst Kapotte stoeptegel ABC123 We laten u binnen 5 dagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken.",
         )
 
-    async def test_send_mail_service_belofte_all_props(self) -> None:
+    @pytest.mark.parametrize("service_belofte_days, service_belofte_type", [(4, "working_days")])
+    async def test_send_mail_service_belofte_all_props(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} 1. Wij nemen binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} contact met u op. 2. {melding_categorie_service_belofte_tekst}"
         )
 
-        await task(self.get_melding_with_service_belofte(service_belofte_days=4, service_belofte_type="working_days"))
+        await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
-            "Tekst Kapotte stoeptegel ABC123 1. Wij nemen binnen 4 werkdagen contact met u op. 2. We laten u binnen 4 werkdagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken",
+            "Tekst Kapotte stoeptegel ABC123 1. Wij nemen binnen 4 werkdagen contact met u op. 2. We laten u binnen 4 werkdagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken.",
         )
 
-    async def test_send_mail_service_belofte_custom(self) -> None:
+    @pytest.mark.parametrize("service_belofte_days, service_belofte_type", [(4, "working_days")])
+    async def test_send_mail_service_belofte_custom(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} Wij nemen binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} contact met u op."
         )
 
-        await task(self.get_melding_with_service_belofte(service_belofte_days=4, service_belofte_type="working_days"))
+        await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
             "Tekst Kapotte stoeptegel ABC123 Wij nemen binnen 4 werkdagen contact met u op.",
         )
 
-    async def test_send_mail_service_belofte_default_with_custom_days_and_type(self) -> None:
+    @pytest.mark.parametrize("service_belofte_days, service_belofte_type", [(10, "calendar_days")])
+    async def test_send_mail_service_belofte_default_with_custom_days_and_type(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
-        await task(self.get_melding_with_service_belofte(service_belofte_days=10, service_belofte_type="calendar_days"))
+        await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
-            "Tekst Kapotte stoeptegel ABC123 We laten u binnen 10 dagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken",
+            "Tekst Kapotte stoeptegel ABC123 We laten u binnen 10 dagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken.",
         )
 
-    async def test_send_mail_service_belofte_custom_ignoring_days_and_type_settings(self) -> None:
+    @pytest.mark.parametrize("service_belofte_text", ["We houden u op de hoogte via e-mail."])
+    async def test_send_mail_service_belofte_custom_ignoring_days_and_type_settings(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
-        await task(self.get_melding_with_service_belofte(service_belofte_text="We houden u op de hoogte via e-mail."))
+        await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
             "Tekst Kapotte stoeptegel ABC123 We houden u op de hoogte via e-mail.",
         )
 
-    async def test_send_mail_without_service_belofte(self) -> None:
+    @pytest.mark.parametrize("service_belofte_text", ["We houden u op de hoogte via e-mail."])
+    async def test_send_mail_without_service_belofte(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task("Tekst {melding_tekst} {melding_id}")
 
-        await task(self.get_melding_with_service_belofte(service_belofte_text="We houden u op de hoogte via e-mail."))
+        await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
             "Tekst Kapotte stoeptegel ABC123",
         )
 
-    async def test_send_mail_with_empty_service_belofte(self) -> None:
+    @pytest.mark.parametrize("service_belofte_text", [""])
+    async def test_send_mail_with_empty_service_belofte(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
             "Tekst {melding_tekst} {melding_id} {melding_categorie_service_belofte_tekst}"
         )
 
-        await task(self.get_melding_with_service_belofte(service_belofte_text=""))
+        await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
             "Tekst Kapotte stoeptegel ABC123",
         )
 
-    async def test_send_mail_with_default_confirmation_mail_without_markdown_parsing(self) -> None:
+    async def test_send_mail_with_default_confirmation_mail_without_markdown_parsing(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(settings.mail_melding_confirmation_body_text)
 
-        await task(self.get_melding_with_service_belofte())
+        await task(melding)
         renderer.assert_awaited_once_with(
             "Titel",
             "Preview ABC123",
-            "U heeft ons het volgende laten weten:\n\n*Kapotte stoeptegel*\n\n### Wat we doen met uw melding\nWe onderzoeken uw melding en kijken wat we kunnen oppakken. We laten u binnen 5 werkdagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken We houden u op de hoogte via e-mail.\n\n### Meer weten?\nHeeft u nog een vraag over uw melding? Bel met het telefoonnummer [14 020](tel:14020), maandag tot en met vrijdag\nvan 08.00 tot 18.00. Geef dan ook het nummer van uw melding door: ABC123.\n\nMet vriendelijke groet,\n\nGemeente Amsterdam\n\n*Dit bericht is automatisch gemaakt met de informatie uit uw melding.*",
+            "U heeft ons het volgende laten weten:\n\n*Kapotte stoeptegel*\n\n### Wat we doen met uw melding\nWe onderzoeken uw melding en kijken wat we kunnen oppakken. We laten u binnen 5 dagen weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken. We houden u op de hoogte via e-mail.\n\n### Meer weten?\nHeeft u nog een vraag over uw melding? Bel met het telefoonnummer [14 020](tel:14020), maandag tot en met vrijdag\nvan 08.00 tot 18.00. Geef dan ook het nummer van uw melding door: ABC123.\n\nMet vriendelijke groet,\n\nGemeente Amsterdam\n\n*Dit bericht is automatisch gemaakt met de informatie uit uw melding.*",
         )
 
 
 @pytest.mark.anyio
-async def test_send_confirmation_mail_task_without_email() -> None:
+async def test_send_confirmation_mail_task_without_email(melding: Melding) -> None:
     mailer = AsyncMock(BaseMailer)
-    melding = Mock(Melding, email=None, public_id="ABC123", text="Kapotte stoeptegel")
-
     task = SendConfirmationMailTask(AsyncMock(BaseMailRenderer), mailer, "Titel", "Preview", "Tekst", "Onderwerp")
+    melding.email = None
 
     with pytest.raises(EmailAddressMissingException):
         await task(melding)
@@ -286,11 +305,9 @@ async def test_send_confirmation_mail_task_without_email() -> None:
 
 
 @pytest.mark.anyio
-async def test_send_confirmation_mail_task_send_fails() -> None:
+async def test_send_confirmation_mail_task_send_fails(melding: Melding) -> None:
     renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
     mailer = AsyncMock(BaseMailer, side_effect=MailException)
-    melding = Mock(Melding, email="melder@example.com", public_id="ABC123", text="Kapotte stoeptegel")
-
     task = SendConfirmationMailTask(renderer, mailer, "Titel", "Preview", "Tekst", "Onderwerp")
 
     with pytest.raises(MailException):
@@ -298,12 +315,11 @@ async def test_send_confirmation_mail_task_send_fails() -> None:
 
 
 @pytest.mark.anyio
-async def test_send_completed_mail_task() -> None:
+async def test_send_completed_mail_task(melding: Melding) -> None:
     renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
     mailer = AsyncMock(BaseMailer)
-    melding = Mock(Melding, email="melder@example.com", public_id="ABC123")
-
     task = SendCompletedMailTask(renderer, mailer, "Titel", "Preview {melding_id}", "Onderwerp {melding_id}")
+
     await task(melding, "Wij hebben de tegel vervangen.")
 
     renderer.assert_awaited_once_with("Titel", "Preview ABC123", "Wij hebben de tegel vervangen.")
