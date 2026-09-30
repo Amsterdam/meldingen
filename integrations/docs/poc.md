@@ -25,8 +25,17 @@ The created auth.yaml works with the local Keycloak, but it might not work with 
 
 ### 2. DataSonnet
 
-DataSonnet works well in this case, because it is a flexible language natively supported by Camel. It supports different language types such as XML (for THOR) and JSON. It also has modules built in so that we can import functionality (such as the one the lib folder) to other documents.
+DataSonnet works well in this case, because it is a flexible language natively supported by Camel. It supports different language types such as XML (for THOR) and JSON.
 
+It also has modules built in so that we can import functionality (such as the one the lib folder) to other documents. However it seems to have problems loading them in at runtime.
+
+The negative side is that it's not super well documented.
+
+
+### 3. Hot reloading
+
+Hot reloading only seems to work for the routes file and not for the datasonnet files.
+Needs further investigation.
 
 ## Possible improvements
 

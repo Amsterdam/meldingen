@@ -89,9 +89,8 @@ That returns a plain-text value in the form `Bearer <access-token>`.
 The compatibility route expects the caller to supply the `Authorization` header themselves. One simple local flow is to request a token first and then pass it to the V1 endpoint:
 
 ```bash
-TOKEN="$(curl -s -X POST http://127.0.0.1:8088/bearer-token \
-	--data-urlencode "username=user@example.com" \
-	--data-urlencode "password=password")"
+TOKEN="$(curl -s -X POST http://127.0.0.1:8088/bearer-token --data-urlencode "username=user@example.com"  --data-urlencode "password=password")"
+
 curl -H "Authorization: $TOKEN" http://127.0.0.1:8088/meldingen-v1
 ```
 
