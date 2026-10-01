@@ -5,7 +5,14 @@ from dataclasses import dataclass
 from fastapi import BackgroundTasks
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 
-from meldingen.models import Melding
+from meldingen.models import (
+    SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT,
+    SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
+    SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT,
+    Melding,
+    ServiceLevelObjectiveDayType,
+)
+from meldingen.utils import format_safe
 
 logger = logging.getLogger(__name__)
 
@@ -57,14 +64,26 @@ class SendMailTask:
         if melding.email is None:
             raise EmailAddressMissingException("Email address missing!")
 
-        mail = await self._render(self._title, self._preview_template.format(melding.public_id), body_text)
+        mail = await self._render(
+            format_safe(self._title, {"melding_id": melding.public_id}),
+            format_safe(self._preview_template, {"melding_id": melding.public_id}),
+            body_text,
+        )
 
         try:
-            await self._send_mail(melding.email, self._subject_template.format(melding.public_id), mail)
+            await self._send_mail(
+                melding.email, format_safe(self._subject_template, {"melding_id": melding.public_id}), mail
+            )
         except MailException:
             # Runs as a background task, so without logging this failure would go unnoticed
             logger.exception("Failed to send mail for melding %s", melding.public_id)
             raise
+
+
+ServiceLevelObjectiveDayTypeReadable = {
+    ServiceLevelObjectiveDayType.working_days: "werkdagen",
+    ServiceLevelObjectiveDayType.calendar_days: "dagen",
+}
 
 
 class SendConfirmationMailTask(SendMailTask):
@@ -78,12 +97,61 @@ class SendConfirmationMailTask(SendMailTask):
         preview_template: str,
         body_template: str,
         subject_template: str,
+        service_belofte_template: str,
     ) -> None:
         super().__init__(renderer, mailer, title, preview_template, subject_template)
+        self._service_belofte_template = service_belofte_template
         self._body_template = body_template
 
+    def _get_service_level_objective_props(self, melding: Melding) -> tuple[str, int, str]:
+
+        if not melding.classification:
+            return (
+                self._service_belofte_template,
+                SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
+                ServiceLevelObjectiveDayTypeReadable[SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT],
+            )
+
+        service_level_objective_text = (
+            melding.classification.service_level_objective_text
+            if melding.classification.service_level_objective_text != SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT
+            else self._service_belofte_template
+        )
+        service_level_objective_days = melding.classification.service_level_objective_days
+        service_level_objective_day_type = ServiceLevelObjectiveDayTypeReadable[
+            melding.classification.service_level_objective_day_type
+        ]
+
+        # If the service level objective is only 1 day, remove the plural suffix from the day type.
+        if service_level_objective_days == 1:
+            service_level_objective_day_type = service_level_objective_day_type.removesuffix("en")
+
+        return service_level_objective_text, service_level_objective_days, service_level_objective_day_type
+
     async def __call__(self, melding: Melding) -> None:
-        await self._send(melding, self._body_template.format(melding.text, melding.public_id))
+        service_level_objective_text, service_level_objective_days, service_level_objective_day_type = (
+            self._get_service_level_objective_props(melding)
+        )
+        classification_service_objective_text_formatted = format_safe(
+            service_level_objective_text,
+            {
+                "melding_categorie_service_belofte_dagen": service_level_objective_days,
+                "melding_categorie_service_belofte_dag_type": service_level_objective_day_type,
+            },
+        )
+        await self._send(
+            melding,
+            format_safe(
+                self._body_template,
+                {
+                    "melding_tekst": melding.text,
+                    "melding_id": melding.public_id,
+                    "melding_categorie_service_belofte_dagen": service_level_objective_days,
+                    "melding_categorie_service_belofte_dag_type": service_level_objective_day_type,
+                    "melding_categorie_service_belofte_tekst": classification_service_objective_text_formatted,
+                },
+            ).strip(),
+        )
 
 
 class SendCompletedMailTask(SendMailTask):
