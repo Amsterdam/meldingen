@@ -1,7 +1,7 @@
 import datetime
 from typing import Any
 
-from meldingen.models import ServiceLevelObjectiveDayType
+from meldingen.schemas.types import DaysType
 
 
 class SafeTemplateDict(dict[str, Any]):
@@ -16,7 +16,7 @@ def format_safe(template: str, mapping: dict[str, Any]) -> str:
 def days_passed_since(
     date: datetime.date,
     date2: datetime.date | None,
-    days_type: ServiceLevelObjectiveDayType = ServiceLevelObjectiveDayType.calendar_days,
+    days_type: DaysType = DaysType.calendar_days,
 ) -> int:
     """Count days in the half-open interval [date, date2) according to the specified day type.
 
@@ -30,7 +30,7 @@ def days_passed_since(
         date2 = datetime.datetime.now(datetime.UTC).date()
 
     # Calendar days, all days are counted
-    if days_type == ServiceLevelObjectiveDayType.calendar_days:
+    if days_type == DaysType.calendar_days:
         return (date2 - date).days
 
     # Workdays, excluding weekends

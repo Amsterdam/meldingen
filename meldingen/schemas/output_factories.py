@@ -671,6 +671,8 @@ class SimpleClassificationOutputFactory:
             asset_type=self._output_asset_type(asset_type) if asset_type else None,
             created_at=classification.created_at,
             updated_at=classification.updated_at,
+            service_level_objective_days=classification.service_level_objective_days,
+            service_level_objective_day_type=classification.service_level_objective_day_type,
         )
 
 
@@ -772,6 +774,7 @@ class MeldingOutputFactory:
             state=melding.state,
             urgency=melding.urgency,
             classification=await self._output_classification(classification),
+            classification_service_level_objective_days_passed=melding.classification_service_level_objective_days_passed,
             created_at=melding.created_at,
             updated_at=melding.updated_at,
             geo_location=geojson,
@@ -803,6 +806,7 @@ class MeldingCreateOutputFactory:
             state=melding.state,
             urgency=melding.urgency,
             classification=await self._output_classification(classification),
+            classification_service_level_objective_days_passed=melding.classification_service_level_objective_days_passed,
             token=melding.token,
             created_at=melding.created_at,
             updated_at=melding.updated_at,

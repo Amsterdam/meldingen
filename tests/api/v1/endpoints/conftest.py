@@ -190,6 +190,7 @@ async def melding(
     melding_phone: str | None,
     melding_labels: list[str],
     melding_urgency: int,
+    classification: Classification | None,
 ) -> Melding:
     melding = Melding(text=melding_text)
     melding.public_id = melding_public_id
@@ -219,6 +220,7 @@ async def melding(
     melding.city = melding_city
 
     melding.urgency = melding_urgency
+    melding.classification = classification
 
     db_session.add(melding)
     await db_session.commit()

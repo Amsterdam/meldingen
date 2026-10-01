@@ -19,9 +19,8 @@ from meldingen.models import (
     AnswerTypeEnum,
     FormIoComponentTypeEnum,
     FormIoFormDisplayEnum,
-    ServiceLevelObjectiveDayType,
 )
-from meldingen.schemas.types import DateAnswerObject, FormIOConditional, PhoneNumber, ValueLabelObject
+from meldingen.schemas.types import DateAnswerObject, DaysType, FormIOConditional, PhoneNumber, ValueLabelObject
 from meldingen.validators import create_non_match_validator
 
 NOTE_MAX_PLAIN_TEXT_LENGTH = 1000
@@ -73,7 +72,7 @@ class ClassificationInput(BaseModel):
     ]
     # These 2 are optional, defaults are added automatically if not provided.
     service_level_objective_days: int | None = Field(default=None, ge=1, le=SERVICE_LEVEL_OBJECTIVE_DAYS_MAX)
-    service_level_objective_day_type: ServiceLevelObjectiveDayType | None = Field(default=None)
+    service_level_objective_day_type: DaysType | None = Field(default=None)
     instructions: str | None = Field(default=None)
 
 
@@ -101,7 +100,7 @@ class ClassificationUpdateInput(BaseModel):
         | None
     ) = Field(default=None)
     service_level_objective_days: int | None = Field(default=None, ge=1, le=SERVICE_LEVEL_OBJECTIVE_DAYS_MAX)
-    service_level_objective_day_type: ServiceLevelObjectiveDayType | None = Field(default=None)
+    service_level_objective_day_type: DaysType | None = Field(default=None)
 
 
 class MeldingInput(BaseModel):

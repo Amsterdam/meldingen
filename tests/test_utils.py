@@ -1,6 +1,6 @@
 import datetime
 
-from meldingen.models import ServiceLevelObjectiveDayType
+from meldingen.schemas.types import DaysType
 from meldingen.utils import days_passed_since, format_safe
 
 
@@ -17,7 +17,7 @@ def test_days_passed_since_calendar_days_uses_half_open_interval() -> None:
     start = datetime.date(2026, 9, 24)
     end = datetime.date(2026, 10, 1)
 
-    days = days_passed_since(start, end, ServiceLevelObjectiveDayType.calendar_days)
+    days = days_passed_since(start, end, DaysType.calendar_days)
 
     assert days == 7
 
@@ -26,7 +26,7 @@ def test_days_passed_since_working_days_excludes_weekends() -> None:
     start = datetime.date(2026, 9, 26)  # Saturday
     end = datetime.date(2026, 10, 1)  # Thursday
 
-    days = days_passed_since(start, end, ServiceLevelObjectiveDayType.working_days)
+    days = days_passed_since(start, end, DaysType.working_days)
 
     assert days == 3
 
@@ -37,12 +37,12 @@ def test_days_passed_since_same_start_and_end_is_zero() -> None:
     calendar_days = days_passed_since(
         day,
         day,
-        ServiceLevelObjectiveDayType.calendar_days,
+        DaysType.calendar_days,
     )
     working_days = days_passed_since(
         day,
         day,
-        ServiceLevelObjectiveDayType.working_days,
+        DaysType.working_days,
     )
 
     assert calendar_days == 0
@@ -64,12 +64,12 @@ def test_days_passed_since_uses_current_utc_date_when_end_is_none(monkeypatch) -
     calendar_days = days_passed_since(
         start,
         None,
-        ServiceLevelObjectiveDayType.calendar_days,
+        DaysType.calendar_days,
     )
     working_days = days_passed_since(
         start,
         None,
-        ServiceLevelObjectiveDayType.working_days,
+        DaysType.working_days,
     )
 
     assert calendar_days == 2
