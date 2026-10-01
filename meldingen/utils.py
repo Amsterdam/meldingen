@@ -33,9 +33,8 @@ def days_passed_since(
     if days_type == DaysType.calendar_days:
         return (date2 - date).days
 
-    # Workdays, excluding weekends
-    daygenerator = (
-        date + datetime.timedelta(x) for x in range((date2 - date).days)
-    )  # generate days in [d1, d2), matching numpy.busday_count
+    # Generate all days between date and date2
+    daygenerator = (date + datetime.timedelta(x) for x in range((date2 - date).days))
 
+    # Calculate the number of weekdays (Monday to Friday) between date and date2
     return sum(1 for day in daygenerator if day.weekday() < 5)
