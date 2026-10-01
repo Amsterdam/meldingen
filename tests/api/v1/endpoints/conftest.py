@@ -47,6 +47,7 @@ from meldingen.models import (
     User,
     ValueLabelAnswer,
 )
+from meldingen.utils import utc_now
 
 
 @pytest.fixture
@@ -87,7 +88,7 @@ def melding_geo_location(request: FixtureRequest) -> str | None:
 def melding_token_expires(request: FixtureRequest) -> dt.datetime | None:
     if hasattr(request, "param"):
         timedelta_adapter = TypeAdapter(timedelta)
-        return dt.datetime.now(tz=dt.UTC) - timedelta_adapter.validate_python(request.param)
+        return utc_now() - timedelta_adapter.validate_python(request.param)
 
     return None
 
@@ -687,7 +688,7 @@ def user_email(request: FixtureRequest) -> str:
 @pytest.fixture
 def auth_user(app: FastAPI, user_username: str, user_email: str) -> None:
     async def authenticate_user_override() -> User:
-        now = datetime.now(tz=dt.UTC)
+        now = utc_now()
         user = User(username=user_username, email=user_email)
         user.id = 400
         user.created_at = now

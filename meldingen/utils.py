@@ -1,3 +1,4 @@
+import datetime
 from typing import Any
 
 
@@ -8,3 +9,11 @@ class SafeTemplateDict(dict[str, Any]):
 
 def format_safe(template: str, mapping: dict[str, Any]) -> str:
     return template.format_map(SafeTemplateDict(mapping))
+
+
+def utc_now() -> datetime.datetime:
+    return datetime.datetime.now(tz=datetime.UTC)
+
+
+def utc_datetime(*args) -> datetime.datetime:
+    return datetime.datetime(*args, tzinfo=datetime.UTC)
