@@ -839,8 +839,9 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        melding: Melding,
+        melding_with_classification: Melding,
     ) -> None:
+        melding = melding_with_classification
         response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=melding.id))
 
         assert response.status_code == HTTP_200_OK
