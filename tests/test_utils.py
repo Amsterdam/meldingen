@@ -1,5 +1,6 @@
 import datetime
 
+from meldingen import utils
 from meldingen.schemas.types import DaysType
 from meldingen.utils import days_passed_since, format_safe
 
@@ -52,10 +53,8 @@ def test_days_passed_since_same_start_and_end_is_zero() -> None:
 def test_days_passed_since_uses_current_utc_date_when_end_is_none(monkeypatch) -> None:
     class FrozenDateTime(datetime.datetime):
         @classmethod
-        def now(cls, tz=None):
+        def now(cls, tz=None) -> datetime.datetime:
             return cls(2026, 10, 1, tzinfo=tz)
-
-    from meldingen import utils
 
     monkeypatch.setattr(utils.datetime, "datetime", FrozenDateTime)
 
