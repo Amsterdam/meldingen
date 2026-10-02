@@ -812,6 +812,7 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         [
+            "classification_name",
             "melding_text",
             "melding_street",
             "melding_house_number",
@@ -820,12 +821,27 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
             "melding_city",
         ],
         [
-            ("Er ligt poep op de stoep.", "Amstel", 1, None, "1011PN", "Amsterdam"),
-            ("Er is een matras naast de prullenbak gedumpt.", "Stationsplein", 35, "D", "1012AB", "Amsterdam"),
+            ("My Classification", "Er ligt poep op de stoep.", "Amstel", 1, None, "1011PN", "Amsterdam"),
+            (
+                "My Classification",
+                "Er is een matras naast de prullenbak gedumpt.",
+                "Stationsplein",
+                35,
+                "D",
+                "1012AB",
+                "Amsterdam",
+            ),
         ],
         indirect=True,
     )
-    async def test_retrieve_melding(self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding) -> None:
+    async def test_retrieve_melding(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding_with_classification: Melding,
+    ) -> None:
+        melding = melding_with_classification
         response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=melding.id))
 
         assert response.status_code == HTTP_200_OK
@@ -835,7 +851,13 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert body.get("text") == melding.text
         assert body.get("state") == MeldingStates.NEW
         assert body.get("urgency") == 0
-        assert body.get("classification") is None
+        assert body.get("classification").get("name") == "My Classification"
+        assert body.get("classification").get("service_level_objective_day_type") == "calendar_days"
+        assert body.get("classification").get("service_level_objective_days") == 5
+        assert (
+            body.get("classification_service_level_objective_days_passed")
+            == melding.classification_service_level_objective_days_passed
+        )
         assert body.get("geo_location", "") is None
         assert body.get("email", "") is None
         assert body.get("phone", "") is None

@@ -5,9 +5,10 @@ from pydantic import AliasGenerator, BaseModel, ConfigDict, EmailStr, Field, fie
 from pydantic.alias_generators import to_camel
 from pydantic_jsonlogic import JSONLogic
 
-from meldingen.models import AnswerTypeEnum, ServiceLevelObjectiveDayType
+from meldingen.models import AnswerTypeEnum
 from meldingen.schemas.types import (
     DateAnswerObject,
+    DaysType,
     FormIOConditional,
     GeoJson,
     PhoneNumber,
@@ -47,6 +48,8 @@ class SimpleClassificationOutput(BaseOutputModel):
     name: str
     instructions: str | None = Field(default=None)
     asset_type: AssetTypeOutput | None = Field(default=None)
+    service_level_objective_days: int
+    service_level_objective_day_type: DaysType
 
 
 class ClassificationOutput(BaseOutputModel):
@@ -56,7 +59,7 @@ class ClassificationOutput(BaseOutputModel):
     asset_type: int | None = None
     service_level_objective_text: str
     service_level_objective_days: int
-    service_level_objective_day_type: ServiceLevelObjectiveDayType
+    service_level_objective_day_type: DaysType
 
 
 class LabelOutput(BaseOutputModel):
@@ -82,6 +85,7 @@ class MeldingOutput(BaseOutputModel):
     state: str
     urgency: Literal[-1, 0, 1]
     classification: SimpleClassificationOutput | None = Field(default=None)
+    classification_service_level_objective_days_passed: int | None = Field(default=None)
     geo_location: GeoJson | None = Field(default=None)
     street: str | None = Field(default=None)
     house_number: int | None = Field(default=None)

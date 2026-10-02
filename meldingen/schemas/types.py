@@ -1,4 +1,5 @@
 import datetime
+import enum
 import re
 from typing import Annotated, Any
 
@@ -70,3 +71,8 @@ class ValueLabelObject(BaseModel):
 
     value: str
     label: str
+
+
+class DaysType(enum.StrEnum):
+    working_days = "working_days"
+    calendar_days = "calendar_days"

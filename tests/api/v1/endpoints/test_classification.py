@@ -21,9 +21,9 @@ from meldingen.models import (
     Classification,
     Form,
     Melding,
-    ServiceLevelObjectiveDayType,
 )
 from meldingen.repositories import ClassificationRepository
+from meldingen.schemas.types import DaysType
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
@@ -52,7 +52,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert data.get("instructions") == "test instructions"
         assert data.get("service_level_objective_text") == "Foo Bar"
         assert data.get("service_level_objective_days") is SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT
-        assert data.get("service_level_objective_day_type") == ServiceLevelObjectiveDayType.calendar_days
+        assert data.get("service_level_objective_day_type") == DaysType.calendar_days
         assert data.get("form", "") is None
         assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None
@@ -69,7 +69,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
                 "instructions": "test instructions",
                 "service_level_objective_text": "Foo Bar",
                 "service_level_objective_days": 10,
-                "service_level_objective_day_type": ServiceLevelObjectiveDayType.calendar_days,
+                "service_level_objective_day_type": DaysType.calendar_days,
             },
         )
 
@@ -81,7 +81,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         assert data.get("instructions") == "test instructions"
         assert data.get("service_level_objective_text") == "Foo Bar"
         assert data.get("service_level_objective_days") == 10
-        assert data.get("service_level_objective_day_type") == ServiceLevelObjectiveDayType.calendar_days
+        assert data.get("service_level_objective_day_type") == DaysType.calendar_days
         assert data.get("form", "") is None
         assert data.get("asset_type", "") is None
         assert data.get("created_at") is not None

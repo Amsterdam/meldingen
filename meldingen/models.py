@@ -38,6 +38,9 @@ from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column, relationship
 
+from meldingen.schemas.types import DaysType
+from meldingen.utils import days_passed_since
+
 
 class BaseDBModel(MappedAsDataclass, DeclarativeBase):
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
@@ -70,12 +73,7 @@ class Asset(BaseDBModel, BaseAsset):
     subtype: Mapped[str] = mapped_column(String)
 
 
-class ServiceLevelObjectiveDayType(enum.StrEnum):
-    working_days = "working_days"
-    calendar_days = "calendar_days"
-
-
-SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT = ServiceLevelObjectiveDayType.calendar_days
+SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT = DaysType.calendar_days
 SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT = 5
 SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT = "-"
 
@@ -101,10 +99,10 @@ class Classification(AsyncAttrs, BaseDBModel, BaseClassification):
     service_level_objective_days: Mapped[int] = mapped_column(
         Integer, default=SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT, server_default=str(SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT)
     )
-    service_level_objective_day_type: Mapped[ServiceLevelObjectiveDayType] = mapped_column(
-        Enum(ServiceLevelObjectiveDayType, name="service_level_objective_day_type"),
-        default=ServiceLevelObjectiveDayType.calendar_days,
-        server_default=ServiceLevelObjectiveDayType.calendar_days,
+    service_level_objective_day_type: Mapped[DaysType] = mapped_column(
+        Enum(DaysType, name="service_level_objective_day_type"),
+        default=DaysType.calendar_days,
+        server_default=DaysType.calendar_days,
     )
 
     # Instructions that are passed to an LLM for automatic melding classification.
@@ -181,6 +179,15 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     )
     source_id: Mapped[int | None] = mapped_column(ForeignKey("source.id"), default=None)
     source: Mapped[Source | None] = relationship(default=None, lazy="joined")
+
+    @property
+    def classification_service_level_objective_days_passed(self) -> int | None:
+        if not self.classification:
+            return None
+
+        return days_passed_since(
+            self.created_at.date(), None, days_type=self.classification.service_level_objective_day_type
+        )
 
 
 user_group = Table(
