@@ -15,5 +15,5 @@ def utc_now() -> datetime.datetime:
     return datetime.datetime.now(tz=datetime.UTC)
 
 
-def utc_datetime(*args) -> datetime.datetime:
+def utc_datetime(*args: int) -> datetime.datetime:
     return datetime.datetime(*args, tzinfo=datetime.UTC)
