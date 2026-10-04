@@ -15,6 +15,22 @@ def utc_now() -> datetime.datetime:
     return datetime.datetime.now(tz=datetime.UTC)
 
 
-def utc_datetime(*args: int) -> datetime.datetime:
-    args_filtered = [arg for arg in args if arg != "tzinfo"]
-    return datetime.datetime(*args_filtered, tzinfo=datetime.UTC)
+def utc_datetime(
+    year: int,
+    month: int,
+    day: int,
+    hour: int = 0,
+    minute: int = 0,
+    second: int = 0,
+    microsecond: int = 0,
+) -> datetime.datetime:
+    return datetime.datetime(
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+        microsecond,
+        tzinfo=datetime.UTC,
+    )
