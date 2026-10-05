@@ -40,7 +40,7 @@ TLS flags are mutually exclusive in normal setups:
 | mail_melding_confirmation_title | string | Uw melding | Title shown in the confirmation template. |
 | mail_melding_confirmation_preview_text | string | Uw melding: `{melding_id}` | Preview text/snippet shown by some clients. |
 | mail_melding_confirmation_subject | string | Uw melding `{melding_id}`: melding ontvangen | Subject line for confirmation messages. |
-| mail_melding_confirmation_service_belofte_default | string | Dutch default text | Fallback service promise text when no category-specific text is available. |
+| mail_melding_confirmation_service_belofte_default | string | Dutch default text | Fallback service promise text when no category-specific text is available. This value can contain the following placeolders: `{melding_categorie_service_belofte_dagen}` and `{melding_categorie_service_belofte_dag_type}` |
 | mail_melding_confirmation_body_text | string | Dutch markdown body | Main markdown body of the confirmation mail. This value *must* contain a template placeholder `{melding_categorie_service_belofte_tekst}` to use the configured service belofte. |
 
 
@@ -56,7 +56,7 @@ If you add custom service belofte text to a Classification, that custom text is 
 - `{melding_categorie_service_belofte_dagen}`
 - `{melding_categorie_service_belofte_dag_type}` (dagen of werkdagen)
 
-These values come from the Classification edit screen. For example, with this service belofte text:
+These values come from the Classification source. For example, with this service belofte text:
 
 ```
 Wij pakken uw melding binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} op.
