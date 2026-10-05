@@ -46,7 +46,7 @@ TLS flags are mutually exclusive in normal setups:
 
 #### Service belofte
 
-You can override the service belofte text per Classification in the Administration panel.
+You can override the service belofte text per Classification created.
 
 *Default service belofte from config*  
 If a Classification uses the default service belofte value (`-`), the application uses the value from the config.
