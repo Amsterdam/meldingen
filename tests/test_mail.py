@@ -285,7 +285,7 @@ class TestMailFormatting:
         )
 
     @pytest.mark.parametrize("service_belofte_text", ["Wij gaan aan de slag en nemen contact met u op."])
-    async def test_send_mail__with_default_confirmation_mail_and_custom_service_belofte(self, melding: Melding) -> None:
+    async def test_send_mail_with_default_confirmation_mail_and_custom_service_belofte(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
             body_template=settings.mail_melding_confirmation_body_text,
         )
