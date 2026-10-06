@@ -804,7 +804,7 @@ class MeldingCreateOutputFactory:
             state=melding.state,
             urgency=melding.urgency,
             classification=await self._output_classification(classification),
-            classification_service_level_objective_days_passed=melding.classification_service_level_objective_days_passed,
+            service_level_objective=melding.service_level_objective,
             token=melding.token,
             created_at=melding.created_at,
             updated_at=melding.updated_at,
