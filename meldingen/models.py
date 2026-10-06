@@ -1,6 +1,6 @@
 import enum
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, ClassVar, Optional, Union
 
 from geoalchemy2 import Geometry, WKBElement
@@ -146,7 +146,7 @@ class Source(BaseDBModel, BaseSource):
 
 @dataclass
 class MeldingServiceLevelObjective:
-    date_start: datetime
+    date_start: date
     days: int
     day_type: DaysType
 
