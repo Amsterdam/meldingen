@@ -284,6 +284,19 @@ class TestMailFormatting:
             "Tekst Kapotte stoeptegel ABC123",
         )
 
+    @pytest.mark.parametrize("service_belofte_text", ["Wij gaan aan de slag en nemen contact met u op."])
+    async def test_send_mail_with_default_confirmation_mail_and_custom_service_belofte(self, melding: Melding) -> None:
+        renderer, task, _mailer = self.send_mail_task(
+            body_template=settings.mail_melding_confirmation_body_text,
+        )
+
+        await task(melding)
+        renderer.assert_awaited_once_with(
+            "Titel",
+            "Preview ABC123",
+            "U heeft ons het volgende laten weten:\n\n*Kapotte stoeptegel*\n\n### Wat we doen met uw melding\nWij gaan aan de slag en nemen contact met u op.\n\n### Meer weten?\nHeeft u nog een vraag over uw melding? Bel met het telefoonnummer [14 020](tel:14020), maandag tot en met vrijdag\nvan 08.00 tot 18.00. Geef dan ook het nummer van uw melding door: ABC123.\n\nMet vriendelijke groet,\n\nGemeente Amsterdam\n\n*Dit bericht is automatisch gemaakt met de informatie uit uw melding.*",
+        )
+
     async def test_send_mail_with_default_confirmation_mail_without_markdown_parsing(self, melding: Melding) -> None:
         renderer, task, _mailer = self.send_mail_task(
             body_template=settings.mail_melding_confirmation_body_text,
