@@ -1,4 +1,5 @@
 import enum
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, ClassVar, Optional, Union
 
@@ -143,6 +144,13 @@ class Source(BaseDBModel, BaseSource):
     name: Mapped[str] = mapped_column(String, unique=True)
 
 
+@dataclass
+class MeldingServiceLevelObjective:
+    days: int
+    day_type: DaysType
+    days_passed: int
+
+
 class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     __table_args__ = (CheckConstraint("urgency in (-1, 0, 1)", name="ck_melding_urgency"),)
 
@@ -181,12 +189,16 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     source: Mapped[Source | None] = relationship(default=None, lazy="joined")
 
     @property
-    def classification_service_level_objective_days_passed(self) -> int | None:
+    def service_level_objective(self) -> MeldingServiceLevelObjective | None:
         if not self.classification:
             return None
 
-        return days_passed_since(
-            self.created_at.date(), None, days_type=self.classification.service_level_objective_day_type
+        return MeldingServiceLevelObjective(
+            days=self.classification.service_level_objective_days,
+            day_type=self.classification.service_level_objective_day_type,
+            days_passed=days_passed_since(
+                self.created_at.date(), None, days_type=self.classification.service_level_objective_day_type
+            ),
         )
 
 

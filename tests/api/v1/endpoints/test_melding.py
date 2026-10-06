@@ -852,11 +852,10 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         assert body.get("state") == MeldingStates.NEW
         assert body.get("urgency") == 0
         assert body.get("classification").get("name") == "My Classification"
-        assert body.get("classification").get("service_level_objective_day_type") == "calendar_days"
-        assert body.get("classification").get("service_level_objective_days") == 5
-        assert (
-            body.get("classification_service_level_objective_days_passed")
-            == melding.classification_service_level_objective_days_passed
+        assert body.get("service_level_objective").get("day_type") == "calendar_days"
+        assert body.get("service_level_objective").get("days") == 5
+        assert body.get("service_level_objective").get("days_passed") == getattr(
+            melding.service_level_objective, "days_passed", None
         )
         assert body.get("geo_location", "") is None
         assert body.get("email", "") is None
@@ -880,6 +879,16 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
 
         body = response.json()
         assert body.get("detail") == "Not Found"
+
+    @pytest.mark.anyio
+    async def test_retrieve_melding_without_classification_service_level_objective(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=1))
+        body = response.json()
+
+        assert body.get("classification") is None
+        assert body.get("service_level_objective") is None
 
 
 class BaseTokenAuthenticationTest(metaclass=ABCMeta):
