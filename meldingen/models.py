@@ -146,9 +146,13 @@ class Source(BaseDBModel, BaseSource):
 
 @dataclass
 class MeldingServiceLevelObjective:
+    date_start: datetime
     days: int
     day_type: DaysType
-    days_passed: int
+
+    @property
+    def days_passed(self) -> int:
+        return days_passed_since(self.date_start, None, days_type=self.day_type)
 
 
 class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
@@ -196,9 +200,7 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
         return MeldingServiceLevelObjective(
             days=self.classification.service_level_objective_days,
             day_type=self.classification.service_level_objective_day_type,
-            days_passed=days_passed_since(
-                self.created_at.date(), None, days_type=self.classification.service_level_objective_day_type
-            ),
+            date_start=self.created_at,
         )
 
 
