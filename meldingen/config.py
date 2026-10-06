@@ -130,13 +130,13 @@ class Settings(BaseSettings):
 
     mail_melding_confirmation_title: str = "Uw melding"
     mail_melding_confirmation_preview_text: str = "Uw melding: {melding_id}"
-    mail_melding_confirmation_service_belofte_default: str = "We laten u binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken."
+    mail_melding_confirmation_service_belofte_default: str = "We onderzoeken uw melding en kijken wat we kunnen oppakken. We laten u binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type} weten wat we hebben gedaan. En anders hoort u wanneer wij uw melding kunnen oppakken. We houden u op de hoogte via e-mail."
     mail_melding_confirmation_body_text: str = """U heeft ons het volgende laten weten:
 
 *{melding_tekst}*
 
 ### Wat we doen met uw melding
-We onderzoeken uw melding en kijken wat we kunnen oppakken. {melding_categorie_service_belofte_tekst} We houden u op de hoogte via e-mail.
+{melding_categorie_service_belofte_tekst}
 
 ### Meer weten?
 Heeft u nog een vraag over uw melding? Bel met het telefoonnummer [14 020](tel:14020), maandag tot en met vrijdag
