@@ -55,6 +55,7 @@ from meldingen.schemas.output import (
     LabelOutput,
     MeldingCreateOutput,
     MeldingOutput,
+    MeldingServiceLevelObjectiveOutput,
     MeldingUpdateOutput,
     NoteOutput,
     NoteRetrieveOutput,
@@ -765,6 +766,17 @@ class MeldingOutputFactory:
         labels = await melding.awaitable_attrs.labels
         source = await melding.awaitable_attrs.source
 
+        service_level_objective = (
+            MeldingServiceLevelObjectiveOutput(
+                days=melding.service_level_objective.days,
+                day_type=melding.service_level_objective.day_type,
+                date_start=melding.service_level_objective.date_start,
+                days_passed=melding.service_level_objective.days_passed,
+            )
+            if melding.service_level_objective
+            else None
+        )
+
         return MeldingOutput(
             id=melding.id,
             public_id=melding.public_id,
@@ -772,6 +784,7 @@ class MeldingOutputFactory:
             state=melding.state,
             urgency=melding.urgency,
             classification=await self._output_classification(classification),
+            service_level_objective=service_level_objective,
             created_at=melding.created_at,
             updated_at=melding.updated_at,
             geo_location=geojson,
@@ -796,6 +809,17 @@ class MeldingCreateOutputFactory:
     async def __call__(self, melding: Melding) -> MeldingCreateOutput:
         classification = await melding.awaitable_attrs.classification
 
+        service_level_objective = (
+            MeldingServiceLevelObjectiveOutput(
+                days=melding.service_level_objective.days,
+                day_type=melding.service_level_objective.day_type,
+                date_start=melding.service_level_objective.date_start,
+                days_passed=melding.service_level_objective.days_passed,
+            )
+            if melding.service_level_objective
+            else None
+        )
+
         return MeldingCreateOutput(
             id=melding.id,
             public_id=melding.public_id,
@@ -803,6 +827,7 @@ class MeldingCreateOutputFactory:
             state=melding.state,
             urgency=melding.urgency,
             classification=await self._output_classification(classification),
+            service_level_objective=service_level_objective,
             token=melding.token,
             created_at=melding.created_at,
             updated_at=melding.updated_at,

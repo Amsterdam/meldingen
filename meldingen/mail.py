@@ -10,8 +10,8 @@ from meldingen.models import (
     SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
     SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT,
     Melding,
-    ServiceLevelObjectiveDayType,
 )
+from meldingen.schemas.types import DaysType
 from meldingen.utils import format_safe
 
 logger = logging.getLogger(__name__)
@@ -80,9 +80,9 @@ class SendMailTask:
             raise
 
 
-ServiceLevelObjectiveDayTypeReadable = {
-    ServiceLevelObjectiveDayType.working_days: "werkdagen",
-    ServiceLevelObjectiveDayType.calendar_days: "dagen",
+DaysTypeReadable = {
+    DaysType.working_days: "werkdagen",
+    DaysType.calendar_days: "dagen",
 }
 
 
@@ -109,7 +109,7 @@ class SendConfirmationMailTask(SendMailTask):
             return (
                 self._service_belofte_template,
                 SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
-                ServiceLevelObjectiveDayTypeReadable[SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT],
+                DaysTypeReadable[SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT],
             )
 
         service_level_objective_text = (
@@ -118,9 +118,7 @@ class SendConfirmationMailTask(SendMailTask):
             else self._service_belofte_template
         )
         service_level_objective_days = melding.classification.service_level_objective_days
-        service_level_objective_day_type = ServiceLevelObjectiveDayTypeReadable[
-            melding.classification.service_level_objective_day_type
-        ]
+        service_level_objective_day_type = DaysTypeReadable[melding.classification.service_level_objective_day_type]
 
         # If the service level objective is only 1 day, remove the plural suffix from the day type.
         if service_level_objective_days == 1:
