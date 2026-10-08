@@ -52,7 +52,7 @@ def days_passed_since(
     """
 
     if date2 is None:
-        date2 = datetime.datetime.now(datetime.UTC).date()
+        date2 = utc_now().date()
 
     # Calendar days, all days are counted
     if days_type == DaysType.calendar_days:
