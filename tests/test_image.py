@@ -9,6 +9,7 @@ from meldingen_core.image import BaseImageOptimizer, BaseThumbnailGenerator
 from meldingen_core.malware import BaseMalwareScanner
 from plugfs.filesystem import Filesystem
 
+from meldingen.config import settings
 from meldingen.factories import BaseFilesystemFactory
 from meldingen.image import (
     BaseMetadataStripper,
@@ -113,7 +114,9 @@ async def test_imgproxy_image_processor() -> None:
 
     processed_path, media_type = await process("path/to/image.jpg", "processed")
 
-    http_client.stream.assert_called_with("GET", "http://some.url")
+    http_client.stream.assert_called_with(
+        "GET", "http://some.url", timeout=settings.request_timeout_to_imgproxy_optimizer
+    )
     filesystem.write_iterator.assert_awaited_once()
     assert processed_path == "path/to/image-processed.webp"
     assert media_type == "image/webp"
@@ -185,7 +188,9 @@ async def test_imgproxy_metadata_stripper() -> None:
 
     await strip_metadata("path/to/image.jpg")
 
-    http_client.get.assert_awaited_once_with("http://some.url")
+    http_client.get.assert_awaited_once_with(
+        "http://some.url", timeout=settings.request_timeout_to_imgproxy_metadata_stripper
+    )
     # The metadata free image replaces the original
     filesystem.write.assert_awaited_once_with("path/to/image.jpg", b"stripped image")
 
