@@ -67,8 +67,8 @@ class Settings(BaseSettings):
     # Quality imgproxy re-encodes uploaded images with when stripping their metadata. Higher than
     # the imgproxy default of 80, since this replaces the original the backoffice works with.
     imgproxy_metadata_strip_quality: int = 90
-    request_timeout_to_imgproxy_optimizer: float = 10.0
-    request_timeout_to_imgproxy_metadata_stripper: float = 10.0
+    request_timeout_to_imgproxy_optimizer: int = 10
+    request_timeout_to_imgproxy_metadata_stripper: int = 10
 
     # azure storage blobs
     azure_storage_container: str
