@@ -14,6 +14,7 @@ from meldingen_core.malware import BaseMalwareScanner
 from plugfs.filesystem import Filesystem
 from starlette.status import HTTP_200_OK
 
+from meldingen.config import settings
 from meldingen.factories import BaseFilesystemFactory
 from meldingen.models import Attachment
 from meldingen.repositories import AttachmentRepository
@@ -147,7 +148,9 @@ class IMGProxyMetadataStripper(BaseMetadataStripper):
         async for _filesystem in self._filesystem_factory():
             # The stripped image is read into memory in one go instead of streamed, so we never
             # start overwriting the image while imgproxy could still be reading it.
-            response = await self._http_client.get(self._generate_url(image_path))
+            response = await self._http_client.get(
+                self._generate_url(image_path), timeout=settings.request_timeout_to_imgproxy_metadata_stripper
+            )
             if response.status_code != HTTP_200_OK:
                 raise MetadataStripperException()
 
@@ -180,7 +183,9 @@ class IMGProxyImageProcessor:
             file_path, _ = image_path.rsplit(".", 1)
             processed_path = f"{file_path}-{suffix}.webp"
 
-            async with self._http_client.stream("GET", imgproxy_url) as response:
+            async with self._http_client.stream(
+                "GET", imgproxy_url, timeout=settings.request_timeout_to_imgproxy_optimizer
+            ) as response:
                 if response.status_code != HTTP_200_OK:
                     raise ImageOptimizerException()
 
