@@ -2082,7 +2082,7 @@ requires-dist = [
     { name = "httpx", extras = ["http2"], specifier = ">=0.28.1,<1.0.0" },
     { name = "jinja2", specifier = ">=3.1.4,<4.0.0" },
     { name = "markdown-it-py", specifier = ">=4.0.0,<5.0.0" },
-    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git" },
+    { name = "meldingen-core", git = "https://github.com/Amsterdam/meldingen-core.git?branch=5754%2Fset-assets-action" },
     { name = "mp-fsm", git = "https://github.com/Amsterdam/mp-fsm.git" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.29.0,<2.0.0" },
     { name = "opentelemetry-instrumentation-aiohttp-client", specifier = ">=0.55b1,<1.0" },
@@ -2130,7 +2130,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git#cb29eb9787e0e9a04b63d41bb6506e1020f87fd7" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=5754%2Fset-assets-action#5fea5e3e991be728390d82c7ac7951a12c067b85" }
 dependencies = [
     { name = "plugfs" },
 ]

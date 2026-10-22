@@ -25,6 +25,7 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
     HTTP_413_CONTENT_TOO_LARGE,
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
@@ -6187,6 +6188,162 @@ class TestMeldingSubmit(BaseUnauthorizedTest):
         )
 
         assert response.status_code == HTTP_404_NOT_FOUND
+
+
+class TestMeldingSetAssets(BaseTokenAuthenticationTest):
+    def get_route_name(self) -> str:
+        return "melding:set-assets"
+
+    def get_method(self) -> str:
+        return "PUT"
+
+    async def get_assets(self, app: FastAPI, client: AsyncClient, melding: Melding) -> list[dict[str, Any]]:
+        response = await client.get(
+            app.url_path_for("melding:assets_melder", melding_id=melding.id), params={"token": melding.token}
+        )
+
+        assert response.status_code == HTTP_200_OK
+        return response.json()
+
+    @override
+    def get_json(self) -> dict[str, Any] | None:
+        return {
+            "asset_type_id": 123,
+            "assets": [{"external_id": "some_external_id", "label": "Container 123", "subtype": "gft"}],
+        }
+
+    @pytest.mark.anyio
+    async def test_set_assets_to_melding_that_does_not_exist(self, app: FastAPI, client: AsyncClient) -> None:
+        response = await client.put(
+            app.url_path_for(self.get_route_name(), melding_id=123),
+            params={"token": "supersecrettoken"},
+            json=self.get_json(),
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+        assert response.json().get("detail") == "Melding not found"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_set_assets_when_melding_has_no_asset_type(
+        self, app: FastAPI, client: AsyncClient, melding: Melding
+    ) -> None:
+        response = await client.put(
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
+            params={"token": melding.token},
+            json=self.get_json(),
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+        assert response.json().get("detail") == "Failed to find asset type for melding"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_set_assets_with_asset_type_that_does_not_exist(
+        self, app: FastAPI, client: AsyncClient, melding_with_assets_with_classification_and_asset_type: Melding
+    ) -> None:
+        response = await client.put(
+            app.url_path_for(
+                self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
+            ),
+            params={"token": melding_with_assets_with_classification_and_asset_type.token},
+            json={"asset_type_id": 123456789, "assets": []},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+        assert response.json().get("detail") == "Failed to find asset type with id 123456789"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_set_assets_creates_assets_and_updates_existing_assets(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_assets_with_classification_and_asset_type: Melding,
+    ) -> None:
+        assert melding_with_assets_with_classification_and_asset_type.classification is not None
+        asset_type = melding_with_assets_with_classification_and_asset_type.classification.asset_type
+        assert asset_type is not None
+
+        response = await client.put(
+            app.url_path_for(
+                self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
+            ),
+            params={"token": melding_with_assets_with_classification_and_asset_type.token},
+            json={
+                "asset_type_id": asset_type.id,
+                "assets": [
+                    {"external_id": "external_id_0", "label": "Updated label", "subtype": "updated"},
+                    {"external_id": "new_external_id", "label": "New label", "subtype": "new"},
+                ],
+            },
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        assets = await self.get_assets(app, client, melding_with_assets_with_classification_and_asset_type)
+        assets_by_external_id = {asset["external_id"]: asset for asset in assets}
+        assert assets_by_external_id["external_id_0"]["label"] == "Updated label"
+        assert assets_by_external_id["external_id_0"]["subtype"] == "updated"
+        assert assets_by_external_id["new_external_id"]["label"] == "New label"
+        assert assets_by_external_id["new_external_id"]["subtype"] == "new"
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_set_assets_when_limit_is_reached(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_assets_with_classification_and_asset_type: Melding,
+    ) -> None:
+        assert melding_with_assets_with_classification_and_asset_type.classification is not None
+        asset_type = melding_with_assets_with_classification_and_asset_type.classification.asset_type
+        assert asset_type is not None
+
+        response = await client.put(
+            app.url_path_for(
+                self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
+            ),
+            params={"token": melding_with_assets_with_classification_and_asset_type.token},
+            json={
+                "asset_type_id": asset_type.id,
+                "assets": [
+                    {"external_id": f"new_external_id_{index}", "label": "Container", "subtype": "gft"}
+                    for index in range(asset_type.max_assets)
+                ],
+            },
+        )
+
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response.json().get("detail") == (
+            "The given input exceeds the maximum number of assets allowed for asset type test_asset_type"
+        )
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecrettoken",)])
+    async def test_set_assets_with_the_same_external_id_gives_conflict(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_with_assets_with_classification_and_asset_type: Melding,
+    ) -> None:
+        asset_type = melding_with_assets_with_classification_and_asset_type.classification.asset_type
+        response = await client.put(
+            app.url_path_for(
+                self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
+            ),
+            params={"token": melding_with_assets_with_classification_and_asset_type.token},
+            json={
+                "asset_type_id": asset_type.id,
+                "assets": [
+                    {"external_id": "same_external_id", "label": "Container", "subtype": "gft"},
+                    {"external_id": "same_external_id", "label": "Container", "subtype": "gft"},
+                ],
+            },
+        )
+
+        assert response.status_code == HTTP_409_CONFLICT
+        assert response.json().get("detail") == "The asset data contains conflicting and most likely duplicate data."
 
 
 class TestMeldingAddAsset(BaseTokenAuthenticationTest):

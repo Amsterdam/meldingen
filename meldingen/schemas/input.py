@@ -340,3 +340,14 @@ class MeldingAssetInput(BaseModel):
     asset_type_id: int
     label: str
     subtype: str
+
+
+class MeldingAssetInputV2(BaseModel):
+    external_id: str
+    label: str
+    subtype: str
+
+
+class MeldingSetAssetsInput(BaseModel):
+    asset_type_id: int
+    assets: list[MeldingAssetInputV2]
