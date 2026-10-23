@@ -6203,7 +6203,7 @@ class TestMeldingSetAssets(BaseTokenAuthenticationTest):
         )
 
         assert response.status_code == HTTP_200_OK
-        body: list[dict[str, Any]] =  response.json()
+        body: list[dict[str, Any]] = response.json()
         return body
 
     @override
