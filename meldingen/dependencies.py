@@ -100,6 +100,7 @@ from meldingen.actions.melding import (
     MeldingListAction,
     MeldingReclassifyAction,
     MeldingRetrieveAction,
+    MeldingSetAssetsAction,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
 )
@@ -888,6 +889,22 @@ def melding_answer_delete_action(
     answer_repository: Annotated[AnswerRepository, Depends(answer_repository)],
 ) -> MeldingAnswerDeleteAction:
     return MeldingAnswerDeleteAction(melding_repository, answer_repository)
+
+
+def melding_set_assets_action(
+    melding_repository: Annotated[MeldingRepository, Depends(melding_repository)],
+    asset_repository: Annotated[AssetRepository, Depends(asset_repository)],
+    asset_type_repository: Annotated[AssetTypeRepository, Depends(asset_type_repository)],
+    asset_factory: Annotated[AssetFactory, Depends(asset_factory)],
+    relationship_manager: Annotated[RelationshipManager[Melding, Asset], Depends(melding_asset_relationship_manager)],
+) -> MeldingSetAssetsAction:
+    return MeldingSetAssetsAction(
+        melding_repository,
+        asset_repository,
+        asset_type_repository,
+        asset_factory,
+        relationship_manager,
+    )
 
 
 def melding_add_asset_action(
