@@ -59,12 +59,12 @@ from meldingen.actions.melding import (
     AddLocationToMeldingAction,
     MeldingAddAssetAction,
     MeldingAnswerDeleteAction,
-    MeldingSetAssetsAction,
     MeldingDeleteAssetAction,
     MeldingGetPossibleNextStatesAction,
     MeldingListAction,
     MeldingReclassifyAction,
     MeldingRetrieveAction,
+    MeldingSetAssetsAction,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
 )
@@ -121,12 +121,12 @@ from meldingen.dependencies import (
     melding_primary_form_validator,
     melding_process_action,
     melding_reclassify_action,
-    melding_set_assets_action,
     melding_reopen_action,
     melding_repository,
     melding_request_processing_action,
     melding_request_reopen_action,
     melding_retrieve_action,
+    melding_set_assets_action,
     melding_submit_action,
     melding_submit_action_melder,
     melding_submit_location_action,
@@ -162,10 +162,10 @@ from meldingen.schemas.input import (
     AnswerInputUnion,
     CompleteMeldingInput,
     MeldingAssetInput,
-    MeldingSetAssetsInput,
     MeldingContactInput,
     MeldingInput,
     MeldingReclassificationInput,
+    MeldingSetAssetsInput,
     MeldingUpdateInput,
     NoteInput,
     NoteUpdateInput,
@@ -1162,7 +1162,7 @@ async def set_assets(
     except IntegrityError as e:
         raise HTTPException(
             status_code=HTTP_409_CONFLICT,
-            detail=str("The asset data contains conflicting and most likely duplicate data."),
+            detail="The asset data contains conflicting and most likely duplicate data.",
         ) from e
     except LimitReachedException as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
