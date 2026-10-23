@@ -1160,7 +1160,10 @@ async def set_assets(
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
     except IntegrityError as e:
-        raise HTTPException(status_code=HTTP_409_CONFLICT, detail=str("The asset data contains conflicting and most likely duplicate data.")) from e
+        raise HTTPException(
+            status_code=HTTP_409_CONFLICT,
+            detail=str("The asset data contains conflicting and most likely duplicate data."),
+        ) from e
     except LimitReachedException as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except InvalidInputException as e:
@@ -1244,6 +1247,7 @@ async def list_assets(
         output.append(produce_output(asset))
 
     return output
+
 
 # TODO decommission after frontend uses the set-assets endpoint
 @router.delete(

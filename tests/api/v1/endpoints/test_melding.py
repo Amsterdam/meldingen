@@ -6203,7 +6203,8 @@ class TestMeldingSetAssets(BaseTokenAuthenticationTest):
         )
 
         assert response.status_code == HTTP_200_OK
-        return response.json()
+        body: list[dict[str, Any]] =  response.json()
+        return body
 
     @override
     def get_json(self) -> dict[str, Any] | None:
@@ -6327,7 +6328,10 @@ class TestMeldingSetAssets(BaseTokenAuthenticationTest):
         client: AsyncClient,
         melding_with_assets_with_classification_and_asset_type: Melding,
     ) -> None:
+        assert melding_with_assets_with_classification_and_asset_type.classification is not None
         asset_type = melding_with_assets_with_classification_and_asset_type.classification.asset_type
+        assert asset_type is not None
+
         response = await client.put(
             app.url_path_for(
                 self.get_route_name(), melding_id=melding_with_assets_with_classification_and_asset_type.id
