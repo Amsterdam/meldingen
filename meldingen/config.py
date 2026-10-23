@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     cors_allow_headers: list[str]
 
     # Token
-    token_duration: timedelta  # Uses ISO 8601 standard for durations (https://en.wikipedia.org/wiki/ISO_8601)
+    token_duration: timedelta = "P1D" # Uses ISO 8601 standard for durations (https://en.wikipedia.org/wiki/ISO_8601)
 
     # Storage
     attachment_storage_base_directory: Path
