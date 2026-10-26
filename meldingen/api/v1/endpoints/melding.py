@@ -30,6 +30,7 @@ from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction, No
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
 from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import InvalidLabelException
+from meldingen_core.managers import RelationshipExistsException
 from meldingen_core.reclassification import ReclassificationNotAllowedException
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates, get_all_backoffice_states
 from meldingen_core.validators import AttachmentLimitReachedException, MediaTypeIntegrityError, MediaTypeNotAllowed
@@ -1196,6 +1197,8 @@ async def add_asset(
         )
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except RelationshipExistsException as e:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except LimitReachedException as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except InvalidInputException as e:
