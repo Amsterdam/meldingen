@@ -6310,7 +6310,7 @@ class TestMeldingSetAssets(BaseTokenAuthenticationTest):
                 "asset_type_id": asset_type.id,
                 "assets": [
                     {"external_id": f"new_external_id_{index}", "label": "Container", "subtype": "gft"}
-                    for index in range(asset_type.max_assets)
+                    for index in range(asset_type.max_assets + 1)
                 ],
             },
         )
