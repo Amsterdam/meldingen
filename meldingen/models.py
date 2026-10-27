@@ -677,6 +677,11 @@ class Note(AsyncAttrs, BaseDBModel, BaseNote):
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), init=False, default=None)
     classification: Mapped[Classification | None] = relationship(default=None)
 
+    parent_note_id: Mapped[int | None] = mapped_column(ForeignKey("note.id"), init=False, default=None)
+    parent_note: Mapped[Note | None] = relationship(default=None)
+    # Stores a snapshot of the parent note's text at the time this note was created.
+    parent_note_text_snapshot: Mapped[str | None] = mapped_column(String(), default=None)
+
 
 class LlmEvalRunStatus(enum.StrEnum):
     pending = "pending"
