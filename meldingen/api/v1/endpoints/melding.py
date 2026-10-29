@@ -1165,9 +1165,7 @@ async def set_assets(
             status_code=HTTP_409_CONFLICT,
             detail="The asset data contains conflicting and most likely duplicate data.",
         ) from e
-    except LimitReachedException as e:
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
-    except InvalidInputException as e:
+    except (LimitReachedException, InvalidInputException) as e:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     return await produce_output(melding)
