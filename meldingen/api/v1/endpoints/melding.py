@@ -9,9 +9,9 @@ from geojson_pydantic.geometries import Geometry
 from meldingen_core.actions.attachment import AttachmentTypes, MelderDownloadAttachmentAction
 from meldingen_core.actions.melding import (
     AssetData,
-    AssetDataV2,
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
+    MeldingAssetsPayload,
     MeldingCancelAction,
     MeldingCompleteAction,
     MeldingContactInfoAddedAction,
@@ -1156,7 +1156,7 @@ async def set_assets(
         melding = await action(
             melding.id,
             input.asset_type_id,
-            [AssetDataV2(**asset.dict()) for asset in input.assets],
+            [MeldingAssetsPayload(**asset.model_dump()) for asset in input.assets],
         )
     except NotFoundException as e:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e

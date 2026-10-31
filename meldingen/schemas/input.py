@@ -349,5 +349,5 @@ class MeldingAssetInputV2(BaseModel):
 
 
 class MeldingSetAssetsInput(BaseModel):
-    asset_type_id: int
     assets: list[MeldingAssetInputV2]
+    asset_type_id: int

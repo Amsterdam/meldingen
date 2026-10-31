@@ -6197,14 +6197,14 @@ class TestMeldingSetAssets(BaseTokenAuthenticationTest):
     def get_method(self) -> str:
         return "PUT"
 
-    async def get_assets(self, app: FastAPI, client: AsyncClient, melding: Melding) -> list[dict[str, Any]]:
-        response = await client.get(
-            app.url_path_for("melding:assets_melder", melding_id=melding.id), params={"token": melding.token}
+    async def get_assets_from_db(self, db_session: AsyncSession, melding: Melding) -> dict[str, dict[str, str]]:
+        result = await db_session.execute(
+            select(Asset.external_id, Asset.label, Asset.subtype)
+            .select_from(Melding)
+            .join(Melding.assets)
+            .where(Melding.id == melding.id)
         )
-
-        assert response.status_code == HTTP_200_OK
-        body: list[dict[str, Any]] = response.json()
-        return body
+        return {row.external_id: {"label": row.label, "subtype": row.subtype} for row in result}
 
     @override
     def get_json(self) -> dict[str, Any] | None:
@@ -6261,8 +6261,15 @@ class TestMeldingSetAssets(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         melding_with_assets_with_classification_and_asset_type: Melding,
+        db_session: AsyncSession,
     ) -> None:
         assert melding_with_assets_with_classification_and_asset_type.classification is not None
+
+        assets_before = await self.get_assets_from_db(
+            db_session, melding_with_assets_with_classification_and_asset_type
+        )
+        old_label = assets_before["external_id_0"]["label"]
+
         asset_type = melding_with_assets_with_classification_and_asset_type.classification.asset_type
         assert asset_type is not None
 
@@ -6282,10 +6289,13 @@ class TestMeldingSetAssets(BaseTokenAuthenticationTest):
 
         assert response.status_code == HTTP_200_OK
 
-        assets = await self.get_assets(app, client, melding_with_assets_with_classification_and_asset_type)
-        assets_by_external_id = {asset["external_id"]: asset for asset in assets}
+        assets_by_external_id = await self.get_assets_from_db(
+            db_session, melding_with_assets_with_classification_and_asset_type
+        )
+
         assert assets_by_external_id["external_id_0"]["label"] == "Updated label"
         assert assets_by_external_id["external_id_0"]["subtype"] == "updated"
+        assert assets_by_external_id["external_id_0"]["label"] != old_label
         assert assets_by_external_id["new_external_id"]["label"] == "New label"
         assert assets_by_external_id["new_external_id"]["subtype"] == "new"
 

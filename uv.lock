@@ -2130,7 +2130,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=5754%2Fset-assets-action#c38816ca883834bac1ce3c046d584704c35e5c0a" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=5754%2Fset-assets-action#042508acd0e88e344464d821f9d8aa9cc5d0ab1e" }
 dependencies = [
     { name = "plugfs" },
 ]
