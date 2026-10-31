@@ -11,6 +11,7 @@ from meldingen_core.actions.melding import (
     AssetData,
     MeldingAddAttachmentsAction,
     MeldingAnswerQuestionsAction,
+    MeldingAssetsPayload,
     MeldingCancelAction,
     MeldingCompleteAction,
     MeldingContactInfoAddedAction,
@@ -42,6 +43,7 @@ from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
     HTTP_422_UNPROCESSABLE_CONTENT,
 )
 
@@ -63,6 +65,7 @@ from meldingen.actions.melding import (
     MeldingListAction,
     MeldingReclassifyAction,
     MeldingRetrieveAction,
+    MeldingSetAssetsAction,
     MeldingSubmitAction,
     MeldingSubmitActionMelder,
 )
@@ -124,6 +127,7 @@ from meldingen.dependencies import (
     melding_request_processing_action,
     melding_request_reopen_action,
     melding_retrieve_action,
+    melding_set_assets_action,
     melding_submit_action,
     melding_submit_action_melder,
     melding_submit_location_action,
@@ -162,6 +166,7 @@ from meldingen.schemas.input import (
     MeldingContactInput,
     MeldingInput,
     MeldingReclassificationInput,
+    MeldingSetAssetsInput,
     MeldingUpdateInput,
     NoteInput,
     NoteUpdateInput,
@@ -1136,6 +1141,37 @@ async def list_answers(
     return await produce_output(answers)
 
 
+@router.put(
+    "/{melding_id}/assets",
+    name="melding:set-assets",
+    responses={**not_found_response, **unauthorized_response},
+)
+async def set_assets(
+    melding: Annotated[Melding, Depends(verify_token_and_retrieve_melding)],
+    input: MeldingSetAssetsInput,
+    action: Annotated[MeldingSetAssetsAction, Depends(melding_set_assets_action)],
+    produce_output: Annotated[MeldingUpdateOutputFactory, Depends(melding_update_output_factory)],
+) -> MeldingUpdateOutput:
+    try:
+        melding = await action(
+            melding.id,
+            input.asset_type_id,
+            [MeldingAssetsPayload(**asset.model_dump()) for asset in input.assets],
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=HTTP_409_CONFLICT,
+            detail="The asset data contains conflicting and most likely duplicate data.",
+        ) from e
+    except (LimitReachedException, InvalidInputException) as e:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail=str(e)) from e
+
+    return await produce_output(melding)
+
+
+# TODO decommission after frontend uses the set-assets endpoint
 @router.post(
     "/{melding_id}/asset",
     name="melding:add-asset",
@@ -1214,6 +1250,7 @@ async def list_assets(
     return output
 
 
+# TODO decommission after frontend uses the set-assets endpoint
 @router.delete(
     "/{melding_id}/asset/{asset_id}",
     name="melding:delete-asset",
