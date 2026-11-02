@@ -1172,6 +1172,7 @@ async def set_assets(
 
 
 # TODO decommission after frontend uses the set-assets endpoint
+# Ticket SIG-7815
 @router.post(
     "/{melding_id}/asset",
     name="melding:add-asset",
@@ -1251,6 +1252,7 @@ async def list_assets(
 
 
 # TODO decommission after frontend uses the set-assets endpoint
+# Ticket SIG-7815
 @router.delete(
     "/{melding_id}/asset/{asset_id}",
     name="melding:delete-asset",
