@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
+from fastapi import Depends, HTTPException, Path, Query, Response
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import NameListFilters
 from sqlalchemy import ColumnExpressionArgument
@@ -18,35 +18,29 @@ from meldingen.api.utils import (
     FilterParams,
     PaginationParams,
     SortParams,
+    create_router,
     filter_param,
     pagination_params,
     sort_param,
 )
-from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
-from meldingen.authentication import authenticate_user
+from meldingen.api.v1 import list_response, unauthorized_response
+from meldingen.api.v1.endpoints.classification.helpers import content_range_header_adder
 from meldingen.dependencies import (
     classification_create_action,
     classification_delete_action,
     classification_list_action,
-    classification_repository,
     classification_retrieve_action,
     classification_update_action,
 )
 from meldingen.models import Classification
-from meldingen.repositories import ClassificationRepository
 from meldingen.schemas.input import ClassificationCreateInput, ClassificationUpdateInput
 from meldingen.schemas.output import ClassificationOutput
 
-router = APIRouter()
-
-
-async def content_range_header_adder(
-    repo: Annotated[ClassificationRepository, Depends(classification_repository)],
-) -> ContentRangeHeaderAdder[Classification]:
-    return ContentRangeHeaderAdder(repo, "classification")
+router = create_router(responses={**unauthorized_response})
 
 
 async def _hydrate_output(classification: Classification) -> ClassificationOutput:
+
     form_id = None
 
     form = await classification.awaitable_attrs.form
@@ -69,10 +63,8 @@ async def _hydrate_output(classification: Classification) -> ClassificationOutpu
 
 @router.post(
     "/",
-    name="classification:create",
+    name="backoffice:classification:create",
     status_code=HTTP_201_CREATED,
-    responses={**unauthorized_response, **conflict_response, **not_found_response},
-    dependencies=[Depends(authenticate_user)],
 )
 async def create_classification(
     classification_input: ClassificationCreateInput,
@@ -92,9 +84,8 @@ async def create_classification(
 
 @router.get(
     "/",
-    name="classification:list",
-    responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(authenticate_user)],
+    name="backoffice:classification:list",
+    responses={**list_response},
 )
 async def list_classifications(
     response: Response,
@@ -139,26 +130,22 @@ async def list_classifications(
 
 @router.get(
     "/{classification_id}",
-    name="classification:retrieve",
-    responses={**unauthorized_response, **not_found_response},
-    dependencies=[Depends(authenticate_user)],
+    name="backoffice:classification:retrieve",
 )
 async def retrieve_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
     action: Annotated[ClassificationRetrieveAction, Depends(classification_retrieve_action)],
 ) -> ClassificationOutput:
     classification = await action(classification_id)
-    if classification is None:
-        raise HTTPException(HTTP_404_NOT_FOUND)
+    if not classification:
+        raise HTTPException(HTTP_404_NOT_FOUND, "Classification not found")
 
     return await _hydrate_output(classification)
 
 
 @router.patch(
     "/{classification_id}",
-    name="classification:update",
-    responses={**unauthorized_response, **not_found_response, **conflict_response},
-    dependencies=[Depends(authenticate_user)],
+    name="backoffice:classification:update",
 )
 async def update_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
@@ -177,13 +164,8 @@ async def update_classification(
 
 @router.delete(
     "/{classification_id}",
-    name="classification:delete",
+    name="backoffice:classification:delete",
     status_code=HTTP_204_NO_CONTENT,
-    responses={
-        **unauthorized_response,
-        **not_found_response,
-    },
-    dependencies=[Depends(authenticate_user)],
 )
 async def delete_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],

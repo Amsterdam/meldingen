@@ -28,7 +28,7 @@ from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParams
 
 
 class TestClassificationCreate(BaseUnauthorizedTest):
-    ROUTE_NAME: Final[str] = "classification:create"
+    ROUTE_NAME: Final[str] = "backoffice:classification:create"
     METHOD: Final[str] = "POST"
 
     def get_route_name(self) -> str:
@@ -234,7 +234,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
 
 
 class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
-    ROUTE_NAME: Final[str] = "classification:list"
+    ROUTE_NAME: Final[str] = "backoffice:classification:list"
     METHOD: Final[str] = "GET"
 
     def get_route_name(self) -> str:
@@ -264,7 +264,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         classification_to_delete = classifications[0]
 
         delete_response = await client.delete(
-            app.url_path_for("classification:delete", classification_id=classification_to_delete.id)
+            app.url_path_for("backoffice:classification:delete", classification_id=classification_to_delete.id)
         )
         assert delete_response.status_code == HTTP_204_NO_CONTENT
 
@@ -548,7 +548,7 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
 
 class TestClassificationRetrieve(BaseUnauthorizedTest):
-    ROUTE_NAME: Final[str] = "classification:retrieve"
+    ROUTE_NAME: Final[str] = "backoffice:classification:retrieve"
     METHOD: Final[str] = "GET"
     PATH_PARAMS: ClassVar[dict[str, Any]] = {"classification_id": 1}
 
@@ -638,7 +638,7 @@ class TestClassificationRetrieve(BaseUnauthorizedTest):
 
 
 class TestClassificationUpdate(BaseUnauthorizedTest):
-    ROUTE_NAME: Final[str] = "classification:update"
+    ROUTE_NAME: Final[str] = "backoffice:classification:update"
     METHOD: Final[str] = "PATCH"
     PATH_PARAMS: ClassVar[dict[str, Any]] = {"classification_id": 1}
 
@@ -814,7 +814,7 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
 
 
 class TestClassificationDelete(BaseUnauthorizedTest):
-    ROUTE_NAME: Final[str] = "classification:delete"
+    ROUTE_NAME: Final[str] = "backoffice:classification:delete"
     METHOD: Final[str] = "DELETE"
     PATH_PARAMS: ClassVar[dict[str, Any]] = {"classification_id": 1}
 
@@ -859,11 +859,13 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         assert response.status_code == HTTP_204_NO_CONTENT
 
         # No longer directly retrievable...
-        retrieve = await client.get(app.url_path_for("classification:retrieve", classification_id=classification.id))
+        retrieve = await client.get(
+            app.url_path_for("backoffice:classification:retrieve", classification_id=classification.id)
+        )
         assert retrieve.status_code == HTTP_404_NOT_FOUND
 
         # ...nor listed.
-        listed = await client.get(app.url_path_for("classification:list"))
+        listed = await client.get(app.url_path_for("backoffice:classification:list"))
         assert all(item["name"] != "bla" for item in listed.json())
 
         # But still visible on the related melding.
@@ -892,7 +894,8 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         assert delete.status_code == HTTP_204_NO_CONTENT
 
         recreated = await client.post(
-            app.url_path_for("classification:create"), json={"name": "bla", "service_level_objective_text": "Some text"}
+            app.url_path_for("backoffice:classification:create"),
+            json={"name": "bla", "service_level_objective_text": "Some text"},
         )
         assert recreated.status_code == HTTP_201_CREATED
         assert recreated.json()["name"] == "bla"
