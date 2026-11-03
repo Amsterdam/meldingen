@@ -138,7 +138,7 @@ async def retrieve_classification(
 ) -> ClassificationOutput:
     classification = await action(classification_id)
     if not classification:
-        raise HTTPException(HTTP_404_NOT_FOUND, "Classification not found")
+        raise HTTPException(HTTP_404_NOT_FOUND)
 
     return await _hydrate_output(classification)
 
