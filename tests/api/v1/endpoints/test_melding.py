@@ -6263,8 +6263,6 @@ class TestMeldingSetAssets(BaseTokenAuthenticationTest):
         melding_with_assets_with_classification_and_asset_type: Melding,
         db_session: AsyncSession,
     ) -> None:
-        assert melding_with_assets_with_classification_and_asset_type.classification is not None
-
         assets_before = await self.get_assets_from_db(
             db_session, melding_with_assets_with_classification_and_asset_type
         )
@@ -6307,7 +6305,6 @@ class TestMeldingSetAssets(BaseTokenAuthenticationTest):
         client: AsyncClient,
         melding_with_assets_with_classification_and_asset_type: Melding,
     ) -> None:
-        assert melding_with_assets_with_classification_and_asset_type.classification is not None
         asset_type = melding_with_assets_with_classification_and_asset_type.classification.asset_type
         assert asset_type is not None
 
@@ -6338,7 +6335,6 @@ class TestMeldingSetAssets(BaseTokenAuthenticationTest):
         client: AsyncClient,
         melding_with_assets_with_classification_and_asset_type: Melding,
     ) -> None:
-        assert melding_with_assets_with_classification_and_asset_type.classification is not None
         asset_type = melding_with_assets_with_classification_and_asset_type.classification.asset_type
         assert asset_type is not None
 
@@ -6447,7 +6443,6 @@ class TestMeldingAddAsset(BaseTokenAuthenticationTest):
     async def test_can_add_third_asset_with_max_two_after_deleting_an_asset(
         self, app: FastAPI, client: AsyncClient, melding_with_assets_with_classification_and_asset_type: Melding
     ) -> None:
-        assert melding_with_assets_with_classification_and_asset_type.classification is not None
         assert melding_with_assets_with_classification_and_asset_type.classification.asset_type is not None
 
         asset_type = melding_with_assets_with_classification_and_asset_type.classification.asset_type

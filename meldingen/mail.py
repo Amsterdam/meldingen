@@ -6,11 +6,9 @@ from fastapi import BackgroundTasks
 from meldingen_core.mail import BaseMeldingCompleteMailer, BaseMeldingConfirmationMailer
 
 from meldingen.models import (
-    SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT,
-    SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
-    SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT,
     Melding,
 )
+from meldingen.repositories import ClassificationRepository
 from meldingen.schemas.types import DaysType
 from meldingen.utils import format_safe
 
@@ -88,6 +86,7 @@ DaysTypeReadable = {
 
 class SendConfirmationMailTask(SendMailTask):
     _body_template: str
+    _classification_repository: ClassificationRepository
 
     def __init__(
         self,
@@ -97,26 +96,13 @@ class SendConfirmationMailTask(SendMailTask):
         preview_template: str,
         body_template: str,
         subject_template: str,
-        service_belofte_template: str,
     ) -> None:
         super().__init__(renderer, mailer, title, preview_template, subject_template)
-        self._service_belofte_template = service_belofte_template
         self._body_template = body_template
 
-    def _get_service_level_objective_props(self, melding: Melding) -> tuple[str, int, str]:
+    async def _get_service_level_objective_props(self, melding: Melding) -> tuple[str, int, str]:
 
-        if not melding.classification:
-            return (
-                self._service_belofte_template,
-                SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT,
-                DaysTypeReadable[SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT],
-            )
-
-        service_level_objective_text = (
-            melding.classification.service_level_objective_text
-            if melding.classification.service_level_objective_text != SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT
-            else self._service_belofte_template
-        )
+        service_level_objective_text = melding.classification.service_level_objective_text
         service_level_objective_days = melding.classification.service_level_objective_days
         service_level_objective_day_type = DaysTypeReadable[melding.classification.service_level_objective_day_type]
 
@@ -127,9 +113,11 @@ class SendConfirmationMailTask(SendMailTask):
         return service_level_objective_text, service_level_objective_days, service_level_objective_day_type
 
     async def __call__(self, melding: Melding) -> None:
-        service_level_objective_text, service_level_objective_days, service_level_objective_day_type = (
-            self._get_service_level_objective_props(melding)
-        )
+        (
+            service_level_objective_text,
+            service_level_objective_days,
+            service_level_objective_day_type,
+        ) = await self._get_service_level_objective_props(melding)
         classification_service_objective_text_formatted = format_safe(
             service_level_objective_text,
             {
