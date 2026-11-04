@@ -1,8 +1,8 @@
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Annotated, TypedDict
+from typing import Annotated, Any, TypedDict
 
-from fastapi import Depends, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFile
 from meldingen_core import SortingDirection
 from pydantic import BaseModel, RootModel, ValidationError
 from sqlalchemy import ColumnExpressionArgument
@@ -126,3 +126,7 @@ class ContentRangeHeaderAdder[T: BaseDBModel]:
         response.headers["Content-Range"] = f"{self._identifier} {offset}-{limit - 1 + offset}/{total}"
 
         return 0
+
+
+def create_router(responses: dict[int | str, dict[str, Any]] | None = None) -> APIRouter:
+    return APIRouter(responses=responses or {})

@@ -1,10 +1,12 @@
-from fastapi import APIRouter
+from enum import Enum
+
+from fastapi import APIRouter, Depends
 
 from meldingen import static
+from meldingen.api.v1 import not_found_response
 from meldingen.api.v1.endpoints import (
     asset_type,
     attachment,
-    classification,
     docs,
     form,
     label,
@@ -15,10 +17,39 @@ from meldingen.api.v1.endpoints import (
     static_form,
     user,
 )
+from meldingen.api.v1.endpoints.classification import (
+    classification_router_backoffice,
+    classification_router_public,
+)
+from meldingen.authentication import authenticate_user
 
-api_router = APIRouter()
+api_router = APIRouter(responses={**not_found_response})
+api_router_backoffice = APIRouter()
+api_router_public = APIRouter()
+
+api_router.include_router(api_router_backoffice, dependencies=[Depends(authenticate_user)])
+api_router.include_router(api_router_public, prefix="/public")
+
+routers_by_type = {
+    "backoffice": api_router_backoffice,
+    "public": api_router_public,
+}
+
+
+def attach_routers(prefix: str, routers: dict[str, APIRouter], tags: list[str | Enum] | None = None) -> None:
+    for router_type, router in routers.items():
+        routers_by_type[router_type].include_router(router, prefix=prefix, tags=tags)
+
+
+attach_routers(
+    prefix="/classification",
+    routers={"backoffice": classification_router_backoffice, "public": classification_router_public},
+    tags=["classification"],
+)
+
+
+# Mixed routes that may or may not require authentication
 api_router.include_router(attachment.router, prefix="/attachment", tags=["attachment"])
-api_router.include_router(classification.router, prefix="/classification", tags=["classification"])
 api_router.include_router(mail.router, prefix="/mail", tags=["mail"])
 api_router.include_router(melding.router, prefix="/melding", tags=["melding"])
 api_router.include_router(user.router, prefix="/user", tags=["user"])
