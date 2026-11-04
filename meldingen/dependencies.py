@@ -121,6 +121,7 @@ from meldingen.adapters.malware.azure_defender_for_storage_scanner import AzureD
 from meldingen.adapters.malware.dummy_scanner import DummyMalwareScanner
 from meldingen.address import AddressEnricherTask, PDOKAddressResolver, PDOKAddressTransformer
 from meldingen.answer import AnswerPurger
+from meldingen.api.utils import FilterParams, filter_param, repository_list_filters
 from meldingen.asset import AssetPurger
 from meldingen.config import settings
 from meldingen.database import DatabaseSessionManager
@@ -181,6 +182,7 @@ from meldingen.repositories import (
     MeldingRepository,
     NoteRepository,
     QuestionRepository,
+    RepositoryListFilters,
     SourceRepository,
     StaticFormRepository,
     UserRepository,
@@ -308,6 +310,10 @@ def classification_list_action(
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> ClassificationListAction:
     return ClassificationListAction(repository)
+
+
+def list_filters(filter_params: Annotated[FilterParams, Depends(filter_param)]) -> RepositoryListFilters | None:
+    return repository_list_filters(filter_params)
 
 
 def classification_delete_action(

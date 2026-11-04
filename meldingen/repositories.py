@@ -1,11 +1,11 @@
-import builtins
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import MeldingListFilters, NameListFilters
+from meldingen_core.filters import RepositoryFilters
 from meldingen_core.repositories import (
     BaseAnswerRepository,
     BaseAssetRepository,
@@ -21,6 +21,7 @@ from meldingen_core.repositories import (
     BaseSourceRepository,
     BaseUserRepository,
 )
+from meldingen_core.statemachine import BaseMeldingState
 from sqlalchemy import ColumnExpressionArgument, Select, delete, desc, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,6 +47,18 @@ from meldingen.models import (
     StaticFormTypeEnum,
     User,
 )
+
+
+@dataclass
+class RepositoryListFilters(RepositoryFilters):
+    id_in: list[int] | None = None
+    name_contains: str | None = None
+
+
+@dataclass
+class MeldingRepositoryListFilters(RepositoryFilters):
+    area: str | None = None
+    states: Sequence[BaseMeldingState] | None = None
 
 
 class AttributeNotFoundException(Exception):
@@ -95,20 +108,12 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        filters: NameListFilters | None = None,
+        filters: RepositoryFilters | None = None,
         apply_visibility_filters: bool = True,
     ) -> Sequence[T]:
-        _type = self.get_model_type()
-        statement = select(_type)
-
-        if apply_visibility_filters:
-            for visibility_filter in self._visibility_filters():
-                statement = statement.where(visibility_filter)
-
-        if filters is not None and filters.name_contains is not None:
-            statement = statement.where(_type.name.ilike(f"%{filters.name_contains}%"))
-
-        statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
+        statement = self._get_query_statement()
+        statement = self._handle_list_filters(statement, filters, apply_visibility_filters)
+        statement = self._handle_sorting(statement, sort_attribute_name, sort_direction)
 
         if limit:
             statement = statement.limit(limit)
@@ -140,33 +145,64 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
     async def count(
         self,
-        filters: builtins.list[ColumnExpressionArgument[bool]] | None = None,
+        filters: RepositoryFilters | None = None,
         apply_visibility_filters: bool = True,
     ) -> int:
-        _type = self.get_model_type()
-        statement = select(func.count(_type.id))
+
+        statement = self._get_query_statement()
+        statement = self._handle_list_filters(statement, filters, apply_visibility_filters)
+        statement = select(func.count()).select_from(statement.subquery())
+
+        result = await self._session.execute(statement)
+
+        return result.scalar_one()
+
+    def _get_query_statement(
+        self,
+    ):
+        statement = select(self.get_model_type())
+        return statement
+
+    def _filter_input_to_expression_arguments(
+        self, filter_input: RepositoryFilters | None = None
+    ) -> list[ColumnExpressionArgument[bool]]:
+        """
+        Returns a list of SQLAlchemy column expression arguments based on the provided filter input.
+        Implements the conversion of repository filters into SQLAlchemy expressions.
+        This function should be extended to handle specific filter criteria for the repository.
+        """
+        expressions: list[ColumnExpressionArgument[bool]] = []
+
+        if filter_input is None:
+            return expressions
+
+        return expressions
+
+    def _handle_list_filters(
+        self,
+        statement: Select[Any],
+        filters: RepositoryFilters | None = None,
+        apply_visibility_filters: bool = True,
+    ) -> Select[tuple[T]]:
 
         if apply_visibility_filters:
             for visibility_filter in self._visibility_filters():
                 statement = statement.where(visibility_filter)
 
-        if filters is not None:
-            for filter_condition in filters:
-                statement = statement.where(filter_condition)
+        expression_arguments = self._filter_input_to_expression_arguments(filters)
+        for expression in expression_arguments:
+            statement = statement.filter(expression)
 
-        result = await self._session.execute(statement)
-
-        return result.scalars().one()
+        return statement
 
     def _handle_sorting(
         self,
-        _type: type[Any],
         statement: Select[Any],
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
     ) -> Select[Any]:
         if sort_attribute_name is not None:
-            sort_attribute = _type.__mapper__.attrs.get(sort_attribute_name)
+            sort_attribute = self.get_model_type().__mapper__.attrs.get(sort_attribute_name)
 
             if sort_attribute is None:
                 raise AttributeNotFoundException(f"Attribute {sort_attribute_name} not found")
@@ -180,6 +216,27 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
                 statement = statement.order_by(desc(sort_attribute))
 
         return statement
+
+
+class BaseRepositoryWithListFilters[T: BaseDBModel](BaseSQLAlchemyRepository[T]):
+    """Base class for repository filter inputs."""
+
+    def _filter_input_to_expression_arguments(
+        self, filter_input: RepositoryListFilters | None = None
+    ) -> list[ColumnExpressionArgument[bool]]:
+        expressions: list[ColumnExpressionArgument[bool]] = []
+        _type = self.get_model_type()
+
+        if filter_input is None:
+            return expressions
+
+        if filter_input is not None:
+            if filter_input.name_contains is not None:
+                expressions.append(_type.name.ilike(f"%{filter_input.name_contains}%"))
+            if filter_input.id_in is not None:
+                expressions.append(_type.id.in_(filter_input.id_in))
+
+        return expressions
 
 
 class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository[Melding]):
@@ -198,44 +255,14 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
 
         return result.scalars().unique().all()
 
-    async def list_meldingen(
-        self,
-        *,
-        limit: int | None = None,
-        offset: int | None = None,
-        sort_attribute_name: str | None = None,
-        sort_direction: SortingDirection | None = None,
-        filters: MeldingListFilters | None = None,
-    ) -> Sequence[Melding]:
-        _type = self.get_model_type()
-        statement = select(_type)
-
-        expression_arguments = self.filter_input_to_expression_arguments(filters)
-
-        if expression_arguments is not None:
-            for expression in expression_arguments:
-                statement = statement.filter(expression)
-
-        statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
-
-        if limit:
-            statement = statement.limit(limit)
-
-        if offset:
-            statement = statement.offset(offset)
-
-        results = await self._session.execute(statement)
-
-        return results.scalars().unique().all()
-
     async def delete_assets_from_melding(self, melding: Melding) -> None:
         await melding.awaitable_attrs.assets
         melding.assets = []
 
         await self.save(melding)
 
-    def filter_input_to_expression_arguments(
-        self, filters: MeldingListFilters | None = None
+    def _filter_input_to_expression_arguments(
+        self, filters: MeldingRepositoryListFilters | None = None
     ) -> list[ColumnExpressionArgument[bool]] | None:
         if filters is None:
             return None
@@ -290,7 +317,9 @@ class GroupRepository(BaseSQLAlchemyRepository[Group]):
         return results.scalars().one()
 
 
-class ClassificationRepository(BaseSQLAlchemyRepository[Classification], BaseClassificationRepository[Classification]):
+class ClassificationRepository(
+    BaseRepositoryWithListFilters[Classification], BaseClassificationRepository[Classification]
+):
     def get_model_type(self) -> type[Classification]:
         return Classification
 
@@ -416,7 +445,7 @@ class AttachmentRepository(BaseSQLAlchemyRepository[Attachment], BaseAttachmentR
         return result.scalars().all()
 
 
-class AssetTypeRepository(BaseSQLAlchemyRepository[AssetType], BaseAssetTypeRepository[AssetType]):
+class AssetTypeRepository(BaseRepositoryWithListFilters[AssetType], BaseAssetTypeRepository[AssetType]):
     def get_model_type(self) -> type[AssetType]:
         return AssetType
 
@@ -453,7 +482,7 @@ class AssetRepository(BaseSQLAlchemyRepository[Asset], BaseAssetRepository[Asset
         return result.scalars().one_or_none()
 
 
-class LabelRepository(BaseSQLAlchemyRepository[Label], BaseLabelRepository[Label]):
+class LabelRepository(BaseRepositoryWithListFilters[Label], BaseLabelRepository[Label]):
     def get_model_type(self) -> type[Label]:
         return Label
 
@@ -465,7 +494,7 @@ class LabelRepository(BaseSQLAlchemyRepository[Label], BaseLabelRepository[Label
         return result.scalars().all()
 
 
-class SourceRepository(BaseSQLAlchemyRepository[Source], BaseSourceRepository[Source]):
+class SourceRepository(BaseRepositoryWithListFilters[Source], BaseSourceRepository[Source]):
     def get_model_type(self) -> type[Source]:
         return Source
 
@@ -486,7 +515,7 @@ class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
         if sort_attribute_name is None:
             statement = statement.order_by(Note.created_at)
         else:
-            statement = self._handle_sorting(Note, statement, sort_attribute_name, sort_direction)
+            statement = self._handle_sorting(statement, sort_attribute_name, sort_direction)
 
         result = await self._session.execute(statement)
         return result.scalars().unique().all()

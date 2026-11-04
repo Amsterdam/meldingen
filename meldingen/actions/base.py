@@ -3,10 +3,9 @@ from collections.abc import Sequence
 from fastapi import HTTPException
 from meldingen_core import SortingDirection
 from meldingen_core.actions.base import BaseListAction as BaseCoreListAction
-from meldingen_core.filters import NameListFilters
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
-from meldingen.repositories import AttributeNotFoundException
+from meldingen.repositories import AttributeNotFoundException, RepositoryFilters
 
 
 class BaseListAction[T](BaseCoreListAction[T]):
@@ -16,7 +15,7 @@ class BaseListAction[T](BaseCoreListAction[T]):
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        filters: NameListFilters | None = None,
+        filters: RepositoryFilters | None = None,
         apply_visibility_filters: bool = True,
     ) -> Sequence[T]:
         try:

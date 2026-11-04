@@ -481,6 +481,24 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         assert body[0].get("form") == form_with_classification.id
 
     @pytest.mark.anyio
+    async def test_list_classifications_filtered_by_id_in(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        classifications: list[Classification],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"id_in": [3, 6]}'})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 2
+        assert data[0]["name"] == "category: 2"
+        assert data[1]["name"] == "category: 5"
+        assert response.headers.get("content-range") == "classification 0-49/2"
+
+    @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
     ) -> None:
