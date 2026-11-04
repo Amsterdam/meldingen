@@ -27,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Relationship, selectinload
 from sqlalchemy.sql import func
 
+from meldingen.config import settings
 from meldingen.models import (
     Answer,
     Asset,
@@ -323,6 +324,9 @@ class ClassificationRepository(BaseSQLAlchemyRepository[Classification], BaseCla
 
         classification.deleted_at = func.now()
         await self.save(classification)
+
+    async def get_default_classification(self) -> Classification:
+        return await self.find_by_name(settings.llm_fallback_classification_name)
 
 
 class FormRepository(BaseSQLAlchemyRepository[Form], BaseFormRepository[Form]):

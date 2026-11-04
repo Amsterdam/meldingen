@@ -63,8 +63,4 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
         return classification
 
     async def __call__(self, text: str) -> str | None:
-        try:
-            return await self.classify(text)
-        except Exception:
-            logger.exception("LLM classification failed")
-            return None
+        return await self.classify(text)

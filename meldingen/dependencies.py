@@ -447,7 +447,7 @@ def classifier_adapter(
     return DummyClassifierAdapter()
 
 
-def classifier(
+async def classifier(
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
     adapter: Annotated[BaseClassifierAdapter, Depends(classifier_adapter)],
 ) -> Classifier[Classification]:
