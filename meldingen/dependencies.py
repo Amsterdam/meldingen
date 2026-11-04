@@ -439,19 +439,27 @@ def classification_model_settings() -> OpenAIChatModelSettings | None:
 
 
 def classifier_adapter(
-    agent: Annotated[Agent, Depends(classifier_agent)],
+    agent: Annotated[Agent | None, Depends(classifier_agent)],
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> AgentClassifierAdapter | DummyClassifierAdapter:
     if settings.llm_enabled:
-        return AgentClassifierAdapter(agent, repository, classification_model_settings())
-    return DummyClassifierAdapter()
+        if agent is None:
+            raise ValueError("LLM is enabled but no agent supplied.")
+
+        return AgentClassifierAdapter(
+            name=settings.llm_model_identifier,
+            agent=agent,
+            repository=repository,
+            model_settings=classification_model_settings(),
+        )
+    return DummyClassifierAdapter(name="Dummy adapter")
 
 
 async def classifier(
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
     adapter: Annotated[BaseClassifierAdapter, Depends(classifier_adapter)],
 ) -> Classifier[Classification]:
-    return Classifier(adapter, repository)
+    return Classifier([adapter], repository, settings.llm_fallback_classification_name)
 
 
 def token_generator() -> BaseTokenGenerator:

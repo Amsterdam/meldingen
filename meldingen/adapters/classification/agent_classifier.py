@@ -18,10 +18,13 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
 
     def __init__(
         self,
+        name: str,
         agent: Agent,
         repository: ClassificationRepository,
         model_settings: ModelSettings | None = None,
     ):
+        super().__init__(name)
+
         self._agent = agent
         self._repository = repository
         self._model_settings = model_settings
