@@ -166,6 +166,7 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     urgency: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
     classification: Mapped[Classification] = relationship(default=None, lazy="joined")
+    classifier_adapter_result_initial: Mapped[str | None] = mapped_column(String, default=None)
     token: Mapped[str | None] = mapped_column(String, default=None)
     token_expires: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), default=None)
     attachments: Mapped[list["Attachment"]] = relationship(
