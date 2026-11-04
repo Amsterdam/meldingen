@@ -23,6 +23,7 @@ from meldingen.models import (
     Melding,
 )
 from meldingen.repositories import ClassificationRepository
+from meldingen.schemas.output import ClassificationOutput, ClassificationOutputPublic
 from meldingen.schemas.types import DaysType
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -258,6 +259,32 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         assert response.headers.get("content-range") == "classification 0-49/10"
 
     @pytest.mark.anyio
+    async def test_list_all_classifications_authenticated(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        is_authenticated_request_true: None,
+        classifications: list[Classification],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), headers={"Authorization": "Bearer fake_token"})
+        assert response.status_code == HTTP_200_OK
+        data = response.json()
+        assert set(data[0]) == set(ClassificationOutput.model_fields)
+
+    @pytest.mark.anyio
+    async def test_list_all_classifications_not_authenticated(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        is_authenticated_request_false: None,
+        classifications: list[Classification],
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+        assert response.status_code == HTTP_200_OK
+        data = response.json()
+        assert set(data[0]) == set(ClassificationOutputPublic.model_fields)
+
+    @pytest.mark.anyio
     async def test_list_classifications_include_deleted_query_param(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
     ) -> None:
@@ -479,6 +506,20 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         body = response.json()
         assert len(body) == 1
         assert body[0].get("form") == form_with_classification.id
+
+    @pytest.mark.anyio
+    async def test_list_classifications_filtered_by_id_in(
+        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"id_in": [3, 6]}'})
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert len(data) == 2
+        assert data[0]["name"] == "category: 2"
+        assert data[1]["name"] == "category: 5"
+        assert response.headers.get("content-range") == "classification 0-49/2"
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q(

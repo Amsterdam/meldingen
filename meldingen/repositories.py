@@ -1,6 +1,7 @@
 import builtins
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from meldingen_core import SortingDirection
@@ -46,6 +47,11 @@ from meldingen.models import (
     StaticFormTypeEnum,
     User,
 )
+
+
+@dataclass
+class RepositoryListFilters(NameListFilters):
+    id_in: list[int] | None = None
 
 
 class AttributeNotFoundException(Exception):
@@ -95,7 +101,7 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
         offset: int | None = None,
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-        filters: NameListFilters | None = None,
+        filters: RepositoryListFilters | None = None,
         apply_visibility_filters: bool = True,
     ) -> Sequence[T]:
         _type = self.get_model_type()
@@ -105,8 +111,11 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
             for visibility_filter in self._visibility_filters():
                 statement = statement.where(visibility_filter)
 
-        if filters is not None and filters.name_contains is not None:
-            statement = statement.where(_type.name.ilike(f"%{filters.name_contains}%"))
+        if filters is not None:
+            if filters.name_contains:
+                statement = statement.where(_type.name.ilike(f"%{filters.name_contains}%"))
+            if filters.id_in:
+                statement = statement.where(_type.id.in_(filters.id_in))
 
         statement = self._handle_sorting(_type, statement, sort_attribute_name, sort_direction)
 

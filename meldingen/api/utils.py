@@ -4,7 +4,7 @@ from typing import Annotated, TypedDict
 
 from fastapi import Depends, HTTPException, Query, Response, UploadFile
 from meldingen_core import SortingDirection
-from pydantic import BaseModel, RootModel, ValidationError
+from pydantic import BaseModel, Field, RootModel, ValidationError
 from sqlalchemy import ColumnExpressionArgument
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
@@ -53,6 +53,7 @@ def optional_sort_param(sort: Annotated[str | None, Query()] = None) -> SortPara
 
 class FilterParams(BaseModel, extra="ignore"):
     q: str | None = None
+    id_in: list[Annotated[int, Field(ge=1)]] | None = None
 
 
 def filter_param(filter: Annotated[str | None, Query()] = None) -> FilterParams:
