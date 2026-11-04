@@ -108,7 +108,9 @@ async def test_adapter_forwards_model_settings_to_run() -> None:
     repository.list = AsyncMock(return_value=[classification])
 
     model_settings = OpenAIChatModelSettings(openai_reasoning_effort="low")
-    adapter = AgentClassifierAdapter(agent, repository, model_settings)
+    adapter = AgentClassifierAdapter(
+        name="test-adapter", agent=agent, repository=repository, model_settings=model_settings
+    )
 
     result = await adapter.classify("er ligt afval op straat")
 
