@@ -137,7 +137,7 @@ async def list_classifications(
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
     q = filter_params.q or None
-    id_in: list[int] | None = filter_params.id_in or None
+    id_in: list[int] | None = filter_params.id_in if filter_params.id_in is not None else None
 
     content_range_filters: list[ColumnExpressionArgument[bool]] | None = []
     if q:

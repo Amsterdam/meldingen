@@ -234,7 +234,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         )
 
 
-class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
+class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
     ROUTE_NAME: Final[str] = "classification:list"
     METHOD: Final[str] = "GET"
 
@@ -266,7 +266,9 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         is_authenticated_request_true: None,
         classifications: list[Classification],
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME), headers={"Authorization": "Bearer fake_token"})
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME), headers={"Authorization": "Bearer fake_token"}
+        )  # Just to indicate an authenticated request, not actually verifying the token
         assert response.status_code == HTTP_200_OK
         data = response.json()
         assert set(data[0]) == set(ClassificationOutput.model_fields)
