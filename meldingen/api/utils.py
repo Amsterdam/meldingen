@@ -1,6 +1,6 @@
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Annotated, TypedDict
+from typing import Annotated, Any, TypedDict
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFile
 from meldingen_core import SortingDirection
@@ -128,5 +128,5 @@ class ContentRangeHeaderAdder[T: BaseDBModel]:
         return 0
 
 
-def create_router(responses: dict | None = None) -> APIRouter:
+def create_router(responses: dict[int | str, dict[str, Any]] | None = None) -> APIRouter:
     return APIRouter(responses=responses or {})

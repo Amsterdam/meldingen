@@ -36,7 +36,7 @@ routers_by_type = {
 }
 
 
-def attach_routers(prefix: str, routers: dict[str, APIRouter], tags: list[str | Enum] | None = None):
+def attach_routers(prefix: str, routers: dict[str, APIRouter], tags: list[str | Enum] | None = None) -> None:
     for router_type, router in routers.items():
         routers_by_type[router_type].include_router(router, prefix=prefix, tags=tags)
 
