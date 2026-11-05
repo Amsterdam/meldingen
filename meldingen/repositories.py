@@ -159,7 +159,7 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
     def _get_query_statement(
         self,
-    ):
+    ) -> Select[tuple[Any]]:
         statement = select(self.get_model_type())
         return statement
 
