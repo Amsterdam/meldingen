@@ -291,13 +291,11 @@ async def list_meldingen(
         sort_direction=sort.get_direction(),
         filters=filter_input,
     )
+
     output = []
-    try:
-        for melding in meldingen:
-            output.append(await produce_output(melding))
-    except Exception as e:
-        logger.error("Error producing output for meldingen: %s", str(e))
-        raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, str(e)) from e
+
+    for melding in meldingen:
+        output.append(await produce_output(melding))
 
     await content_range_header_adder(response, pagination, filter_input)
 
