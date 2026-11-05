@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -2130,7 +2130,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=main#28cd6ee420e33f458d7669753819c9d20e042b16" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=main#867eee11815adc9cc19b9bd91c073902ce3e5641" }
 dependencies = [
     { name = "plugfs" },
 ]
