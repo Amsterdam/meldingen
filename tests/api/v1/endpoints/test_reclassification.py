@@ -125,7 +125,7 @@ class TestReclassifyMelding:
 
         assert response.status_code == HTTP_200_OK
 
-        notes = (await db_session.execute(select(Note).where(Note.melding_id == melding.id))).scalars().all()
+        notes = (await db_session.execute(select(Note).where(Note.melding_id == melding.id))).unique().scalars().all()
         assert len(notes) == 1
 
         note = notes[0]
