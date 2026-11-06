@@ -8,7 +8,7 @@ results with pass/fail status.
 import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic_ai import Agent
@@ -18,6 +18,7 @@ from meldingen.adapters.classification.agent_classifier import AgentClassifierAd
 from meldingen.api.v1 import unauthorized_response
 from meldingen.authentication import authenticate_user
 from meldingen.dependencies import classifier_agent
+from meldingen.repositories import ClassificationRepository
 from meldingen.schemas.llm_eval import LlmEvalRunInput, LlmEvalRunOutput, LlmEvalTestCaseResult
 
 logger = logging.getLogger(__name__)
@@ -80,7 +81,7 @@ async def run_llm_eval(
 
     classifications = [_FakeClassification(name=c.name, instructions=c.instructions) for c in body.classifications]
     repository = _InMemoryClassificationRepository(classifications)
-    adapter = AgentClassifierAdapter(agent, repository)  # type: ignore[arg-type]
+    adapter = AgentClassifierAdapter(agent, cast(ClassificationRepository, repository))
 
     results: list[LlmEvalTestCaseResult] = []
     for i, test_case in enumerate(body.test_cases):

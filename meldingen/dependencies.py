@@ -439,19 +439,27 @@ def classification_model_settings() -> OpenAIChatModelSettings | None:
 
 
 def classifier_adapter(
-    agent: Annotated[Agent, Depends(classifier_agent)],
+    agent: Annotated[Agent | None, Depends(classifier_agent)],
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> AgentClassifierAdapter | DummyClassifierAdapter:
     if settings.llm_enabled:
-        return AgentClassifierAdapter(agent, repository, classification_model_settings())
-    return DummyClassifierAdapter()
+        if agent is None:
+            raise ValueError("LLM is enabled but no agent supplied.")
+
+        return AgentClassifierAdapter(
+            agent=agent,
+            repository=repository,
+            model_settings=classification_model_settings(),
+        )
+
+    return DummyClassifierAdapter(name="Dummy adapter")
 
 
-def classifier(
+async def classifier(
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
     adapter: Annotated[BaseClassifierAdapter, Depends(classifier_adapter)],
 ) -> Classifier[Classification]:
-    return Classifier(adapter, repository)
+    return Classifier([adapter], repository, settings.llm_fallback_classification_name)
 
 
 def token_generator() -> BaseTokenGenerator:
@@ -751,10 +759,18 @@ def mailer() -> BaseMailer:
     )
 
 
+async def default_classification(
+    classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+) -> Classification:
+    return await classification_repository.find_by_name(settings.llm_fallback_classification_name)
+
+
 def send_confirmation_mail_task(
+    default_classification: Annotated[Classification, Depends(default_classification)],
     renderer: Annotated[BaseMailRenderer, Depends(mail_renderer)],
     mailer: Annotated[BaseMailer, Depends(mailer)],
 ) -> SendConfirmationMailTask:
+
     return SendConfirmationMailTask(
         renderer,
         mailer,
@@ -762,7 +778,7 @@ def send_confirmation_mail_task(
         settings.mail_melding_confirmation_preview_text,
         settings.mail_melding_confirmation_body_text,
         settings.mail_melding_confirmation_subject,
-        settings.mail_melding_confirmation_service_belofte_default,
+        default_classification.service_level_objective_text,
     )
 
 

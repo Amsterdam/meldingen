@@ -8,6 +8,7 @@ import pytest
 from meldingen.adapters.mail.jinja_renderer import JinjaMailRenderer
 from meldingen.adapters.mail.smtp_mailer import LOGO_CONTENT_ID, LOGO_SRC, SmtpMailer
 from meldingen.config import settings
+from meldingen.dependencies import default_classification, send_confirmation_mail_task
 from meldingen.mail import (
     BaseMailer,
     BaseMailRenderer,
@@ -18,6 +19,7 @@ from meldingen.mail import (
     SendConfirmationMailTask,
 )
 from meldingen.models import Classification, Melding
+from meldingen.repositories import ClassificationRepository
 
 RENDERED_MAIL = RenderedMail(html="<p>Hoi</p>", text="Hoi")
 
@@ -133,6 +135,32 @@ async def melding(classification: Classification) -> Melding:
         text="Kapotte stoeptegel",
         classification=classification,
     )
+
+
+@pytest.mark.anyio
+async def test_confirmation_mail_uses_default_classification_service_level_objective_text(melding: Melding) -> None:
+    fallback = Classification(
+        name=settings.llm_fallback_classification_name,
+        service_level_objective_text="Wij reageren binnen {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type}.",
+    )
+    repository = Mock(ClassificationRepository)
+    repository.find_by_name = AsyncMock(return_value=fallback)
+    renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
+    mailer = AsyncMock(BaseMailer)
+
+    classification = await default_classification(repository)
+    with patch.object(settings, "mail_melding_confirmation_body_text", "{melding_categorie_service_belofte_tekst}"):
+        task = send_confirmation_mail_task(classification, renderer, mailer)
+
+    await task(melding)
+
+    repository.find_by_name.assert_awaited_once_with(settings.llm_fallback_classification_name)
+    renderer.assert_awaited_once_with(
+        settings.mail_melding_confirmation_title,
+        "Uw melding: ABC123",
+        "Wij reageren binnen 5 dagen.",
+    )
+    mailer.assert_awaited_once_with("melder@example.com", "Uw melding ABC123: melding ontvangen", RENDERED_MAIL)
 
 
 @pytest.mark.anyio
