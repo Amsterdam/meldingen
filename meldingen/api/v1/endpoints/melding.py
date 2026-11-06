@@ -141,7 +141,6 @@ from meldingen.dependencies import (
     note_list_output_factory,
     note_output_factory,
     note_retrieve_action,
-    note_retrieve_output_factory,
     note_update_action,
     public_id_generator,
     states_output_factory,
@@ -180,7 +179,6 @@ from meldingen.schemas.output import (
     MeldingOutput,
     MeldingUpdateOutput,
     NoteOutput,
-    NoteRetrieveOutput,
     StatesOutput,
 )
 from meldingen.schemas.output_factories import (
@@ -193,7 +191,7 @@ from meldingen.schemas.output_factories import (
     MeldingUpdateOutputFactory,
     NoteListOutputFactory,
     NoteOutputFactory,
-    NoteRetrieveOutputFactory,
+    NoteOutputFactory,
     StatesOutputFactory,
 )
 from meldingen.schemas.types import GeoJson
@@ -1283,7 +1281,7 @@ async def add_note(
     produce_output: Annotated[NoteOutputFactory, Depends(note_output_factory)],
 ) -> NoteOutput:
     try:
-        note = await action(melding_id, note_input.text, user)
+        note = await action(melding_id, note_input.text, user, note_input.parent_note_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
@@ -1301,7 +1299,7 @@ async def list_notes(
     action: Annotated[NoteListAction, Depends(note_list_action)],
     produce_output: Annotated[NoteListOutputFactory, Depends(note_list_output_factory)],
     sort: Annotated[SortParams | None, Depends(optional_sort_param)] = None,
-) -> list[NoteRetrieveOutput]:
+) -> list[NoteOutput]:
     try:
         notes = await action(
             melding_id,
@@ -1311,7 +1309,7 @@ async def list_notes(
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await produce_output(notes)
+    return produce_output(notes)
 
 
 @router.get(
@@ -1324,14 +1322,14 @@ async def retrieve_note(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     note_id: Annotated[int, Path(description="The id of the note.", ge=1)],
     action: Annotated[NoteRetrieveAction[Note], Depends(note_retrieve_action)],
-    produce_output: Annotated[NoteRetrieveOutputFactory, Depends(note_retrieve_output_factory)],
-) -> NoteRetrieveOutput:
+    produce_output: Annotated[NoteOutputFactory, Depends(note_output_factory)],
+) -> NoteOutput:
     try:
         note = await action(melding_id, note_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await produce_output(note)
+    return produce_output(note)
 
 
 @router.patch(
@@ -1346,8 +1344,8 @@ async def update_note(
     user: Annotated[User, Depends(authenticate_user)],
     retrieve: Annotated[NoteRetrieveAction[Note], Depends(note_retrieve_action)],
     update: Annotated[NoteUpdateAction[Note], Depends(note_update_action)],
-    produce_output: Annotated[NoteRetrieveOutputFactory, Depends(note_retrieve_output_factory)],
-) -> NoteRetrieveOutput:
+    produce_output: Annotated[NoteOutputFactory, Depends(note_output_factory)],
+) -> NoteOutput:
     # Fetch the note first so ownership can be verified before it is mutated. A note may only
     # be edited by the user that created it.
     try:
@@ -1363,7 +1361,7 @@ async def update_note(
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await produce_output(updated)
+    return produce_output(updated)
 
 
 @router.get(

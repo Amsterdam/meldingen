@@ -60,7 +60,13 @@ class AssetFactory(BaseAssetFactory[Asset, AssetType, Melding]):
 
 class NoteFactory(BaseNoteFactory[Note, Melding, User]):
     def __call__(self, text: str, melding: Melding, user: User, parent_note: Note | None = None) -> Note:
-        return Note(text=text, melding=melding, user=user, parent_note=parent_note, parent_note_text_snapshot=parent_note.text if parent_note else None)
+        return Note(
+            text=text,
+            melding=melding,
+            user=user,
+            parent_note=parent_note,
+            parent_note_text_snapshot=parent_note.text if parent_note else None,
+        )
 
 
 class UnsupportedAnswerTypeException(Exception):
