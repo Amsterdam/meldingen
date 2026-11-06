@@ -488,7 +488,10 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         auth_user: None,
         classifications: list[Classification],
     ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"id_in": [3, 6]}'})
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME),
+            params={"filter": f'{{"id_in": [{classifications[2].id}, {classifications[5].id}]}}'},
+        )
 
         assert response.status_code == HTTP_200_OK
 
