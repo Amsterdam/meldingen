@@ -447,7 +447,6 @@ def classifier_adapter(
             raise ValueError("LLM is enabled but no agent supplied.")
 
         return AgentClassifierAdapter(
-            name=f"LLM Adapter {settings.llm_model_identifier}",
             agent=agent,
             repository=repository,
             model_settings=classification_model_settings(),

@@ -18,11 +18,18 @@ class AgentClassifierAdapter(BaseClassifierAdapter):
 
     def __init__(
         self,
-        name: str,
         agent: Agent,
         repository: ClassificationRepository,
         model_settings: ModelSettings | None = None,
+        name: str | None = None,
     ):
+        """Default the adapter name to the agent's configured model identifier."""
+        if name is None:
+            model = agent.model
+            if model is None:
+                raise ValueError("A model or explicit adapter name is required.")
+            name = model if isinstance(model, str) else model.model_name
+
         super().__init__(name)
 
         self._agent = agent
