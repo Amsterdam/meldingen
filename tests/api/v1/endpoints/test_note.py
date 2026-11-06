@@ -50,12 +50,12 @@ class TestAddNote:
         data = response.json()
         assert data["text"] == "This is a **note**"
         assert data["melding_id"] == melding.id
-        assert data["user_id"] == auth_behandelaar.id
+        assert data["user"]["id"] == auth_behandelaar.id
         assert "id" in data
         assert "created_at" in data
         assert "updated_at" in data
 
-        notes = (await db_session.execute(select(Note).where(Note.melding_id == melding.id))).scalars().all()
+        notes = (await db_session.execute(select(Note).where(Note.melding_id == melding.id))).unique().scalars().all()
         assert len(notes) == 1
         assert notes[0].text == "This is a **note**"
 
@@ -153,13 +153,44 @@ class TestAddNote:
         assert response.status_code == HTTP_201_CREATED
         assert response.json()["text"] == text
 
+    @pytest.mark.anyio
+    async def test_add_note_as_reply_to_previous_note(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_behandelaar: User,
+        melding: Melding,
+        note: Note,
+    ) -> None:
+        response = await client.post(
+            app.url_path_for("melding:add-note", melding_id=melding.id),
+            json={"text": "A reply", "parent_note_id": note.id},
+        )
 
-@pytest.fixture
-async def note(db_session: AsyncSession, melding: Melding, user: User) -> Note:
-    note = Note(text="An existing note", melding=melding, user=user)
-    db_session.add(note)
-    await db_session.commit()
-    return note
+        assert response.status_code == HTTP_201_CREATED
+        data = response.json()
+
+        assert data["text"] == "A reply"
+        assert data["parent_note_id"] == note.id
+        assert data["parent_note_text_snapshot"] == note.text
+        assert data["melding_id"] == melding.id
+        assert "created_at" in data
+        assert "updated_at" in data
+
+    @pytest.mark.anyio
+    async def test_add_note_as_reply_to_nonexistent_note_returns_404(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_behandelaar: User,
+        melding: Melding,
+    ) -> None:
+        response = await client.post(
+            app.url_path_for("melding:add-note", melding_id=melding.id),
+            json={"text": "A reply", "parent_note_id": 999999},
+        )
+
+        assert response.status_code == HTTP_404_NOT_FOUND
 
 
 class TestRetrieveNoteUnauthorized(BaseUnauthorizedTest):
@@ -223,6 +254,34 @@ class TestRetrieveNote:
 
         assert response.status_code == HTTP_404_NOT_FOUND
 
+    @pytest.mark.anyio
+    async def test_retrieve_reply_note(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_behandelaar: User,
+        melding: Melding,
+        note: Note,
+    ) -> None:
+        response = await client.get(
+            app.url_path_for("melding:retrieve-note", melding_id=melding.id, note_id=note.id),
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        data = response.json()
+        assert data["id"] == note.id
+        assert data["text"] == "An existing note"
+        assert data["melding_id"] == melding.id
+        assert "created_at" in data
+        assert "updated_at" in data
+        assert data["user"]["id"] == note.user.id
+        assert data["user"]["email"] == note.user.email
+        assert data["user"]["username"] == note.user.username
+
+        assert data["parent_note_id"] == note.parent_note_id
+        assert data["parent_note_text_snapshot"] == note.parent_note_text_snapshot
+
 
 class TestUpdateNoteUnauthorized(BaseUnauthorizedTest):
     def get_route_name(self) -> str:
@@ -258,7 +317,7 @@ class TestUpdateNote:
         assert data["text"] == "updated **text**"
         assert data["melding_id"] == melding.id
 
-        persisted = (await db_session.execute(select(Note).where(Note.id == note.id))).scalar_one()
+        persisted = (await db_session.execute(select(Note).where(Note.id == note.id))).unique().scalar_one()
         assert persisted.text == "updated **text**"
 
     @pytest.mark.anyio
@@ -324,7 +383,7 @@ class TestUpdateNote:
 
         assert response.status_code == HTTP_403_FORBIDDEN
 
-        persisted = (await db_session.execute(select(Note).where(Note.id == note.id))).scalar_one()
+        persisted = (await db_session.execute(select(Note).where(Note.id == note.id))).unique().scalar_one()
         assert persisted.text == "not mine"
 
     @pytest.mark.anyio
@@ -343,6 +402,25 @@ class TestUpdateNote:
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
         assert response.json()["detail"][0]["loc"] == ["body", "text"]
+
+    @pytest.mark.anyio
+    async def test_update_note_with_parent_id_does_not_set_it(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_behandelaar: User,
+        melding: Melding,
+        note: Note,
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for("melding:update-note", melding_id=melding.id, note_id=note.id),
+            json={"parent_note_id": 1, "text": "some text"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+        body = response.json()
+        assert body["parent_note_id"] is None
+        assert body["parent_note_text_snapshot"] is None
 
 
 class TestListNotesUnauthorized(BaseUnauthorizedTest):
@@ -448,3 +526,64 @@ class TestListNotes:
 
         assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
         assert response.json()["detail"][0]["loc"] == ["query", "sort"]
+
+    @pytest.mark.anyio
+    async def test_list_notes_with_reply_notes(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_behandelaar: User,
+        melding: Melding,
+        user: User,
+    ) -> None:
+        parent_note = Note(text="parent", melding=melding, user=user)
+        db_session.add(parent_note)
+        await db_session.commit()
+        await db_session.refresh(parent_note)
+
+        reply_note = Note(
+            text="reply",
+            melding=melding,
+            user=user,
+            parent_note=parent_note,
+            parent_note_text_snapshot=parent_note.text,
+        )
+        db_session.add(reply_note)
+        await db_session.commit()
+        await db_session.refresh(reply_note)
+
+        response = await client.get(app.url_path_for("melding:notes", melding_id=melding.id))
+
+        assert response.status_code == HTTP_200_OK
+        data = response.json()
+        assert len(data) == 2
+
+        first = data[0]
+        # Newest first (reply note)
+        assert first["id"] == reply_note.id
+        assert first["text"] == reply_note.text
+        assert first["melding_id"] == melding.id
+        assert first["parent_note_id"] == parent_note.id
+        assert first["parent_note_text_snapshot"] == parent_note.text
+        assert "created_at" in first
+        assert "updated_at" in first
+        assert first["user"]["id"] == user.id
+        assert first["user"]["email"] == user.email
+        assert first["user"]["username"] == user.username
+        assert "created_at" in first["user"]
+        assert "updated_at" in first["user"]
+
+        second = data[1]
+        assert second["id"] == parent_note.id
+        assert second["text"] == parent_note.text
+        assert second["melding_id"] == melding.id
+        assert second["parent_note_id"] is None
+        assert second["parent_note_text_snapshot"] is None
+        assert "created_at" in second
+        assert "updated_at" in second
+        assert second["user"]["id"] == user.id
+        assert second["user"]["email"] == user.email
+        assert second["user"]["username"] == user.username
+        assert "created_at" in second["user"]
+        assert "updated_at" in second["user"]

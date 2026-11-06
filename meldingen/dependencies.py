@@ -209,7 +209,6 @@ from meldingen.schemas.output_factories import (
     MeldingUpdateOutputFactory,
     NoteListOutputFactory,
     NoteOutputFactory,
-    NoteRetrieveOutputFactory,
     SimpleClassificationOutputFactory,
     SimpleFormOutputFactory,
     SimpleStaticFormOutputFactory,
@@ -604,10 +603,6 @@ def note_retrieve_action(repository: Annotated[NoteRepository, Depends(note_repo
     return NoteRetrieveAction(repository)
 
 
-def note_retrieve_output_factory() -> NoteRetrieveOutputFactory:
-    return NoteRetrieveOutputFactory()
-
-
 def note_update_action(repository: Annotated[NoteRepository, Depends(note_repository)]) -> NoteUpdateAction[Note]:
     return NoteUpdateAction(repository)
 
@@ -620,9 +615,9 @@ def note_list_action(
 
 
 def note_list_output_factory(
-    note_retrieve_output_factory: Annotated[NoteRetrieveOutputFactory, Depends(note_retrieve_output_factory)],
+    note_output_factory: Annotated[NoteOutputFactory, Depends(note_output_factory)],
 ) -> NoteListOutputFactory:
-    return NoteListOutputFactory(note_retrieve_output_factory)
+    return NoteListOutputFactory(note_output_factory)
 
 
 def melding_update_action(

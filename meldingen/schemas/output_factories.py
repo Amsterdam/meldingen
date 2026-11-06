@@ -58,7 +58,6 @@ from meldingen.schemas.output import (
     MeldingServiceLevelObjectiveOutput,
     MeldingUpdateOutput,
     NoteOutput,
-    NoteRetrieveOutput,
     QuestionOutput,
     SimpleClassificationOutput,
     SimpleFormOutput,
@@ -696,46 +695,37 @@ class SourceOutputFactory:
 
 
 class NoteOutputFactory:
+    """Requires: note.user to be loaded."""
+
     def __call__(self, note: Note) -> NoteOutput:
+
         return NoteOutput(
             id=note.id,
             text=note.text,
             melding_id=note.melding_id,
-            user_id=note.user_id,
-            classification_id=note.classification_id,
-            created_at=note.created_at,
-            updated_at=note.updated_at,
-        )
-
-
-class NoteRetrieveOutputFactory:
-    async def __call__(self, note: Note) -> NoteRetrieveOutput:
-        user = await note.awaitable_attrs.user
-        return NoteRetrieveOutput(
-            id=note.id,
-            text=note.text,
-            melding_id=note.melding_id,
             user=UserOutput(
-                id=user.id,
-                email=user.email,
-                username=user.username,
-                created_at=user.created_at,
-                updated_at=user.updated_at,
+                id=note.user.id,
+                email=note.user.email,
+                username=note.user.username,
+                created_at=note.user.created_at,
+                updated_at=note.user.updated_at,
             ),
             classification_id=note.classification_id,
+            parent_note_id=note.parent_note_id,
+            parent_note_text_snapshot=note.parent_note_text_snapshot,
             created_at=note.created_at,
             updated_at=note.updated_at,
         )
 
 
 class NoteListOutputFactory:
-    _output_note: NoteRetrieveOutputFactory
+    _output_note: NoteOutputFactory
 
-    def __init__(self, note_retrieve_output_factory: NoteRetrieveOutputFactory):
-        self._output_note = note_retrieve_output_factory
+    def __init__(self, note_output_factory: NoteOutputFactory):
+        self._output_note = note_output_factory
 
-    async def __call__(self, notes: Sequence[Note]) -> list[NoteRetrieveOutput]:
-        return [await self._output_note(note) for note in notes]
+    def __call__(self, notes: Sequence[Note]) -> list[NoteOutput]:
+        return [self._output_note(note) for note in notes]
 
 
 class MeldingOutputFactory:

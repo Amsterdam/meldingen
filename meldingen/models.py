@@ -669,13 +669,20 @@ class Note(AsyncAttrs, BaseDBModel, BaseNote):
     melding: Mapped[Melding] = relationship()
 
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), init=False)
-    user: Mapped[User] = relationship()
+
+    # Always JOIN the User, since we always need to communicate user data, such as email address.
+    user: Mapped[User] = relationship(lazy="joined")
 
     # Set on the note that records why a melding was reclassified: it points at the classification
     # the melding was moved to, so the reason is shown next to the classification it argues for.
     # None for a note a Behandelaar wrote by hand.
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), init=False, default=None)
     classification: Mapped[Classification | None] = relationship(default=None)
+
+    parent_note_id: Mapped[int | None] = mapped_column(ForeignKey("note.id"), init=False, default=None)
+    parent_note: Mapped[Optional["Note"]] = relationship(default=None, remote_side="Note.id")
+    # Stores a snapshot of the parent note's text at the time this note was created.
+    parent_note_text_snapshot: Mapped[str | None] = mapped_column(String(), default=None)
 
 
 class LlmEvalRunStatus(enum.StrEnum):
