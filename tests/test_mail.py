@@ -148,7 +148,6 @@ async def test_send_confirmation_mail_task(melding: Melding) -> None:
         # Service level objective properties can also be used in the body template
         body_template="Tekst {melding_tekst} {melding_id}",
         subject_template="Onderwerp {melding_id}",
-        service_belofte_template="Service belofte {melding_categorie_service_belofte_dagen} {melding_categorie_service_belofte_dag_type}",
     )
     await task(melding)
 
@@ -175,7 +174,6 @@ class TestMailFormatting:
             preview_template=preview_template,
             body_template=body_template,
             subject_template=subject_template,
-            service_belofte_template=service_belofte_template,
         )
         return renderer, task, mailer
 
@@ -314,9 +312,7 @@ class TestMailFormatting:
 @pytest.mark.anyio
 async def test_send_confirmation_mail_task_without_email(melding: Melding) -> None:
     mailer = AsyncMock(BaseMailer)
-    task = SendConfirmationMailTask(
-        AsyncMock(BaseMailRenderer), mailer, "Titel", "Preview", "Tekst", "Onderwerp", "Servicebelofte"
-    )
+    task = SendConfirmationMailTask(AsyncMock(BaseMailRenderer), mailer, "Titel", "Preview", "Tekst", "Onderwerp")
     melding.email = None
 
     with pytest.raises(EmailAddressMissingException):
@@ -329,7 +325,7 @@ async def test_send_confirmation_mail_task_without_email(melding: Melding) -> No
 async def test_send_confirmation_mail_task_send_fails(melding: Melding) -> None:
     renderer = AsyncMock(BaseMailRenderer, return_value=RENDERED_MAIL)
     mailer = AsyncMock(BaseMailer, side_effect=MailException)
-    task = SendConfirmationMailTask(renderer, mailer, "Titel", "Preview", "Tekst", "Onderwerp", "Servicebelofte")
+    task = SendConfirmationMailTask(renderer, mailer, "Titel", "Preview", "Tekst", "Onderwerp")
 
     with pytest.raises(MailException):
         await task(melding)
