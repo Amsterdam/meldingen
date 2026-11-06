@@ -681,6 +681,7 @@ async def note(db_session: AsyncSession, melding: Melding, user: User) -> Note:
     await db_session.commit()
     return note
 
+
 @pytest.fixture
 async def reply_note(db_session: AsyncSession, melding: Melding, user: User, note: Note) -> Note:
     new_note = Note(
