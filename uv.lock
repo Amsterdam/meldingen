@@ -2130,7 +2130,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=task%2FSIG-7768-refactor-list-filtering#b0ecef5a15223642a04031cc324f5069cea2ba5b" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=task%2FSIG-7768-refactor-list-filtering#0a9e3772532c43afaa62dcdf4c7c5d1d1704237c" }
 dependencies = [
     { name = "plugfs" },
 ]
