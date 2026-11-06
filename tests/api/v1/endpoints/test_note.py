@@ -414,7 +414,7 @@ class TestUpdateNote:
     ) -> None:
         response = await client.patch(
             app.url_path_for("melding:update-note", melding_id=melding.id, note_id=note.id),
-            json={"parent_id": 1, "text": "some text"},
+            json={"parent_note_id": 1, "text": "some text"},
         )
 
         assert response.status_code == HTTP_200_OK

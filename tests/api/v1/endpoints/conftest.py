@@ -681,7 +681,7 @@ async def note(db_session: AsyncSession, melding: Melding, user: User) -> Note:
     await db_session.commit()
     return note
 
-
+@pytest.fixture
 async def reply_note(db_session: AsyncSession, melding: Melding, user: User, note: Note) -> Note:
     new_note = Note(
         text="A reply note",
@@ -692,7 +692,6 @@ async def reply_note(db_session: AsyncSession, melding: Melding, user: User, not
     )
     db_session.add(new_note)
     await db_session.commit()
-    await db_session.refresh(new_note)
     return new_note
 
 
