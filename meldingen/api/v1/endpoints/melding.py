@@ -191,7 +191,6 @@ from meldingen.schemas.output_factories import (
     MeldingUpdateOutputFactory,
     NoteListOutputFactory,
     NoteOutputFactory,
-    NoteOutputFactory,
     StatesOutputFactory,
 )
 from meldingen.schemas.types import GeoJson
