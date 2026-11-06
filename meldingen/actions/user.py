@@ -6,12 +6,13 @@ from meldingen_core.actions.user import UserUpdateAction as BaseUserUpdateAction
 
 from meldingen.actions.base import BaseListAction
 from meldingen.models import User
+from meldingen.repositories import RepositoryListFilters
 
 
 class UserCreateAction(BaseUserCreateAction[User]): ...
 
 
-class UserListAction(BaseUserListAction[User], BaseListAction[User]): ...
+class UserListAction(BaseUserListAction[User, RepositoryListFilters], BaseListAction[User]): ...
 
 
 class UserRetrieveAction(BaseUserRetrieveAction[User]): ...

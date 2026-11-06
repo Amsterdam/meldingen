@@ -6,9 +6,12 @@ from meldingen_core.actions.classification import ClassificationUpdateAction as 
 
 from meldingen.actions.base import BaseListAction
 from meldingen.models import AssetType, Classification
+from meldingen.repositories import RepositoryListFilters
 
 
-class ClassificationListAction(BaseClassificationListAction[Classification], BaseListAction[Classification]): ...
+class ClassificationListAction(
+    BaseClassificationListAction[Classification, RepositoryListFilters], BaseListAction[Classification]
+): ...
 
 
 class ClassificationCreateAction(BaseClassificationCreateAction[Classification, AssetType]): ...

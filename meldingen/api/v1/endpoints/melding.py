@@ -28,7 +28,6 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction, NoteUpdateAction
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
-from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import InvalidLabelException
 from meldingen_core.managers import RelationshipExistsException
 from meldingen_core.reclassification import ReclassificationNotAllowedException
@@ -158,7 +157,7 @@ from meldingen.models import (
     Source,
     User,
 )
-from meldingen.repositories import MeldingRepository
+from meldingen.repositories import MeldingRepository, MeldingRepositoryListFilters
 from meldingen.schemas.input import (
     AnswerInputUnion,
     CompleteMeldingInput,
@@ -280,7 +279,7 @@ async def list_meldingen(
         else get_all_backoffice_states()
     )
 
-    filter_input = MeldingListFilters(
+    filter_input = MeldingRepositoryListFilters(
         area=area,
         states=states,
     )
@@ -292,13 +291,13 @@ async def list_meldingen(
         sort_direction=sort.get_direction(),
         filters=filter_input,
     )
+
     output = []
+
     for melding in meldingen:
         output.append(await produce_output(melding))
 
-    filters = repo.filter_input_to_expression_arguments(filter_input)
-
-    await content_range_header_adder(response, pagination, filters)
+    await content_range_header_adder(response, pagination, filter_input)
 
     return output
 
