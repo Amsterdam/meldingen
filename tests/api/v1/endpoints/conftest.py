@@ -691,6 +691,9 @@ async def reply_note(db_session: AsyncSession, melding: Melding, user: User, not
         parent_note=note,
         parent_note_text_snapshot=note.text,
     )
+    new_note.created_at = utc_now() + timedelta(hours=1)
+    new_note.updated_at = new_note.created_at
+
     db_session.add(new_note)
     await db_session.commit()
     return new_note

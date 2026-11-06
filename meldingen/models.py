@@ -670,8 +670,8 @@ class Note(AsyncAttrs, BaseDBModel, BaseNote):
 
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), init=False)
 
-    # Using selectin to always load user, since we always need to communicate user data, such as email address.
-    user: Mapped[User] = relationship(lazy="selectin")
+    # Always JOIN the User, since we always need to communicate user data, such as email address.
+    user: Mapped[User] = relationship(lazy="joined")
 
     # Set on the note that records why a melding was reclassified: it points at the classification
     # the melding was moved to, so the reason is shown next to the classification it argues for.

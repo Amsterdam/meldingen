@@ -55,7 +55,7 @@ class TestAddNote:
         assert "created_at" in data
         assert "updated_at" in data
 
-        notes = (await db_session.execute(select(Note).where(Note.melding_id == melding.id))).scalars().all()
+        notes = (await db_session.execute(select(Note).where(Note.melding_id == melding.id))).unique().scalars().all()
         assert len(notes) == 1
         assert notes[0].text == "This is a **note**"
 
@@ -317,7 +317,7 @@ class TestUpdateNote:
         assert data["text"] == "updated **text**"
         assert data["melding_id"] == melding.id
 
-        persisted = (await db_session.execute(select(Note).where(Note.id == note.id))).scalar_one()
+        persisted = (await db_session.execute(select(Note).where(Note.id == note.id))).unique().scalar_one()
         assert persisted.text == "updated **text**"
 
     @pytest.mark.anyio
@@ -383,7 +383,7 @@ class TestUpdateNote:
 
         assert response.status_code == HTTP_403_FORBIDDEN
 
-        persisted = (await db_session.execute(select(Note).where(Note.id == note.id))).scalar_one()
+        persisted = (await db_session.execute(select(Note).where(Note.id == note.id))).unique().scalar_one()
         assert persisted.text == "not mine"
 
     @pytest.mark.anyio
@@ -560,11 +560,12 @@ class TestListNotes:
         assert len(data) == 2
 
         first = data[0]
-        assert first["id"] == parent_note.id
-        assert first["text"] == parent_note.text
+        # Newest first (reply note)
+        assert first["id"] == reply_note.id
+        assert first["text"] == reply_note.text
         assert first["melding_id"] == melding.id
-        assert first["parent_note_id"] is None
-        assert first["parent_note_text_snapshot"] is None
+        assert first["parent_note_id"] == parent_note.id
+        assert first["parent_note_text_snapshot"] == parent_note.text
         assert "created_at" in first
         assert "updated_at" in first
         assert first["user"]["id"] == user.id
@@ -574,11 +575,11 @@ class TestListNotes:
         assert "updated_at" in first["user"]
 
         second = data[1]
-        assert second["id"] == reply_note.id
-        assert second["text"] == reply_note.text
+        assert second["id"] == parent_note.id
+        assert second["text"] == parent_note.text
         assert second["melding_id"] == melding.id
-        assert second["parent_note_id"] == parent_note.id
-        assert second["parent_note_text_snapshot"] == parent_note.text
+        assert second["parent_note_id"] is None
+        assert second["parent_note_text_snapshot"] is None
         assert "created_at" in second
         assert "updated_at" in second
         assert second["user"]["id"] == user.id
