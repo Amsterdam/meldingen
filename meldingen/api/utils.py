@@ -4,12 +4,13 @@ from typing import Annotated, TypedDict
 
 from fastapi import Depends, HTTPException, Query, Response, UploadFile
 from meldingen_core import SortingDirection
+from meldingen_core.filters import RepositoryFilters
 from pydantic import BaseModel, Field, RootModel, ValidationError
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.config import settings
 from meldingen.models import BaseDBModel
-from meldingen.repositories import BaseSQLAlchemyRepository, RepositoryFilters, RepositoryListFilters
+from meldingen.repositories import BaseSQLAlchemyRepository, RepositoryListFilters
 
 
 class PaginationParams(TypedDict):
@@ -133,4 +134,4 @@ class ContentRangeHeaderAdder[T: BaseDBModel]:
 
         response.headers["Content-Range"] = f"{self._identifier} {offset}-{limit - 1 + offset}/{total}"
 
-        return 0
+        return total

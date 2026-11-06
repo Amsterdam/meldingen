@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
@@ -22,10 +21,21 @@ from meldingen_core.repositories import (
     BaseUserRepository,
 )
 from meldingen_core.statemachine import BaseMeldingState
-from sqlalchemy import ColumnExpressionArgument, Select, delete, desc, select
+from sqlalchemy import (
+    ColumnElement,
+    ColumnExpressionArgument,
+    Select,
+    delete,
+    desc,
+    select,
+)
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Relationship, selectinload
+from sqlalchemy.orm import (
+    ColumnProperty,
+    Relationship,
+    selectinload,
+)
 from sqlalchemy.sql import func
 
 from meldingen.models import (
@@ -77,7 +87,7 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
         self._session = session
 
     @abstractmethod
-    def get_model_type(self) -> type[Any]: ...
+    def get_model_type(self) -> type[T]: ...
 
     def _visibility_filters(self) -> Sequence[ColumnExpressionArgument[bool]]:
         """Row-level filters applied to every read query (list/retrieve/count).
@@ -151,15 +161,15 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
         statement = self._get_query_statement()
         statement = self._handle_list_filters(statement, filters, apply_visibility_filters)
-        statement = select(func.count()).select_from(statement.subquery())
+        count_statement = select(func.count()).select_from(statement.subquery())
 
-        result = await self._session.execute(statement)
+        result = await self._session.execute(count_statement)
 
         return result.scalar_one()
 
     def _get_query_statement(
         self,
-    ) -> Select[tuple[Any]]:
+    ) -> Select[tuple[T]]:
         statement = select(self.get_model_type())
         return statement
 
@@ -180,7 +190,7 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
     def _handle_list_filters(
         self,
-        statement: Select[Any],
+        statement: Select[tuple[T]],
         filters: RepositoryFilters | None = None,
         apply_visibility_filters: bool = True,
     ) -> Select[tuple[T]]:
@@ -197,10 +207,10 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
     def _handle_sorting(
         self,
-        statement: Select[Any],
+        statement: Select[tuple[T]],
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-    ) -> Select[Any]:
+    ) -> Select[tuple[T]]:
         if sort_attribute_name is not None:
             sort_attribute = self.get_model_type().__mapper__.attrs.get(sort_attribute_name)
 
@@ -210,15 +220,26 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
             if isinstance(sort_attribute, Relationship):
                 raise AttributeNotFoundException(f"Cannot sort on relationship {sort_attribute_name}")
 
+            if not isinstance(sort_attribute, ColumnProperty):
+                raise AttributeNotFoundException(f"Cannot sort on non-column attribute {sort_attribute_name}")
+
+            sort_expression = sort_attribute.expression
+
+            if not isinstance(sort_expression, ColumnElement):
+                raise AttributeNotFoundException(f"Cannot sort on non-column expression {sort_attribute_name}")
+
             if sort_direction is None or sort_direction == SortingDirection.ASC:
-                statement = statement.order_by(sort_attribute)
+                statement = statement.order_by(sort_expression)
             elif sort_direction == SortingDirection.DESC:
-                statement = statement.order_by(desc(sort_attribute))
+                statement = statement.order_by(desc(sort_expression))
 
         return statement
 
 
-class BaseRepositoryWithListFilters[T: BaseDBModel](BaseSQLAlchemyRepository[T]):
+type NamedDBModel = Classification | AssetType | Label | Source
+
+
+class BaseRepositoryWithListFilters[T: NamedDBModel](BaseSQLAlchemyRepository[T]):
     """Base class for repository filter inputs."""
 
     def _filter_input_to_expression_arguments(
@@ -226,6 +247,8 @@ class BaseRepositoryWithListFilters[T: BaseDBModel](BaseSQLAlchemyRepository[T])
     ) -> list[ColumnExpressionArgument[bool]]:
         expressions: list[ColumnExpressionArgument[bool]] = []
         _type = self.get_model_type()
+
+        # assert hasattr(_type, "name") is not None and _type.name is not None
 
         if filter_input is None:
             return expressions
@@ -264,10 +287,10 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
     def _filter_input_to_expression_arguments(
         self, filters: MeldingRepositoryListFilters | None = None
     ) -> list[ColumnExpressionArgument[bool]] | None:
-        if filters is None:
-            return None
-
         expressions: list[ColumnExpressionArgument[bool]] = []
+
+        if filters is None:
+            return expressions
 
         area = None if filters is None else filters.area
         states = None if filters is None else filters.states
