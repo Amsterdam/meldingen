@@ -24,7 +24,7 @@ async def ensure_fallback_classification(session: AsyncSession) -> int:
     stmt = insert(Classification).values(
         name=settings.llm_fallback_classification_name,
         instructions=settings.llm_fallback_classification_instructions,
-        servive_level_objective_text=settings.mail_melding_confirmation_service_belofte_default,
+        service_level_objective_text=settings.mail_melding_confirmation_service_belofte_default,
     )
     stmt = stmt.on_conflict_do_nothing(index_elements=["name"], index_where=Classification.deleted_at.is_(None))
     result = cast(CursorResult[Any], await session.execute(stmt))
