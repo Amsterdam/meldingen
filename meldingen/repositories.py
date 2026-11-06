@@ -1,6 +1,8 @@
+import builtins
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any
 
 from meldingen_core import SortingDirection
 from meldingen_core.exceptions import NotFoundException
@@ -174,12 +176,13 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
         return statement
 
     def _filter_input_to_expression_arguments(
-        self, filter_input: RepositoryFilters | None = None
-    ) -> list[ColumnExpressionArgument[bool]]:
+        self, filter_input: Any = None
+    ) -> builtins.list[ColumnExpressionArgument[bool]]:
         """
         Returns a list of SQLAlchemy column expression arguments based on the provided filter input.
         Implements the conversion of repository filters into SQLAlchemy expressions.
         This function should be extended to handle specific filter criteria for the repository.
+        Subclasses define the accepted filter type; callers must supply compatible filters.
         """
         expressions: list[ColumnExpressionArgument[bool]] = []
 
@@ -246,18 +249,17 @@ class BaseRepositoryWithListFilters[T: NamedDBModel](BaseSQLAlchemyRepository[T]
         self, filter_input: RepositoryListFilters | None = None
     ) -> list[ColumnExpressionArgument[bool]]:
         expressions: list[ColumnExpressionArgument[bool]] = []
-        _type = self.get_model_type()
-
-        # assert hasattr(_type, "name") is not None and _type.name is not None
 
         if filter_input is None:
             return expressions
 
-        if filter_input is not None:
-            if filter_input.name_contains is not None:
-                expressions.append(_type.name.ilike(f"%{filter_input.name_contains}%"))
-            if filter_input.id_in is not None:
-                expressions.append(_type.id.in_(filter_input.id_in))
+        _type = self.get_model_type()
+
+        if filter_input.name_contains is not None:
+            expressions.append(_type.name.ilike(f"%{filter_input.name_contains}%"))
+
+        if filter_input.id_in is not None:
+            expressions.append(_type.id.in_(filter_input.id_in))
 
         return expressions
 
@@ -285,21 +287,23 @@ class MeldingRepository(BaseSQLAlchemyRepository[Melding], BaseMeldingRepository
         await self.save(melding)
 
     def _filter_input_to_expression_arguments(
-        self, filters: MeldingRepositoryListFilters | None = None
-    ) -> list[ColumnExpressionArgument[bool]] | None:
+        self, filter_input: MeldingRepositoryListFilters | None = None
+    ) -> list[ColumnExpressionArgument[bool]]:
         expressions: list[ColumnExpressionArgument[bool]] = []
 
-        if filters is None:
+        if filter_input is None:
             return expressions
 
-        area = None if filters is None else filters.area
-        states = None if filters is None else filters.states
+        if filter_input.area is not None:
+            expressions.append(
+                func.ST_Contains(
+                    func.ST_GeomFromGeoJSON(filter_input.area),
+                    Melding.geo_location,
+                )
+            )
 
-        if area is not None:
-            expressions.append(func.ST_Contains(func.ST_GeomFromGeoJSON(area), Melding.geo_location))
-
-        if states is not None:
-            expressions.append(Melding.state.in_(states))
+        if filter_input.states is not None:
+            expressions.append(Melding.state.in_(filter_input.states))
 
         return expressions
 
