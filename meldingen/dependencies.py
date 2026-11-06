@@ -759,10 +759,18 @@ def mailer() -> BaseMailer:
     )
 
 
+async def default_classification(
+    classification_repository: Annotated[ClassificationRepository, Depends(classification_repository)],
+) -> Classification:
+    return await classification_repository.find_by_name(settings.llm_fallback_classification_name)
+
+
 def send_confirmation_mail_task(
+    default_classification: Annotated[Classification, Depends(default_classification)],
     renderer: Annotated[BaseMailRenderer, Depends(mail_renderer)],
     mailer: Annotated[BaseMailer, Depends(mailer)],
 ) -> SendConfirmationMailTask:
+
     return SendConfirmationMailTask(
         renderer,
         mailer,
@@ -770,6 +778,7 @@ def send_confirmation_mail_task(
         settings.mail_melding_confirmation_preview_text,
         settings.mail_melding_confirmation_body_text,
         settings.mail_melding_confirmation_subject,
+        default_classification.service_level_objective_text,
     )
 
 
