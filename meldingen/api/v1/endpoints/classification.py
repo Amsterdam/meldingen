@@ -164,8 +164,16 @@ async def update_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
     classification_input: ClassificationUpdateInput,
     action: Annotated[ClassificationUpdateAction, Depends(classification_update_action)],
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> ClassificationOutput:
     classification_data = classification_input.model_dump(exclude_unset=True)
+    classification = await repository.retrieve(classification_id)
+
+    if classification is None:
+        raise HTTPException(HTTP_404_NOT_FOUND)
+
+    if classification_data.get("name") and classification.name == settings.llm_fallback_classification_name:
+        raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, detail="Default classification name cannot be updated.")
 
     try:
         classification = await action(classification_id, classification_data)
