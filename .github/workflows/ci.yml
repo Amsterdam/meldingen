@@ -59,7 +59,7 @@ jobs:
           docker pull ${REGISTRY}/${REPOSITORY}:${VERSION}
           docker pull postgis/postgis:16-3.4-alpine
           docker pull mcr.microsoft.com/azure-storage/azurite:latest
-          docker pull axllent/mailpit:latest
+          docker pull axllent/mailpit:1.32.0
           docker pull darthsim/imgproxy
 
       - name: Run alembic tests
