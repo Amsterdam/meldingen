@@ -171,7 +171,7 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
     def _get_query_statement(
         self,
-    ) -> Select[T]:
+    ) -> Select[tuple[T]]:
         statement = select(self.get_model_type())
         return statement
 
@@ -193,10 +193,10 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
     def _handle_list_filters(
         self,
-        statement: Select[T],
+        statement: Select[tuple[T]],
         filters: RepositoryFilters | None = None,
         apply_visibility_filters: bool = True,
-    ) -> Select[T]:
+    ) -> Select[tuple[T]]:
 
         if apply_visibility_filters:
             for visibility_filter in self._visibility_filters():
@@ -210,10 +210,10 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
     def _handle_sorting(
         self,
-        statement: Select[T],
+        statement: Select[tuple[T]],
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-    ) -> Select[T]:
+    ) -> Select[tuple[T]]:
         if sort_attribute_name is not None:
             sort_attribute = self.get_model_type().__mapper__.attrs.get(sort_attribute_name)
 
@@ -539,7 +539,8 @@ class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
     ) -> Sequence[Note]:
-        statement = select(Note).where(Note.melding_id == melding_id)
+        statement = self._get_query_statement()
+        statement = statement.where(Note.melding_id == melding_id)
 
         if sort_attribute_name is None:
             statement = statement.order_by(Note.created_at)
