@@ -8,6 +8,7 @@ from uuid import uuid4
 import pytest
 from fastapi import FastAPI
 from geoalchemy2 import WKBElement
+from mailpit.client.api import API
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
@@ -1631,11 +1632,7 @@ async def asset(db_session: AsyncSession, asset_type: AssetType, melding: Meldin
     return asset
 
 
-from mailpit.client.api import API
-
-
 @pytest.fixture
 def meldingen_mailpit_api(mailpit_api: API) -> Generator[API, Any, Any]:
     mailpit_api.mailpit_url = os.environ.get("TEST_MAILPIT_URL", "http://mailpit:8025")
     yield mailpit_api
-    mailpit_api.delete_messages([])
