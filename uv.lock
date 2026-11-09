@@ -2130,7 +2130,7 @@ dev = [
 [[package]]
 name = "meldingen-core"
 version = "0.1.0"
-source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=task%2FSIG-7790-modify-classifier-behaviour#49176f51824fbff812dfe4cc618f2c162bcbbab3" }
+source = { git = "https://github.com/Amsterdam/meldingen-core.git?branch=task%2FSIG-7790-modify-classifier-behaviour#f7077c9a6fae70f6186a27cee38553ebeb26fc83" }
 dependencies = [
     { name = "plugfs" },
 ]
