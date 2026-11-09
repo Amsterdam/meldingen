@@ -16,4 +16,4 @@ def a_confirmation_email_should_be_sent_to(mailpit_api: API, email_address: str)
     assert len(message.to) == 1
     assert message.to[0].address == email_address
 
-    mailpit_api.delete_messages([messages.messages[0].message_id])
+    mailpit_api.delete_messages([])

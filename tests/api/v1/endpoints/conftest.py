@@ -1608,4 +1608,4 @@ from mailpit.client.api import API
 def meldingen_mailpit_api(mailpit_api: API) -> Generator[API, Any, Any]:
     mailpit_api.mailpit_url = os.environ.get("TEST_MAILPIT_URL", "http://mailpit:8025")
     yield mailpit_api
-    mailpit_api.delete_messages([m.message_id for m in mailpit_api.get_messages().messages])
+    mailpit_api.delete_messages([])
