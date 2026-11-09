@@ -84,27 +84,8 @@ class TestMeldingCreate:
     ROUTE_NAME_CREATE: Final[str] = "melding:create"
 
     @pytest.mark.anyio
-    async def test_create_melding(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "This is a test melding."})
-
-        assert response.status_code == HTTP_201_CREATED
-
-        data = response.json()
-        assert data.get("id") > 0
-        assert data.get("text") == "This is a test melding."
-        assert data.get("state") == MeldingStates.CLASSIFIED
-        assert data.get("urgency") == 0
-        assert data.get("classification") is None
-        assert data.get("token") is not None
-        assert data.get("created_at") is not None
-        assert data.get("updated_at") is not None
-        public_id = data.get("public_id")
-        assert isinstance(public_id, str)
-        assert len(public_id) == 6
-
-    @pytest.mark.anyio
-    async def test_create_melding_with_duplicate_public_id(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, public_id_generator_override: None
+    async def test_create_melding(
+        self, app: FastAPI, client: AsyncClient, classification: Classification, default_classification: Classification
     ) -> None:
         response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "This is a test melding."})
 
@@ -115,7 +96,33 @@ class TestMeldingCreate:
         assert data.get("text") == "This is a test melding."
         assert data.get("state") == MeldingStates.CLASSIFIED
         assert data.get("urgency") == 0
-        assert data.get("classification") is None
+        assert data.get("classification").get("id") == default_classification.id
+        assert data.get("token") is not None
+        assert data.get("created_at") is not None
+        assert data.get("updated_at") is not None
+        public_id = data.get("public_id")
+        assert isinstance(public_id, str)
+        assert len(public_id) == 6
+
+    @pytest.mark.anyio
+    async def test_create_melding_with_duplicate_public_id(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding: Melding,
+        public_id_generator_override: None,
+        default_classification: Classification,
+    ) -> None:
+        response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "This is a test melding."})
+
+        assert response.status_code == HTTP_201_CREATED
+
+        data = response.json()
+        assert data.get("id") > 0
+        assert data.get("text") == "This is a test melding."
+        assert data.get("state") == MeldingStates.CLASSIFIED
+        assert data.get("urgency") == 0
+        assert data.get("classification").get("id") == default_classification.id
         assert data.get("token") is not None
         assert data.get("created_at") is not None
         assert data.get("updated_at") is not None
@@ -194,7 +201,7 @@ class TestMeldingCreate:
 
     @pytest.mark.anyio
     async def test_create_melding_with_valid_text(
-        self, app: FastAPI, client: AsyncClient, primary_form: StaticForm
+        self, app: FastAPI, client: AsyncClient, primary_form: StaticForm, default_classification: Classification
     ) -> None:
         text = (
             "On the other hand, we denounce with righteous indignation and dislike men who are so "
@@ -256,66 +263,22 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
             (
                 "id",
                 SortingDirection.ASC,
-                [
-                    {"text": "This is a test melding. 0", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 1", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 2", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 3", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 4", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 5", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 6", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 7", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 8", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 9", "state": "processing", "classification": None},
-                ],
+                [{"text": f"This is a test melding. {i}", "state": "processing"} for i in range(10)],
             ),
             (
                 "id",
                 SortingDirection.DESC,
-                [
-                    {"text": "This is a test melding. 9", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 8", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 7", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 6", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 5", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 4", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 3", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 2", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 1", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 0", "state": "processing", "classification": None},
-                ],
+                [{"text": f"This is a test melding. {i}", "state": "processing"} for i in reversed(range(10))],
             ),
             (
                 "text",
                 SortingDirection.ASC,
-                [
-                    {"text": "This is a test melding. 0", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 1", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 2", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 3", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 4", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 5", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 6", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 7", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 8", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 9", "state": "processing", "classification": None},
-                ],
+                [{"text": f"This is a test melding. {i}", "state": "processing"} for i in range(10)],
             ),
             (
                 "text",
                 SortingDirection.DESC,
-                [
-                    {"text": "This is a test melding. 9", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 8", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 7", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 6", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 5", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 4", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 3", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 2", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 1", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 0", "state": "processing", "classification": None},
-                ],
+                [{"text": f"This is a test melding. {i}", "state": "processing"} for i in reversed(range(10))],
             ),
         ],
     )
@@ -340,7 +303,6 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         for i in range(len(expected)):
             assert data[i]["text"] == expected[i]["text"]
             assert data[i]["state"] == expected[i]["state"]
-            assert data[i]["classification"] == expected[i]["classification"]
             assert data[i]["created_at"] is not None
             assert data[i]["updated_at"] is not None
 
@@ -356,8 +318,8 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
                 "text",
                 SortingDirection.DESC,
                 [
-                    {"text": "This is a test melding. 7", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 6", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 7", "state": "processing"},
+                    {"text": "This is a test melding. 6", "state": "processing"},
                 ],
             ),
             (
@@ -366,9 +328,9 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
                 "text",
                 SortingDirection.ASC,
                 [
-                    {"text": "This is a test melding. 1", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 2", "state": "processing", "classification": None},
-                    {"text": "This is a test melding. 3", "state": "processing", "classification": None},
+                    {"text": "This is a test melding. 1", "state": "processing"},
+                    {"text": "This is a test melding. 2", "state": "processing"},
+                    {"text": "This is a test melding. 3", "state": "processing"},
                 ],
             ),
         ],
@@ -397,7 +359,6 @@ class TestMeldingList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortPa
         for i in range(len(expected)):
             assert data[i]["text"] == expected[i]["text"]
             assert data[i]["state"] == expected[i]["state"]
-            assert data[i]["classification"] == expected[i]["classification"]
             assert data[i]["created_at"] is not None
             assert data[i]["updated_at"] is not None
 
@@ -994,8 +955,8 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         [("nice text", MeldingStates.CLASSIFIED, "supersecuretoken")],
         indirect=True,
     )
-    async def test_update_melding_classification_not_found(
-        self, app: FastAPI, client: AsyncClient, melding: Melding
+    async def test_update_melding_classification_always_has_classification(
+        self, app: FastAPI, client: AsyncClient, melding: Melding, default_classification: Classification
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
@@ -1006,7 +967,8 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("classification", "") is None
+        assert body.get("classification").get("id") == default_classification.id
+        assert body.get("classification").get("name") == default_classification.name
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1065,6 +1027,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         client: AsyncClient,
         melding_with_text_answers: Melding,
         db_session: AsyncSession,
+        default_classification: Classification,
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_text_answers.id),
@@ -1075,7 +1038,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("classification", "") is None
+        assert body.get("classification").get("id") is default_classification.id
 
         results = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_text_answers.id))
         answers = results.scalars().all()
@@ -1208,7 +1171,8 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("classification") is None
+        assert body.get("classification").get("id") == classification_with_asset_type.id
+        assert body.get("classification").get("name") == classification_with_asset_type.name
         assert body.get("geo_location").get("geometry").get("coordinates") == [52.3680, 4.8970]
 
         new_assets = await melding_with_classification_with_asset_type.awaitable_attrs.assets
