@@ -10,6 +10,7 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_422_UNPROCESSABLE_CONTENT,
@@ -835,6 +836,15 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
+    async def test_delete_default_classification_cannot_be_deleted(
+        self, app: FastAPI, client: AsyncClient, default_classification: Classification, auth_user: None
+    ) -> None:
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=default_classification.id))
+
+        assert response.status_code == HTTP_403_FORBIDDEN
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)

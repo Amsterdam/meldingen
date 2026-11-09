@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from meldingen_core.exceptions import NotFoundException
 from meldingen_core.filters import NameListFilters
 from sqlalchemy import ColumnExpressionArgument
-from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 
 from meldingen.actions.classification import (
     ClassificationCreateAction,
@@ -175,6 +175,9 @@ async def update_classification(
     return await _hydrate_output(classification)
 
 
+from meldingen.config import settings
+
+
 @router.delete(
     "/{classification_id}",
     name="classification:delete",
@@ -187,8 +190,17 @@ async def update_classification(
 )
 async def delete_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
+    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
     action: Annotated[ClassificationDeleteAction, Depends(classification_delete_action)],
 ) -> None:
+    classification = await repository.retrieve(classification_id)
+
+    if classification is None:
+        raise HTTPException(HTTP_404_NOT_FOUND)
+
+    if classification.name == settings.llm_fallback_classification_name:
+        raise HTTPException(HTTP_403_FORBIDDEN, detail="Classification cannot be deleted.")
+
     try:
         await action(classification_id)
     except NotFoundException:
