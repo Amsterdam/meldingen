@@ -1,4 +1,6 @@
 import datetime as dt
+import os
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from typing import Any, cast
 from uuid import uuid4
@@ -1597,3 +1599,13 @@ async def asset(db_session: AsyncSession, asset_type: AssetType, melding: Meldin
     await db_session.commit()
 
     return asset
+
+
+from mailpit.client.api import API
+
+
+@pytest.fixture
+def meldingen_mailpit_api(mailpit_api: API) -> Generator[API, Any, Any]:
+    mailpit_api.mailpit_url = os.environ.get("TEST_MAILPIT_URL", "http://mailpit:8025")
+    yield mailpit_api
+    mailpit_api.delete_messages([m.message_id for m in mailpit_api.get_messages().messages])
