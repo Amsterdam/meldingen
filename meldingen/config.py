@@ -214,7 +214,7 @@ Gemeente Amsterdam
     # every startup by the `classifications ensure-fallback` command, independent
     # of the deployment-specific seed file, so it is guaranteed present in every
     # environment regardless of which other classifications exist.
-    llm_fallback_classification_name: str = "Overige"
+    llm_fallback_classification_name: str = "Overig"
     llm_fallback_classification_instructions: str = (
         "Gebruik deze classificatie als geen van de andere classificaties past bij de meldtekst."
     )
