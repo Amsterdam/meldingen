@@ -1652,3 +1652,6 @@ async def asset(db_session: AsyncSession, asset_type: AssetType, melding: Meldin
 def meldingen_mailpit_api(mailpit_api: API) -> Generator[API, Any, Any]:
     mailpit_api.mailpit_url = os.environ.get("TEST_MAILPIT_URL", "http://mailpit:8025")
     yield mailpit_api
+    # Clear all messages from Mailpit after each test
+    messages = mailpit_api.get_messages()
+    mailpit_api.delete_messages([message.id for message in messages.messages])
