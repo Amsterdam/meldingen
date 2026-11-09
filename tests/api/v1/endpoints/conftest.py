@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.orderinglist import OrderingList
 
 from meldingen.authentication import authenticate_user
+from meldingen.config import settings
 from meldingen.models import (
     AnswerTypeEnum,
     Asset,
@@ -572,12 +573,15 @@ async def melding_with_some_answers(
 
 
 @pytest.fixture
-async def meldingen(db_session: AsyncSession, melding_text: str) -> list[Melding]:
+async def meldingen(
+    db_session: AsyncSession, melding_text: str, default_classification: Classification
+) -> list[Melding]:
     meldingen = []
     for i in range(10):
         melding = Melding(text=f"{melding_text} {i}")
         melding.public_id = f"MELDI{i}"
         melding.state = MeldingBackofficeStates.PROCESSING
+        melding.classification = default_classification
 
         db_session.add(melding)
         meldingen.append(melding)
@@ -596,13 +600,16 @@ def melding_locations(request: FixtureRequest) -> list[str]:
 
 
 @pytest.fixture
-async def meldingen_with_location(db_session: AsyncSession, melding_locations: list[str]) -> list[Melding]:
+async def meldingen_with_location(
+    db_session: AsyncSession, melding_locations: list[str], default_classification: Classification
+) -> list[Melding]:
     meldingen = []
     for i, location in enumerate(melding_locations):
         melding = Melding(text=f"Melding {i + 1}")
         melding.public_id = f"MELDI{i + 1}"
         melding.geo_location = cast(WKBElement, location)
         melding.state = MeldingBackofficeStates.PROCESSING
+        melding.classification = default_classification
 
         db_session.add(melding)
         meldingen.append(melding)
@@ -626,13 +633,14 @@ def melding_states(request: FixtureRequest) -> list[MeldingStates]:
 
 @pytest.fixture
 async def meldingen_with_different_states(
-    db_session: AsyncSession, melding_states: list[MeldingStates]
+    db_session: AsyncSession, melding_states: list[MeldingStates], default_classification: Classification
 ) -> list[Melding]:
     meldingen = []
     for i, state in enumerate(melding_states):
         melding = Melding(text=f"Melding {i + 1}")
         melding.public_id = f"MELDI{i + 1}"
         melding.state = state
+        melding.classification = default_classification
 
         db_session.add(melding)
         meldingen.append(melding)
@@ -647,7 +655,10 @@ async def meldingen_with_different_states(
 
 @pytest.fixture
 async def meldingen_with_different_states_and_locations(
-    db_session: AsyncSession, melding_states: list[MeldingStates], melding_locations: list[str]
+    db_session: AsyncSession,
+    melding_states: list[MeldingStates],
+    melding_locations: list[str],
+    default_classification: Classification,
 ) -> list[Melding]:
     meldingen = []
 
@@ -657,6 +668,7 @@ async def meldingen_with_different_states_and_locations(
         melding.public_id = f"MELDI{i + 1}"
         melding.state = state
         melding.geo_location = location
+        melding.classification = default_classification
 
         db_session.add(melding)
         meldingen.append(melding)
@@ -724,6 +736,20 @@ async def classification(db_session: AsyncSession, classification_name: str) -> 
     classification = Classification(
         name=classification_name,
         service_level_objective_text="Service level objective text",
+        instructions="Instructions for the classification",
+    )
+    db_session.add(classification)
+    await db_session.commit()
+
+    return classification
+
+
+@pytest.fixture()
+async def default_classification(db_session: AsyncSession) -> Classification:
+
+    classification = Classification(
+        name=settings.llm_fallback_classification_name,
+        service_level_objective_text="Service level objective text default",
         instructions="Instructions for the classification",
     )
     db_session.add(classification)
