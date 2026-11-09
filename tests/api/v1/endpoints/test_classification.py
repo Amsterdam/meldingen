@@ -10,7 +10,6 @@ from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
-    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_422_UNPROCESSABLE_CONTENT,
@@ -844,7 +843,7 @@ class TestClassificationDelete(BaseUnauthorizedTest):
     ) -> None:
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=default_classification.id))
 
-        assert response.status_code == HTTP_403_FORBIDDEN
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
