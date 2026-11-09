@@ -55,14 +55,17 @@ class SimpleClassificationOutput(BaseOutputModel):
     asset_type: AssetTypeOutput | None = Field(default=None)
 
 
-class ClassificationOutput(BaseOutputModel):
+class ClassificationOutputPublic(BaseOutputModel):
     name: str
-    instructions: str | None = Field(default=None)
-    form: int | None = None
-    asset_type: int | None = None
     service_level_objective_text: str
     service_level_objective_days: int
     service_level_objective_day_type: DaysType
+
+
+class ClassificationOutput(ClassificationOutputPublic):
+    instructions: str | None = Field(default=None)
+    form: int | None = None
+    asset_type: int | None = None
 
 
 class LabelOutput(BaseOutputModel):

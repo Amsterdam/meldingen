@@ -1,7 +1,9 @@
-from typing import Annotated
+from typing import Annotated, Literal, overload
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from meldingen_core.exceptions import NotFoundException
+from meldingen_core.filters import NameListFilters
+from sqlalchemy import ColumnExpressionArgument
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions.classification import (
@@ -19,7 +21,7 @@ from meldingen.api.utils import (
     sort_param,
 )
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
-from meldingen.authentication import authenticate_user
+from meldingen.authentication import authenticate_user, is_authenticated_request
 from meldingen.dependencies import (
     classification_create_action,
     classification_delete_action,
@@ -32,7 +34,7 @@ from meldingen.dependencies import (
 from meldingen.models import Classification
 from meldingen.repositories import ClassificationRepository, RepositoryListFilters
 from meldingen.schemas.input import ClassificationCreateInput, ClassificationUpdateInput
-from meldingen.schemas.output import ClassificationOutput
+from meldingen.schemas.output import ClassificationOutput, ClassificationOutputPublic
 
 router = APIRouter()
 
@@ -43,12 +45,33 @@ async def content_range_header_adder(
     return ContentRangeHeaderAdder(repo, "classification")
 
 
-async def _hydrate_output(classification: Classification) -> ClassificationOutput:
+@overload
+async def _hydrate_output(classification: Classification, public: Literal[True]) -> ClassificationOutputPublic: ...
+
+
+@overload
+async def _hydrate_output(classification: Classification, public: Literal[False] = False) -> ClassificationOutput: ...
+
+
+async def _hydrate_output(
+    classification: Classification, public: bool = False
+) -> ClassificationOutput | ClassificationOutputPublic:
     form_id = None
 
     form = await classification.awaitable_attrs.form
     if form is not None:
         form_id = form.id
+
+    if public:
+        return ClassificationOutputPublic(
+            id=classification.id,
+            name=classification.name,
+            service_level_objective_text=classification.service_level_objective_text,
+            service_level_objective_days=classification.service_level_objective_days,
+            service_level_objective_day_type=classification.service_level_objective_day_type,
+            created_at=classification.created_at,
+            updated_at=classification.updated_at,
+        )
 
     return ClassificationOutput(
         id=classification.id,
@@ -90,14 +113,18 @@ async def create_classification(
 @router.get(
     "/",
     name="classification:list",
-    responses={**list_response, **unauthorized_response},
-    dependencies=[Depends(authenticate_user)],
+    responses={**list_response},
+    description="""
+    Retrieve a list of classifications with optional filtering, sorting, and pagination.
+    If the request is unauthenticated, only public fields (See `ClassificationOutputPublic` schema) will be included in the response.
+    """,
 )
 async def list_classifications(
     response: Response,
     content_range_header_adder: Annotated[ContentRangeHeaderAdder[Classification], Depends(content_range_header_adder)],
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
+    is_authenticated_request: Annotated[bool, Depends(is_authenticated_request)],
     action: Annotated[ClassificationListAction, Depends(classification_list_action)],
     list_filters: Annotated[RepositoryListFilters | None, Depends(list_filters)],
     include_deleted: Annotated[
@@ -106,7 +133,7 @@ async def list_classifications(
             description="Include soft-deleted classifications in the list result when true.",
         ),
     ] = False,
-) -> list[ClassificationOutput]:
+) -> list[ClassificationOutput] | list[ClassificationOutputPublic]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
 
@@ -125,7 +152,9 @@ async def list_classifications(
         apply_visibility_filters=not include_deleted,
     )
 
-    return [await _hydrate_output(classification) for classification in classifications]
+    return [
+        await _hydrate_output(classification, public=not is_authenticated_request) for classification in classifications
+    ]
 
 
 @router.get(
