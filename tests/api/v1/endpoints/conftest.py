@@ -40,6 +40,7 @@ from meldingen.models import (
     FormIoTimeComponent,
     Label,
     Melding,
+    Note,
     Question,
     Source,
     StaticForm,
@@ -669,6 +670,35 @@ async def meldingen_with_different_states_and_locations(
         await db_session.refresh(melding)
 
     return meldingen
+
+
+@pytest.fixture
+async def note(db_session: AsyncSession, melding: Melding, user: User) -> Note:
+    note = Note(
+        text="An existing note",
+        melding=melding,
+        user=user,
+    )
+    db_session.add(note)
+    await db_session.commit()
+    return note
+
+
+@pytest.fixture
+async def reply_note(db_session: AsyncSession, melding: Melding, user: User, note: Note) -> Note:
+    new_note = Note(
+        text="A reply note",
+        melding=melding,
+        user=user,
+        parent_note=note,
+        parent_note_text_snapshot=note.text,
+    )
+    new_note.created_at = utc_now() + timedelta(hours=1)
+    new_note.updated_at = new_note.created_at
+
+    db_session.add(new_note)
+    await db_session.commit()
+    return new_note
 
 
 @pytest.fixture

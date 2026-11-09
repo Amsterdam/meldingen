@@ -1,7 +1,7 @@
 import enum
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, ClassVar, Optional, Union
+from typing import Any, Optional, Union
 
 from geoalchemy2 import Geometry, WKBElement
 from meldingen_core.models import Answer as BaseAnswer
@@ -256,9 +256,11 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
     label: Mapped[str] = mapped_column(String(), nullable=True)
     key: Mapped[str] = mapped_column(String())
 
-    __table_args__: ClassVar = (
-        CheckConstraint("form_id IS NULL OR static_form_id IS NULL", name="only_form_or_static_form_constraint"),
-    )
+    @declared_attr.directive
+    def __table_args__(cls) -> tuple[CheckConstraint, ...] | dict[str, bool]:
+        return (
+            CheckConstraint("form_id IS NULL OR static_form_id IS NULL", name="only_form_or_static_form_constraint"),
+        )
 
     description: Mapped[str] = mapped_column(String(), nullable=True, default=None)
     type: Mapped[str] = mapped_column(
@@ -294,7 +296,9 @@ class FormIoComponent(AsyncAttrs, BaseDBModel):
 
 
 class FormIoPanelComponent(FormIoComponent):
-    __table_args__: ClassVar = {"extend_existing": True}
+    @declared_attr.directive
+    def __table_args__(cls) -> dict[str, bool]:
+        return {"extend_existing": True}
 
     @declared_attr.directive
     def __mapper_args__(cls) -> dict[str, Any]:
@@ -314,7 +318,9 @@ class FormIoPanelComponent(FormIoComponent):
 
 
 class FormIoQuestionComponent(FormIoComponent):
-    __table_args__: ClassVar = {"extend_existing": True}
+    @declared_attr.directive
+    def __table_args__(cls) -> dict[str, bool]:
+        return {"extend_existing": True}
 
     question_id: Mapped[int | None] = mapped_column(ForeignKey("question.id", ondelete="SET NULL"), default=None)
     jsonlogic: Mapped[str | None] = mapped_column(String(), nullable=True, default=None)
@@ -332,7 +338,9 @@ class FormIoQuestionComponent(FormIoComponent):
 
 
 class FormIoTextAreaComponent(FormIoQuestionComponent):
-    __table_args__: ClassVar = {"extend_existing": True}
+    @declared_attr.directive
+    def __table_args__(cls) -> dict[str, bool]:
+        return {"extend_existing": True}
 
     auto_expand: Mapped[bool] = mapped_column(Boolean(), nullable=True, default=None)
     max_char_count: Mapped[int | None] = mapped_column(Integer(), nullable=True, default=None)
@@ -418,7 +426,9 @@ class FormIoSelectComponentValue(BaseDBModel, BaseFormIoComponentValue):
 
 
 class FormIoSelectComponent(FormIoQuestionComponent):
-    __table_args__: ClassVar = {"extend_existing": True}
+    @declared_attr.directive
+    def __table_args__(cls) -> dict[str, bool]:
+        return {"extend_existing": True}
 
     widget: Mapped[str] = mapped_column(String(), nullable=True, default=None)
     placeholder: Mapped[str] = mapped_column(String(), nullable=True, default=None)
@@ -444,7 +454,9 @@ class FormIoComponentValue(BaseDBModel, BaseFormIoComponentValue):
 
 class FormIoDateComponent(FormIoQuestionComponent):
     # A component that allows the user to select a date in the past or today.
-    __table_args__: ClassVar = {"extend_existing": True}
+    @declared_attr.directive
+    def __table_args__(cls) -> dict[str, bool]:
+        return {"extend_existing": True}
 
     """
     The amount of days a date in the past can be selected from today.
@@ -583,7 +595,9 @@ class Answer(AsyncAttrs, BaseAnswer, BaseDBModel, kw_only=True):
 
 
 class TextAnswer(Answer):
-    __table_args__: ClassVar = {"extend_existing": True}
+    @declared_attr.directive
+    def __table_args__(cls) -> dict[str, bool]:
+        return {"extend_existing": True}
 
     text: Mapped[str] = mapped_column(String(), nullable=True)
 
@@ -598,7 +612,9 @@ class TimeAnswer(Answer):
     """Answer type for time values. Stored as hh:mm string,
     because it's only used as a simple display of the user's input"""
 
-    __table_args__: ClassVar = {"extend_existing": True}
+    @declared_attr.directive
+    def __table_args__(cls) -> dict[str, bool]:
+        return {"extend_existing": True}
 
     time: Mapped[str | None] = mapped_column(String(), nullable=True)
 
@@ -613,7 +629,10 @@ class DateAnswer(Answer):
     """Answer type for date component saved as a JSON object
     with value, label and converted_date as keys"""
 
-    __table_args__: ClassVar = {"extend_existing": True}
+    @declared_attr.directive
+    def __table_args__(cls) -> dict[str, bool]:
+        return {"extend_existing": True}
+
     date: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=True)
 
     @declared_attr.directive
@@ -628,7 +647,10 @@ class ValueLabelAnswer(Answer):
     select, radio and checkbox components. Stored as a list of objects
     f.e. [{"value": "option1", "label": "Option 1"}, ...]"""
 
-    __table_args__: ClassVar = {"extend_existing": True}
+    @declared_attr.directive
+    def __table_args__(cls) -> dict[str, bool]:
+        return {"extend_existing": True}
+
     values_and_labels: Mapped[list[dict[str, str]]] = mapped_column(JSON, nullable=True)
 
     @declared_attr.directive
@@ -669,13 +691,20 @@ class Note(AsyncAttrs, BaseDBModel, BaseNote):
     melding: Mapped[Melding] = relationship()
 
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), init=False)
-    user: Mapped[User] = relationship()
+
+    # Always JOIN the User, since we always need to communicate user data, such as email address.
+    user: Mapped[User] = relationship(lazy="joined")
 
     # Set on the note that records why a melding was reclassified: it points at the classification
     # the melding was moved to, so the reason is shown next to the classification it argues for.
     # None for a note a Behandelaar wrote by hand.
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), init=False, default=None)
     classification: Mapped[Classification | None] = relationship(default=None)
+
+    parent_note_id: Mapped[int | None] = mapped_column(ForeignKey("note.id"), init=False, default=None)
+    parent_note: Mapped[Optional["Note"]] = relationship(default=None, remote_side="Note.id")
+    # Stores a snapshot of the parent note's text at the time this note was created.
+    parent_note_text_snapshot: Mapped[str | None] = mapped_column(String(), default=None)
 
 
 class LlmEvalRunStatus(enum.StrEnum):

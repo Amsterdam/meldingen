@@ -1,6 +1,6 @@
 import datetime
-import enum
 import re
+from enum import StrEnum
 from typing import Annotated, Any
 
 from geojson_pydantic import Feature as GeoJsonPydanticFeature
@@ -73,6 +73,6 @@ class ValueLabelObject(BaseModel):
     label: str
 
 
-class DaysType(enum.StrEnum):
+class DaysType(StrEnum):
     working_days = "working_days"
     calendar_days = "calendar_days"

@@ -171,7 +171,7 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
     def _get_query_statement(
         self,
-    ) -> Select[tuple[T]]:
+    ) -> Select[T]:
         statement = select(self.get_model_type())
         return statement
 
@@ -193,10 +193,10 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
     def _handle_list_filters(
         self,
-        statement: Select[tuple[T]],
+        statement: Select[T],
         filters: RepositoryFilters | None = None,
         apply_visibility_filters: bool = True,
-    ) -> Select[tuple[T]]:
+    ) -> Select[T]:
 
         if apply_visibility_filters:
             for visibility_filter in self._visibility_filters():
@@ -210,10 +210,10 @@ class BaseSQLAlchemyRepository[T: BaseDBModel](BaseRepository[T], metaclass=ABCM
 
     def _handle_sorting(
         self,
-        statement: Select[tuple[T]],
+        statement: Select[T],
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
-    ) -> Select[tuple[T]]:
+    ) -> Select[T]:
         if sort_attribute_name is not None:
             sort_attribute = self.get_model_type().__mapper__.attrs.get(sort_attribute_name)
 
@@ -527,6 +527,8 @@ class SourceRepository(BaseRepositoryWithListFilters[Source], BaseSourceReposito
 
 
 class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
+    """Eager loads: user"""
+
     def get_model_type(self) -> type[Note]:
         return Note
 
@@ -537,7 +539,7 @@ class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
         sort_attribute_name: str | None = None,
         sort_direction: SortingDirection | None = None,
     ) -> Sequence[Note]:
-        statement = select(Note).where(Note.melding_id == melding_id).options(selectinload(Note.user))
+        statement = select(Note).where(Note.melding_id == melding_id)
 
         if sort_attribute_name is None:
             statement = statement.order_by(Note.created_at)
@@ -548,8 +550,6 @@ class NoteRepository(BaseSQLAlchemyRepository[Note], BaseNoteRepository[Note]):
         return result.scalars().unique().all()
 
     async def find_by_id_and_melding(self, note_id: int, melding_id: int) -> Note | None:
-        statement = (
-            select(Note).where(Note.id == note_id, Note.melding_id == melding_id).options(selectinload(Note.user))
-        )
+        statement = select(Note).where(Note.id == note_id, Note.melding_id == melding_id)
         result = await self._session.execute(statement)
         return result.scalars().unique().one_or_none()

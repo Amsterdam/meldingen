@@ -34,8 +34,8 @@ from meldingen.middleware import ContentSizeLimitMiddleware
 def get_application() -> FastAPI:
     application = FastAPI(
         debug=settings.debug,
-        title=settings.project_name,
         prefix=settings.url_prefix,
+        title=settings.project_name,
         swagger_ui_init_oauth={
             "clientId": settings.auth_client_id,
             "scopes": settings.auth_scopes,
