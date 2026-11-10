@@ -111,7 +111,7 @@ module-name = "meldingen"
 module-root = "."
 
 [tool.uv.sources]
-meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git", branch = "task/SIG-7790-modify-classifier-behaviour"}
+meldingen-core = {git = "https://github.com/Amsterdam/meldingen-core.git", branch = "task/SIG-7790-adjust-default-classification-logic"}
 mp-fsm = {git = "https://github.com/Amsterdam/mp-fsm.git"}
 pdok-api-client = {git = "https://github.com/Amsterdam/pdok-api-client.git"}
 pydantic-jsonlogic = {git = "https://github.com/Amsterdam/pydantic-jsonlogic.git"}
