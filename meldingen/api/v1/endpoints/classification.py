@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from meldingen_core.exceptions import NotFoundException
-from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.actions.classification import (
     ClassificationCreateAction,
@@ -20,6 +20,7 @@ from meldingen.api.utils import (
 )
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
+from meldingen.config import settings
 from meldingen.dependencies import (
     classification_create_action,
     classification_delete_action,
