@@ -344,6 +344,11 @@ class AttachmentOutput(BaseOutputModel):
     original_filename: str
     original_media_type: str
     user: UserOutput | None
+    is_image: bool
+    has_thumbnail: bool
+    thumbnail_media_type: str | None
+    has_optimized: bool
+    optimized_media_type: str | None
 
 
 class AssetOutput(BaseOutputModel):

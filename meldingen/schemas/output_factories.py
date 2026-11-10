@@ -1040,6 +1040,11 @@ class AttachmentOutputFactory:
             id=attachment.id,
             original_filename=attachment.original_filename,
             original_media_type=attachment.original_media_type,
+            has_thumbnail=attachment.has_thumbnail,
+            thumbnail_media_type=attachment.thumbnail_media_type,
+            is_image=attachment.is_image,
+            has_optimized=attachment.has_optimized,
+            optimized_media_type=attachment.optimized_media_type,
             created_at=attachment.created_at,
             updated_at=attachment.updated_at,
             user=(
