@@ -53,6 +53,7 @@ class NoteInput(BaseModel):
         StringConstraints(min_length=1, strip_whitespace=True),
         AfterValidator(validate_note_plain_text_length),
     ]
+    parent_note_id: int | None = Field(default=None)
 
 
 class NoteUpdateInput(BaseModel):

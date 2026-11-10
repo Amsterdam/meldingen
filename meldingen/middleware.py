@@ -1,12 +1,11 @@
-from fastapi import FastAPI
-from starlette.types import Message, Receive, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
 class ContentSizeLimitMiddleware:
-    _app: FastAPI
+    _app: ASGIApp
     _max_size: int
 
-    def __init__(self, app: FastAPI, max_size: int):
+    def __init__(self, app: ASGIApp, max_size: int) -> None:
         self._app = app
         self._max_size = max_size
 

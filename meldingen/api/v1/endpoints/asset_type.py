@@ -4,9 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from geojson_pydantic import FeatureCollection
 from httpx import HTTPError
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import NameListFilters
 from meldingen_core.wfs import InvalidWfsProviderException
-from sqlalchemy import ColumnExpressionArgument
 from starlette.responses import StreamingResponse
 from starlette.status import (
     HTTP_201_CREATED,
@@ -26,10 +24,8 @@ from meldingen.actions.asset_type import (
 )
 from meldingen.api.utils import (
     ContentRangeHeaderAdder,
-    FilterParams,
     PaginationParams,
     SortParams,
-    filter_param,
     pagination_params,
     sort_param,
 )
@@ -43,10 +39,11 @@ from meldingen.dependencies import (
     asset_type_repository,
     asset_type_retrieve_action,
     asset_type_update_action,
+    list_filters,
     wfs_retrieve_action,
 )
 from meldingen.models import AssetType
-from meldingen.repositories import AssetTypeRepository
+from meldingen.repositories import AssetTypeRepository, RepositoryListFilters
 from meldingen.schemas.input import AssetTypeInput, AssetTypeUpdateInput
 from meldingen.schemas.output import AssetTypeOutput
 from meldingen.schemas.output_factories import AssetTypeOutputFactory
@@ -113,24 +110,20 @@ async def list_asset_types(
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[AssetTypeListAction, Depends(asset_type_list_action)],
     produce_output: Annotated[AssetTypeOutputFactory, Depends(asset_type_output_factory)],
-    filter_params: Annotated[FilterParams, Depends(filter_param)],
+    list_filters: Annotated[RepositoryListFilters | None, Depends(list_filters)],
 ) -> list[AssetTypeOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
-    q = filter_params.q
 
     asset_types = await action(
         limit=limit,
         offset=offset,
         sort_attribute_name=sort.get_attribute_name(),
         sort_direction=sort.get_direction(),
-        filters=NameListFilters(name_contains=q) if q is not None else None,
+        filters=list_filters,
     )
 
-    content_range_filters: list[ColumnExpressionArgument[bool]] | None = (
-        [AssetType.name.ilike(f"%{q}%")] if q is not None else None
-    )
-    await content_range_header_adder(response, pagination, content_range_filters)
+    await content_range_header_adder(response, pagination, list_filters)
 
     return [produce_output(asset_type) for asset_type in asset_types]
 

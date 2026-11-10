@@ -32,6 +32,11 @@ class BaseOutputModel(BaseModel):
         return updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+class UserOutput(BaseOutputModel):
+    email: str
+    username: str
+
+
 class BaseFormOutput(BaseOutputModel):
     title: str
     display: str
@@ -71,10 +76,12 @@ class SourceOutput(BaseOutputModel):
 class NoteOutput(BaseOutputModel):
     text: str
     melding_id: int
-    user_id: int
+    user: UserOutput
     # Set on the note that records why a melding was reclassified, pointing at the classification
     # it was moved to. None for a note a Behandelaar wrote by hand.
     classification_id: int | None = Field(default=None)
+    parent_note_id: int | None = Field(default=None)
+    parent_note_text_snapshot: str | None = Field(default=None)
 
 
 class MeldingServiceLevelObjectiveOutput(BaseModel):
@@ -333,23 +340,10 @@ AnswerQuestionOutputUnion = Annotated[
 ]
 
 
-class UserOutput(BaseOutputModel):
-    email: str
-    username: str
-
-
 class AttachmentOutput(BaseOutputModel):
     original_filename: str
     original_media_type: str
     user: UserOutput | None
-
-
-class NoteRetrieveOutput(BaseOutputModel):
-    text: str
-    melding_id: int
-    user: UserOutput
-    # See NoteOutput.classification_id.
-    classification_id: int | None = Field(default=None)
 
 
 class AssetOutput(BaseOutputModel):

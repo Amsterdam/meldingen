@@ -28,7 +28,6 @@ from meldingen_core.actions.melding import (
 )
 from meldingen_core.actions.note import NoteCreateAction, NoteRetrieveAction, NoteUpdateAction
 from meldingen_core.exceptions import InvalidInputException, LimitReachedException, NotFoundException
-from meldingen_core.filters import MeldingListFilters
 from meldingen_core.labels import InvalidLabelException
 from meldingen_core.managers import RelationshipExistsException
 from meldingen_core.reclassification import ReclassificationNotAllowedException
@@ -141,7 +140,6 @@ from meldingen.dependencies import (
     note_list_output_factory,
     note_output_factory,
     note_retrieve_action,
-    note_retrieve_output_factory,
     note_update_action,
     public_id_generator,
     states_output_factory,
@@ -158,7 +156,7 @@ from meldingen.models import (
     Source,
     User,
 )
-from meldingen.repositories import MeldingRepository
+from meldingen.repositories import MeldingRepository, MeldingRepositoryListFilters
 from meldingen.schemas.input import (
     AnswerInputUnion,
     CompleteMeldingInput,
@@ -180,7 +178,6 @@ from meldingen.schemas.output import (
     MeldingOutput,
     MeldingUpdateOutput,
     NoteOutput,
-    NoteRetrieveOutput,
     StatesOutput,
 )
 from meldingen.schemas.output_factories import (
@@ -193,7 +190,6 @@ from meldingen.schemas.output_factories import (
     MeldingUpdateOutputFactory,
     NoteListOutputFactory,
     NoteOutputFactory,
-    NoteRetrieveOutputFactory,
     StatesOutputFactory,
 )
 from meldingen.schemas.types import GeoJson
@@ -280,7 +276,7 @@ async def list_meldingen(
         else get_all_backoffice_states()
     )
 
-    filter_input = MeldingListFilters(
+    filter_input = MeldingRepositoryListFilters(
         area=area,
         states=states,
     )
@@ -292,13 +288,13 @@ async def list_meldingen(
         sort_direction=sort.get_direction(),
         filters=filter_input,
     )
+
     output = []
+
     for melding in meldingen:
         output.append(await produce_output(melding))
 
-    filters = repo.filter_input_to_expression_arguments(filter_input)
-
-    await content_range_header_adder(response, pagination, filters)
+    await content_range_header_adder(response, pagination, filter_input)
 
     return output
 
@@ -1283,7 +1279,7 @@ async def add_note(
     produce_output: Annotated[NoteOutputFactory, Depends(note_output_factory)],
 ) -> NoteOutput:
     try:
-        note = await action(melding_id, note_input.text, user)
+        note = await action(melding_id, note_input.text, user, note_input.parent_note_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
@@ -1301,7 +1297,7 @@ async def list_notes(
     action: Annotated[NoteListAction, Depends(note_list_action)],
     produce_output: Annotated[NoteListOutputFactory, Depends(note_list_output_factory)],
     sort: Annotated[SortParams | None, Depends(optional_sort_param)] = None,
-) -> list[NoteRetrieveOutput]:
+) -> list[NoteOutput]:
     try:
         notes = await action(
             melding_id,
@@ -1311,7 +1307,7 @@ async def list_notes(
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await produce_output(notes)
+    return produce_output(notes)
 
 
 @router.get(
@@ -1324,14 +1320,14 @@ async def retrieve_note(
     melding_id: Annotated[int, Path(description="The id of the melding.", ge=1)],
     note_id: Annotated[int, Path(description="The id of the note.", ge=1)],
     action: Annotated[NoteRetrieveAction[Note], Depends(note_retrieve_action)],
-    produce_output: Annotated[NoteRetrieveOutputFactory, Depends(note_retrieve_output_factory)],
-) -> NoteRetrieveOutput:
+    produce_output: Annotated[NoteOutputFactory, Depends(note_output_factory)],
+) -> NoteOutput:
     try:
         note = await action(melding_id, note_id)
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await produce_output(note)
+    return produce_output(note)
 
 
 @router.patch(
@@ -1346,8 +1342,8 @@ async def update_note(
     user: Annotated[User, Depends(authenticate_user)],
     retrieve: Annotated[NoteRetrieveAction[Note], Depends(note_retrieve_action)],
     update: Annotated[NoteUpdateAction[Note], Depends(note_update_action)],
-    produce_output: Annotated[NoteRetrieveOutputFactory, Depends(note_retrieve_output_factory)],
-) -> NoteRetrieveOutput:
+    produce_output: Annotated[NoteOutputFactory, Depends(note_output_factory)],
+) -> NoteOutput:
     # Fetch the note first so ownership can be verified before it is mutated. A note may only
     # be edited by the user that created it.
     try:
@@ -1363,7 +1359,7 @@ async def update_note(
     except NotFoundException:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
-    return await produce_output(updated)
+    return produce_output(updated)
 
 
 @router.get(
