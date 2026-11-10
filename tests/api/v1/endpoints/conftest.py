@@ -1,4 +1,6 @@
 import datetime as dt
+import os
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from typing import Any, cast
 from uuid import uuid4
@@ -6,6 +8,7 @@ from uuid import uuid4
 import pytest
 from fastapi import FastAPI
 from geoalchemy2 import WKBElement
+from mailpit.client.api import API
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingStates
 from pydantic import TypeAdapter
 from pytest import FixtureRequest
@@ -1627,3 +1630,12 @@ async def asset(db_session: AsyncSession, asset_type: AssetType, melding: Meldin
     await db_session.commit()
 
     return asset
+
+
+@pytest.fixture
+def meldingen_mailpit_api(mailpit_api: API) -> Generator[API, Any, Any]:
+    mailpit_api.mailpit_url = os.environ.get("TEST_MAILPIT_URL", "http://mailpit:8025")
+    yield mailpit_api
+    # Clear all messages from Mailpit after each test
+    messages = mailpit_api.get_messages()
+    mailpit_api.delete_messages([message.id for message in messages.messages])

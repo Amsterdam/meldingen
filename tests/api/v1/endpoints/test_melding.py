@@ -2324,12 +2324,12 @@ class TestMeldingComplete(BaseUnauthorizedTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_text", "melding_state", "melding_email", "mailpit_api"],
-        [("Er ligt poep op de stoep.", MeldingStates.PROCESSING, "me@example.com", "http://mailpit:8025")],
+        ["melding_text", "melding_state", "melding_email"],
+        [("Er ligt poep op de stoep.", MeldingStates.PROCESSING, "me@example.com")],
         indirect=True,
     )
     async def test_complete_melding_with_mail_text(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding, mailpit_api: API
+        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding, meldingen_mailpit_api: API
     ) -> None:
         response = await client.request(
             self.get_method(),
@@ -2344,7 +2344,7 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         assert body.get("state") == MeldingStates.COMPLETED
         assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
-        messages = mailpit_api.get_messages()
+        messages = meldingen_mailpit_api.get_messages()
         assert messages.total == 1
 
     @pytest.mark.anyio
@@ -6067,18 +6067,18 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_state", "melding_token", "melding_email", "mailpit_api"],
+        ["melding_state", "melding_token", "melding_email"],
         [
-            (MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
-            (MeldingStates.PLANNED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
-            (MeldingStates.PROCESSING_REQUESTED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
-            (MeldingStates.PROCESSING, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
-            (MeldingStates.REOPENED, "supersecrettoken", "melder@example.com", "http://mailpit:8025"),
+            (MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com"),
+            (MeldingStates.PLANNED, "supersecrettoken", "melder@example.com"),
+            (MeldingStates.PROCESSING_REQUESTED, "supersecrettoken", "melder@example.com"),
+            (MeldingStates.PROCESSING, "supersecrettoken", "melder@example.com"),
+            (MeldingStates.REOPENED, "supersecrettoken", "melder@example.com"),
         ],
         indirect=True,
     )
     async def test_submit_melding_melder(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, mailpit_api: API
+        self, app: FastAPI, client: AsyncClient, melding: Melding, meldingen_mailpit_api: API
     ) -> None:
         response = await client.request(
             self.get_method(),
@@ -6091,7 +6091,7 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
         body = response.json()
         assert body.get("state") == MeldingStates.SUBMITTED
 
-        messages = mailpit_api.get_messages()
+        messages = meldingen_mailpit_api.get_messages()
         assert messages.total == 1
 
     @pytest.mark.anyio
@@ -6122,12 +6122,12 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_state", "melding_token", "melding_email", "mailpit_api"],
-        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com", "http://mailpit:8025")],
+        ["melding_state", "melding_token", "melding_email"],
+        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com")],
         indirect=True,
     )
     async def test_submit_melding_melder_not_found(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, mailpit_api: API
+        self, app: FastAPI, client: AsyncClient, melding: Melding, meldingen_mailpit_api: API
     ) -> None:
         response = await client.request(
             self.get_method(),

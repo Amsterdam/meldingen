@@ -2,8 +2,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import NameListFilters
-from sqlalchemy import ColumnExpressionArgument
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from meldingen.actions.classification import (
@@ -15,10 +13,8 @@ from meldingen.actions.classification import (
 )
 from meldingen.api.utils import (
     ContentRangeHeaderAdder,
-    FilterParams,
     PaginationParams,
     SortParams,
-    filter_param,
     pagination_params,
     sort_param,
 )
@@ -31,9 +27,10 @@ from meldingen.dependencies import (
     classification_repository,
     classification_retrieve_action,
     classification_update_action,
+    list_filters,
 )
 from meldingen.models import Classification
-from meldingen.repositories import ClassificationRepository
+from meldingen.repositories import ClassificationRepository, RepositoryListFilters
 from meldingen.schemas.input import ClassificationCreateInput, ClassificationUpdateInput
 from meldingen.schemas.output import ClassificationOutput
 
@@ -102,7 +99,7 @@ async def list_classifications(
     pagination: Annotated[PaginationParams, Depends(pagination_params)],
     sort: Annotated[SortParams, Depends(sort_param)],
     action: Annotated[ClassificationListAction, Depends(classification_list_action)],
-    filter_params: Annotated[FilterParams, Depends(filter_param)],
+    list_filters: Annotated[RepositoryListFilters | None, Depends(list_filters)],
     include_deleted: Annotated[
         bool,
         Query(
@@ -112,25 +109,19 @@ async def list_classifications(
 ) -> list[ClassificationOutput]:
     limit = pagination["limit"] or 0
     offset = pagination["offset"] or 0
-    q = filter_params.q
-
-    content_range_filters: list[ColumnExpressionArgument[bool]] | None = (
-        [Classification.name.ilike(f"%{q}%")] if q is not None else None
-    )
-    name_filters = NameListFilters(name_contains=q) if q is not None else None
 
     classifications = await action(
         limit=limit,
         offset=offset,
         sort_attribute_name=sort.get_attribute_name(),
         sort_direction=sort.get_direction(),
-        filters=name_filters,
+        filters=list_filters,
         apply_visibility_filters=not include_deleted,
     )
     await content_range_header_adder(
         response,
         pagination,
-        content_range_filters,
+        list_filters,
         apply_visibility_filters=not include_deleted,
     )
 

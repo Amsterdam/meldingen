@@ -1,5 +1,5 @@
 import logging
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 from pydantic import BaseModel, Field, create_model
 
@@ -23,7 +23,7 @@ async def build_dynamic_classification_response_model(
         type[ClassificationResponse],
         create_model(
             "ClassificationResponse",
-            classification=(classification_type, Field(..., description="The chosen classification")),
+            classification=(cast(Any, classification_type), Field(..., description="The chosen classification")),
         ),
     )
 

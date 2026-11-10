@@ -1,56 +1,27 @@
-from collections.abc import Sequence
-from typing import override
-
-from fastapi import BackgroundTasks, HTTPException
-from meldingen_core import SortingDirection
+from fastapi import BackgroundTasks
 from meldingen_core.actions.melding import MeldingAddAssetAction as BaseMeldingAddAssetAction
 from meldingen_core.actions.melding import MeldingAddContactInfoAction as BaseMeldingAddContactInfoAction
 from meldingen_core.actions.melding import MeldingAnswerDeleteAction as BaseMeldingAnswerDeleteAction
 from meldingen_core.actions.melding import MeldingDeleteAssetAction as BaseMeldingDeleteAssetAction
-from meldingen_core.actions.melding import MeldingListAction as BaseMeldingListAction
 from meldingen_core.actions.melding import MeldingReclassifyAction as BaseMeldingReclassifyAction
 from meldingen_core.actions.melding import MeldingSetAssetsAction as BaseMeldingSetAssetsAction
 from meldingen_core.actions.melding import MeldingSubmitAction as BaseMeldingSubmitAction
 from meldingen_core.actions.melding import MeldingSubmitActionMelder as BaseMeldingSubmitActionMelder
 from meldingen_core.address import BaseAddressEnricher
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.filters import MeldingListFilters
-from meldingen_core.repositories import BaseMeldingRepository
+from meldingen_core.repositories import BaseRepository
 from meldingen_core.repository_helpers import retrieve_or_raise_not_found
 from meldingen_core.statemachine import MeldingBackofficeStates, MeldingTransitions
-from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
+from meldingen.actions.base import BaseListAction
 from meldingen.location import MeldingLocationIngestor, WKBToPointShapeTransformer
 from meldingen.models import Answer, Asset, AssetType, Classification, Melding, Note, User
-from meldingen.repositories import AttributeNotFoundException, MeldingRepository
+from meldingen.repositories import MeldingRepository
 from meldingen.schemas.types import Address, GeoJson
 from meldingen.statemachine import MeldingStateMachine
 
 
-class MeldingListAction(BaseMeldingListAction[Melding]):
-    @override
-    async def __call__(
-        self,
-        *,
-        limit: int | None = None,
-        offset: int | None = None,
-        sort_attribute_name: str | None = None,
-        sort_direction: SortingDirection | None = None,
-        filters: MeldingListFilters | None = None,
-    ) -> Sequence[Melding]:
-        try:
-            return await super().__call__(
-                limit=limit,
-                offset=offset,
-                sort_attribute_name=sort_attribute_name,
-                sort_direction=sort_direction,
-                filters=filters,
-            )
-        except AttributeNotFoundException as e:
-            raise HTTPException(
-                HTTP_422_UNPROCESSABLE_CONTENT,
-                [{"loc": ("query", "sort"), "msg": e.message, "type": "attribute_not_found"}],
-            )
+class MeldingListAction(BaseListAction[Melding]): ...
 
 
 class MeldingRetrieveAction:
@@ -124,9 +95,9 @@ class MeldingReclassifyAction(BaseMeldingReclassifyAction[Melding, Classificatio
 
 class MeldingGetPossibleNextStatesAction:
     _state_machine: MeldingStateMachine
-    _melding_repository: BaseMeldingRepository[Melding]
+    _melding_repository: BaseRepository[Melding]
 
-    def __init__(self, state_machine: MeldingStateMachine, repository: BaseMeldingRepository[Melding]) -> None:
+    def __init__(self, state_machine: MeldingStateMachine, repository: BaseRepository[Melding]) -> None:
         self._state_machine = state_machine
         self._melding_repository = repository
 
