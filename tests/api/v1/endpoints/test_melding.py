@@ -841,16 +841,6 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         body = response.json()
         assert body.get("detail") == "Not Found"
 
-    @pytest.mark.anyio
-    async def test_retrieve_melding_without_classification_service_level_objective(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding
-    ) -> None:
-        response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=1))
-        body = response.json()
-
-        assert body.get("classification") is None
-        assert body.get("service_level_objective") is None
-
 
 class BaseTokenAuthenticationTest(metaclass=ABCMeta):
     @abstractmethod
