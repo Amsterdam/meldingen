@@ -236,20 +236,6 @@ async def melding(
 
 
 @pytest.fixture
-async def melding_with_classification(
-    db_session: AsyncSession,
-    melding: Melding,
-    classification: Classification,
-) -> Melding:
-    melding.classification = classification
-
-    db_session.add(melding)
-    await db_session.commit()
-
-    return melding
-
-
-@pytest.fixture
 async def melding_with_classification_with_asset_type(
     db_session: AsyncSession,
     melding: Melding,
@@ -304,7 +290,7 @@ async def initial_sources(db_session: AsyncSession) -> list[Source]:
 
 @pytest.fixture
 async def form_with_multiple_questions(
-    db_session: AsyncSession, melding_with_classification: Melding, classification: Classification, is_required: bool
+    db_session: AsyncSession, melding: Melding, classification: Classification, is_required: bool
 ) -> Form:
     form = Form(title="Form", classification=classification)
     questions = []
@@ -330,7 +316,7 @@ async def form_with_multiple_questions(
 
 @pytest.fixture
 async def melding_with_text_answers(
-    db_session: AsyncSession, melding_with_classification: Melding, form_with_multiple_questions: Form
+    db_session: AsyncSession, melding: Melding, form_with_multiple_questions: Form
 ) -> Melding:
     questions = await form_with_multiple_questions.awaitable_attrs.questions
 
@@ -342,7 +328,7 @@ async def melding_with_text_answers(
         db_session.add(
             TextAnswer(
                 text=f"Answer {i}",
-                melding=melding_with_classification,
+                melding=melding,
                 question=question,
                 type=AnswerTypeEnum.text,
                 original_question_text=question.text,
@@ -353,12 +339,12 @@ async def melding_with_text_answers(
 
     await db_session.commit()
 
-    return melding_with_classification
+    return melding
 
 
 @pytest.fixture
 async def melding_with_time_answers(
-    db_session: AsyncSession, melding_with_classification: Melding, form_with_multiple_questions: Form
+    db_session: AsyncSession, melding: Melding, form_with_multiple_questions: Form
 ) -> Melding:
     questions = await form_with_multiple_questions.awaitable_attrs.questions
 
@@ -366,7 +352,7 @@ async def melding_with_time_answers(
         db_session.add(
             TimeAnswer(
                 time=f"10:0{i}",
-                melding=melding_with_classification,
+                melding=melding,
                 question=questions[i],
                 type=AnswerTypeEnum.time,
             )
@@ -374,13 +360,13 @@ async def melding_with_time_answers(
 
     await db_session.commit()
 
-    return melding_with_classification
+    return melding
 
 
 @pytest.fixture
 async def melding_with_different_answer_types(
     db_session: AsyncSession,
-    melding_with_classification: Melding,
+    melding: Melding,
     formio_time_component: FormIoTimeComponent,
     formio_text_area_component: FormIoTextAreaComponent,
     formio_date_component: FormIoDateComponent,
@@ -389,7 +375,7 @@ async def melding_with_different_answer_types(
     formio_radio_component: FormIoRadioComponent,
     formio_text_field_component: FormIoTextFieldComponent,
 ) -> Melding:
-    classification = melding_with_classification.classification
+    classification = melding.classification
     form = Form(title="test_form", display=FormIoFormDisplayEnum.form, classification=classification)
 
     question_components = [
@@ -431,7 +417,7 @@ async def melding_with_different_answer_types(
 
     text_answer = TextAnswer(
         text="John Doe",
-        melding=melding_with_classification,
+        melding=melding,
         question=Question(text="What is your name?", form=form, component=formio_text_area_component),
         type=AnswerTypeEnum.text,
         original_question_text="What is your name?",
@@ -439,14 +425,14 @@ async def melding_with_different_answer_types(
 
     time_answer = TimeAnswer(
         time="14:30",
-        melding=melding_with_classification,
+        melding=melding,
         question=Question(text="What time is it?", form=form, component=formio_time_component),
         type=AnswerTypeEnum.time,
         original_question_text="What time is it?",
     )
 
     date_answer = DateAnswer(
-        melding=melding_with_classification,
+        melding=melding,
         date={"value": "-1", "label": "Gisteren 31 december", "converted_date": "2025-12-31"},
         question=Question(text="When did this happen?", form=form, component=formio_date_component),
         type=AnswerTypeEnum.date,
@@ -454,7 +440,7 @@ async def melding_with_different_answer_types(
     )
 
     radio_answer = ValueLabelAnswer(
-        melding=melding_with_classification,
+        melding=melding,
         values_and_labels=[{"value": "option-2", "label": "Optie #2"}],
         question=Question(text="Kies een optie", form=form, component=formio_radio_component),
         type=AnswerTypeEnum.value_label,
@@ -462,7 +448,7 @@ async def melding_with_different_answer_types(
     )
 
     select_answer = ValueLabelAnswer(
-        melding=melding_with_classification,
+        melding=melding,
         values_and_labels=[{"value": "option-1", "label": "Optie #1"}, {"value": "option-2", "label": "Optie #2"}],
         question=Question(text="Kies een optie", form=form, component=formio_select_component),
         type=AnswerTypeEnum.value_label,
@@ -470,7 +456,7 @@ async def melding_with_different_answer_types(
     )
 
     checkbox_answer = ValueLabelAnswer(
-        melding=melding_with_classification,
+        melding=melding,
         values_and_labels=[{"value": "option-3", "label": "Optie #3"}],
         question=Question(text="Vink aan wat voor jou geldt", form=form, component=formio_checkbox_component),
         type=AnswerTypeEnum.value_label,
@@ -479,7 +465,7 @@ async def melding_with_different_answer_types(
 
     text_field_answer = TextAnswer(
         text="Jane Doe",
-        melding=melding_with_classification,
+        melding=melding,
         question=Question(text="Vul uw naam in", form=form, component=formio_text_field_component),
         type=AnswerTypeEnum.text,
         original_question_text="Vul uw naam in",
@@ -490,7 +476,7 @@ async def melding_with_different_answer_types(
     )
     await db_session.commit()
 
-    return melding_with_classification
+    return melding
 
 
 @pytest.fixture
@@ -553,7 +539,7 @@ async def melding_with_assets_with_classification_and_asset_type(
 
 @pytest.fixture
 async def melding_with_some_answers(
-    db_session: AsyncSession, melding_with_classification: Melding, form_with_multiple_questions: Form
+    db_session: AsyncSession, melding: Melding, form_with_multiple_questions: Form
 ) -> Melding:
     questions = await form_with_multiple_questions.awaitable_attrs.questions
 
@@ -565,7 +551,7 @@ async def melding_with_some_answers(
         db_session.add(
             TextAnswer(
                 text=f"Answer {i}",
-                melding=melding_with_classification,
+                melding=melding,
                 question=question,
                 type=AnswerTypeEnum.text,
                 original_question_text=question.text,
@@ -576,7 +562,7 @@ async def melding_with_some_answers(
 
     await db_session.commit()
 
-    return melding_with_classification
+    return melding
 
 
 @pytest.fixture
@@ -1123,12 +1109,10 @@ async def form_with_date_component(
     form_title: str,
     form_panel: FormIoPanelComponent,
     formio_date_component: FormIoDateComponent,
-    melding_with_classification: Melding,
+    melding: Melding,
     conditional: dict[str, Any] | None,
 ) -> Form:
-    form = Form(
-        title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
-    )
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form, classification=melding.classification)
 
     formio_date_component.conditional = conditional
 
@@ -1154,12 +1138,10 @@ async def form_with_select_component(
     form_title: str,
     form_panel: FormIoPanelComponent,
     formio_select_component: FormIoSelectComponent,
-    melding_with_classification: Melding,
+    melding: Melding,
     conditional: dict[str, Any] | None,
 ) -> Form:
-    form = Form(
-        title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
-    )
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form, classification=melding.classification)
 
     formio_select_component.conditional = conditional
 
@@ -1185,12 +1167,10 @@ async def form_with_checkbox_component(
     form_title: str,
     form_panel: FormIoPanelComponent,
     formio_checkbox_component: FormIoCheckBoxComponent,
-    melding_with_classification: Melding,
+    melding: Melding,
     conditional: dict[str, Any] | None,
 ) -> Form:
-    form = Form(
-        title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
-    )
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form, classification=melding.classification)
 
     formio_checkbox_component.conditional = conditional
 
@@ -1216,12 +1196,10 @@ async def form_with_radio_component(
     form_title: str,
     form_panel: FormIoPanelComponent,
     formio_radio_component: FormIoRadioComponent,
-    melding_with_classification: Melding,
+    melding: Melding,
     conditional: dict[str, Any] | None,
 ) -> Form:
-    form = Form(
-        title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
-    )
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form, classification=melding.classification)
 
     formio_radio_component.conditional = conditional
 
@@ -1261,12 +1239,10 @@ async def form_with_time_component(
     form_title: str,
     form_panel: FormIoPanelComponent,
     formio_time_component: FormIoTimeComponent,
-    melding_with_classification: Melding,
+    melding: Melding,
     conditional: dict[str, Any] | None,
 ) -> Form:
-    form = Form(
-        title=form_title, display=FormIoFormDisplayEnum.form, classification=melding_with_classification.classification
-    )
+    form = Form(title=form_title, display=FormIoFormDisplayEnum.form, classification=melding.classification)
 
     formio_time_component.conditional = conditional
 
@@ -1346,7 +1322,7 @@ async def form_with_mixed_required_components(db_session: AsyncSession, classifi
 
 @pytest.fixture
 async def melding_with_mixed_required_components(
-    db_session: AsyncSession, form_with_mixed_required_components: Form, melding_with_classification: Melding
+    db_session: AsyncSession, form_with_mixed_required_components: Form, melding: Melding
 ) -> Melding:
 
     # Only answer the conditional required question; leave the non-conditional required question unanswered.
@@ -1363,22 +1339,22 @@ async def melding_with_mixed_required_components(
     db_session.add(
         TextAnswer(
             text="Answered conditional question",
-            melding=melding_with_classification,
+            melding=melding,
             question=conditional_question,
             type=AnswerTypeEnum.text,
         )
     )
 
-    db_session.add(melding_with_classification)
+    db_session.add(melding)
     await db_session.commit()
-    await db_session.refresh(melding_with_classification)
+    await db_session.refresh(melding)
 
-    return melding_with_classification
+    return melding
 
 
 @pytest.fixture
 async def melding_with_mixed_required_components_all_answered(
-    db_session: AsyncSession, form_with_mixed_required_components: Form, melding_with_classification: Melding
+    db_session: AsyncSession, form_with_mixed_required_components: Form, melding: Melding
 ) -> Melding:
     questions = await form_with_mixed_required_components.awaitable_attrs.questions
 
@@ -1398,24 +1374,24 @@ async def melding_with_mixed_required_components_all_answered(
         [
             TextAnswer(
                 text="Answered conditional question",
-                melding=melding_with_classification,
+                melding=melding,
                 question=conditional_question,
                 type=AnswerTypeEnum.text,
             ),
             TextAnswer(
                 text="Answered required question",
-                melding=melding_with_classification,
+                melding=melding,
                 question=required_question,
                 type=AnswerTypeEnum.text,
             ),
-            melding_with_classification,
+            melding,
         ]
     )
 
     await db_session.commit()
-    await db_session.refresh(melding_with_classification)
+    await db_session.refresh(melding)
 
-    return melding_with_classification
+    return melding
 
 
 @pytest.fixture

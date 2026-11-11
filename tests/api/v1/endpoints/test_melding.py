@@ -801,9 +801,9 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        melding_with_classification: Melding,
+        melding: Melding,
     ) -> None:
-        melding = melding_with_classification
+        melding = melding
         response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=melding.id))
 
         assert response.status_code == HTTP_200_OK
@@ -1425,11 +1425,11 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        melding_with_classification: Melding,
+        melding: Melding,
         default_classification: Classification,
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification.id),
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             json={"urgency": 1},
         )
 
@@ -1482,13 +1482,13 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         client: AsyncClient,
         db_session: AsyncSession,
         auth_user: None,
-        melding_with_classification: Melding,
+        melding: Melding,
         initial_labels: list[Label],
         default_classification: Classification,
     ) -> None:
 
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification.id),
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             json={"urgency": 1, "label_ids": [initial_labels[0].id, initial_labels[1].id]},
         )
 
@@ -1521,11 +1521,11 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         app: FastAPI,
         client: AsyncClient,
         auth_user: None,
-        melding_with_classification: Melding,
+        melding: Melding,
         initial_sources: list[Source],
     ) -> None:
         response = await client.patch(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification.id),
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             json={"source_id": initial_sources[0].id},
         )
 
@@ -1637,13 +1637,13 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         client: AsyncClient,
         db_session: AsyncSession,
         auth_user: None,
-        melding_with_classification: Melding,
+        melding: Melding,
         classification: Classification,
         form: Form,
     ) -> None:
         """Sending the classification the melding already has is not a reclassification: it neither
         throws the melder's input away nor sends the melding back to the classified state."""
-        melding = melding_with_classification
+        melding = melding
         component = (await form.awaitable_attrs.components)[0]
         question = await component.awaitable_attrs.question
         db_session.add(TextAnswer(question=question, melding=melding, text="Het antwoord van de melder"))
@@ -1757,10 +1757,10 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         indirect=True,
     )
     async def test_answer_questions(
-        self, app: FastAPI, client: AsyncClient, melding_with_classification: Melding, form_with_classification: Form
+        self, app: FastAPI, client: AsyncClient, melding: Melding, form_with_classification: Form
     ) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification.id),
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecrettoken"},
         )
 
@@ -1769,8 +1769,8 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
-        assert body.get("created_at") == melding_with_classification.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
-        assert body.get("updated_at") == melding_with_classification.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -1838,10 +1838,10 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         indirect=["is_required", "classification_name"],
     )
     async def test_answer_questions_without_answering_required_questions(
-        self, app: FastAPI, client: AsyncClient, melding_with_classification: Melding, form_with_classification: Form
+        self, app: FastAPI, client: AsyncClient, melding: Melding, form_with_classification: Form
     ) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification.id),
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecrettoken"},
         )
 
@@ -1932,10 +1932,10 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
     ) -> None:
         response = await client.put(
-            app.url_path_for(self.ROUTE_NAME, melding_id=melding_with_classification.id),
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
             params={"token": "supersecrettoken"},
         )
 
@@ -1944,8 +1944,8 @@ class TestMeldingAnswerQuestions(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert body.get("state") == MeldingStates.QUESTIONS_ANSWERED
-        assert body.get("created_at") == melding_with_classification.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
-        assert body.get("updated_at") == melding_with_classification.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+        assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class TestMeldingAddAttachments(BaseTokenAuthenticationTest):
@@ -2064,11 +2064,11 @@ class TestMeldingSubmitLocation(BaseTokenAuthenticationTest):
         indirect=True,
     )
     async def test_submit_location_with_classification_cannot_skip_questions(
-        self, app: FastAPI, client: AsyncClient, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, melding: Melding
     ) -> None:
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id),
+            app.url_path_for(self.get_route_name(), melding_id=melding.id),
             params={"token": "supersecrettoken"},
         )
 
@@ -2381,7 +2381,7 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
@@ -2398,9 +2398,7 @@ class TestMeldingQuestionAnswer:
         data = {"text": text, "type": AnswerTypeEnum.text}
 
         response = await client.post(
-            app.url_path_for(
-                self.ROUTE_NAME_CREATE, melding_id=melding_with_classification.id, question_id=question.id
-            ),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
             params={"token": "supersecuretoken"},
             json=data,
         )
@@ -2435,7 +2433,7 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_classification: Form,
         db_session: AsyncSession,
     ) -> None:
@@ -2455,9 +2453,7 @@ class TestMeldingQuestionAnswer:
         data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
-            app.url_path_for(
-                self.ROUTE_NAME_CREATE, melding_id=melding_with_classification.id, question_id=question.id
-            ),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
             params={"token": "supersecuretoken"},
             json=data,
         )
@@ -2501,7 +2497,7 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_classification: Form,
         validation_err_message: str,
     ) -> None:
@@ -2518,9 +2514,7 @@ class TestMeldingQuestionAnswer:
         data = {"text": "dit is het antwoord op de vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
-            app.url_path_for(
-                self.ROUTE_NAME_CREATE, melding_id=melding_with_classification.id, question_id=question.id
-            ),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
             params={"token": "supersecuretoken"},
             json=data,
         )
@@ -2682,7 +2676,7 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_classification: Form,
     ) -> None:
         components = await form_with_classification.awaitable_attrs.components
@@ -2699,10 +2693,8 @@ class TestMeldingQuestionAnswer:
         data = {"text": text, "type": AnswerTypeEnum.text}
 
         response = await client.post(
-            app.url_path_for(
-                self.ROUTE_NAME_CREATE, melding_id=melding_with_classification.id, question_id=question.id
-            ),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
+            params={"token": melding.token},
             json=data,
         )
 
@@ -2747,7 +2739,7 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         db_session: AsyncSession,
     ) -> None:
         question = Question(text="is dit een vraag?")
@@ -2757,9 +2749,7 @@ class TestMeldingQuestionAnswer:
         data = {"text": "Ja, dit is een vraag", "type": AnswerTypeEnum.text}
 
         response = await client.post(
-            app.url_path_for(
-                self.ROUTE_NAME_CREATE, melding_id=melding_with_classification.id, question_id=question.id
-            ),
+            app.url_path_for(self.ROUTE_NAME_CREATE, melding_id=melding.id, question_id=question.id),
             params={"token": "supersecuretoken"},
             json=data,
         )
@@ -2800,7 +2790,7 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_time_component: Form,
         time_value: str | None,
         db_session: AsyncSession,
@@ -2818,10 +2808,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"time": time_value, "type": AnswerTypeEnum.time},
         )
 
@@ -2861,7 +2851,7 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         melding_token: str,
         form_with_time_component: Form,
         time_value: str | int,
@@ -2881,7 +2871,7 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
             params={"token": melding_token},
@@ -2907,7 +2897,7 @@ class TestMeldingQuestionAnswer:
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_time_component: Form,
     ) -> None:
         """
@@ -2928,10 +2918,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"type": AnswerTypeEnum.time},
         )
 
@@ -2949,7 +2939,7 @@ class TestMeldingQuestionAnswer:
         ["supersecrettoken"],
     )
     async def test_create_date_answer(
-        self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding: Melding
     ) -> None:
         components = await form_with_date_component.awaitable_attrs.components
         assert len(components) == 1
@@ -2966,10 +2956,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"date": date_input, "type": AnswerTypeEnum.date},
         )
 
@@ -2992,7 +2982,7 @@ class TestMeldingQuestionAnswer:
         ["supersecrettoken"],
     )
     async def test_create_date_answer_invalid(
-        self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding: Melding
     ) -> None:
         components = await form_with_date_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3007,10 +2997,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"date": "invalid-date-format", "type": AnswerTypeEnum.date},
         )
 
@@ -3036,7 +3026,7 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         form_with_date_component: Form,
-        melding_with_classification: Melding,
+        melding: Melding,
         converted_date_input: str,
     ) -> None:
         components = await form_with_date_component.awaitable_attrs.components
@@ -3054,10 +3044,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"date": date_input, "type": AnswerTypeEnum.date},
         )
 
@@ -3075,7 +3065,7 @@ class TestMeldingQuestionAnswer:
         ["supersecrettoken"],
     )
     async def test_create_date_answer_i_dont_know_option(
-        self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, form_with_date_component: Form, melding: Melding
     ) -> None:
         components = await form_with_date_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3092,10 +3082,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"date": date_input, "type": AnswerTypeEnum.date},
         )
 
@@ -3120,7 +3110,7 @@ class TestMeldingQuestionAnswer:
         ["supersecrettoken"],
     )
     async def test_create_select_component_answer(
-        self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding: Melding
     ) -> None:
         components = await form_with_select_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3137,10 +3127,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"values_and_labels": select_input, "type": AnswerTypeEnum.value_label},
         )
 
@@ -3163,7 +3153,7 @@ class TestMeldingQuestionAnswer:
         ["supersecrettoken"],
     )
     async def test_create_select_component_answer_invalid(
-        self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, form_with_select_component: Form, melding: Melding
     ) -> None:
         components = await form_with_select_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3178,10 +3168,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"text": "invalid-answer-field", "type": AnswerTypeEnum.value_label},
         )
 
@@ -3199,7 +3189,7 @@ class TestMeldingQuestionAnswer:
         ["supersecrettoken"],
     )
     async def test_create_radio_component_answer(
-        self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding: Melding
     ) -> None:
         components = await form_with_radio_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3216,10 +3206,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"values_and_labels": radio_input, "type": AnswerTypeEnum.value_label},
         )
 
@@ -3242,7 +3232,7 @@ class TestMeldingQuestionAnswer:
         ["supersecrettoken"],
     )
     async def test_create_invalid_answer_without_type(
-        self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding: Melding
     ) -> None:
         components = await form_with_time_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3257,10 +3247,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"time": "10:30"},
         )
 
@@ -3279,7 +3269,7 @@ class TestMeldingQuestionAnswer:
         ["supersecrettoken"],
     )
     async def test_create_answer_non_matching_answer_types(
-        self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, form_with_radio_component: Form, melding: Melding
     ) -> None:
         components = await form_with_radio_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3294,10 +3284,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"time": "10:30", "type": AnswerTypeEnum.time},
         )
 
@@ -3316,7 +3306,7 @@ class TestMeldingQuestionAnswer:
         ["supersecrettoken"],
     )
     async def test_create_answer_empty_type(
-        self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding_with_classification: Melding
+        self, app: FastAPI, client: AsyncClient, form_with_time_component: Form, melding: Melding
     ) -> None:
         components = await form_with_time_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3331,10 +3321,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"time": "10:30", "type": ""},
         )
 
@@ -3357,7 +3347,7 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         form_with_checkbox_component: Form,
-        melding_with_classification: Melding,
+        melding: Melding,
     ) -> None:
         components = await form_with_checkbox_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3374,10 +3364,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={"values_and_labels": checkbox_input, "type": AnswerTypeEnum.value_label},
         )
 
@@ -3404,7 +3394,7 @@ class TestMeldingQuestionAnswer:
         app: FastAPI,
         client: AsyncClient,
         form_with_checkbox_component: Form,
-        melding_with_classification: Melding,
+        melding: Melding,
     ) -> None:
         components = await form_with_checkbox_component.awaitable_attrs.components
         assert len(components) == 1
@@ -3419,10 +3409,10 @@ class TestMeldingQuestionAnswer:
         response = await client.post(
             app.url_path_for(
                 self.ROUTE_NAME_CREATE,
-                melding_id=melding_with_classification.id,
+                melding_id=melding.id,
                 question_id=question.id,
             ),
-            params={"token": melding_with_classification.token},
+            params={"token": melding.token},
             json={
                 "date": {"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"},
                 "type": AnswerTypeEnum.value_label,
@@ -3522,7 +3512,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_classification: Form,
         db_session: AsyncSession,
     ) -> None:
@@ -3532,7 +3522,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = TextAnswer(
             text="This is the answer",
             question=questions[0],
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.text,
         )
         db_session.add(answer)
@@ -3540,8 +3530,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"text": "This is another answer", "type": AnswerTypeEnum.text},
         )
 
@@ -3569,7 +3559,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_classification: Form,
         db_session: AsyncSession,
     ) -> None:
@@ -3579,7 +3569,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = TextAnswer(
             text="This is the answer",
             question=questions[0],
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.text,
             original_question_text=questions[0].text,
         )
@@ -3588,8 +3578,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"text": "This is another answer", "type": AnswerTypeEnum.text},
         )
 
@@ -3633,7 +3623,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_time_component: Form,
         time_value: str | None,
     ) -> None:
@@ -3650,7 +3640,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = TimeAnswer(
             time="14:30",
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.time,
             original_question_text=question.text,
         )
@@ -3659,8 +3649,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"time": time_value, "type": AnswerTypeEnum.time},
         )
 
@@ -3685,7 +3675,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_time_component: Form,
     ) -> None:
         """
@@ -3706,7 +3696,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = TimeAnswer(
             time="14:30",
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.time,
             original_question_text=question.text,
         )
@@ -3715,8 +3705,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"type": AnswerTypeEnum.time},
         )
 
@@ -3746,7 +3736,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_time_component: Form,
         time_value: str | float,
         error_message: str,
@@ -3764,7 +3754,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = TimeAnswer(
             time="14:30",
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.time,
             original_question_text=question.text,
         )
@@ -3773,8 +3763,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"time": time_value, "type": AnswerTypeEnum.time},
         )
 
@@ -3800,7 +3790,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_date_component: Form,
     ) -> None:
         components = await form_with_date_component.awaitable_attrs.components
@@ -3816,7 +3806,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = DateAnswer(
             date={"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"},
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.date,
             original_question_text=question.text,
         )
@@ -3827,8 +3817,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"date": new_date, "type": AnswerTypeEnum.date},
         )
 
@@ -3855,7 +3845,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_date_component: Form,
     ) -> None:
         components = await form_with_date_component.awaitable_attrs.components
@@ -3871,7 +3861,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = DateAnswer(
             date={"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"},
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.date,
             original_question_text=question.text,
         )
@@ -3880,8 +3870,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"date": "invalid-date-format", "type": AnswerTypeEnum.date},
         )
 
@@ -3907,7 +3897,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_date_component: Form,
     ) -> None:
         components = await form_with_date_component.awaitable_attrs.components
@@ -3923,7 +3913,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = DateAnswer(
             date={"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"},
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.date,
             original_question_text=question.text,
         )
@@ -3934,8 +3924,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"date": new_date, "type": AnswerTypeEnum.date},
         )
 
@@ -3969,7 +3959,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_radio_component: Form,
     ) -> None:
         components = await form_with_radio_component.awaitable_attrs.components
@@ -3985,7 +3975,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}],
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.value_label,
             original_question_text=question.text,
         )
@@ -3996,8 +3986,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"values_and_labels": new_values_and_labels, "type": AnswerTypeEnum.value_label},
         )
 
@@ -4024,7 +4014,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_radio_component: Form,
     ) -> None:
         components = await form_with_radio_component.awaitable_attrs.components
@@ -4040,7 +4030,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}],
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.value_label,
             original_question_text=question.text,
         )
@@ -4049,8 +4039,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"time": "10:30", "type": AnswerTypeEnum.value_label},
         )
 
@@ -4078,7 +4068,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_select_component: Form,
     ) -> None:
         components = await form_with_select_component.awaitable_attrs.components
@@ -4094,7 +4084,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}, {"value": "option_3", "label": "Option 3"}],
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.value_label,
             original_question_text=question.text,
         )
@@ -4105,8 +4095,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"values_and_labels": new_values_and_labels, "type": AnswerTypeEnum.value_label},
         )
 
@@ -4133,7 +4123,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_select_component: Form,
     ) -> None:
         components = await form_with_select_component.awaitable_attrs.components
@@ -4149,7 +4139,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}, {"value": "option_3", "label": "Option 3"}],
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.value_label,
             original_question_text=question.text,
         )
@@ -4158,8 +4148,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"text": "invalid-answer-field", "type": AnswerTypeEnum.value_label},
         )
 
@@ -4187,7 +4177,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_checkbox_component: Form,
     ) -> None:
         components = await form_with_checkbox_component.awaitable_attrs.components
@@ -4203,7 +4193,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}],
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.value_label,
             original_question_text=question.text,
         )
@@ -4214,8 +4204,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"values_and_labels": new_values_and_labels, "type": AnswerTypeEnum.value_label},
         )
 
@@ -4242,7 +4232,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_checkbox_component: Form,
     ) -> None:
         components = await form_with_checkbox_component.awaitable_attrs.components
@@ -4258,7 +4248,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = ValueLabelAnswer(
             values_and_labels=[{"value": "option_1", "label": "Option 1"}],
             question=question,
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.value_label,
             original_question_text=question.text,
         )
@@ -4267,8 +4257,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={
                 "date": {"value": "day -1", "label": "Gisteren", "converted_date": "2025-12-31"},
                 "type": AnswerTypeEnum.value_label,
@@ -4299,7 +4289,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         app: FastAPI,
         client: AsyncClient,
         db_session: AsyncSession,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_classification: Form,
     ) -> None:
         questions = await form_with_classification.awaitable_attrs.questions
@@ -4308,7 +4298,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         answer = TextAnswer(
             text="This is the answer",
             question=questions[0],
-            melding=melding_with_classification,
+            melding=melding,
             type=AnswerTypeEnum.text,
             original_question_text=questions[0].text,
         )
@@ -4317,8 +4307,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
 
         response = await client.request(
             self.get_method(),
-            app.url_path_for(self.get_route_name(), melding_id=melding_with_classification.id, answer_id=answer.id),
-            params={"token": melding_with_classification.token},
+            app.url_path_for(self.get_route_name(), melding_id=melding.id, answer_id=answer.id),
+            params={"token": melding.token},
             json={"text": "This is another answer", "type": ""},
         )
 
@@ -4344,7 +4334,7 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        melding_with_classification: Melding,
+        melding: Melding,
         form_with_classification: Form,
         db_session: AsyncSession,
     ) -> None:
@@ -4360,8 +4350,8 @@ class TestMeldingUpdateAnswer(BaseTokenAuthenticationTest):
         question = await component.awaitable_attrs.question
         assert isinstance(question, Question)
 
-        melding_id = melding_with_classification.id
-        melding_token = melding_with_classification.token
+        melding_id = melding.id
+        melding_token = melding.token
 
         # Create the answer.
         create_response = await client.post(
