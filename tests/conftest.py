@@ -1,4 +1,5 @@
 import contextlib
+import logging
 from collections.abc import AsyncGenerator, AsyncIterator
 from typing import Any
 from unittest.mock import AsyncMock, Mock
@@ -40,6 +41,23 @@ from meldingen.models import BaseDBModel, User
 
 pytest_plugins = ["mailpit.testing.pytest"]
 TEST_DATABASE_URL: str = str(settings.test_database_dsn)
+
+_NOISY_LOGGERS = (
+    "asyncio",
+    "httpcore",
+    "httpcore.connection",
+    "httpcore.http11",
+    "httpx",
+    "openai",
+    "mailpit_client",
+    "opentelemetry",
+    "openai._base_client",
+    "pytest_bdd",
+    "azure",
+)
+
+for _logger_name in _NOISY_LOGGERS:
+    logging.getLogger(_logger_name).setLevel(logging.WARNING)
 
 
 @pytest.fixture
