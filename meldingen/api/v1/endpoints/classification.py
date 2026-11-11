@@ -2,7 +2,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from meldingen_core.exceptions import NotFoundException
-from meldingen_core.repository_helpers import retrieve_or_raise_not_found
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.actions.classification import (
@@ -159,16 +158,17 @@ async def update_classification(
     action: Annotated[ClassificationUpdateAction, Depends(classification_update_action)],
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> ClassificationOutput:
-    classification_payload = classification_input.model_dump(exclude_unset=True)
-    existing_classification = await retrieve_or_raise_not_found(repository, classification_id)
+    classification_data = classification_input.model_dump(exclude_unset=True)
+    classification = await repository.retrieve(classification_id)
 
-    if classification_payload.get("name") and existing_classification.name == settings.llm_fallback_classification_name:
+    if classification is None:
+        raise HTTPException(HTTP_404_NOT_FOUND)
+
+    if classification_data.get("name") and classification.name == settings.llm_fallback_classification_name:
         raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, detail="Default classification name cannot be updated.")
 
-    classification = existing_classification
-
     try:
-        classification = await action(classification_id, classification_payload)
+        classification = await action(classification_id, classification_data)
     except NotFoundException:
         raise HTTPException(HTTP_404_NOT_FOUND)
 
