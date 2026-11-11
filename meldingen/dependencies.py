@@ -257,16 +257,19 @@ from meldingen.validators import (
 from meldingen.wfs import ProxyWfsProviderValidator
 
 
-@lru_cache
-def database_engine() -> AsyncEngine:
+def sql_echo_value() -> bool | str:
     echo: bool | str = False
-    match settings.log_level:  # pragma: no cover
+    match settings.log_level:
         case logging.INFO:
             echo = True
         case logging.DEBUG:
             echo = "debug"
+    return echo
 
-    engine = create_async_engine(str(settings.database_dsn), echo=echo)
+
+@lru_cache
+def database_engine() -> AsyncEngine:
+    engine = create_async_engine(str(settings.database_dsn), echo=sql_echo_value())
 
     SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
 

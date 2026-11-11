@@ -31,6 +31,7 @@ from meldingen.dependencies import (
     database_session_manager,
     malware_scanner,
     public_id_generator,
+    sql_echo_value,
     wfs_provider_validator,
 )
 from meldingen.generators import PublicIdGenerator
@@ -152,7 +153,7 @@ async def client(app: FastAPI, test_database: None, override_dependencies: None)
 
 @pytest.fixture(scope="session")
 def db_engine() -> AsyncEngine:
-    return create_async_engine(TEST_DATABASE_URL, echo="debug", poolclass=NullPool)
+    return create_async_engine(TEST_DATABASE_URL, echo=sql_echo_value(), poolclass=NullPool)
 
 
 class DatabaseSessionManager(BaseDatabaseSessionManager):
