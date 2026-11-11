@@ -196,6 +196,7 @@ async def melding(
     melding_phone: str | None,
     melding_labels: list[str],
     melding_urgency: int,
+    classification: Classification,
 ) -> Melding:
     melding = Melding(text=melding_text)
     melding.public_id = melding_public_id
@@ -226,9 +227,6 @@ async def melding(
 
     melding.urgency = melding_urgency
 
-    classification = Classification(name="Melding classification")
-    # classification.id = 44
-    db_session.add(classification)
     melding.classification = classification
 
     db_session.add(melding)
@@ -769,10 +767,32 @@ def classification_name(request: FixtureRequest) -> str:
 
 
 @pytest.fixture
+def new_classification_name(request: FixtureRequest) -> str:
+    if hasattr(request, "param"):
+        return str(request.param)
+    else:
+        return "new classification name"
+
+
+@pytest.fixture
 async def classification(db_session: AsyncSession, classification_name: str) -> Classification:
 
     classification = Classification(
         name=classification_name,
+        service_level_objective_text="Service level objective text",
+        instructions="Instructions for the classification",
+    )
+    db_session.add(classification)
+    await db_session.commit()
+
+    return classification
+
+
+@pytest.fixture
+async def new_classification(db_session: AsyncSession, new_classification_name: str) -> Classification:
+
+    classification = Classification(
+        name=new_classification_name,
         service_level_objective_text="Service level objective text",
         instructions="Instructions for the classification",
     )
@@ -1668,6 +1688,3 @@ async def asset(db_session: AsyncSession, asset_type: AssetType, melding: Meldin
 def meldingen_mailpit_api(mailpit_api: API) -> Generator[API, Any, Any]:
     mailpit_api.mailpit_url = os.environ.get("TEST_MAILPIT_URL", "http://mailpit:8025")
     yield mailpit_api
-    # Clear all messages from Mailpit after each test
-    messages = mailpit_api.get_messages()
-    mailpit_api.delete_messages([message.id for message in messages.messages])

@@ -85,7 +85,7 @@ class TestMeldingCreate:
 
     @pytest.mark.anyio
     async def test_create_melding(
-        self, app: FastAPI, client: AsyncClient, classification: Classification, default_classification: Classification
+        self, app: FastAPI, client: AsyncClient, default_classification: Classification
     ) -> None:
         response = await client.post(app.url_path_for(self.ROUTE_NAME_CREATE), json={"text": "This is a test melding."})
 
@@ -1043,7 +1043,7 @@ class TestMeldingUpdateMelder(BaseTokenAuthenticationTest):
         assert response.status_code == HTTP_200_OK
 
         body = response.json()
-        assert body.get("classification").get("id") is default_classification.id
+        assert body.get("classification").get("id") == default_classification.id
 
         results = await db_session.execute(select(Answer).where(Answer.melding_id == melding_with_text_answers.id))
         answers = results.scalars().all()
@@ -1579,20 +1579,20 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         db_session: AsyncSession,
         auth_user: None,
         melding: Melding,
-        classification: Classification,
+        new_classification: Classification,
     ) -> None:
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
-            json={"classification_id": classification.id},
+            json={"classification_id": new_classification.id},
         )
 
         assert response.status_code == HTTP_200_OK
         body = response.json()
-        assert body.get("classification", {}).get("id") == classification.id
+        assert body.get("classification", {}).get("id") == new_classification.id
         assert body.get("state") == MeldingStates.CLASSIFIED
 
         await db_session.refresh(melding)
-        assert melding.classification_id == classification.id
+        assert melding.classification_id == new_classification.id
         assert melding.state == MeldingStates.CLASSIFIED
 
     @pytest.mark.anyio
@@ -1672,14 +1672,14 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
         db_session: AsyncSession,
         auth_user: None,
         melding: Melding,
-        classification: Classification,
+        new_classification: Classification,
         melding_state: str,
     ) -> None:
         """This endpoint may not be used to get around the reclassification endpoint, which records
         a reason and keeps what the melder supplied."""
         response = await client.patch(
             app.url_path_for(self.ROUTE_NAME, melding_id=melding.id),
-            json={"classification_id": classification.id, "urgency": 1},
+            json={"classification_id": new_classification.id, "urgency": 1},
         )
 
         assert response.status_code == HTTP_400_BAD_REQUEST
@@ -1689,8 +1689,8 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
 
         # Refused before anything is written: not even the urgency that came with it is applied.
         await db_session.refresh(melding)
-        assert melding.classification.id is not classification.id
-        assert melding.classification_id is melding.classification.id
+        assert melding.classification.id != new_classification.id
+        assert melding.classification_id == melding.classification.id
         assert melding.state == melding_state
         assert melding.urgency == 0
 
@@ -2290,11 +2290,17 @@ class TestMeldingComplete(BaseUnauthorizedTest):
     @pytest.mark.anyio
     @pytest.mark.parametrize(
         ["melding_text", "melding_state", "melding_email"],
-        [("Er ligt poep op de stoep.", MeldingStates.PROCESSING, "me@example.com")],
+        [("Er ligt poep op de stoep.", MeldingStates.PROCESSING, "test_complete_melding_with_mail_text@example.com")],
         indirect=True,
     )
     async def test_complete_melding_with_mail_text(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, melding: Melding, meldingen_mailpit_api: API
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        melding: Melding,
+        meldingen_mailpit_api: API,
+        melding_email: str,
     ) -> None:
         response = await client.request(
             self.get_method(),
@@ -2309,8 +2315,9 @@ class TestMeldingComplete(BaseUnauthorizedTest):
         assert body.get("state") == MeldingStates.COMPLETED
         assert body.get("created_at") == melding.created_at.strftime("%Y-%m-%dT%H:%M:%SZ")
         assert body.get("updated_at") == melding.updated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
-        messages = meldingen_mailpit_api.get_messages()
-        assert messages.total == 1
+
+        mailpit_response = meldingen_mailpit_api.get_messages()
+        assert any(melding_email in message.to[0].address for message in mailpit_response.messages)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("melding_text", ["Er ligt poep op de stoep."], indirect=True)
@@ -6035,22 +6042,29 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
     @pytest.mark.parametrize(
         ["melding_state", "melding_token", "melding_email"],
         [
-            (MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com"),
-            (MeldingStates.PLANNED, "supersecrettoken", "melder@example.com"),
-            (MeldingStates.PROCESSING_REQUESTED, "supersecrettoken", "melder@example.com"),
-            (MeldingStates.PROCESSING, "supersecrettoken", "melder@example.com"),
-            (MeldingStates.REOPENED, "supersecrettoken", "melder@example.com"),
+            (MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder_from_state_CONTACT_INFO_ADDED@example.com"),
+            (MeldingStates.PLANNED, "supersecrettoken", "melder_from_state_PLANNED@example.com"),
+            (
+                MeldingStates.PROCESSING_REQUESTED,
+                "supersecrettoken",
+                "melder_from_state_PROCESSING_REQUESTED@example.com",
+            ),
+            (MeldingStates.PROCESSING, "supersecrettoken", "melder_from_state_PROCESSING@example.com"),
+            (MeldingStates.REOPENED, "supersecrettoken", "melder_from_state_REOPENED@example.com"),
         ],
         indirect=True,
     )
-    async def test_submit_melding_melder(
+    async def test_submit_melding_melder_from_various_states(
         self,
         app: FastAPI,
         client: AsyncClient,
         melding: Melding,
         meldingen_mailpit_api: API,
         default_classification: Classification,
+        melding_email: str,
     ) -> None:
+        # The melding with specified melding_state is comitted to the database via the fixture setup
+        # After submitting, it should transition to SUBMITTED and confirmation mail sent.
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=melding.id),
@@ -6062,8 +6076,8 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
         body = response.json()
         assert body.get("state") == MeldingStates.SUBMITTED
 
-        messages = meldingen_mailpit_api.get_messages()
-        assert messages.total == 1
+        mailpit_response = meldingen_mailpit_api.get_messages()
+        assert any(melding_email in message.to[0].address for message in mailpit_response.messages)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
@@ -6097,13 +6111,11 @@ class TestMeldingSubmitMelder(BaseTokenAuthenticationTest):
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        ["melding_state", "melding_token", "melding_email"],
-        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken", "melder@example.com")],
+        ["melding_state", "melding_token"],
+        [(MeldingStates.CONTACT_INFO_ADDED, "supersecrettoken")],
         indirect=True,
     )
-    async def test_submit_melding_melder_not_found(
-        self, app: FastAPI, client: AsyncClient, melding: Melding, meldingen_mailpit_api: API
-    ) -> None:
+    async def test_submit_melding_melder_not_found(self, app: FastAPI, client: AsyncClient, melding: Melding) -> None:
         response = await client.request(
             self.get_method(),
             app.url_path_for(self.get_route_name(), melding_id=325894768),

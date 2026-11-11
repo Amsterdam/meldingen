@@ -244,7 +244,7 @@ Feature: Melding Form
         When I upload the file
         Then the upload response should include data about my file as attachment
         When I check the attachments of my melding
-        Then there should be 1 attachments
+        Then there should be "1" attachments
         And the attachments should contain my file
         When I finish my current step by completing "ADD_ATTACHMENTS"
         Then I should receive a response with the current content of my melding
