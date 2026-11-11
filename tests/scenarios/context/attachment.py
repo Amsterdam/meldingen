@@ -87,7 +87,7 @@ async def i_check_the_attachments_of_my_melding(
     return body
 
 
-@then(parsers.parse("there should be {count:d} attachments"))
+@then(parsers.parse('there should be "{count:d}" attachments'))
 def there_should_be_attachments(melding_attachments: list[dict[str, Any]], count: int) -> None:
     assert len(melding_attachments) == count
 

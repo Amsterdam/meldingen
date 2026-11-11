@@ -11,7 +11,7 @@ from meldingen.models import AssetType, Classification
 from tests.scenarios.conftest import async_step
 
 
-@given(parsers.parse("there is an asset type {name:l} with max_assets {max_assets:d}"), target_fixture="asset_type")
+@given(parsers.parse('there is an asset type "{name}" with max_assets "{max_assets:d}"'), target_fixture="asset_type")
 @async_step
 async def there_is_an_asset_type(name: str, max_assets: int, db_session: AsyncSession) -> AssetType:
     asset_type = AssetType(
@@ -26,7 +26,7 @@ async def there_is_an_asset_type(name: str, max_assets: int, db_session: AsyncSe
 
 
 @given(
-    parsers.parse("the classification {classification_name:l} has asset type {asset_type_name:l}"),
+    parsers.parse('the classification "{classification_name}" has asset type "{asset_type_name}"'),
     target_fixture="classification",
 )
 @async_step
@@ -71,7 +71,7 @@ def asset_added_successfully(api_response: Response, my_melding: dict[str, Any])
     return body
 
 
-@then(parsers.parse("the melding should have {count:d} asset(s)"))
+@then(parsers.parse('the melding should have "{count:d}" asset(s)'))
 @async_step
 async def melding_should_have_assets_count(
     count: int, my_melding: dict[str, Any], app: FastAPI, client: AsyncClient
