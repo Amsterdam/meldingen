@@ -226,6 +226,11 @@ async def melding(
 
     melding.urgency = melding_urgency
 
+    classification = Classification(name="Melding classification")
+    # classification.id = 44
+    db_session.add(classification)
+    melding.classification = classification
+
     db_session.add(melding)
     await db_session.commit()
 
@@ -777,6 +782,7 @@ async def classification(db_session: AsyncSession, classification_name: str) -> 
     return classification
 
 
+# @pytest.fixture(autouse=True)
 @pytest.fixture()
 async def default_classification(db_session: AsyncSession) -> Classification:
 
