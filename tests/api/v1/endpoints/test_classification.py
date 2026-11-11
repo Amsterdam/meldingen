@@ -871,7 +871,6 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         assert response.status_code == HTTP_204_NO_CONTENT
 
     @pytest.mark.anyio
-    @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)
     async def test_delete_default_classification_cannot_be_deleted(
         self, app: FastAPI, client: AsyncClient, default_classification: Classification, auth_user: None
     ) -> None:
