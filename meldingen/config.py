@@ -219,6 +219,8 @@ Gemeente Amsterdam
         "Gebruik deze classificatie als geen van de andere classificaties past bij de meldtekst."
     )
 
+    dummy_classifier_enabled: bool = False
+
     @model_validator(mode="after")
     def _validate_llm_selection(self) -> "Settings":
         """The chosen default model and effort must come from their option lists."""

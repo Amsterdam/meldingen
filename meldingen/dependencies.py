@@ -446,10 +446,10 @@ def classification_model_settings() -> OpenAIChatModelSettings | None:
     return OpenAIChatModelSettings(openai_reasoning_effort=effort)
 
 
-def classifier_adapter(
+def agent_classifier_adapter(
     agent: Annotated[Agent | None, Depends(classifier_agent)],
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
-) -> AgentClassifierAdapter | DummyClassifierAdapter:
+) -> AgentClassifierAdapter | None:
     if settings.llm_enabled:
         if agent is None:
             raise ValueError("LLM is enabled but no agent supplied.")
@@ -460,14 +460,32 @@ def classifier_adapter(
             model_settings=classification_model_settings(),
         )
 
-    return DummyClassifierAdapter(name="Dummy adapter")
+
+def dummy_classifier_adapter() -> DummyClassifierAdapter | None:
+    if settings.dummy_classifier_enabled:
+        return DummyClassifierAdapter(name="Dummy adapter")
+
+    return None
+
+
+def classifier_adapters(
+    agent_adapter: Annotated[BaseClassifierAdapter, Depends(agent_classifier_adapter)],
+    dummy_adapter: Annotated[BaseClassifierAdapter, Depends(dummy_classifier_adapter)],
+) -> list[BaseClassifierAdapter]:
+    # Order matters here.
+    adapters = []
+    if agent_adapter is not None:
+        adapters.append(agent_adapter)
+    if dummy_adapter is not None:
+        adapters.append(dummy_adapter)
+    return adapters
 
 
 async def classifier(
     repository: Annotated[ClassificationRepository, Depends(classification_repository)],
-    adapter: Annotated[BaseClassifierAdapter, Depends(classifier_adapter)],
+    classifier_adapters: Annotated[list[BaseClassifierAdapter], Depends(classifier_adapters)],
 ) -> Classifier[Classification]:
-    return Classifier([adapter], repository, settings.llm_fallback_classification_name)
+    return Classifier(classifier_adapters, repository, settings.llm_fallback_classification_name)
 
 
 def token_generator() -> BaseTokenGenerator:
