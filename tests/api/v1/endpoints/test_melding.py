@@ -803,7 +803,6 @@ class TestMeldingRetrieve(BaseUnauthorizedTest):
         auth_user: None,
         melding: Melding,
     ) -> None:
-        melding = melding
         response = await client.get(app.url_path_for(self.ROUTE_NAME, melding_id=melding.id))
 
         assert response.status_code == HTTP_200_OK
@@ -1643,7 +1642,6 @@ class TestMeldingUpdate(BaseUnauthorizedTest):
     ) -> None:
         """Sending the classification the melding already has is not a reclassification: it neither
         throws the melder's input away nor sends the melding back to the classified state."""
-        melding = melding
         component = (await form.awaitable_attrs.components)[0]
         question = await component.awaitable_attrs.question
         db_session.add(TextAnswer(question=question, melding=melding, text="Het antwoord van de melder"))
