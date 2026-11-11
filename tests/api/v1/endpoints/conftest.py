@@ -802,7 +802,6 @@ async def new_classification(db_session: AsyncSession, new_classification_name: 
     return classification
 
 
-# @pytest.fixture(autouse=True)
 @pytest.fixture()
 async def default_classification(db_session: AsyncSession) -> Classification:
 
