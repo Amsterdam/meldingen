@@ -459,6 +459,7 @@ def agent_classifier_adapter(
             repository=repository,
             model_settings=classification_model_settings(),
         )
+    return None
 
 
 def dummy_classifier_adapter() -> DummyClassifierAdapter | None:
