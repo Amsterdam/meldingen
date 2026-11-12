@@ -54,7 +54,7 @@ async def is_authenticated_request(
 ) -> bool:
     if authorization is None:
         return False
-    if token is None:
+    if not token:
         raise InvalidTokenException()
 
     await authenticate_user(token, jwks_client, py_jwt, user_repository)
