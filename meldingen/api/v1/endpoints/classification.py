@@ -44,7 +44,7 @@ async def content_range_header_adder(
 
 
 @overload
-async def _hydrate_output(classification: Classification, public: Literal[True]) -> ClassificationOutputPublic: ...
+async def _hydrate_output(classification: Classification, public: bool) -> ClassificationOutputPublic: ...
 
 
 @overload
