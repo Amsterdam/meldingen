@@ -797,6 +797,19 @@ class TestClassificationUpdate(BaseUnauthorizedTest):
         )
 
     @pytest.mark.anyio
+    async def test_update_cannot_update_default_classification_name(
+        self, app: FastAPI, client: AsyncClient, default_classification: Classification, auth_user: None
+    ) -> None:
+        response = await client.patch(
+            app.url_path_for(self.ROUTE_NAME, classification_id=default_classification.id), json={"name": "category: 2"}
+        )
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
+
+        data = response.json()
+        assert data.get("detail") == "Default classification name cannot be updated."
+
+    @pytest.mark.anyio
     async def test_update_classification_with_form(
         self, app: FastAPI, client: AsyncClient, auth_user: None, classification_with_form: Classification
     ) -> None:
@@ -885,6 +898,14 @@ class TestClassificationDelete(BaseUnauthorizedTest):
         response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=classification.id))
 
         assert response.status_code == HTTP_204_NO_CONTENT
+
+    @pytest.mark.anyio
+    async def test_delete_default_classification_cannot_be_deleted(
+        self, app: FastAPI, client: AsyncClient, default_classification: Classification, auth_user: None
+    ) -> None:
+        response = await client.delete(app.url_path_for(self.ROUTE_NAME, classification_id=default_classification.id))
+
+        assert response.status_code == HTTP_422_UNPROCESSABLE_CONTENT
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("classification_name", ["bla"], indirect=True)

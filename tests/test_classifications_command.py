@@ -35,5 +35,5 @@ async def test_ensure_fallback_classification_uses_idempotent_upsert() -> None:
 
 def test_fallback_classification_defaults_present() -> None:
     """Defaults guarantee the fallback appears even without any env override."""
-    assert settings.llm_fallback_classification_name == "Overige"
+    assert settings.llm_fallback_classification_name == "Overig"
     assert settings.llm_fallback_classification_instructions

@@ -71,19 +71,19 @@ class TestReclassifyMelding:
         client: AsyncClient,
         db_session: AsyncSession,
         auth_behandelaar: User,
-        melding_with_classification: Melding,
+        melding: Melding,
         new_classification: Classification,
     ) -> None:
         response = await client.post(
-            app.url_path_for(ROUTE, melding_id=melding_with_classification.id),
+            app.url_path_for(ROUTE, melding_id=melding.id),
             json={"classification_id": new_classification.id, "reason": "Hoort bij een andere categorie"},
         )
 
         assert response.status_code == HTTP_200_OK
         assert response.json()["classification"]["id"] == new_classification.id
 
-        await db_session.refresh(melding_with_classification)
-        assert melding_with_classification.classification_id == new_classification.id
+        await db_session.refresh(melding)
+        assert melding.classification_id == new_classification.id
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_state"], [(state,) for state in RECLASSIFIABLE_STATES], indirect=True)
@@ -196,12 +196,12 @@ class TestReclassifyMelding:
         client: AsyncClient,
         db_session: AsyncSession,
         auth_behandelaar: User,
-        melding_with_classification: Melding,
+        melding: Melding,
         new_classification: Classification,
         melding_state: str,
     ) -> None:
         response = await client.post(
-            app.url_path_for(ROUTE, melding_id=melding_with_classification.id),
+            app.url_path_for(ROUTE, melding_id=melding.id),
             json={"classification_id": new_classification.id, "reason": "Andere categorie"},
         )
 
@@ -209,15 +209,11 @@ class TestReclassifyMelding:
         assert response.json()["detail"] == "Melding may not be reclassified from current state"
 
         # A refused reclassification leaves neither the melding nor a note behind.
-        await db_session.refresh(melding_with_classification)
-        assert melding_with_classification.state == melding_state
-        assert melding_with_classification.classification_id != new_classification.id
+        await db_session.refresh(melding)
+        assert melding.state == melding_state
+        assert melding.classification_id != new_classification.id
 
-        notes = (
-            (await db_session.execute(select(Note).where(Note.melding_id == melding_with_classification.id)))
-            .scalars()
-            .all()
-        )
+        notes = (await db_session.execute(select(Note).where(Note.melding_id == melding.id))).scalars().all()
         assert len(notes) == 0
 
     @pytest.mark.anyio

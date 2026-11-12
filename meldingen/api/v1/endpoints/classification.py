@@ -2,7 +2,7 @@ from typing import Annotated, Literal, overload
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from meldingen_core.exceptions import NotFoundException
-from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_CONTENT
 
 from meldingen.actions.classification import (
     ClassificationCreateAction,
@@ -10,6 +10,8 @@ from meldingen.actions.classification import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    DefaultClassificationCannotBeDeleted,
+    DefaultClassificationNameCannotBeUpdated,
 )
 from meldingen.api.utils import (
     ContentRangeHeaderAdder,
@@ -189,6 +191,8 @@ async def update_classification(
         classification = await action(classification_id, classification_data)
     except NotFoundException:
         raise HTTPException(HTTP_404_NOT_FOUND)
+    except DefaultClassificationNameCannotBeUpdated:
+        raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, detail="Default classification name cannot be updated.")
 
     return await _hydrate_output(classification)
 
@@ -211,3 +215,5 @@ async def delete_classification(
         await action(classification_id)
     except NotFoundException:
         raise HTTPException(HTTP_404_NOT_FOUND)
+    except DefaultClassificationCannotBeDeleted:
+        raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, detail="Default classification cannot be deleted.")
