@@ -5229,10 +5229,12 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         assert len(attachments) == len(body)
         assert all(item.get("is_image") is True for item in body)
         assert all(item.get("original_media_type") == "image/jpeg" for item in body)
-        assert all(item.get("has_thumbnail") is True for item in body)
-        assert all(item.get("thumbnail_media_type") == "image/webp" for item in body)
-        assert all(item.get("has_optimized") is True for item in body)
-        assert all(item.get("optimized_media_type") == "image/webp" for item in body)
+        assert all(item.get("thumbnail") is not None for item in body)
+        assert all(item.get("thumbnail", {}).get("media_type") == "image/webp" for item in body)
+        assert all(item.get("thumbnail", {}).get("path") is not None for item in body)
+        assert all(item.get("optimized") is not None for item in body)
+        assert all(item.get("optimized", {}).get("path") is not None for item in body)
+        assert all(item.get("optimized", {}).get("media_type") == "image/webp" for item in body)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
@@ -5255,10 +5257,8 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         assert len(attachments) == len(body)
         assert all(item.get("is_image") is True for item in body)
         assert all(item.get("original_media_type") == "image/jpeg" for item in body)
-        assert all(item.get("has_thumbnail") is False for item in body)
-        assert all(item.get("thumbnail_media_type") is None for item in body)
-        assert all(item.get("has_optimized") is False for item in body)
-        assert all(item.get("optimized_media_type") is None for item in body)
+        assert all(item.get("thumbnail") is None for item in body)
+        assert all(item.get("optimized") is None for item in body)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
@@ -5324,10 +5324,14 @@ class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
         assert len(attachments) == len(body)
         assert all(item.get("is_image") is True for item in body)
         assert all(item.get("original_media_type") is not None for item in body)
-        assert all(item.get("has_thumbnail") is True for item in body)
-        assert all(item.get("thumbnail_media_type") == "image/webp" for item in body)
-        assert all(item.get("has_optimized") is True for item in body)
-        assert all(item.get("optimized_media_type") == "image/webp" for item in body)
+
+        assert all(item.get("thumbnail") is not None for item in body)
+        assert all(item.get("thumbnail", {}).get("path") is not None for item in body)
+        assert all(item.get("thumbnail", {}).get("media_type") is not None for item in body)
+
+        assert all(item.get("optimized") is not None for item in body)
+        assert all(item.get("optimized", {}).get("path") is not None for item in body)
+        assert all(item.get("optimized", {}).get("media_type") is not None for item in body)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
@@ -5347,10 +5351,8 @@ class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
         assert len(attachments) == len(body)
         assert all(item.get("is_image") is True for item in body)
         assert all(item.get("original_media_type") is not None for item in body)
-        assert all(item.get("has_thumbnail") is False for item in body)
-        assert all(item.get("thumbnail_media_type") is None for item in body)
-        assert all(item.get("has_optimized") is False for item in body)
-        assert all(item.get("optimized_media_type") is None for item in body)
+        assert all(item.get("thumbnail") is None for item in body)
+        assert all(item.get("optimized") is None for item in body)
 
 
 class TestMeldingDeleteAttachmentAction(BaseTokenAuthenticationTest):
