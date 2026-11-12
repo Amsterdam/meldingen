@@ -350,66 +350,22 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
             (
                 "id",
                 SortingDirection.ASC,
-                [
-                    {"name": "category: 0", "form": None, "asset_type": None},
-                    {"name": "category: 1", "form": None, "asset_type": None},
-                    {"name": "category: 2", "form": None, "asset_type": None},
-                    {"name": "category: 3", "form": None, "asset_type": None},
-                    {"name": "category: 4", "form": None, "asset_type": None},
-                    {"name": "category: 5", "form": None, "asset_type": None},
-                    {"name": "category: 6", "form": None, "asset_type": None},
-                    {"name": "category: 7", "form": None, "asset_type": None},
-                    {"name": "category: 8", "form": None, "asset_type": None},
-                    {"name": "category: 9", "form": None, "asset_type": None},
-                ],
+                [{"name": f"category: {i}", "form": None, "asset_type": None} for i in range(10)],
             ),
             (
                 "id",
                 SortingDirection.DESC,
-                [
-                    {"name": "category: 9", "form": None, "asset_type": None},
-                    {"name": "category: 8", "form": None, "asset_type": None},
-                    {"name": "category: 7", "form": None, "asset_type": None},
-                    {"name": "category: 6", "form": None, "asset_type": None},
-                    {"name": "category: 5", "form": None, "asset_type": None},
-                    {"name": "category: 4", "form": None, "asset_type": None},
-                    {"name": "category: 3", "form": None, "asset_type": None},
-                    {"name": "category: 2", "form": None, "asset_type": None},
-                    {"name": "category: 1", "form": None, "asset_type": None},
-                    {"name": "category: 0", "form": None, "asset_type": None},
-                ],
+                [{"name": f"category: {i}", "form": None, "asset_type": None} for i in reversed(range(10))],
             ),
             (
                 "name",
                 SortingDirection.ASC,
-                [
-                    {"name": "category: 0", "form": None, "asset_type": None},
-                    {"name": "category: 1", "form": None, "asset_type": None},
-                    {"name": "category: 2", "form": None, "asset_type": None},
-                    {"name": "category: 3", "form": None, "asset_type": None},
-                    {"name": "category: 4", "form": None, "asset_type": None},
-                    {"name": "category: 5", "form": None, "asset_type": None},
-                    {"name": "category: 6", "form": None, "asset_type": None},
-                    {"name": "category: 7", "form": None, "asset_type": None},
-                    {"name": "category: 8", "form": None, "asset_type": None},
-                    {"name": "category: 9", "form": None, "asset_type": None},
-                ],
+                [{"name": f"category: {i}", "form": None, "asset_type": None} for i in range(10)],
             ),
             (
                 "name",
                 SortingDirection.DESC,
-                [
-                    {"name": "category: 9", "form": None, "asset_type": None},
-                    {"name": "category: 8", "form": None, "asset_type": None},
-                    {"name": "category: 7", "form": None, "asset_type": None},
-                    {"name": "category: 6", "form": None, "asset_type": None},
-                    {"name": "category: 5", "form": None, "asset_type": None},
-                    {"name": "category: 4", "form": None, "asset_type": None},
-                    {"name": "category: 3", "form": None, "asset_type": None},
-                    {"name": "category: 2", "form": None, "asset_type": None},
-                    {"name": "category: 1", "form": None, "asset_type": None},
-                    {"name": "category: 0", "form": None, "asset_type": None},
-                ],
+                [{"name": f"category: {i}", "form": None, "asset_type": None} for i in reversed(range(10))],
             ),
         ],
     )
@@ -417,14 +373,15 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        auth_user: None,
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
         classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(
-            app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
+            app.url_path_for(self.ROUTE_NAME),
+            params={"sort": f'["{attribute}", "{direction}"]'},
         )
 
         assert response.status_code == HTTP_200_OK
