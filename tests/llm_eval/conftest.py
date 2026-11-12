@@ -8,11 +8,6 @@ relevant — not several KB of httpcore connection trace lines.
 import logging
 
 _NOISY_LOGGERS = (
-    "asyncio",
-    "httpcore",
-    "httpcore.connection",
-    "httpcore.http11",
-    "httpx",
     "openai",
     "openai._base_client",
 )

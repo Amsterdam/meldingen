@@ -76,6 +76,8 @@ class Asset(BaseDBModel, BaseAsset):
 
 SERVICE_LEVEL_OBJECTIVE_DAY_TYPE_DEFAULT = DaysType.calendar_days
 SERVICE_LEVEL_OBJECTIVE_DAYS_DEFAULT = 5
+# We use this default for new classifications that do not have a specific service level objective text set.
+# The field on the model is required but we don't want to force a specific value for every new classification, so we provide a default.
 SERVICE_LEVEL_OBJECTIVE_TEXT_DEFAULT = "-"
 
 
@@ -163,7 +165,8 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     state: Mapped[str] = mapped_column(String, default=MeldingStates.NEW)
     urgency: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classification.id"), default=None)
-    classification: Mapped[Classification | None] = relationship(default=None, lazy="joined")
+    classification: Mapped[Classification] = relationship(default=None, lazy="joined")
+    classifier_adapter_result_initial: Mapped[str | None] = mapped_column(String, default=None)
     token: Mapped[str | None] = mapped_column(String, default=None)
     token_expires: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), default=None)
     attachments: Mapped[list["Attachment"]] = relationship(
@@ -193,10 +196,7 @@ class Melding(AsyncAttrs, BaseDBModel, BaseMelding, StateAware):
     source: Mapped[Source | None] = relationship(default=None, lazy="joined")
 
     @property
-    def service_level_objective(self) -> MeldingServiceLevelObjective | None:
-        if not self.classification:
-            return None
-
+    def service_level_objective(self) -> MeldingServiceLevelObjective:
         return MeldingServiceLevelObjective(
             days=self.classification.service_level_objective_days,
             day_type=self.classification.service_level_objective_day_type,
@@ -679,6 +679,14 @@ class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     @property
     def is_image(self) -> bool:
         return self.original_media_type.startswith("image/")
+
+    @property
+    def has_thumbnail(self) -> bool:
+        return self.thumbnail_path is not None and self.thumbnail_media_type is not None
+
+    @property
+    def has_optimized(self) -> bool:
+        return self.optimized_path is not None and self.optimized_media_type is not None
 
 
 class Note(AsyncAttrs, BaseDBModel, BaseNote):

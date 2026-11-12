@@ -79,6 +79,7 @@ from meldingen.schemas.output import (
     ValueLabelAnswerOutput,
     ValueLabelAnswerQuestionOutput,
 )
+from meldingen.schemas.types import OptimizedMediaObject, ThumbnailObject
 
 
 class ValidateAdder:
@@ -1036,10 +1037,29 @@ class AssetOutputFactory:
 class AttachmentOutputFactory:
     def __call__(self, attachment: Attachment) -> AttachmentOutput:
 
+        if attachment.has_thumbnail:
+            thumbnail = ThumbnailObject(
+                path=attachment.thumbnail_path,
+                media_type=attachment.thumbnail_media_type,
+            )
+        else:
+            thumbnail = None
+
+        if attachment.has_optimized:
+            optimized = OptimizedMediaObject(
+                path=attachment.optimized_path,
+                media_type=attachment.optimized_media_type,
+            )
+        else:
+            optimized = None
+
         return AttachmentOutput(
             id=attachment.id,
             original_filename=attachment.original_filename,
             original_media_type=attachment.original_media_type,
+            is_image=attachment.is_image,
+            thumbnail=thumbnail,
+            optimized=optimized,
             created_at=attachment.created_at,
             updated_at=attachment.updated_at,
             user=(

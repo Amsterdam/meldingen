@@ -1,4 +1,5 @@
 import contextlib
+import logging
 from collections.abc import AsyncGenerator, AsyncIterator
 from typing import Any
 from unittest.mock import AsyncMock, Mock
@@ -31,6 +32,7 @@ from meldingen.dependencies import (
     database_session_manager,
     malware_scanner,
     public_id_generator,
+    sql_echo_value,
     wfs_provider_validator,
 )
 from meldingen.generators import PublicIdGenerator
@@ -39,6 +41,23 @@ from meldingen.models import BaseDBModel, User
 
 pytest_plugins = ["mailpit.testing.pytest"]
 TEST_DATABASE_URL: str = str(settings.test_database_dsn)
+
+_NOISY_LOGGERS = (
+    "asyncio",
+    "httpcore",
+    "httpcore.connection",
+    "httpcore.http11",
+    "httpx",
+    "openai",
+    "mailpit_client",
+    "opentelemetry",
+    "openai._base_client",
+    "pytest_bdd",
+    "azure",
+)
+
+for _logger_name in _NOISY_LOGGERS:
+    logging.getLogger(_logger_name).setLevel(logging.WARNING)
 
 
 @pytest.fixture
@@ -152,7 +171,7 @@ async def client(app: FastAPI, test_database: None, override_dependencies: None)
 
 @pytest.fixture(scope="session")
 def db_engine() -> AsyncEngine:
-    return create_async_engine(TEST_DATABASE_URL, echo="debug", poolclass=NullPool)
+    return create_async_engine(TEST_DATABASE_URL, echo=sql_echo_value(), poolclass=NullPool)
 
 
 class DatabaseSessionManager(BaseDatabaseSessionManager):

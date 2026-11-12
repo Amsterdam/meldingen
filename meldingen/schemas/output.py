@@ -11,7 +11,9 @@ from meldingen.schemas.types import (
     DaysType,
     FormIOConditional,
     GeoJson,
+    OptimizedMediaObject,
     PhoneNumber,
+    ThumbnailObject,
     ValueLabelObject,
 )
 
@@ -344,6 +346,9 @@ class AttachmentOutput(BaseOutputModel):
     original_filename: str
     original_media_type: str
     user: UserOutput | None
+    is_image: bool
+    thumbnail: ThumbnailObject | None
+    optimized: OptimizedMediaObject | None
 
 
 class AssetOutput(BaseOutputModel):

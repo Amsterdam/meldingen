@@ -2,7 +2,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pydantic import ValidationError
-from pydantic_ai.models.openai import OpenAIChatModelSettings
+from pydantic_ai import Agent
+from pydantic_ai.models.openai import OpenAIChatModel, OpenAIChatModelSettings
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from meldingen.adapters.classification.agent_classifier import AgentClassifierAdapter
 from meldingen.config import Settings
@@ -94,6 +96,24 @@ def test_effort_omitted_when_none() -> None:
 # ---------------------------------------------------------------------------
 
 
+def test_adapter_name_defaults_to_model_identifier() -> None:
+    model = OpenAIChatModel("configured-model", provider=OpenAIProvider(api_key="test"))
+    adapter = AgentClassifierAdapter(agent=Agent(model), repository=MagicMock())
+
+    assert adapter.name == "configured-model"
+
+
+def test_adapter_name_can_be_overridden() -> None:
+    adapter = AgentClassifierAdapter(agent=Agent(), repository=MagicMock(), name="custom-adapter")
+
+    assert adapter.name == "custom-adapter"
+
+
+def test_adapter_requires_model_when_name_is_omitted() -> None:
+    with pytest.raises(ValueError, match="A model or explicit adapter name is required"):
+        AgentClassifierAdapter(agent=Agent(), repository=MagicMock())
+
+
 @pytest.mark.anyio
 async def test_adapter_forwards_model_settings_to_run() -> None:
     agent = MagicMock()
@@ -108,7 +128,9 @@ async def test_adapter_forwards_model_settings_to_run() -> None:
     repository.list = AsyncMock(return_value=[classification])
 
     model_settings = OpenAIChatModelSettings(openai_reasoning_effort="low")
-    adapter = AgentClassifierAdapter(agent, repository, model_settings)
+    adapter = AgentClassifierAdapter(
+        name="test-adapter", agent=agent, repository=repository, model_settings=model_settings
+    )
 
     result = await adapter.classify("er ligt afval op straat")
 

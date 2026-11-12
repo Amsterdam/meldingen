@@ -1,7 +1,7 @@
 import datetime
 import re
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from geojson_pydantic import Feature as GeoJsonPydanticFeature
 from geojson_pydantic import Point
@@ -76,3 +76,18 @@ class ValueLabelObject(BaseModel):
 class DaysType(StrEnum):
     working_days = "working_days"
     calendar_days = "calendar_days"
+
+
+class ThumbnailObject(BaseModel):
+    """Represents a thumbnail image with its path and media type."""
+
+    path: str
+    media_type: Literal["image/webp"]
+
+
+class OptimizedMediaObject(BaseModel):
+    """Represents an optimized media file with its path and media type.
+    Extendable to other media types if needed."""
+
+    path: str
+    media_type: Literal["image/webp"]

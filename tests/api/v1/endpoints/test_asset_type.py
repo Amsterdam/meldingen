@@ -21,7 +21,7 @@ from meldingen.models import AssetType
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
 
-class TestableWfsProviderFactory(BaseWfsProviderFactory):
+class WfsProviderFactoryTestable(BaseWfsProviderFactory):
     """A WFS provider factory for testing validation. Validates base_url without HTTP calls."""
 
     def __call__(self) -> BaseWfsProvider:
@@ -694,7 +694,7 @@ class TestCreateAssetTypeValidation(BaseUnauthorizedTest):
             app.url_path_for(self.get_route_name()),
             json={
                 "name": "test",
-                "class_name": "tests.api.v1.endpoints.test_asset_type.TestableWfsProviderFactory",
+                "class_name": "tests.api.v1.endpoints.test_asset_type.WfsProviderFactoryTestable",
                 "arguments": {},
                 "max_assets": 5,
             },
@@ -711,7 +711,7 @@ class TestCreateAssetTypeValidation(BaseUnauthorizedTest):
             app.url_path_for(self.get_route_name()),
             json={
                 "name": "test_valid",
-                "class_name": "tests.api.v1.endpoints.test_asset_type.TestableWfsProviderFactory",
+                "class_name": "tests.api.v1.endpoints.test_asset_type.WfsProviderFactoryTestable",
                 "arguments": {"base_url": "http://example.com"},
                 "max_assets": 5,
             },
@@ -754,7 +754,7 @@ class TestUpdateAssetTypeValidation(BaseUnauthorizedTest):
     ) -> None:
         at = AssetType(
             name="validation_test",
-            class_name="tests.api.v1.endpoints.test_asset_type.TestableWfsProviderFactory",
+            class_name="tests.api.v1.endpoints.test_asset_type.WfsProviderFactoryTestable",
             arguments={"base_url": "http://example.com"},
             max_assets=5,
         )
