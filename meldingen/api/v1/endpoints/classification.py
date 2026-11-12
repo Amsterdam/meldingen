@@ -10,6 +10,8 @@ from meldingen.actions.classification import (
     ClassificationListAction,
     ClassificationRetrieveAction,
     ClassificationUpdateAction,
+    DefaultClassificationCannotBeDeleted,
+    DefaultClassificationNameCannotBeUpdated,
 )
 from meldingen.api.utils import (
     ContentRangeHeaderAdder,
@@ -20,7 +22,6 @@ from meldingen.api.utils import (
 )
 from meldingen.api.v1 import conflict_response, list_response, not_found_response, unauthorized_response
 from meldingen.authentication import authenticate_user
-from meldingen.config import settings
 from meldingen.dependencies import (
     classification_create_action,
     classification_delete_action,
@@ -156,21 +157,15 @@ async def update_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
     classification_input: ClassificationUpdateInput,
     action: Annotated[ClassificationUpdateAction, Depends(classification_update_action)],
-    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
 ) -> ClassificationOutput:
     classification_data = classification_input.model_dump(exclude_unset=True)
-    classification = await repository.retrieve(classification_id)
-
-    if classification is None:
-        raise HTTPException(HTTP_404_NOT_FOUND)
-
-    if classification_data.get("name") and classification.name == settings.llm_fallback_classification_name:
-        raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, detail="Default classification name cannot be updated.")
 
     try:
         classification = await action(classification_id, classification_data)
     except NotFoundException:
         raise HTTPException(HTTP_404_NOT_FOUND)
+    except DefaultClassificationNameCannotBeUpdated:
+        raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, detail="Default classification name cannot be updated.")
 
     return await _hydrate_output(classification)
 
@@ -187,18 +182,11 @@ async def update_classification(
 )
 async def delete_classification(
     classification_id: Annotated[int, Path(description="The classification id.", ge=1)],
-    repository: Annotated[ClassificationRepository, Depends(classification_repository)],
     action: Annotated[ClassificationDeleteAction, Depends(classification_delete_action)],
 ) -> None:
-    classification = await repository.retrieve(classification_id)
-
-    if classification is None:
-        raise HTTPException(HTTP_404_NOT_FOUND)
-
-    if classification.name == settings.llm_fallback_classification_name:
-        raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, detail="Default classification cannot be deleted.")
-
     try:
         await action(classification_id)
     except NotFoundException:
         raise HTTPException(HTTP_404_NOT_FOUND)
+    except DefaultClassificationCannotBeDeleted:
+        raise HTTPException(HTTP_422_UNPROCESSABLE_CONTENT, detail="Default classification cannot be deleted.")
