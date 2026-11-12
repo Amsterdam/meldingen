@@ -744,6 +744,9 @@ def auth_behandelaar(app: FastAPI, user: User) -> User:
     return user
 
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Classification fixture #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @pytest.fixture
 def classification_name(request: FixtureRequest) -> str:
     if hasattr(request, "param"):
@@ -774,6 +777,8 @@ async def classification(db_session: AsyncSession, classification_name: str) -> 
     return classification
 
 
+# Standalone classification fixture. This fixture creates a new classification that is not tied to any existing report.
+# Use this fixture when you need a classification that is guaranteed to be different from any existing report's classification.
 @pytest.fixture
 async def new_classification(db_session: AsyncSession, new_classification_name: str) -> Classification:
 
@@ -788,6 +793,10 @@ async def new_classification(db_session: AsyncSession, new_classification_name: 
     return classification
 
 
+# Default classification fixture. This fixture is needed to provide a fallback
+# classification that can be used when no specific classification is assigned.
+# Should always be loaded whenever endpoint tests are performed that involve
+# classification by classifier adapter.
 @pytest.fixture()
 async def default_classification(db_session: AsyncSession) -> Classification:
 
