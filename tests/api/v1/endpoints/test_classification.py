@@ -246,7 +246,11 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
 
     @pytest.mark.anyio
     async def test_list_all_classifications(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
@@ -263,14 +267,13 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        is_authenticated_request_true: None,
         classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
-        response = await client.get(
-            app.url_path_for(self.ROUTE_NAME), headers={"Authorization": "Bearer fake_token"}
-        )  # Just to indicate an authenticated request, not actually verifying the token
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
         assert response.status_code == HTTP_200_OK
         data = response.json()
+        assert len(data) == len(classifications)
         assert set(data[0]) == set(ClassificationOutput.model_fields)
 
     @pytest.mark.anyio
@@ -278,17 +281,22 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        is_authenticated_request_false: None,
         classifications: list[Classification],
+        is_authenticated_request_false: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
         assert response.status_code == HTTP_200_OK
         data = response.json()
+        assert len(data) == len(classifications)
         assert set(data[0]) == set(ClassificationOutputPublic.model_fields)
 
     @pytest.mark.anyio
     async def test_list_classifications_include_deleted_query_param(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        auth_user: None,
     ) -> None:
         classification_to_delete = classifications[0]
 
@@ -328,11 +336,11 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        auth_user: None,
         limit: int,
         offset: int,
         expected: int,
         classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
@@ -428,13 +436,13 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
         self,
         app: FastAPI,
         client: AsyncClient,
-        auth_user: None,
         limit: int,
         offset: int,
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
         classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME),
@@ -456,7 +464,11 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
 
     @pytest.mark.anyio
     async def test_list_classification_with_form(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        form_with_classification: Form,
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
@@ -489,7 +501,11 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "category: 3"}'})
 
@@ -502,7 +518,11 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q_partial_match(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "categ"}'})
 
@@ -514,7 +534,11 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q_case_insensitive(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "CATEGORY"}'})
 
@@ -526,7 +550,11 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q_no_results(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "nonexistent"}'})
 
@@ -538,7 +566,12 @@ class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
 
     @pytest.mark.anyio
     async def test_list_classifications_sort_on_relationship(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form_with_classification: Form,
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"sort": '["form", "ASC"]'})
 
