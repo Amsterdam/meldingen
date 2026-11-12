@@ -5227,7 +5227,38 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         body = response.json()
 
         assert len(attachments) == len(body)
+        assert all(item.get("is_image") is True for item in body)
         assert all(item.get("original_media_type") == "image/jpeg" for item in body)
+        assert all(item.get("thumbnail") is not None for item in body)
+        assert all(item.get("thumbnail", {}).get("media_type") == "image/webp" for item in body)
+        assert all(item.get("thumbnail", {}).get("path") is not None for item in body)
+        assert all(item.get("optimized") is not None for item in body)
+        assert all(item.get("optimized", {}).get("path") is not None for item in body)
+        assert all(item.get("optimized", {}).get("media_type") == "image/webp" for item in body)
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
+    async def test_list_attachments_without_thumbnails_and_optimized(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        melding_without_optimized_attachments_and_thumbnails: Melding,
+        auth_user: None,
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_without_optimized_attachments_and_thumbnails.id)
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        attachments = await melding_without_optimized_attachments_and_thumbnails.awaitable_attrs.attachments
+        body = response.json()
+
+        assert len(attachments) == len(body)
+        assert all(item.get("is_image") is True for item in body)
+        assert all(item.get("original_media_type") == "image/jpeg" for item in body)
+        assert all(item.get("thumbnail") is None for item in body)
+        assert all(item.get("optimized") is None for item in body)
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
@@ -5291,7 +5322,37 @@ class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
         body = response.json()
 
         assert len(attachments) == len(body)
+        assert all(item.get("is_image") is True for item in body)
         assert all(item.get("original_media_type") is not None for item in body)
+
+        assert all(item.get("thumbnail") is not None for item in body)
+        assert all(item.get("thumbnail", {}).get("path") is not None for item in body)
+        assert all(item.get("thumbnail", {}).get("media_type") is not None for item in body)
+
+        assert all(item.get("optimized") is not None for item in body)
+        assert all(item.get("optimized", {}).get("path") is not None for item in body)
+        assert all(item.get("optimized", {}).get("media_type") is not None for item in body)
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(["melding_token"], [("supersecuretoken",)])
+    async def test_list_attachments_without_optimized_and_thumbnails(
+        self, app: FastAPI, client: AsyncClient, melding_without_optimized_attachments_and_thumbnails: Melding
+    ) -> None:
+        response = await client.get(
+            app.url_path_for(self.ROUTE_NAME, melding_id=melding_without_optimized_attachments_and_thumbnails.id),
+            params={"token": "supersecuretoken"},
+        )
+
+        assert response.status_code == HTTP_200_OK
+
+        attachments = await melding_without_optimized_attachments_and_thumbnails.awaitable_attrs.attachments
+        body = response.json()
+
+        assert len(attachments) == len(body)
+        assert all(item.get("is_image") is True for item in body)
+        assert all(item.get("original_media_type") is not None for item in body)
+        assert all(item.get("thumbnail") is None for item in body)
+        assert all(item.get("optimized") is None for item in body)
 
 
 class TestMeldingDeleteAttachmentAction(BaseTokenAuthenticationTest):
