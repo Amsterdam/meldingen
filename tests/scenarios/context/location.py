@@ -11,7 +11,8 @@ ROUTE_NAME_LOCATION_ADD: Final[str] = "melding:location-add"
 
 
 @given(
-    parsers.parse("I know the latitude {lat:f} and longitude {lon:f} values of my melding"), target_fixture="geojson"
+    parsers.parse('I know the latitude "{lat:f}" and longitude "{lon:f}" values of my melding'),
+    target_fixture="geojson",
 )
 def i_know_the_latitude_and_longitude_values_of_my_melding(lat: float, lon: float) -> dict[str, Any]:
     return {"type": "Feature", "geometry": {"type": "Point", "coordinates": [lat, lon]}, "properties": {}}

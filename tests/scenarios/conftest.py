@@ -2,8 +2,25 @@ import asyncio
 import functools
 from collections.abc import Callable
 from typing import Any
+from unittest.mock import AsyncMock
 
+import pytest
 from mypy_extensions import KwArg, VarArg
+
+from meldingen.adapters.classification.dummy_classifier import DummyClassifierAdapter
+
+
+@pytest.fixture(autouse=True)
+def dummy_classifier(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
+    mock = AsyncMock(return_value="Containers")
+    monkeypatch.setattr(DummyClassifierAdapter, "__call__", mock)
+    return mock
+
+
+@pytest.fixture
+def unclassifiable_classifier(dummy_classifier: AsyncMock) -> AsyncMock:
+    dummy_classifier.return_value = "unclassifiable"
+    return dummy_classifier
 
 
 def async_step(step: Callable[[VarArg(Any), KwArg(Any)], Any]) -> Callable[[VarArg(Any), KwArg(Any)], Any]:

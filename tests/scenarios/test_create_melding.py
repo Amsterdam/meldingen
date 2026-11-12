@@ -1,3 +1,5 @@
+from unittest.mock import AsyncMock
+
 from pytest_bdd import scenario
 
 from tests.scenarios.context.asset import *
@@ -16,8 +18,10 @@ def test_create_melding(anyio_backend: str, test_database: None) -> None:
     pass
 
 
-@scenario("create_melding.feature", "A melder can submit a melding that could not be classified")
-def test_create_melding_without_classification(anyio_backend: str, test_database: None) -> None:
+@scenario("create_melding.feature", "A submitted unclassifiable melding by melder should get default classification")
+def test_create_melding_that_cannot_be_classified(
+    anyio_backend: str, test_database: None, unclassifiable_classifier: AsyncMock
+) -> None:
     pass
 
 
