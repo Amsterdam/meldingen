@@ -56,12 +56,6 @@ async def _hydrate_output(classification: Classification, public: Literal[False]
 async def _hydrate_output(
     classification: Classification, public: bool = False
 ) -> ClassificationOutput | ClassificationOutputPublic:
-    form_id = None
-
-    form = await classification.awaitable_attrs.form
-    if form is not None:
-        form_id = form.id
-
     if public:
         return ClassificationOutputPublic(
             id=classification.id,
@@ -72,6 +66,12 @@ async def _hydrate_output(
             created_at=classification.created_at,
             updated_at=classification.updated_at,
         )
+
+    form_id = None
+
+    form = await classification.awaitable_attrs.form
+    if form is not None:
+        form_id = form.id
 
     return ClassificationOutput(
         id=classification.id,
