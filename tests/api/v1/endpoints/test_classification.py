@@ -23,6 +23,7 @@ from meldingen.models import (
     Melding,
 )
 from meldingen.repositories import ClassificationRepository
+from meldingen.schemas.output import ClassificationOutput, ClassificationOutputPublic
 from meldingen.schemas.types import DaysType
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
