@@ -1,3 +1,5 @@
+from typing import Any
+
 from meldingen_core.actions.classification import ClassificationCreateAction as BaseClassificationCreateAction
 from meldingen_core.actions.classification import ClassificationDeleteAction as BaseClassificationDeleteAction
 from meldingen_core.actions.classification import ClassificationListAction as BaseClassificationListAction
@@ -32,7 +34,7 @@ class ClassificationRetrieveAction(BaseClassificationRetrieveAction[Classificati
 
 
 class ClassificationUpdateAction(BaseClassificationUpdateAction[Classification, AssetType]):
-    async def __call__(self, pk: int, update_payload: dict) -> Classification:
+    async def __call__(self, pk: int, update_payload: dict[str, Any]) -> Classification:
         classification = await retrieve_or_raise_not_found(self._repository, pk)
 
         if (
