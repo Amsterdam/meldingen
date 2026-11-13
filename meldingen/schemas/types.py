@@ -81,7 +81,7 @@ class DaysType(StrEnum):
 class ThumbnailObject(BaseModel):
     """Represents a thumbnail image with its path and media type."""
 
-    path: str
+    filename: str
     media_type: Literal["image/webp"]
 
 
@@ -89,5 +89,5 @@ class OptimizedMediaObject(BaseModel):
     """Represents an optimized media file with its path and media type.
     Extendable to other media types if needed."""
 
-    path: str
+    filename: str
     media_type: Literal["image/webp"]

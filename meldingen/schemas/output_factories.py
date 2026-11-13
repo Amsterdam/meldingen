@@ -1039,7 +1039,7 @@ class AttachmentOutputFactory:
 
         if attachment.has_thumbnail:
             thumbnail = ThumbnailObject(
-                path=attachment.thumbnail_path,
+                filename=attachment.thumbnail_file_name,
                 media_type=attachment.thumbnail_media_type,
             )
         else:
@@ -1047,7 +1047,7 @@ class AttachmentOutputFactory:
 
         if attachment.has_optimized:
             optimized = OptimizedMediaObject(
-                path=attachment.optimized_path,
+                filename=attachment.optimized_file_name,
                 media_type=attachment.optimized_media_type,
             )
         else:

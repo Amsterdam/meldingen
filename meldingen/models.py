@@ -688,6 +688,18 @@ class Attachment(AsyncAttrs, BaseDBModel, BaseAttachment):
     def has_optimized(self) -> bool:
         return self.optimized_path is not None and self.optimized_media_type is not None
 
+    @property
+    def optimized_file_name(self) -> str | None:
+        if self.optimized_path is None:
+            return None
+        return self.optimized_path.split("/")[-1]
+
+    @property
+    def thumbnail_file_name(self) -> str | None:
+        if self.thumbnail_path is None:
+            return None
+        return self.thumbnail_path.split("/")[-1]
+
 
 class Note(AsyncAttrs, BaseDBModel, BaseNote):
     """A free-form note that a Behandelaar can add to a melding. The text is stored as
