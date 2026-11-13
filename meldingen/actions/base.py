@@ -6,10 +6,10 @@ from meldingen_core.actions.base import BaseListAction as BaseCoreListAction
 from meldingen_core.filters import RepositoryFilters
 from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
-from meldingen.repositories import AttributeNotFoundException
+from meldingen.repositories import AttributeNotFoundException, RepositoryListFilters
 
 
-class BaseListAction[T](BaseCoreListAction[T]):
+class BaseListAction[T](BaseCoreListAction[T, RepositoryListFilters]):
     async def __call__(
         self,
         limit: int | None = None,

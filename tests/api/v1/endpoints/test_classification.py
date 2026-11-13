@@ -23,6 +23,7 @@ from meldingen.models import (
     Melding,
 )
 from meldingen.repositories import ClassificationRepository
+from meldingen.schemas.output import ClassificationOutput, ClassificationOutputPublic
 from meldingen.schemas.types import DaysType
 from tests.api.v1.endpoints.base import BasePaginationParamsTest, BaseSortParamsTest, BaseUnauthorizedTest
 
@@ -233,7 +234,7 @@ class TestClassificationCreate(BaseUnauthorizedTest):
         )
 
 
-class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, BaseSortParamsTest):
+class TestClassificationList(BasePaginationParamsTest, BaseSortParamsTest):
     ROUTE_NAME: Final[str] = "classification:list"
     METHOD: Final[str] = "GET"
 
@@ -245,7 +246,11 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_all_classifications(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
@@ -258,8 +263,40 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         assert response.headers.get("content-range") == "classification 0-49/10"
 
     @pytest.mark.anyio
+    async def test_list_all_classifications_authenticated(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+        assert response.status_code == HTTP_200_OK
+        data = response.json()
+        assert len(data) == len(classifications)
+        assert set(data[0]) == set(ClassificationOutput.model_fields)
+
+    @pytest.mark.anyio
+    async def test_list_all_classifications_not_authenticated(
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_false: None,
+    ) -> None:
+        response = await client.get(app.url_path_for(self.ROUTE_NAME))
+        assert response.status_code == HTTP_200_OK
+        data = response.json()
+        assert len(data) == len(classifications)
+        assert set(data[0]) == set(ClassificationOutputPublic.model_fields)
+
+    @pytest.mark.anyio
     async def test_list_classifications_include_deleted_query_param(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        auth_user: None,
     ) -> None:
         classification_to_delete = classifications[0]
 
@@ -299,11 +336,11 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         self,
         app: FastAPI,
         client: AsyncClient,
-        auth_user: None,
         limit: int,
         offset: int,
         expected: int,
         classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"limit": limit, "offset": offset})
 
@@ -321,66 +358,22 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
             (
                 "id",
                 SortingDirection.ASC,
-                [
-                    {"name": "category: 0", "form": None, "asset_type": None},
-                    {"name": "category: 1", "form": None, "asset_type": None},
-                    {"name": "category: 2", "form": None, "asset_type": None},
-                    {"name": "category: 3", "form": None, "asset_type": None},
-                    {"name": "category: 4", "form": None, "asset_type": None},
-                    {"name": "category: 5", "form": None, "asset_type": None},
-                    {"name": "category: 6", "form": None, "asset_type": None},
-                    {"name": "category: 7", "form": None, "asset_type": None},
-                    {"name": "category: 8", "form": None, "asset_type": None},
-                    {"name": "category: 9", "form": None, "asset_type": None},
-                ],
+                [{"name": f"category: {i}", "form": None, "asset_type": None} for i in range(10)],
             ),
             (
                 "id",
                 SortingDirection.DESC,
-                [
-                    {"name": "category: 9", "form": None, "asset_type": None},
-                    {"name": "category: 8", "form": None, "asset_type": None},
-                    {"name": "category: 7", "form": None, "asset_type": None},
-                    {"name": "category: 6", "form": None, "asset_type": None},
-                    {"name": "category: 5", "form": None, "asset_type": None},
-                    {"name": "category: 4", "form": None, "asset_type": None},
-                    {"name": "category: 3", "form": None, "asset_type": None},
-                    {"name": "category: 2", "form": None, "asset_type": None},
-                    {"name": "category: 1", "form": None, "asset_type": None},
-                    {"name": "category: 0", "form": None, "asset_type": None},
-                ],
+                [{"name": f"category: {i}", "form": None, "asset_type": None} for i in reversed(range(10))],
             ),
             (
                 "name",
                 SortingDirection.ASC,
-                [
-                    {"name": "category: 0", "form": None, "asset_type": None},
-                    {"name": "category: 1", "form": None, "asset_type": None},
-                    {"name": "category: 2", "form": None, "asset_type": None},
-                    {"name": "category: 3", "form": None, "asset_type": None},
-                    {"name": "category: 4", "form": None, "asset_type": None},
-                    {"name": "category: 5", "form": None, "asset_type": None},
-                    {"name": "category: 6", "form": None, "asset_type": None},
-                    {"name": "category: 7", "form": None, "asset_type": None},
-                    {"name": "category: 8", "form": None, "asset_type": None},
-                    {"name": "category: 9", "form": None, "asset_type": None},
-                ],
+                [{"name": f"category: {i}", "form": None, "asset_type": None} for i in range(10)],
             ),
             (
                 "name",
                 SortingDirection.DESC,
-                [
-                    {"name": "category: 9", "form": None, "asset_type": None},
-                    {"name": "category: 8", "form": None, "asset_type": None},
-                    {"name": "category: 7", "form": None, "asset_type": None},
-                    {"name": "category: 6", "form": None, "asset_type": None},
-                    {"name": "category: 5", "form": None, "asset_type": None},
-                    {"name": "category: 4", "form": None, "asset_type": None},
-                    {"name": "category: 3", "form": None, "asset_type": None},
-                    {"name": "category: 2", "form": None, "asset_type": None},
-                    {"name": "category: 1", "form": None, "asset_type": None},
-                    {"name": "category: 0", "form": None, "asset_type": None},
-                ],
+                [{"name": f"category: {i}", "form": None, "asset_type": None} for i in reversed(range(10))],
             ),
         ],
     )
@@ -388,14 +381,15 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         self,
         app: FastAPI,
         client: AsyncClient,
-        auth_user: None,
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
         classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(
-            app.url_path_for(self.ROUTE_NAME), params={"sort": f'["{attribute}", "{direction}"]'}
+            app.url_path_for(self.ROUTE_NAME),
+            params={"sort": f'["{attribute}", "{direction}"]'},
         )
 
         assert response.status_code == HTTP_200_OK
@@ -442,13 +436,13 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
         self,
         app: FastAPI,
         client: AsyncClient,
-        auth_user: None,
         limit: int,
         offset: int,
         attribute: str,
         direction: SortingDirection,
         expected: list[dict[str, Any]],
         classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(
             app.url_path_for(self.ROUTE_NAME),
@@ -470,7 +464,11 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_classification_with_form(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        form_with_classification: Form,
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME))
 
@@ -503,7 +501,11 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "category: 3"}'})
 
@@ -516,7 +518,11 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q_partial_match(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "categ"}'})
 
@@ -528,7 +534,11 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q_case_insensitive(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "CATEGORY"}'})
 
@@ -540,7 +550,11 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_classifications_filtered_by_q_no_results(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, classifications: list[Classification]
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        classifications: list[Classification],
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"filter": '{"q": "nonexistent"}'})
 
@@ -552,7 +566,12 @@ class TestClassificationList(BaseUnauthorizedTest, BasePaginationParamsTest, Bas
 
     @pytest.mark.anyio
     async def test_list_classifications_sort_on_relationship(
-        self, app: FastAPI, client: AsyncClient, auth_user: None, form_with_classification: Form
+        self,
+        app: FastAPI,
+        client: AsyncClient,
+        auth_user: None,
+        form_with_classification: Form,
+        is_authenticated_request_true: None,
     ) -> None:
         response = await client.get(app.url_path_for(self.ROUTE_NAME), params={"sort": '["form", "ASC"]'})
 

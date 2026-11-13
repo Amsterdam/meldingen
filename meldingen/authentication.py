@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Path, Query
+from fastapi import Depends, Header, HTTPException, Path, Query
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from jwt import (
     ExpiredSignatureError,
@@ -23,6 +23,11 @@ oauth2_scheme = OAuth2AuthorizationCodeBearer(
     settings.auth_url,
     settings.token_url,
 )
+optional_oauth2_scheme = OAuth2AuthorizationCodeBearer(
+    settings.auth_url,
+    settings.token_url,
+    auto_error=False,
+)
 
 
 class UnauthenticatedException(HTTPException):
@@ -38,6 +43,22 @@ class InvalidRequestException(HTTPException):
 class InvalidTokenException(HTTPException):
     def __init__(self) -> None:
         super().__init__(status_code=HTTP_401_UNAUTHORIZED, detail="invalid_token")
+
+
+async def is_authenticated_request(
+    token: Annotated[str | None, Depends(optional_oauth2_scheme)],
+    jwks_client: Annotated[PyJWKClient, Depends(jwks_client)],
+    py_jwt: Annotated[PyJWT, Depends(py_jwt)],
+    user_repository: Annotated[UserRepository, Depends(user_repository)],
+    authorization: Annotated[str | None, Header()] = None,
+) -> bool:
+    if authorization is None:
+        return False
+    if not token:
+        raise InvalidTokenException()
+
+    await authenticate_user(token, jwks_client, py_jwt, user_repository)
+    return True
 
 
 async def authenticate_user(

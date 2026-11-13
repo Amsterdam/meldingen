@@ -17,7 +17,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.orderinglist import OrderingList
 
-from meldingen.authentication import authenticate_user
+from meldingen.authentication import authenticate_user, is_authenticated_request
 from meldingen.config import settings
 from meldingen.models import (
     AnswerTypeEnum,
@@ -730,6 +730,22 @@ def auth_user(app: FastAPI, user_username: str, user_email: str) -> None:
         return user
 
     app.dependency_overrides[authenticate_user] = authenticate_user_override
+
+
+@pytest.fixture
+def is_authenticated_request_true(app: FastAPI) -> None:
+    async def is_authenticated_request_override() -> bool:
+        return True
+
+    app.dependency_overrides[is_authenticated_request] = is_authenticated_request_override
+
+
+@pytest.fixture
+def is_authenticated_request_false(app: FastAPI) -> None:
+    async def is_authenticated_request_override() -> bool:
+        return False
+
+    app.dependency_overrides[is_authenticated_request] = is_authenticated_request_override
 
 
 @pytest.fixture
