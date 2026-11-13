@@ -1564,11 +1564,35 @@ async def attachment(db_session: AsyncSession, melding: Melding, attachment_file
 
 
 @pytest.fixture
-async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -> Melding:
+async def melding_without_optimized_attachments_and_thumbnails(db_session: AsyncSession, melding: Melding) -> Melding:
     for i in range(9):
         filename = f"test{i}.jpg"
         attachment = Attachment(original_filename=filename, original_media_type="image/jpeg", melding=melding)
         attachment.file_path = f"/tmp/{uuid4()}/{filename}"
+
+        db_session.add(attachment)
+
+    await db_session.commit()
+    await db_session.refresh(melding)
+
+    return melding
+
+
+@pytest.fixture
+async def melding_with_attachments(db_session: AsyncSession, melding: Melding) -> Melding:
+    for i in range(9):
+        path_uuid = uuid4()
+        filename = f"test{i}.jpg"
+        attachment = Attachment(
+            original_filename=filename,
+            original_media_type="image/jpeg",
+            melding=melding,
+            thumbnail_media_type="image/webp",
+            optimized_media_type="image/webp",
+        )
+        attachment.file_path = f"/tmp/{path_uuid}/{filename}"
+        attachment.thumbnail_path = f"/tmp/{path_uuid}/{filename}"
+        attachment.optimized_path = f"/tmp/{path_uuid}/{filename}"
 
         db_session.add(attachment)
 
