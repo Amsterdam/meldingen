@@ -5231,9 +5231,9 @@ class TestMeldingListAttachments(BaseUnauthorizedTest):
         assert all(item.get("original_media_type") == "image/jpeg" for item in body)
         assert all(item.get("thumbnail") is not None for item in body)
         assert all(item.get("thumbnail", {}).get("media_type") == "image/webp" for item in body)
-        assert all(item.get("thumbnail", {}).get("path") is not None for item in body)
+        assert all(item.get("thumbnail", {}).get("filename") is not None for item in body)
         assert all(item.get("optimized") is not None for item in body)
-        assert all(item.get("optimized", {}).get("path") is not None for item in body)
+        assert all(item.get("optimized", {}).get("filename") is not None for item in body)
         assert all(item.get("optimized", {}).get("media_type") == "image/webp" for item in body)
 
     @pytest.mark.anyio
@@ -5326,11 +5326,11 @@ class TestMelderMeldingListAttachments(BaseTokenAuthenticationTest):
         assert all(item.get("original_media_type") is not None for item in body)
 
         assert all(item.get("thumbnail") is not None for item in body)
-        assert all(item.get("thumbnail", {}).get("path") is not None for item in body)
+        assert all(item.get("thumbnail", {}).get("filename") is not None for item in body)
         assert all(item.get("thumbnail", {}).get("media_type") is not None for item in body)
 
         assert all(item.get("optimized") is not None for item in body)
-        assert all(item.get("optimized", {}).get("path") is not None for item in body)
+        assert all(item.get("optimized", {}).get("filename") is not None for item in body)
         assert all(item.get("optimized", {}).get("media_type") is not None for item in body)
 
     @pytest.mark.anyio
