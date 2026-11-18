@@ -259,7 +259,8 @@ from meldingen.wfs import ProxyWfsProviderValidator
 
 def sql_echo_value() -> bool | str:
     echo: bool | str = False
-    match settings.log_level:
+    log_level = settings.log_level_sqlalchemy if settings.log_level_sqlalchemy is not None else settings.log_level
+    match log_level:
         case logging.INFO:
             echo = True
         case logging.DEBUG:
