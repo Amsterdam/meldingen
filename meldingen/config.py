@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # General settings
     debug: bool = False
     log_level: int = logging.WARNING
+    log_level_sqlalchemy: int | None = None
     project_name: str = "Meldingen Openbare Ruimte"
     url_prefix: str = "/api"
     default_page_size: int = 50
